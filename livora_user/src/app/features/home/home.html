@@ -1,0 +1,90 @@
+<main class="intro-main">
+
+  <!-- ====== HERO SECTION ====== -->
+  <section class="hero-section">
+    <div class="hero-image-wrapper" style="position: relative; overflow: hidden;">
+      <img [src]="banners[activeBannerIndex]" alt="From Inspiration to Reality" class="hero-image" style="transition: opacity 0.5s ease-in-out; width: 100%; height: 100%; object-fit: cover;" />
+      <div class="hero-overlay"></div>
+      
+      <!-- Banner hover indicators -->
+      <div class="banner-indicators" style="position: absolute; bottom: 24px; left: 50%; transform: translateX(-50%); display: flex; gap: 12px; z-index: 10;">
+        <span *ngFor="let banner of banners; let idx = index" 
+              (mouseenter)="selectBanner(idx)" 
+              [style.background-color]="activeBannerIndex === idx ? '#FFDB00' : 'rgba(255, 255, 255, 0.4)'"
+              [style.transform]="activeBannerIndex === idx ? 'scale(1.2)' : 'scale(1)'"
+              style="width: 12px; height: 12px; border-radius: 50%; cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); border: 1px solid rgba(0, 0, 0, 0.1);">
+        </span>
+      </div>
+    </div>
+    <div class="hero-content">
+      <h1 class="hero-title">From Inspiration<br>to Reality.</h1>
+      <p class="hero-subtitle">
+        A house becomes a home through objects chosen with intention.<br>
+        LIVORA crafts the spaces between.
+      </p>
+      <div class="hero-actions">
+        <a routerLink="/rooms" class="btn btn-primary">Shop by room →</a>
+        <a routerLink="/inspiration" class="btn btn-outline">Explore Inspiration</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====== BRAND STORY SECTION ====== -->
+  <section class="brand-section">
+    <div class="brand-container">
+      <span class="section-label">THE NAME</span>
+      <h2 class="brand-title">A new word for modern living</h2>
+      <p class="brand-description">
+        <em>Livora</em> — born from <strong>living</strong>, the everyday warmth of home, paired with the luxury suffix
+        <strong>-ora</strong>, evoking the golden hour. Together: a name for spaces that feel both deeply personal and
+        quietly elevated.
+      </p>
+    </div>
+  </section>
+
+  <!-- ====== VALUES / FEATURES SECTION ====== -->
+  <section class="values-section">
+    <div class="values-container">
+      <div class="value-card">
+        <span class="value-number">01</span>
+        <h3 class="value-heading">Considered Craft</h3>
+        <p class="value-text">
+          Materials chosen for the way they age — solid oak, travertine, brushed brass, hand-loomed wool.
+        </p>
+      </div>
+      <div class="value-card">
+        <span class="value-number">02</span>
+        <h3 class="value-heading">Scandinavian Soul</h3>
+        <p class="value-text">
+          Clean lines and quiet palettes. Rooms that breathe and invite you to stay a little longer.
+        </p>
+      </div>
+      <div class="value-card">
+        <span class="value-number">03</span>
+        <h3 class="value-heading">From Inspiration</h3>
+        <p class="value-text">
+          Curated rooms, shoppable ideas, and a service team that helps you bring the vision home.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====== PROMISE SECTION ====== -->
+  <section class="promise-section">
+    <div class="promise-container">
+      <div class="promise-image-col">
+        <img src="intro.2.png" alt="Every room, a quiet love letter" class="promise-image" />
+      </div>
+      <div class="promise-content-col">
+        <span class="section-label">OUR PROMISE</span>
+        <h2 class="promise-title">Every room, a quiet love letter.</h2>
+        <p class="promise-text">
+          We design for the way you actually live — Sunday mornings on the sofa, dinners that linger, a bedroom that
+          finally feels like rest. Browse by room, save inspiration, and shop the exact pieces you see.
+        </p>
+        <a routerLink="/rooms" class="promise-link">Begin with a room →</a>
+      </div>
+    </div>
+  </section>
+
+</main>

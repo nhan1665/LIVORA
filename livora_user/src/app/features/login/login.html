@@ -1,0 +1,134 @@
+<div class="login-container">
+    @if (isForgot) {
+    <div class="login-card slide-right">
+        <h2 class="login-title">FORGOT PASSWORD</h2>
+        <p class="login-subtitle">Enter your email or phone number<br>to reset your password.</p>
+
+        <div class="login-form">
+            @if (errorMessage) {
+            <div class="error-message"
+                style="color: #d9534f; font-size: 0.9em; margin-bottom: 15px; text-align: center;">
+                {{ errorMessage }}
+            </div>
+            }
+            @if (resetSuccessMessage) {
+            <div class="success-message"
+                style="color: #4CAF50; font-size: 0.95em; margin-bottom: 15px; text-align: center; font-weight: 600;">
+                {{ resetSuccessMessage }}
+            </div>
+            }
+            <div class="input-group" style="margin-bottom: 20px;">
+                <input type="text" placeholder="Email / Phone number" [(ngModel)]="resetEmail" name="resetEmail">
+                <span class="icon">
+                    <i class="bi bi-envelope"></i>
+                </span>
+            </div>
+
+            <button type="button" class="btn-login" (click)="doResetPassword($event)">Reset password</button>
+
+            <p class="register-link" style="margin-top: 24px;">
+                Remembered your password?
+                <a href="#" style="color: #6B4949;" (click)="showLoginForm($event)">Log in now</a>
+            </p>
+        </div>
+    </div>
+    } @else if (isLogin) {
+    <div class="login-card slide-right">
+        <h2 class="login-title">LOG IN</h2>
+        <p class="login-subtitle">Welcome back! Please log in<br>to your account.</p>
+
+        <div class="login-form">
+            @if (errorMessage) {
+            <div class="error-message"
+                style="color: #d9534f; font-size: 0.9em; margin-bottom: 15px; text-align: center;">
+                {{ errorMessage }}
+            </div>
+            }
+            <div class="input-group">
+                <input type="text" placeholder="Email / Phone number" [(ngModel)]="username" name="username">
+                <span class="icon">
+                    <i class="bi bi-telephone"></i>
+                </span>
+            </div>
+
+            <div class="input-group" style="margin-bottom: 5px; position: relative;">
+                <input [type]="showPassword ? 'text' : 'password'" placeholder="Password" [(ngModel)]="password" name="password" style="padding-right: 40px;">
+                <span class="icon">
+                    <i class="bi bi-lock"></i>
+                </span>
+                <span class="eye-icon" (click)="togglePasswordVisibility()" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #888; z-index: 10;">
+                    <i class="bi" [class.bi-eye]="!showPassword" [class.bi-eye-slash]="showPassword"></i>
+                </span>
+            </div>
+
+
+            <div class="form-actions">
+                <label class="remember-me">
+                    <input type="checkbox">
+                    <span class="checkmark"></span>
+                    <span class="label-text">Remember me</span>
+                </label>
+                <a href="#" (click)="showForgotForm($event)" class="forgot-password">Forgot password</a>
+            </div>
+
+            <button type="button" class="btn-login" (click)="doLogin($event)">Log in</button>
+
+            <button type="button" class="btn-google" (click)="blockAction($event)">
+                <img class="google-logo" src="google-icon.png" alt="Google Logo">
+                Sign in with Google
+            </button>
+
+            <p class="register-link">
+                Don't have an account?
+                <a href="#" style="color: #6B4949;" (click)="toggleForm($event)">Sign up now</a>
+            </p>
+        </div>
+    </div>
+    } @else {
+    <div class="login-card slide-left">
+        <h2 class="login-title">SIGN UP</h2>
+        <p class="login-subtitle">Welcome! Please sign up to<br>start using the system.</p>
+
+        <div class="login-form">
+            <div class="input-group">
+                <input type="text" placeholder="Email / Phone number">
+                <span class="icon">
+                    <i class="bi bi-telephone"></i>
+                </span>
+            </div>
+
+            <div class="input-group" style="position: relative;">
+                <input [type]="showSignUpPassword ? 'text' : 'password'" placeholder="Password" style="padding-right: 40px;">
+                <span class="icon">
+                    <i class="bi bi-lock"></i>
+                </span>
+                <span class="eye-icon" (click)="toggleSignUpPasswordVisibility()" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #888; z-index: 10;">
+                    <i class="bi" [class.bi-eye]="!showSignUpPassword" [class.bi-eye-slash]="showSignUpPassword"></i>
+                </span>
+            </div>
+
+            <div class="input-group" style="position: relative;">
+                <input [type]="showSignUpConfirmPassword ? 'text' : 'password'" placeholder="Confirm password" style="padding-right: 40px;">
+                <span class="icon">
+                    <i class="bi bi-lock"></i>
+                </span>
+                <span class="eye-icon" (click)="toggleSignUpConfirmPasswordVisibility()" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #888; z-index: 10;">
+                    <i class="bi" [class.bi-eye]="!showSignUpConfirmPassword" [class.bi-eye-slash]="showSignUpConfirmPassword"></i>
+                </span>
+            </div>
+
+            <button type="button" class="btn-login" (click)="blockAction($event)">Sign up</button>
+
+            <button type="button" class="btn-google" (click)="blockAction($event)">
+                <img class="google-logo" src="google-icon.png" alt="Google Logo">
+                Sign in with Google
+            </button>
+
+            <p class="register-link">
+                Already have an account?
+                <a href="#" style="color: #6B4949;" (click)="toggleForm($event)">Log in now</a>
+            </p>
+        </div>
+    </div>
+    }
+</div>

@@ -1,0 +1,38 @@
+<main class="flex-1 w-full max-w-[1440px] mx-auto px-4 md:px-8 py-12">
+  
+  <header class="max-w-3xl">
+    <h1 class="font-serif text-4xl md:text-5xl text-gray-900 mb-2">Shop by room</h1>
+    
+    <p class="mt-5 text-gray-600 leading-relaxed text-lg">
+      Do you have a particular room or rooms in your home that needs a refresh? 
+      Start your search here to find furniture and home accessories for every room in your home here.
+    </p>
+  </header>
+
+  <div class="mt-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-12">
+    
+    @for (room of rooms; track room.id) {
+      <a [routerLink]="['/rooms', room.slug]" class="group cursor-pointer block">
+        <div class="overflow-hidden mb-4 rounded-sm aspect-[4/3] relative bg-gray-100">
+          <img 
+            [src]="room.image" 
+            [alt]="room.name"
+            class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+          >
+        </div>
+
+        <div class="flex items-center justify-between border-b border-gray-200 pb-3">
+          <span class="font-semibold text-xl text-gray-900">{{ room.name }}</span>
+          
+          <span class="grid place-items-center w-8 h-8 rounded-full border border-gray-300 group-hover:bg-gray-900 group-hover:border-gray-900 group-hover:text-white transition-colors duration-300">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M3.33331 8H12.6666" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M8 3.33331L12.6666 7.99998L8 12.6666" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </span>
+        </div>
+      </a>
+    }
+
+  </div>
+</main>

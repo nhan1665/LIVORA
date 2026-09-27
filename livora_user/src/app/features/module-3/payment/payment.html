@@ -1,0 +1,315 @@
+<main class="payment-main">
+  <div class="payment-grid">
+
+    <!-- ====== LEFT COLUMN: Form & Options ====== -->
+    <div class="checkout-form-column">
+
+      <!-- Section Title -->
+      <div class="form-header">
+        <h1 class="form-title">Shipping information</h1>
+        <p class="login-prompt" *ngIf="!isLoggedIn">
+          Sign up to receive more exclusive offer! <a routerLink="/login" [queryParams]="{ returnUrl: '/payment' }"
+            class="login-link">Log in</a>
+        </p>
+      </div>
+
+      <!-- Validation Error Notification -->
+      <div *ngIf="showValidationErrors" class="validation-alert">
+        <i class="bi bi-exclamation-circle-fill"></i>
+        <span>Please fill in all shipping information to continue.</span>
+      </div>
+
+      <!-- Shipping Info Form -->
+      <form class="shipping-form" (submit)="$event.preventDefault()">
+
+        <!-- Saved Addresses Dropdown (Only if logged in) -->
+        <div class="form-group" *ngIf="isLoggedIn && savedAddresses.length > 0" style="margin-bottom: 20px;">
+          <select class="form-control select-control" style="background-color: #fcfcfc;"
+            [(ngModel)]="selectedSavedAddressId" name="savedAddress" (change)="onSavedAddressChange()">
+            <option value="" disabled>Select established address</option>
+            <option *ngFor="let addr of savedAddresses" [value]="addr.id">
+              {{ addr.addressLine }}
+            </option>
+            <option value="custom">+ Enter a new address</option>
+          </select>
+        </div>
+
+        <!-- Name Field -->
+        <div class="form-group" [class.has-error]="showValidationErrors && !fullName">
+          <input type="text" class="form-control" id="fullName" placeholder="Full name" [(ngModel)]="fullName"
+            name="fullName" (input)="saveShippingInfo()" required />
+          <span *ngIf="showValidationErrors && !fullName" class="field-error">Please enter your full name</span>
+        </div>
+
+        <!-- Contact Fields Row -->
+        <div class="form-row-2">
+          <!-- Email -->
+          <div class="form-group" [class.has-error]="showValidationErrors && !email">
+            <input type="email" class="form-control" id="email" placeholder="Email" [(ngModel)]="email" name="email"
+              (input)="saveShippingInfo()" required />
+            <span *ngIf="showValidationErrors && !email" class="field-error">Please enter your email</span>
+          </div>
+
+          <!-- Phone -->
+          <div class="form-group" [class.has-error]="showValidationErrors && !phone">
+            <input type="tel" class="form-control" id="phone" placeholder="Phone number" [(ngModel)]="phone"
+              name="phone" (input)="saveShippingInfo()" required />
+            <span *ngIf="showValidationErrors && !phone" class="field-error">Please enter your phone number</span>
+          </div>
+        </div>
+
+        <!-- Location Dropdowns Row -->
+        <div class="form-row-3">
+          <!-- Province -->
+          <div class="form-group" [class.has-error]="showValidationErrors && !selectedProvince">
+            <select class="form-control select-control" [(ngModel)]="selectedProvince" name="province"
+              (change)="onProvinceChange()" required>
+              <option value="" disabled selected>Province / City</option>
+              <option *ngFor="let prov of provinces" [value]="prov">{{ prov }}</option>
+            </select>
+          </div>
+
+          <!-- District -->
+          <div class="form-group">
+            <select class="form-control select-control" [(ngModel)]="selectedDistrict" name="district"
+              [disabled]="!selectedProvince" (change)="onDistrictChange()">
+              <option value="" disabled selected>District</option>
+              <option *ngFor="let dist of availableDistricts" [value]="dist">{{ dist }}</option>
+            </select>
+          </div>
+
+          <!-- Ward -->
+          <div class="form-group">
+            <select class="form-control select-control" [(ngModel)]="selectedWard" name="ward"
+              [disabled]="!selectedDistrict" (change)="onWardChange()">
+              <option value="" disabled selected>Ward</option>
+              <option *ngFor="let ward of availableWards" [value]="ward">{{ ward }}</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Address Field -->
+        <div class="form-group" [class.has-error]="showValidationErrors && !address">
+          <input type="text" class="form-control" id="address" placeholder="Address" [(ngModel)]="address"
+            name="address" (input)="saveShippingInfo()" required />
+          <span *ngIf="showValidationErrors && !address" class="field-error">Please enter your delivery address</span>
+        </div>
+
+      </form>
+
+      <!-- ====== Shipping Method Section ====== -->
+      <section class="options-section">
+        <h2 class="section-subtitle">Shipping method</h2>
+
+        <div class="options-list">
+          <!-- Fast Shipping -->
+          <label class="option-card" [class.selected]="cartService.shippingMethod() === 'nhanh'">
+            <input type="radio" name="shippingMethod" class="option-radio"
+              [checked]="cartService.shippingMethod() === 'nhanh'" (change)="setShippingMethod('nhanh')" />
+            <span class="option-label-wrapper">
+              <span class="option-main-text">Standard</span>
+            </span>
+            <span class="option-price-text">Free</span>
+          </label>
+
+          <!-- Express Shipping -->
+          <label class="option-card" [class.selected]="cartService.shippingMethod() === 'hoa-toc'">
+            <input type="radio" name="shippingMethod" class="option-radio"
+              [checked]="cartService.shippingMethod() === 'hoa-toc'" (change)="setShippingMethod('hoa-toc')" />
+            <span class="option-label-wrapper">
+              <span class="option-main-text">Express</span>
+            </span>
+            <span class="option-price-text">$15</span>
+          </label>
+        </div>
+      </section>
+
+      <!-- ====== Payment Method Section ====== -->
+      <section class="options-section">
+        <h2 class="section-subtitle">Payment method</h2>
+
+        <div class="options-list">
+          <!-- COD -->
+          <label class="option-card" [class.selected]="cartService.paymentMethod() === 'cod'">
+            <input type="radio" name="paymentMethod" class="option-radio"
+              [checked]="cartService.paymentMethod() === 'cod'" (change)="setPaymentMethod('cod')" />
+            <span class="option-label-wrapper">
+              <span class="option-main-text">Cash on delivery (COD)</span>
+            </span>
+          </label>
+
+          <!-- Bank Transfer -->
+          <label class="option-card" [class.selected]="cartService.paymentMethod() === 'bank'">
+            <input type="radio" name="paymentMethod" class="option-radio"
+              [checked]="cartService.paymentMethod() === 'bank'" (change)="setPaymentMethod('bank')" />
+            <span class="option-label-wrapper">
+              <span class="option-main-text">Bank transfer</span>
+            </span>
+          </label>
+
+        </div>
+      </section>
+
+      <!-- Form Footer Navigation -->
+      <div class="form-navigation-row">
+        <a routerLink="/cart" class="back-link">
+          <i class="bi bi-chevron-left"></i> Cart
+        </a>
+
+        <button (click)="completeOrder()" class="btn-complete-order">
+          COMPLETE ORDER
+        </button>
+      </div>
+
+    </div>
+
+    <!-- ====== RIGHT COLUMN: Order Summary (Grey panel) ====== -->
+    <div class="order-summary-column">
+      <div class="summary-container">
+
+        <!-- Summary Items List -->
+        <div class="summary-items-list">
+          <div *ngFor="let item of cartService.items()" class="summary-item-row">
+            <!-- Thumbnail with quantity badge -->
+            <div class="summary-img-wrapper">
+              <img [src]="item.image" [alt]="item.name" class="summary-img" />
+              <span class="qty-badge">{{ item.quantity }}</span>
+            </div>
+
+            <!-- Item Name -->
+            <span class="summary-item-name">{{ item.name }}</span>
+
+            <!-- Item Price -->
+            <span class="summary-item-price">${{ item.price * item.quantity }}</span>
+          </div>
+        </div>
+
+        <div class="summary-divider"></div>
+
+        <!-- Promo Code Apply Box -->
+        <div class="checkout-promo-box">
+          <input type="text" class="checkout-promo-input" placeholder="Discount code" [(ngModel)]="promoInput"
+            (keyup.enter)="applyPromo()" />
+          <button (click)="applyPromo()" class="btn-use-promo">APPLY</button>
+        </div>
+        <p *ngIf="promoMessage" [class.error-msg]="promoError" class="checkout-promo-msg">
+          {{ promoMessage }}
+        </p>
+
+        <div class="summary-divider"></div>
+
+        <!-- Price breakdown calculations -->
+        <div class="calc-rows-container">
+          <div class="calc-row">
+            <span>Subtotal</span>
+            <span class="calc-val">${{ cartService.subtotal() }}</span>
+          </div>
+
+          <div *ngIf="cartService.discountAmount() > 0" class="calc-row discount-text">
+            <span>Discount</span>
+            <span class="calc-val">-${{ cartService.discountAmount() }}</span>
+          </div>
+
+          <div class="calc-row">
+            <span>Shipping fee</span>
+            <span class="calc-val">
+              {{ cartService.shippingFee() > 0 ? ('$' + cartService.shippingFee()) : 'Free' }}
+            </span>
+          </div>
+        </div>
+
+        <div class="summary-divider"></div>
+
+        <!-- Total Grand Price -->
+        <div class="total-grand-row">
+          <span class="grand-label">Total</span>
+          <div class="grand-price-container">
+            <span class="currency-label">USD</span>
+            <span class="grand-price-val">${{ cartService.total() }}</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<!-- ====== QR PAYMENT POPUP MODAL ====== -->
+<div *ngIf="showQRModal" class="modal-backdrop">
+  <div class="modal-card qr-modal" style="text-align: center; max-width: 400px;">
+    <h2 class="modal-title" style="margin-bottom: 10px;">Bank Transfer Payment</h2>
+    <p class="modal-subtitle" style="margin-bottom: 20px;">Please scan the QR code to pay <strong>${{
+        cartService.total() }}</strong></p>
+
+    <div class="qr-timer-box" style="margin-bottom: 20px; font-size: 18px; font-weight: bold; color: #d9534f;">
+      <i class="bi bi-clock"></i> Time remaining: {{ formattedQRTime }}
+    </div>
+
+    <img [src]="qrDataString" alt="QR Code"
+      style="border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin: 0 auto; display: block; max-width: 100%;" />
+
+    <p style="margin-top: 15px; font-size: 13px; color: #666; padding: 0 10px;">
+      The QR code will automatically reset after 5 minutes.
+    </p>
+
+    <div style="display: flex; gap: 10px; margin-top: 25px;">
+      <button (click)="cancelQRPayment()"
+        style="flex: 1; padding: 12px; background-color: #f1f1f1; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; color: #333;">Cancel</button>
+      <button (click)="confirmQRPayment()"
+        style="flex: 1; padding: 12px; background-color: #c99c75; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; color: white;">I
+        have paid</button>
+    </div>
+  </div>
+</div>
+
+<!-- ====== ORDER SUCCESS POPUP MODAL ====== -->
+<div *ngIf="showSuccessModal" class="modal-backdrop">
+  <div class="modal-card">
+    <div class="success-icon-wrapper">
+      <i class="bi bi-check-circle-fill"></i>
+    </div>
+
+    <h2 class="modal-title">Order placed successfully!</h2>
+    <p class="modal-subtitle">Thank you for shopping at LIVORA.</p>
+
+    <div class="order-details-box">
+      <div class="detail-line">
+        <span class="detail-label">Order number:</span>
+        <span class="detail-value text-gold">{{ orderNumber }}</span>
+      </div>
+      <div class="detail-line">
+        <span class="detail-label">Customer:</span>
+        <span class="detail-value">{{ fullName }}</span>
+      </div>
+      <div class="detail-line">
+        <span class="detail-label">Phone number:</span>
+        <span class="detail-value">{{ phone }}</span>
+      </div>
+      <div class="detail-line">
+        <span class="detail-label">Delivery address:</span>
+        <span class="detail-value">{{ address }}, {{ selectedWard ? selectedWard + ', ' : '' }}{{ selectedDistrict ?
+          selectedDistrict + ', ' : '' }}{{ selectedProvince }}</span>
+      </div>
+      <div class="detail-line">
+        <span class="detail-label">Total payment:</span>
+        <span class="detail-value text-red">${{ cartService.total() }}</span>
+      </div>
+      <div class="detail-line">
+        <span class="detail-label">Payment:</span>
+        <span class="detail-value">
+          {{ cartService.paymentMethod() === 'cod' ? 'Cash on delivery (COD)' : 'Bank transfer' }}
+        </span>
+      </div>
+    </div>
+
+    <p class="modal-info-text">
+      A detailed order confirmation email has been sent to <strong>{{ email }}</strong>. LIVORA will contact you to
+      confirm delivery as soon as possible.
+    </p>
+
+    <button (click)="closeSuccessModal()" class="btn-close-modal">
+      Back to home
+    </button>
+  </div>
+</div>

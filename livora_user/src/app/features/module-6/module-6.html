@@ -1,0 +1,112 @@
+
+<main class="tracking-container">
+  <!-- Search Section -->
+  <section class="search-section">
+    <div class="search-box">
+      <h1 class="tracking-title">Track Your Order</h1>
+      <p class="tracking-subtitle">Enter your phone number to check the shipping status and details.</p>
+      
+      <div class="input-group">
+        <input 
+          type="text" 
+          [(ngModel)]="phoneNumber" 
+          (keyup.enter)="searchOrder()"
+          placeholder="e.g. 0901234567" 
+          class="tracking-input"
+        >
+        <button class="btn-track" (click)="searchOrder()">Track</button>
+      </div>
+
+      <div class="error-msg" *ngIf="hasSearched && !orderFound">
+        Order not found. Please check your phone number and try again.
+      </div>
+    </div>
+  </section>
+
+  <!-- Result Section -->
+  <section class="result-section" *ngIf="hasSearched && orderFound && orderInfo">
+    <div class="order-card">
+      
+      <div class="order-header">
+        <div>
+          <h2>Order #{{ orderInfo.code }}</h2>
+          <span class="order-date">Placed on {{ orderInfo.date }}</span>
+        </div>
+        <div class="order-status-badge">{{ orderInfo.status }}</div>
+      </div>
+
+      <!-- Timeline Tracking -->
+      <div class="tracking-timeline">
+        <div class="timeline-step" [class.active]="true">
+          <div class="step-icon"><i class="bi bi-card-checklist"></i></div>
+          <div class="step-label">Pending</div>
+        </div>
+        <div class="timeline-line" [class.active]="orderInfo.status === 'Shipping' || orderInfo.status === 'Delivering' || orderInfo.status === 'Delivered'"></div>
+        
+        <div class="timeline-step" [class.active]="orderInfo.status === 'Shipping' || orderInfo.status === 'Delivering' || orderInfo.status === 'Delivered'">
+          <div class="step-icon"><i class="bi bi-box-seam"></i></div>
+          <div class="step-label">Shipping</div>
+        </div>
+        <div class="timeline-line" [class.active]="orderInfo.status === 'Delivering' || orderInfo.status === 'Delivered'"></div>
+        
+        <div class="timeline-step" [class.active]="orderInfo.status === 'Delivering' || orderInfo.status === 'Delivered'">
+          <div class="step-icon"><i class="bi bi-truck"></i></div>
+          <div class="step-label">Delivering</div>
+        </div>
+        <div class="timeline-line" [class.active]="orderInfo.status === 'Delivered'"></div>
+        
+        <div class="timeline-step" [class.active]="orderInfo.status === 'Delivered'">
+          <div class="step-icon"><i class="bi bi-house-door"></i></div>
+          <div class="step-label">Delivered</div>
+        </div>
+      </div>
+
+      <div class="order-details-grid">
+        <!-- Customer Info -->
+        <div class="info-card customer-info">
+          <h3>Delivery Information</h3>
+          <p><strong>{{ orderInfo.customer.name }}</strong></p>
+          <p>{{ orderInfo.customer.phone }}</p>
+          <p>{{ orderInfo.customer.address }}</p>
+        </div>
+
+        <!-- Order Summary -->
+        <div class="info-card order-summary">
+          <h3>Order Summary</h3>
+          <div class="summary-row">
+            <span>Subtotal</span>
+            <span>${{ orderInfo.subtotal }}</span>
+          </div>
+          <div class="summary-row">
+            <span>Shipping fee</span>
+            <span>${{ orderInfo.shipping }}</span>
+          </div>
+          <div class="summary-row total-row">
+            <span>Total</span>
+            <span>${{ orderInfo.total }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Order Items -->
+      <div class="order-items-list">
+        <h3>Items</h3>
+        <div class="item-row" *ngFor="let item of orderInfo.items">
+          <div class="item-image">
+            <!-- fallback to item.png if missing -->
+            <img [src]="item.image === 'item.png' ? 'item.png' : 'item.png'" alt="{{ item.name }}">
+          </div>
+          <div class="item-details">
+            <h4>{{ item.name }}</h4>
+            <p>Color: {{ item.color }}</p>
+          </div>
+          <div class="item-qty">x{{ item.quantity }}</div>
+          <div class="item-price">${{ item.price * item.quantity }}</div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+</main>
+

@@ -1,0 +1,16 @@
+# Dependencies
+**/node_modules/
+
+# Angular
+**/.angular/
+
+# Logs
+*.log
+
+# Build output
+**/dist/
+
+# Environment files
+.env
+.env.*
+!.env.example

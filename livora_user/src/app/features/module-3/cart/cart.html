@@ -1,0 +1,181 @@
+<main class="cart-main">
+  <!-- ====== BREADCRUMBS ====== -->
+  <div class="breadcrumb-container">
+    <a routerLink="/home" class="breadcrumb-link">Home</a>
+    <span class="breadcrumb-separator">/</span>
+    <span class="breadcrumb-current">Cart ({{ cartService.itemsCount() }})</span>
+  </div>
+
+  <h1 class="page-title">Shopping Cart</h1>
+
+  <!-- Empty State -->
+  <div *ngIf="cartService.items().length === 0" class="empty-cart-state">
+    <i class="bi bi-cart-x empty-cart-icon"></i>
+    <h2>Your cart is empty</h2>
+    <p>Add some of LIVORA's wonderful products to your cart.</p>
+    <a routerLink="/home" class="btn btn-primary">Continue shopping</a>
+  </div>
+
+  <!-- Cart Content Grid -->
+  <div *ngIf="cartService.items().length > 0" class="cart-grid">
+    <!-- Left Column (Items list & Notes) -->
+    <div class="cart-items-column">
+
+      <!-- Cart Items Card -->
+      <div class="cart-card item-list-card">
+        <div *ngFor="let item of cartService.items()" class="cart-item-row">
+          <!-- Delete button -->
+          <button (click)="removeItem(item.id)" class="btn-delete" aria-label="Remove item">
+            <i class="bi bi-x"></i>
+          </button>
+
+          <!-- Thumbnail -->
+          <a [routerLink]="item.roomName ? ['/rooms', item.roomName, item.categoryName, item.productId] : null"
+             [style.pointer-events]="item.roomName ? 'auto' : 'none'"
+             class="item-thumbnail-wrapper">
+            <img [src]="item.image" [alt]="item.name" class="item-thumbnail" />
+          </a>
+
+          <!-- Name and Detail -->
+          <div class="item-details">
+            <h3 class="item-name">
+              <a [routerLink]="item.roomName ? ['/rooms', item.roomName, item.categoryName, item.productId] : null"
+                 [style.pointer-events]="item.roomName ? 'auto' : 'none'"
+                 class="item-link">
+                {{ item.name }}
+              </a>
+            </h3>
+            <p class="item-description">{{ item.description }}</p>
+          </div>
+
+          <!-- Price -->
+          <div class="item-price">
+            ${{ item.price }}
+          </div>
+
+          <!-- Quantity control -->
+          <div class="quantity-controller">
+            <button (click)="decreaseQty(item)" class="qty-btn" aria-label="Decrease quantity">
+              <i class="bi bi-dash"></i>
+            </button>
+            <span class="qty-number">{{ item.quantity }}</span>
+            <button (click)="increaseQty(item)" class="qty-btn" aria-label="Increase quantity">
+              <i class="bi bi-plus"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Notes Card -->
+      <div class="cart-card notes-card">
+        <label for="order-notes" class="notes-label">Order note</label>
+        <textarea
+          id="order-notes"
+          class="notes-textarea"
+          [value]="cartService.orderNote()"
+          (input)="updateNote($event)"
+          placeholder="Notes about your order, e.g. delivery time or more detailed location instructions.">
+        </textarea>
+      </div>
+
+    </div>
+
+    <!-- Right Column (Checkout summary) -->
+    <div class="cart-summary-column">
+      <div class="cart-card summary-card">
+        <h2 class="summary-title">ORDER TOTAL</h2>
+
+        <div class="summary-row-container">
+          <div class="summary-row">
+            <span>Subtotal</span>
+            <span class="price-val">${{ cartService.subtotal() }}</span>
+          </div>
+
+          <div *ngIf="cartService.discountAmount() > 0" class="summary-row discount-row">
+            <span>Discount ({{ cartService.discountCode() }})</span>
+            <span class="price-val discount-val">-${{ cartService.discountAmount() }}</span>
+          </div>
+
+          <div class="summary-divider"></div>
+
+          <div class="summary-row total-row">
+            <span>Total</span>
+            <span class="total-price-val">${{ cartService.total() }}</span>
+          </div>
+        </div>
+
+        <!-- Promo Code Section -->
+        <div class="promo-input-section">
+          <div class="promo-field-row">
+            <input
+              type="text"
+              class="promo-input"
+              placeholder="Enter discount code"
+              [(ngModel)]="promoInput"
+              (keyup.enter)="applyPromo()"
+            />
+            <button (click)="applyPromo()" class="btn-promo-apply">Apply</button>
+          </div>
+          <p *ngIf="promoMessage" [class.error-msg]="promoError" class="promo-message-text">
+            {{ promoMessage }}
+          </p>
+          <div class="promo-presets">
+            <span class="preset-label">Suggested codes:</span>
+            <button (click)="selectPresetPromo('LIVORA10')" class="preset-badge">LIVORA10 (10%)</button>
+            <button (click)="selectPresetPromo('GIAM20')" class="preset-badge">GIAM20 ($20)</button>
+          </div>
+        </div>
+
+        <!-- Action Button -->
+        <button (click)="checkout()" class="btn-checkout">
+          CHECKOUT
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== RECOMMENDATIONS SECTION ====== -->
+  <section class="recommendations-section">
+    <h2 class="rec-title">You may also like</h2>
+
+    <div class="rec-grid">
+      <div *ngFor="let prod of recommendedProducts" class="rec-card">
+        <!-- Best seller Badge -->
+        <span *ngIf="prod.isBestSeller" class="badge-bestseller">Best seller</span>
+
+        <!-- Product Image -->
+        <a [routerLink]="['/rooms', prod.roomName, prod.categoryName, prod.id]" class="rec-img-wrapper">
+          <img [src]="prod.image" [alt]="prod.name" class="rec-img" />
+        </a>
+
+        <!-- Details -->
+        <div class="rec-info">
+          <h3 class="rec-prod-name">
+            <a [routerLink]="['/rooms', prod.roomName, prod.categoryName, prod.id]" class="rec-link">
+              {{ prod.name }}
+            </a>
+          </h3>
+          <p class="rec-prod-desc">{{ prod.description }}</p>
+
+          <!-- Price tag (Yellow block) -->
+          <div class="rec-price-container">
+            <span class="rec-price-badge">${{ prod.price }}</span>
+          </div>
+
+          <!-- Rating and Action Row -->
+          <div class="rec-footer-row">
+            <div class="rating-stars">
+              <i class="bi bi-star-fill text-gold"></i>
+              <span class="review-count">({{ prod.reviews }})</span>
+            </div>
+
+            <!-- Quick Add Button -->
+            <button (click)="addRecommended(prod)" class="btn-quick-add" aria-label="Add to cart">
+              <i class="bi bi-cart-plus"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>

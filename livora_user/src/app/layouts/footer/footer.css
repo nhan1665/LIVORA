@@ -1,0 +1,144 @@
+
+.footer {
+  background-color: #f0ece6;
+  color: #333;
+  padding: 60px 20px 0;
+}
+
+.footer-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1.6fr 1fr 1fr 1fr;
+  gap: 40px 50px;
+  padding-bottom: 48px;
+  border-bottom: 1px solid #ddd8d0;
+}
+
+.footer-column {
+  display: flex;
+  flex-direction: column;
+}
+
+/* First column — LIVORA Ideas */
+.footer-title {
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  margin: 0 0 16px 0;
+  color: #1a1510;
+}
+
+/* "LIVORA Ideas" — brand title in gold */
+.footer-column:first-child .footer-title {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: #c9a84c;
+  text-transform: none;
+}
+
+.footer-description {
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  line-height: 1.7;
+  color: #666;
+  margin: 0 0 22px 0;
+  font-weight: 300;
+  max-width: 240px;
+}
+
+/* Social icons */
+.social-icons {
+  display: flex;
+  gap: 4px;
+  margin-top: auto;
+}
+
+.social-icon {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #999;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.25s ease;
+  border-radius: 50%;
+}
+
+.social-icon:hover {
+  color: #1a1510;
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+/* Links */
+.footer-links {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.footer-links a {
+  font-family: 'Inter', sans-serif;
+  color: #666;
+  text-decoration: none;
+  font-size: 13.5px;
+  font-weight: 300;
+  transition: color 0.25s ease;
+  line-height: 1.4;
+}
+
+.footer-links a:hover {
+  color: #1a1510;
+}
+
+/* Copyright */
+.footer-copyright {
+  max-width: 1200px;
+  margin: 0 auto;
+  text-align: left;
+  padding: 22px 0;
+}
+
+.footer-copyright p {
+  font-family: 'Inter', sans-serif;
+  font-size: 11.5px;
+  color: #aaa;
+  margin: 0;
+  letter-spacing: 0.2px;
+}
+
+/* ── Responsive ── */
+@media (max-width: 900px) {
+  .footer-container {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 32px 40px;
+  }
+}
+
+@media (max-width: 768px) {
+  .footer {
+    padding: 50px 16px 0;
+  }
+  .footer-container {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 28px 30px;
+  }
+}
+
+@media (max-width: 480px) {
+  .footer-container {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+  .footer-column:first-child .footer-title {
+    font-size: 14px;
+  }
+}

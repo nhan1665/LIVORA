@@ -1,0 +1,635 @@
+.inspiration-main {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 40px 20px;
+  font-family: 'Inter', sans-serif;
+  color: #333;
+}
+
+/* ====== Breadcrumbs ====== */
+.breadcrumb-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 24px;
+}
+
+.breadcrumb-link {
+  color: #666;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.breadcrumb-link:hover {
+  color: #1a1510;
+}
+
+.breadcrumb-separator {
+  color: #ccc;
+}
+
+.breadcrumb-current {
+  color: #1a1510;
+  font-weight: 500;
+}
+
+/* ====== Page Intro ====== */
+.page-intro {
+  margin-bottom: 30px;
+  text-align: center;
+}
+
+.page-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 36px;
+  font-weight: 500;
+  color: #1a1510;
+  margin-top: 0;
+  margin-bottom: 12px;
+}
+
+.page-subtitle {
+  font-size: 16px;
+  color: #666;
+  max-width: 600px;
+  margin: 0 auto;
+  line-height: 1.5;
+}
+
+/* ====== Filter Pills (Matching Screenshot) ====== */
+.filter-pills-container {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 36px;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  border-bottom: 1px solid #ece8e3;
+  padding-bottom: 24px;
+}
+
+.filter-pill-btn {
+  background-color: #fff;
+  border: 1px solid #dcd8d3;
+  color: #1a1510;
+  padding: 10px 24px;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 24px; /* Pill shape */
+  cursor: pointer;
+  transition: all 0.25s ease;
+  font-family: 'Inter', sans-serif;
+  outline: none;
+}
+
+.filter-pill-btn:hover {
+  background-color: #f7f6f5;
+  border-color: #1a1510;
+}
+
+.filter-pill-btn.active {
+  background-color: #111; /* Solid dark background */
+  color: #fff;
+  border-color: #111;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* ====== Inspiration Feed Grid ====== */
+.rooms-feed-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  gap: 32px;
+  margin-bottom: 40px;
+}
+
+.room-card {
+  background-color: #fff;
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+  border: 1px solid #ece8e3;
+  cursor: pointer;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.room-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 25px rgba(0, 0, 0, 0.08);
+}
+
+.room-image-wrapper {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  background-color: #f7f7f7;
+  overflow: hidden;
+}
+
+.room-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.6s ease;
+}
+
+.room-card:hover .room-image {
+  transform: scale(1.03);
+}
+
+.room-info {
+  padding: 24px;
+}
+
+.room-category {
+  font-size: 11px;
+  font-weight: 700;
+  color: #c9a84c; /* Gold brand color */
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.room-name {
+  font-family: 'Playfair Display', serif;
+  font-size: 20px;
+  font-weight: 500;
+  color: #1a1510;
+  margin: 0 0 12px 0;
+}
+
+.room-view-link {
+  font-size: 13px;
+  font-weight: 600;
+  color: #3b5998;
+  display: inline-block;
+  transition: color 0.2s;
+}
+
+.room-card:hover .room-view-link {
+  color: #c9a84c;
+}
+
+/* ====== Superimposed Hotspots/Dots ====== */
+.hotspot-wrapper {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  transform: translate(-50%, -50%);
+  z-index: 10;
+  cursor: pointer;
+}
+
+.hotspot-dot {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Outer dark semi-transparent ring & White solid center */
+.dot-inner {
+  width: 10px;
+  height: 10px;
+  background-color: #fff;
+  border: 4px solid rgba(26, 21, 16, 0.65); /* Dark outer ring */
+  border-radius: 50%;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  z-index: 2;
+  transition: transform 0.2s ease, border-color 0.2s;
+}
+
+/* Pulsing outer ring animation */
+.dot-pulse {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  border: 1.5px solid rgba(255, 255, 255, 0.85);
+  border-radius: 50%;
+  animation: pulse-ring 2s infinite ease-in-out;
+  opacity: 0;
+  z-index: 1;
+}
+
+@keyframes pulse-ring {
+  0% { transform: scale(0.6); opacity: 0; }
+  50% { opacity: 0.8; }
+  100% { transform: scale(1.6); opacity: 0; }
+}
+
+/* Hotspot hover styling */
+.hotspot-wrapper:hover .dot-inner {
+  transform: scale(1.2);
+  border-color: rgba(201, 168, 76, 0.9); /* Gold brand color on hover */
+}
+
+/* ====== Hover Product Tooltip Box ====== */
+.product-tooltip {
+  position: absolute;
+  left: 28px;
+  top: 50%;
+  transform: translateY(-50%) translateX(10px);
+  width: 180px; /* Shrunk width */
+  background-color: #fff;
+  border-radius: 0; /* Square corners */
+  border: 1px solid #ccc; /* Thin grey border */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  display: flex;
+  align-items: stretch; /* Makes left/right columns equal height */
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.25s ease, visibility 0.25s ease, transform 0.25s ease;
+  z-index: 30;
+}
+
+/* 
+  BUGLOAD CORRECTION: The Invisible Hover Bridge
+  This transparent pseudo-element covers the gap between the hotspot dot and the tooltip.
+  It ensures the hover state is maintained when moving the mouse from the dot to the tooltip.
+*/
+.product-tooltip::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -32px; /* Bridges the 28px gap back to the hotspot dot */
+  width: 32px;
+  background-color: transparent;
+}
+
+/* Tooltip left adjustment (for hotspots on the right half of the image) */
+.hotspot-wrapper.tooltip-left .product-tooltip {
+  left: auto;
+  right: 28px;
+  transform: translateY(-50%) translateX(-10px);
+}
+
+.hotspot-wrapper.tooltip-left .product-tooltip::before {
+  left: auto;
+  right: -32px;
+  width: 32px;
+}
+
+.hotspot-wrapper.tooltip-left:hover .product-tooltip {
+  transform: translateY(-50%) translateX(0);
+}
+
+.hotspot-wrapper:hover .product-tooltip {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateY(-50%) translateX(0);
+}
+
+.tooltip-content {
+  flex: 1;
+  min-width: 0;
+  padding: 10px 12px; /* Reduced padding */
+  display: flex;
+  flex-direction: column;
+}
+
+.tooltip-category {
+  font-size: 11px; /* Scaled down */
+  font-weight: 700;
+  color: #111;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: block;
+  margin-bottom: 2px;
+}
+
+.tooltip-name {
+  font-size: 12.5px; /* Scaled down */
+  font-weight: 400;
+  color: #111;
+  margin: 0 0 6px 0;
+  line-height: 1.3;
+  white-space: normal;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.tooltip-price-container {
+  display: flex;
+  align-items: flex-start;
+  margin-top: auto; /* Push to bottom of content area */
+}
+
+.tooltip-currency {
+  font-size: 10px; /* Scaled down */
+  font-weight: 700;
+  color: #111;
+  position: relative;
+  top: 1px;
+  margin-right: 1px;
+}
+
+.tooltip-price-val {
+  font-size: 20px; /* Scaled down from 26px */
+  font-weight: 700;
+  color: #111;
+  line-height: 1;
+}
+
+.tooltip-arrow-indicator {
+  width: 36px; /* Reduced width from 44px */
+  border-left: 1px solid #ccc; /* Thin vertical separator line */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px; /* Scaled down from 22px */
+  color: #333;
+  flex-shrink: 0;
+  background-color: transparent;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.product-tooltip:hover .tooltip-arrow-indicator {
+  background-color: #faf9f8;
+  color: #111;
+}
+
+/* ====== FULL ROOM MODAL OVERLAY ====== */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(26, 21, 16, 0.65); /* Dimming screen overlay */
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1500;
+  animation: fadeIn 0.25s ease-out;
+}
+
+.inspiration-modal {
+  position: relative;
+  background-color: #fff;
+  width: 90%;
+  max-width: 1100px;
+  height: 80vh;
+  border-radius: 8px;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+  animation: slideUp 0.3s ease-out;
+}
+
+/* Close Icon Button */
+.btn-close-modal {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background-color: rgba(255, 255, 255, 0.9);
+  border: 1px solid #ece8e3;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  color: #333;
+  cursor: pointer;
+  z-index: 50;
+  transition: all 0.2s;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.btn-close-modal:hover {
+  background-color: #1a1510;
+  color: #fff;
+  transform: rotate(90deg);
+}
+
+/* Split Modal Layout Grid */
+.modal-split-layout {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  height: 100%;
+}
+
+/* Left Pane: Room Interior Image View */
+.modal-left-pane {
+  background-color: #fcfbfa;
+  overflow: hidden;
+  height: 100%;
+}
+
+.modal-room-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Right Pane: Sidebar Content */
+.modal-right-pane {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background-color: #fff;
+}
+
+.sidebar-header {
+  padding: 36px 36px 20px 36px;
+  border-bottom: 1px solid #ece8e3;
+}
+
+.sidebar-category-tag {
+  font-size: 11px;
+  font-weight: 700;
+  color: #c9a84c;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  display: block;
+  margin-bottom: 6px;
+}
+
+.sidebar-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 24px;
+  font-weight: 500;
+  color: #1a1510;
+  margin: 0;
+}
+
+/* Scrollable Container */
+.sidebar-scroll-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px 36px 36px 36px;
+}
+
+.list-heading {
+  font-size: 14px;
+  font-weight: 700;
+  color: #666;
+  text-transform: uppercase;
+  margin: 0 0 16px 0;
+  letter-spacing: 0.5px;
+}
+
+/* Product list items */
+.featured-products-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.featured-product-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #f4f1ee;
+}
+
+.featured-product-row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+/* Thumbnail wrapper */
+.product-thumb-wrapper {
+  width: 72px;
+  height: 72px;
+  border-radius: 4px;
+  background-color: #f7f7f7;
+  overflow: hidden;
+  flex-shrink: 0;
+  border: 1px solid #ece8e3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.product-thumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Info */
+.product-row-info {
+  flex: 1;
+  min-width: 0;
+  cursor: pointer;
+}
+
+.product-row-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: #1a1510;
+  margin: 0 0 4px 0;
+}
+
+.product-row-desc {
+  font-size: 12px;
+  color: #777;
+  margin: 0 0 6px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.product-row-price {
+  font-size: 14px;
+  font-weight: 700;
+  color: #b82b43;
+}
+
+/* Add to Cart button (dark background, white text) */
+.btn-add-to-cart {
+  background-color: #1a1510; /* Dark background */
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 16px;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.1s;
+  white-space: nowrap;
+}
+
+.btn-add-to-cart:hover {
+  background-color: #c9a84c; /* Gold highlight */
+}
+
+.btn-add-to-cart:active {
+  transform: scale(0.96);
+}
+
+.btn-view-detail {
+  background-color: #1a1510; /* Dark background */
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 16px;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.1s;
+  white-space: nowrap;
+}
+
+.btn-view-detail:hover {
+  background-color: #c9a84c; /* Gold highlight */
+}
+
+.btn-view-detail:active {
+  transform: scale(0.96);
+}
+
+/* Keyframe animations */
+@keyframes fadeIn {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+@keyframes slideUp {
+  0% { transform: translateY(30px); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+
+/* ====== Responsive layout ====== */
+@media (max-width: 900px) {
+  .modal-split-layout {
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr 1.2fr;
+    height: auto;
+  }
+  
+  .inspiration-modal {
+    height: 90vh;
+    overflow-y: auto;
+  }
+  
+  .modal-left-pane {
+    height: 35vh;
+  }
+  
+  .modal-right-pane {
+    height: auto;
+  }
+  
+  .sidebar-header {
+    padding: 24px;
+  }
+  
+  .sidebar-scroll-content {
+    padding: 20px 24px 24px 24px;
+  }
+}

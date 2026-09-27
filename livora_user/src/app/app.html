@@ -1,0 +1,29 @@
+<div class="flex flex-col min-h-screen">
+  
+  @if (!isLoginPage()) {
+    <app-header class="sticky top-0 z-50"></app-header>
+  }
+
+  <main class="flex-1">
+    <router-outlet></router-outlet>
+  </main>
+
+  @if (!isLoginPage()) {
+    <app-footer class="mt-24"></app-footer>
+    
+    <!-- Floating Contact Widget -->
+    <div class="floating-contact-widget">
+      <!-- Call Button -->
+      <a href="tel:0901234567" class="contact-btn phone-btn" title="Gọi điện cho chúng tôi">
+        <i class="bi bi-telephone-fill"></i>
+        <span class="pulse-ring"></span>
+      </a>
+      
+      <!-- Zalo Chat Button -->
+      <a href="https://zalo.me/0901234567" target="_blank" class="contact-btn zalo-btn" title="Chat Zalo với chúng tôi">
+        <span class="zalo-label">Zalo</span>
+      </a>
+    </div>
+  }
+
+</div>

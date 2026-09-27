@@ -1,0 +1,285 @@
+<main class="ai-design">
+
+  <!-- ===== HERO ===== -->
+  <section class="hero">
+    <div class="hero-text">
+      <span class="hero-eyebrow">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true">
+          <path d="M12 2l2.4 5.6L20 10l-5.6 2.4L12 18l-2.4-5.6L4 10l5.6-2.4L12 2z" />
+        </svg>
+        LIVORA KREATIV
+      </span>
+      <h1 class="hero-title">Design the perfect<br>space with AI</h1>
+      <p class="hero-subtitle">
+        Visualise, plan, and create the home of your dreams.
+        See how LIVORA furniture comes together in your space before you buy.
+      </p>
+      <div class="hero-actions">
+        <button type="button" class="btn btn-primary" (click)="roomsSection.scrollIntoView({ behavior: 'smooth' })">Start designing</button>
+      </div>
+    </div>
+
+    <div class="hero-media">
+      <img src="intro.2.png" alt="A room designed with LIVORA AI" class="hero-image">
+      <button type="button" class="hero-play" aria-label="Preview">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden="true">
+          <path d="M8 5v14l11-7z" />
+        </svg>
+      </button>
+    </div>
+  </section>
+
+  <!-- ===== EMPTY ROOMS ===== -->
+  <section class="rooms" #roomsSection>
+    <div class="rooms-head" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+      <div>
+        <h2 class="rooms-title">Empty rooms</h2>
+        <p class="rooms-hint">Select a room to start designing</p>
+      </div>
+      <button class="btn btn-primary" (click)="openCreateSpaceModal()" style="display: flex; align-items: center; gap: 8px;">
+        <i class="bi bi-plus-lg"></i>
+        Create Space
+      </button>
+    </div>
+
+    <div class="rooms-grid">
+      @for (room of rooms; track room.name) {
+        <article class="room-card" (click)="onRoomCardClick(room)">
+          <div class="room-thumb">
+            <img [src]="room.image" [alt]="room.name" loading="lazy">
+            <span class="room-tag">{{ room.tag }}</span>
+            <button type="button" class="room-add" aria-label="Design this room">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true">
+                <path d="M11 5h2v6h6v2h-6v6h-2v-6H5v-2h6V5z" />
+              </svg>
+            </button>
+          </div>
+          <div class="room-info">
+            <h3 class="room-name">{{ room.name }}</h3>
+            <span class="room-area">{{ room.area }}</span>
+          </div>
+        </article>
+      }
+    </div>
+  </section>
+
+</main>
+
+<!-- ===== ROOM PLANNER OVERLAY ===== -->
+@if (plannerOpen()) {
+  <div class="planner">
+
+    <!-- top bar -->
+    <header class="planner-bar">
+      <div class="bar-left">
+        <button class="bar-tab" [class.active]="activeTab() === 'add'" (click)="setTab('add')">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M11 5h2v6h6v2h-6v6h-2v-6H5v-2h6V5z"/></svg>
+          Add
+        </button>
+        <button class="bar-tab" [class.active]="activeTab() === 'list'" (click)="setTab('list')">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M3 5h18v2H3V5zm0 6h18v2H3v-2zm0 6h18v2H3v-2z"/></svg>
+          List
+        </button>
+      </div>
+      <div class="bar-center">
+        <span class="bar-back">&lsaquo;</span>
+        <span class="bar-title">Design {{ activeRoom()?.name }}</span>
+      </div>
+      <div class="bar-right">
+        <button class="bar-icon" aria-label="Screenshot"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M9 3l-1.8 2H4a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-3.2L15 3H9zm3 5a5 5 0 1 1 0 10 5 5 0 0 1 0-10z"/></svg></button>
+        <button class="bar-icon" aria-label="Save" (click)="saveDesign()"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 3v10.6l3.3-3.3 1.4 1.4L12 17.4l-4.7-5.7 1.4-1.4L12 13.6V3h0zM5 19h14v2H5z"/></svg></button>
+        <button class="bar-icon" aria-label="Cart"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M7 18a2 2 0 1 0 .001 4.001A2 2 0 0 0 7 18zm10 0a2 2 0 1 0 .001 4.001A2 2 0 0 0 17 18zM7.2 14h9.5l3-9H6.2l-.7-3H2v2h2l2.6 11z"/></svg></button>
+        <span class="bar-total">${{ total() }}</span>
+        <button class="bar-summary" (click)="goCheckout()">Summary <span>&rsaquo;</span></button>
+        <button class="bar-close" (click)="closePlanner()" aria-label="Close">&times;</button>
+      </div>
+    </header>
+
+    <div class="planner-body">
+
+      <!-- left catalog -->
+      <aside class="planner-side">
+        @if (activeTab() === 'add') {
+          <div class="side-search">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+            <input type="text" placeholder="What are you looking for?" (input)="onSearch($event)">
+          </div>
+
+          <button class="side-room">
+            {{ activeRoom()?.name }}
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M7 10l5 5 5-5z"/></svg>
+          </button>
+
+          <div class="side-chips">
+            @for (cat of categories; track cat) {
+              <button class="chip" [class.active]="activeCategory() === cat" (click)="setCategory(cat)">{{ cat }}</button>
+            }
+          </div>
+
+          <div class="side-list">
+            @for (p of filteredProducts(); track trackId($index, p)) {
+              <div class="prod">
+                <button class="prod-thumb" (click)="addProduct(p)" [attr.aria-label]="'Add ' + p.name">
+                  <img [src]="p.image" [alt]="p.name" loading="lazy">
+                </button>
+                <div class="prod-info">
+                  <span class="prod-name">{{ p.name }}</span>
+                  <span class="prod-desc">{{ p.desc }}</span>
+                  <span class="prod-price">${{ p.price }}</span>
+                  <span class="prod-avail"><i class="dot"></i> Delivery status...</span>
+                  <span class="prod-avail"><i class="dot"></i> Stock status...</span>
+                </div>
+              </div>
+            }
+            @if (filteredProducts().length === 0) {
+              <p class="side-empty">No products found.</p>
+            }
+          </div>
+        } @else {
+          <!-- Saved designs list -->
+          <div class="side-saved-designs">
+            <h3 style="font-size: 16px; font-weight: 700; color: var(--ink); margin-top: 0; margin-bottom: 15px;">Saved Designs</h3>
+            <div class="saved-item">
+              <strong>My Cosy Bedroom</strong>
+              <span style="font-size: 12px; color: var(--muted);">Saved on: Jul 01, 2026</span>
+              <span style="font-size: 13px; color: var(--ink); font-weight: 500;">2 items | Total: $598</span>
+              <div style="display: flex; gap: 10px; margin-top: 5px;">
+                <button (click)="loadSavedDesign('bedroom')" style="flex: 1; padding: 8px 12px; font-size: 12px; background: var(--ink); color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600;">Load</button>
+              </div>
+            </div>
+            <div class="saved-item">
+              <strong>Minimalist Living Room</strong>
+              <span style="font-size: 12px; color: var(--muted);">Saved on: Jul 05, 2026</span>
+              <span style="font-size: 13px; color: var(--ink); font-weight: 500;">2 items | Total: $524</span>
+              <div style="display: flex; gap: 10px; margin-top: 5px;">
+                <button (click)="loadSavedDesign('living-room')" style="flex: 1; padding: 8px 12px; font-size: 12px; background: var(--ink); color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600;">Load</button>
+              </div>
+            </div>
+          </div>
+        }
+      </aside>
+
+      <!-- 3D stage -->
+      <div class="stage">
+        <div class="stage-zoom">
+          <button aria-label="Zoom in">+</button>
+          <button aria-label="Zoom out">&minus;</button>
+        </div>
+
+        <div class="room3d" [attr.data-view]="view()">
+          <div class="room-floor"></div>
+          <div class="room-wall-left"></div>
+          <div class="room-wall-back">
+            <div class="room-window"></div>
+            <div class="room-door"></div>
+          </div>
+
+          @for (p of placed(); track $index) {
+            <div class="room-item" [style.left.%]="18 + ($index % 4) * 18" [style.top.%]="40 + ($index % 3) * 14">
+              <img [src]="p.image" [alt]="p.name">
+              <button class="item-remove" (click)="removeProduct($index)" aria-label="Remove">&times;</button>
+            </div>
+          }
+        </div>
+
+        <div class="view-switch">
+          <button [class.active]="view() === 'dollhouse'" (click)="setView('dollhouse')">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12 3 2 12h3v8h6v-5h2v5h6v-8h3z"/></svg>
+            <span>Dollhouse</span>
+          </button>
+          <button [class.active]="view() === 'top'" (click)="setView('top')">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M3 3h8v8H3V3zm10 0h8v8h-8V3zM3 13h8v8H3v-8zm10 0h8v8h-8v-8z"/></svg>
+            <span>Top<br>view</span>
+          </button>
+          <button [class.active]="view() === 'side'" (click)="setView('side')">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M4 5h16v14H4z" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+            <span>Side<br>view</span>
+            <svg class="caret" viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M7 10l5 5 5-5z"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ===== CREATE SPACE MODAL ===== -->
+@if (showCreateSpaceModal) {
+  <div class="modal-overlay" (click)="closeCreateSpaceModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <h3 class="modal-title">Create Custom Space</h3>
+      <p class="modal-subtitle">Enter details for your new space layout</p>
+      
+      <div class="modal-form-group">
+        <label>Space Name</label>
+        <input type="text" [(ngModel)]="newSpaceName" placeholder="e.g. Office, Kids Room" style="width: 100%; box-sizing: border-box;">
+      </div>
+      
+      <div class="modal-form-group">
+        <label>Description Tag</label>
+        <input type="text" [(ngModel)]="newSpaceTag" placeholder="e.g. Quiet & focused" style="width: 100%; box-sizing: border-box;">
+      </div>
+      
+      <div class="modal-form-group">
+        <label>Default Length (m)</label>
+        <input type="number" [(ngModel)]="newSpaceLength" min="2" max="15" style="width: 100%; box-sizing: border-box;">
+      </div>
+      
+      <div class="modal-form-group">
+        <label>Default Width (m)</label>
+        <input type="number" [(ngModel)]="newSpaceWidth" min="2" max="15" style="width: 100%; box-sizing: border-box;">
+      </div>
+      
+      <div class="modal-actions">
+        <button class="btn btn-ghost" (click)="closeCreateSpaceModal()">Cancel</button>
+        <button class="btn btn-primary" (click)="createCustomSpace()">Create</button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ===== SELECT SIZE MODAL ===== -->
+@if (showSelectSizeModal) {
+  <div class="modal-overlay" (click)="closeSelectSizeModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <h3 class="modal-title">Choose Room Dimensions</h3>
+      <p class="modal-subtitle">Configure size for {{ pendingRoomSelection?.name }}</p>
+      
+      <div class="preset-options">
+        <button class="preset-btn" [class.active]="selectedPreset === 'small'" (click)="selectSizePreset('small', 4, 3)">
+          <strong>Small</strong>
+          <span>4m x 3m (12 m²)</span>
+        </button>
+        <button class="preset-btn" [class.active]="selectedPreset === 'medium'" (click)="selectSizePreset('medium', 6, 4)">
+          <strong>Medium</strong>
+          <span>6m x 4m (24 m²)</span>
+        </button>
+        <button class="preset-btn" [class.active]="selectedPreset === 'large'" (click)="selectSizePreset('large', 8, 5)">
+          <strong>Large</strong>
+          <span>8m x 5m (40 m²)</span>
+        </button>
+      </div>
+
+      <div class="custom-dimension-controls" style="display: flex; flex-direction: column; gap: 16px; margin-bottom: 20px;">
+        <div>
+          <label style="display: flex; justify-content: space-between; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: var(--ink);">
+            <span>Length (meters)</span>
+            <span>{{ selectLength }}m</span>
+          </label>
+          <input type="range" min="3" max="12" [(ngModel)]="selectLength" (input)="selectedPreset = 'custom'" style="width: 100%;">
+        </div>
+        <div>
+          <label style="display: flex; justify-content: space-between; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: var(--ink);">
+            <span>Width (meters)</span>
+            <span>{{ selectWidth }}m</span>
+          </label>
+          <input type="range" min="3" max="10" [(ngModel)]="selectWidth" (input)="selectedPreset = 'custom'" style="width: 100%;">
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn btn-ghost" (click)="closeSelectSizeModal()">Cancel</button>
+        <button class="btn btn-primary" (click)="confirmRoomSize()">Confirm & Start Designing</button>
+      </div>
+    </div>
+  </div>
+}

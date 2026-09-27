@@ -1,0 +1,128 @@
+<main class="inspiration-main">
+  <div class="page-intro">
+    <h1 class="page-title">Inspiration</h1>
+    <p class="page-subtitle">Explore living spaces designed by LIVORA experts and shop the featured products directly.</p>
+  </div>
+
+  <!-- ====== FILTER PILLS ====== -->
+  <div class="filter-pills-container">
+    <button
+      *ngFor="let cat of categories"
+      class="filter-pill-btn"
+      [class.active]="selectedCategory === cat"
+      (click)="filterCategory(cat)"
+    >
+      {{ cat }}
+    </button>
+  </div>
+
+  <!-- ====== ROOM INSPIRATION GRID ====== -->
+  <div class="rooms-feed-grid">
+    <div *ngFor="let room of filteredRooms" class="room-card" (click)="openRoomModal(room)">
+      <!-- Room Image Wrapper -->
+      <div class="room-image-wrapper">
+        <img [src]="room.image" [alt]="room.name" class="room-image" />
+
+        <!-- Hotspots/Dots superimposed over coordinates -->
+        <div
+          *ngFor="let hs of room.hotspots"
+          class="hotspot-wrapper"
+          [class.tooltip-left]="hs.left > 50"
+          [style.top.%]="hs.top"
+          [style.left.%]="hs.left"
+          (click)="redirectToProduct(hs.product.id, $event)"
+        >
+          <!-- Styled Hotspot Circle -->
+          <div class="hotspot-dot">
+            <span class="dot-pulse"></span>
+            <span class="dot-inner"></span>
+          </div>
+
+          <!-- Product Tooltip Box (Visible on Hover) -->
+          <div class="product-tooltip" (click)="redirectToProduct(hs.product.id, $event)">
+            <div class="tooltip-content">
+              <span class="tooltip-category">{{ hs.product.category }}</span>
+              <h4 class="tooltip-name">{{ hs.product.name }}</h4>
+              <div class="tooltip-price-container">
+                <span class="tooltip-currency">$</span>
+                <span class="tooltip-price-val">{{ hs.product.price }}</span>
+              </div>
+            </div>
+            <div class="tooltip-arrow-indicator">
+              <i class="bi bi-chevron-right"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Room Label and Metadata -->
+      <div class="room-info">
+        <span class="room-category">{{ room.category }}</span>
+        <h3 class="room-name">{{ room.name }}</h3>
+        <span class="room-view-link">View space details →</span>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- ====== FULL ROOM INTERIOR MODAL OVERLAY ====== -->
+<div *ngIf="selectedRoom" class="modal-overlay" (click)="closeRoomModal()">
+  <!-- Modal Container -->
+  <div class="inspiration-modal" (click)="$event.stopPropagation()">
+    <!-- Close Icon -->
+    <button class="btn-close-modal" (click)="closeRoomModal()" aria-label="Close modal">
+      <i class="bi bi-x-lg"></i>
+    </button>
+
+    <div class="modal-split-layout">
+      <!-- Left side: Room Interior Image View -->
+      <div class="modal-left-pane">
+        <img [src]="selectedRoom.image" [alt]="selectedRoom.name" class="modal-room-image" />
+      </div>
+
+      <!-- Right side: Vertically Scrollable list of featured products -->
+      <div class="modal-right-pane">
+        <div class="sidebar-header">
+          <span class="sidebar-category-tag">{{ selectedRoom.category }}</span>
+          <h2 class="sidebar-title">{{ selectedRoom.name }}</h2>
+        </div>
+
+        <div class="sidebar-scroll-content">
+          <h3 class="list-heading">Featured products in this room</h3>
+
+          <div class="featured-products-list">
+            <div *ngFor="let hs of selectedRoom.hotspots" class="featured-product-row">
+              <!-- Thumbnail -->
+              <div class="product-thumb-wrapper" (click)="redirectToProduct(hs.product.id, $event)">
+                <img [src]="hs.product.image" [alt]="hs.product.name" class="product-thumb" />
+              </div>
+
+              <!-- Info -->
+              <div class="product-row-info" (click)="redirectToProduct(hs.product.id, $event)">
+                <h4 class="product-row-name">{{ hs.product.name }}</h4>
+                <p class="product-row-desc">{{ hs.product.description }}</p>
+                <span class="product-row-price">${{ hs.product.price }}</span>
+              </div>
+
+              <!-- View Product Detail Action -->
+              <button class="btn-view-detail" (click)="redirectToProduct(hs.product.id, $event)">
+                View product details
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div *ngIf="showToast" class="fixed bottom-8 right-8 z-[9999] flex items-center bg-gray-900 text-white px-6 py-4 rounded-lg shadow-2xl transition-all duration-300 animate-bounce">
+
+  <i class="bi bi-check-circle-fill text-green-400 text-xl mr-3"></i>
+
+  <span class="font-medium text-sm tracking-wide">{{ toastMessage }}</span>
+
+  <a routerLink="/cart" class="ml-6 text-xs text-gray-300 underline hover:text-white transition-colors cursor-pointer border-l border-gray-600 pl-4">
+    View cart
+  </a>
+
+</div>
