@@ -57,11 +57,11 @@ export class Login {
   doResetPassword(event: Event) {
     event.preventDefault();
     if (!this.resetEmail.trim()) {
-      this.errorMessage = 'Please enter your email or phone number.';
+      this.errorMessage = 'Vui lòng nhập email hoặc số điện thoại.';
       return;
     }
     this.errorMessage = '';
-    this.resetSuccessMessage = 'A password reset link has been successfully sent!';
+    this.resetSuccessMessage = 'Liên kết đặt lại mật khẩu đã được gửi thành công!';
   }
 
   private readonly authService = inject(AuthService);
@@ -97,9 +97,9 @@ export class Login {
       this.errorMessage = '';
       this.router.navigateByUrl(this.returnUrl);
     } else if (loginResult === 'INVALID_USERNAME') {
-      this.errorMessage = 'This phone number/email address has not been logged into the system.';
+      this.errorMessage = 'Số điện thoại/email này chưa được đăng ký trong hệ thống.';
     } else if (loginResult === 'INVALID_PASSWORD') {
-      this.errorMessage = 'The password is incorrect. Please check again.';
+      this.errorMessage = 'Mật khẩu không chính xác. Vui lòng kiểm tra lại.';
     }
   }
 

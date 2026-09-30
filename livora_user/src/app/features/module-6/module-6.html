@@ -3,22 +3,22 @@
   <!-- Search Section -->
   <section class="search-section">
     <div class="search-box">
-      <h1 class="tracking-title">Track Your Order</h1>
-      <p class="tracking-subtitle">Enter your phone number to check the shipping status and details.</p>
+      <h1 class="tracking-title">Theo dõi đơn hàng</h1>
+      <p class="tracking-subtitle">Nhập số điện thoại để kiểm tra trạng thái vận chuyển và chi tiết đơn hàng.</p>
       
       <div class="input-group">
         <input 
           type="text" 
           [(ngModel)]="phoneNumber" 
           (keyup.enter)="searchOrder()"
-          placeholder="e.g. 0901234567" 
+          placeholder="VD: 0901234567" 
           class="tracking-input"
         >
-        <button class="btn-track" (click)="searchOrder()">Track</button>
+        <button class="btn-track" (click)="searchOrder()">Tra cứu</button>
       </div>
 
       <div class="error-msg" *ngIf="hasSearched && !orderFound">
-        Order not found. Please check your phone number and try again.
+        Không tìm thấy đơn hàng. Vui lòng kiểm tra lại số điện thoại và thử lại.
       </div>
     </div>
   </section>
@@ -29,8 +29,8 @@
       
       <div class="order-header">
         <div>
-          <h2>Order #{{ orderInfo.code }}</h2>
-          <span class="order-date">Placed on {{ orderInfo.date }}</span>
+          <h2>Đơn hàng #{{ orderInfo.code }}</h2>
+          <span class="order-date">Đặt ngày {{ orderInfo.date }}</span>
         </div>
         <div class="order-status-badge">{{ orderInfo.status }}</div>
       </div>
@@ -39,32 +39,32 @@
       <div class="tracking-timeline">
         <div class="timeline-step" [class.active]="true">
           <div class="step-icon"><i class="bi bi-card-checklist"></i></div>
-          <div class="step-label">Pending</div>
+          <div class="step-label">Chờ xử lý</div>
         </div>
         <div class="timeline-line" [class.active]="orderInfo.status === 'Shipping' || orderInfo.status === 'Delivering' || orderInfo.status === 'Delivered'"></div>
         
         <div class="timeline-step" [class.active]="orderInfo.status === 'Shipping' || orderInfo.status === 'Delivering' || orderInfo.status === 'Delivered'">
           <div class="step-icon"><i class="bi bi-box-seam"></i></div>
-          <div class="step-label">Shipping</div>
+          <div class="step-label">Đang giao</div>
         </div>
         <div class="timeline-line" [class.active]="orderInfo.status === 'Delivering' || orderInfo.status === 'Delivered'"></div>
         
         <div class="timeline-step" [class.active]="orderInfo.status === 'Delivering' || orderInfo.status === 'Delivered'">
           <div class="step-icon"><i class="bi bi-truck"></i></div>
-          <div class="step-label">Delivering</div>
+          <div class="step-label">Đang vận chuyển</div>
         </div>
         <div class="timeline-line" [class.active]="orderInfo.status === 'Delivered'"></div>
         
         <div class="timeline-step" [class.active]="orderInfo.status === 'Delivered'">
           <div class="step-icon"><i class="bi bi-house-door"></i></div>
-          <div class="step-label">Delivered</div>
+          <div class="step-label">Đã giao</div>
         </div>
       </div>
 
       <div class="order-details-grid">
         <!-- Customer Info -->
         <div class="info-card customer-info">
-          <h3>Delivery Information</h3>
+          <h3>Thông tin giao hàng</h3>
           <p><strong>{{ orderInfo.customer.name }}</strong></p>
           <p>{{ orderInfo.customer.phone }}</p>
           <p>{{ orderInfo.customer.address }}</p>
@@ -72,17 +72,17 @@
 
         <!-- Order Summary -->
         <div class="info-card order-summary">
-          <h3>Order Summary</h3>
+          <h3>Tóm tắt đơn hàng</h3>
           <div class="summary-row">
-            <span>Subtotal</span>
+            <span>Tạm tính</span>
             <span>${{ orderInfo.subtotal }}</span>
           </div>
           <div class="summary-row">
-            <span>Shipping fee</span>
+            <span>Phí vận chuyển</span>
             <span>${{ orderInfo.shipping }}</span>
           </div>
           <div class="summary-row total-row">
-            <span>Total</span>
+            <span>Tổng cộng</span>
             <span>${{ orderInfo.total }}</span>
           </div>
         </div>
@@ -90,7 +90,7 @@
 
       <!-- Order Items -->
       <div class="order-items-list">
-        <h3>Items</h3>
+        <h3>Sản phẩm</h3>
         <div class="item-row" *ngFor="let item of orderInfo.items">
           <div class="item-image">
             <!-- fallback to item.png if missing -->
@@ -98,7 +98,7 @@
           </div>
           <div class="item-details">
             <h4>{{ item.name }}</h4>
-            <p>Color: {{ item.color }}</p>
+            <p>Màu sắc: {{ item.color }}</p>
           </div>
           <div class="item-qty">x{{ item.quantity }}</div>
           <div class="item-price">${{ item.price * item.quantity }}</div>

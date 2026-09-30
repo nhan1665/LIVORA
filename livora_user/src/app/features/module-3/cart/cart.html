@@ -1,19 +1,19 @@
 <main class="cart-main">
   <!-- ====== BREADCRUMBS ====== -->
   <div class="breadcrumb-container">
-    <a routerLink="/home" class="breadcrumb-link">Home</a>
+    <a routerLink="/home" class="breadcrumb-link">Trang chủ</a>
     <span class="breadcrumb-separator">/</span>
-    <span class="breadcrumb-current">Cart ({{ cartService.itemsCount() }})</span>
+    <span class="breadcrumb-current">Giỏ hàng ({{ cartService.itemsCount() }})</span>
   </div>
 
-  <h1 class="page-title">Shopping Cart</h1>
+  <h1 class="page-title">Giỏ hàng</h1>
 
   <!-- Empty State -->
   <div *ngIf="cartService.items().length === 0" class="empty-cart-state">
     <i class="bi bi-cart-x empty-cart-icon"></i>
-    <h2>Your cart is empty</h2>
-    <p>Add some of LIVORA's wonderful products to your cart.</p>
-    <a routerLink="/home" class="btn btn-primary">Continue shopping</a>
+    <h2>Giỏ hàng của bạn đang trống</h2>
+    <p>Hãy thêm những sản phẩm tuyệt vời của LIVORA vào giỏ hàng.</p>
+    <a routerLink="/home" class="btn btn-primary">Tiếp tục mua sắm</a>
   </div>
 
   <!-- Cart Content Grid -->
@@ -25,7 +25,7 @@
       <div class="cart-card item-list-card">
         <div *ngFor="let item of cartService.items()" class="cart-item-row">
           <!-- Delete button -->
-          <button (click)="removeItem(item.id)" class="btn-delete" aria-label="Remove item">
+          <button (click)="removeItem(item.id)" class="btn-delete" aria-label="Xóa sản phẩm">
             <i class="bi bi-x"></i>
           </button>
 
@@ -55,11 +55,11 @@
 
           <!-- Quantity control -->
           <div class="quantity-controller">
-            <button (click)="decreaseQty(item)" class="qty-btn" aria-label="Decrease quantity">
+            <button (click)="decreaseQty(item)" class="qty-btn" aria-label="Giảm số lượng">
               <i class="bi bi-dash"></i>
             </button>
             <span class="qty-number">{{ item.quantity }}</span>
-            <button (click)="increaseQty(item)" class="qty-btn" aria-label="Increase quantity">
+            <button (click)="increaseQty(item)" class="qty-btn" aria-label="Tăng số lượng">
               <i class="bi bi-plus"></i>
             </button>
           </div>
@@ -68,13 +68,13 @@
 
       <!-- Notes Card -->
       <div class="cart-card notes-card">
-        <label for="order-notes" class="notes-label">Order note</label>
+        <label for="order-notes" class="notes-label">Ghi chú đơn hàng</label>
         <textarea
           id="order-notes"
           class="notes-textarea"
           [value]="cartService.orderNote()"
           (input)="updateNote($event)"
-          placeholder="Notes about your order, e.g. delivery time or more detailed location instructions.">
+          placeholder="Ghi chú về đơn hàng, ví dụ: thời gian giao hàng hoặc hướng dẫn chi tiết hơn.">
         </textarea>
       </div>
 
@@ -83,23 +83,23 @@
     <!-- Right Column (Checkout summary) -->
     <div class="cart-summary-column">
       <div class="cart-card summary-card">
-        <h2 class="summary-title">ORDER TOTAL</h2>
+        <h2 class="summary-title">TỔNG ĐƠN HÀNG</h2>
 
         <div class="summary-row-container">
           <div class="summary-row">
-            <span>Subtotal</span>
+            <span>Tạm tính</span>
             <span class="price-val">${{ cartService.subtotal() }}</span>
           </div>
 
           <div *ngIf="cartService.discountAmount() > 0" class="summary-row discount-row">
-            <span>Discount ({{ cartService.discountCode() }})</span>
+            <span>Giảm giá ({{ cartService.discountCode() }})</span>
             <span class="price-val discount-val">-${{ cartService.discountAmount() }}</span>
           </div>
 
           <div class="summary-divider"></div>
 
           <div class="summary-row total-row">
-            <span>Total</span>
+            <span>Tổng cộng</span>
             <span class="total-price-val">${{ cartService.total() }}</span>
           </div>
         </div>
@@ -110,17 +110,17 @@
             <input
               type="text"
               class="promo-input"
-              placeholder="Enter discount code"
+              placeholder="Nhập mã giảm giá"
               [(ngModel)]="promoInput"
               (keyup.enter)="applyPromo()"
             />
-            <button (click)="applyPromo()" class="btn-promo-apply">Apply</button>
+            <button (click)="applyPromo()" class="btn-promo-apply">Áp dụng</button>
           </div>
           <p *ngIf="promoMessage" [class.error-msg]="promoError" class="promo-message-text">
             {{ promoMessage }}
           </p>
           <div class="promo-presets">
-            <span class="preset-label">Suggested codes:</span>
+            <span class="preset-label">Mã gợi ý:</span>
             <button (click)="selectPresetPromo('LIVORA10')" class="preset-badge">LIVORA10 (10%)</button>
             <button (click)="selectPresetPromo('GIAM20')" class="preset-badge">GIAM20 ($20)</button>
           </div>
@@ -128,7 +128,7 @@
 
         <!-- Action Button -->
         <button (click)="checkout()" class="btn-checkout">
-          CHECKOUT
+          THANH TOÁN
         </button>
       </div>
     </div>
@@ -136,12 +136,12 @@
 
   <!-- ====== RECOMMENDATIONS SECTION ====== -->
   <section class="recommendations-section">
-    <h2 class="rec-title">You may also like</h2>
+    <h2 class="rec-title">Có thể bạn cũng thích</h2>
 
     <div class="rec-grid">
       <div *ngFor="let prod of recommendedProducts" class="rec-card">
         <!-- Best seller Badge -->
-        <span *ngIf="prod.isBestSeller" class="badge-bestseller">Best seller</span>
+        <span *ngIf="prod.isBestSeller" class="badge-bestseller">Bán chạy</span>
 
         <!-- Product Image -->
         <a [routerLink]="['/rooms', prod.roomName, prod.categoryName, prod.id]" class="rec-img-wrapper">
@@ -170,7 +170,7 @@
             </div>
 
             <!-- Quick Add Button -->
-            <button (click)="addRecommended(prod)" class="btn-quick-add" aria-label="Add to cart">
+            <button (click)="addRecommended(prod)" class="btn-quick-add" aria-label="Thêm vào giỏ hàng">
               <i class="bi bi-cart-plus"></i>
             </button>
           </div>

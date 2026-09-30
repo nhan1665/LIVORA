@@ -1,7 +1,7 @@
 <main class="inspiration-main">
   <div class="page-intro">
-    <h1 class="page-title">Inspiration</h1>
-    <p class="page-subtitle">Explore living spaces designed by LIVORA experts and shop the featured products directly.</p>
+    <h1 class="page-title">Cảm hứng</h1>
+    <p class="page-subtitle">Khám phá không gian sống được thiết kế bởi chuyên gia LIVORA và mua sắm các sản phẩm nổi bật trực tiếp.</p>
   </div>
 
   <!-- ====== FILTER PILLS ====== -->
@@ -59,7 +59,7 @@
       <div class="room-info">
         <span class="room-category">{{ room.category }}</span>
         <h3 class="room-name">{{ room.name }}</h3>
-        <span class="room-view-link">View space details →</span>
+        <span class="room-view-link">Xem chi tiết không gian →</span>
       </div>
     </div>
   </div>
@@ -70,7 +70,7 @@
   <!-- Modal Container -->
   <div class="inspiration-modal" (click)="$event.stopPropagation()">
     <!-- Close Icon -->
-    <button class="btn-close-modal" (click)="closeRoomModal()" aria-label="Close modal">
+    <button class="btn-close-modal" (click)="closeRoomModal()" aria-label="Đóng">
       <i class="bi bi-x-lg"></i>
     </button>
 
@@ -88,7 +88,7 @@
         </div>
 
         <div class="sidebar-scroll-content">
-          <h3 class="list-heading">Featured products in this room</h3>
+          <h3 class="list-heading">Sản phẩm nổi bật trong phòng này</h3>
 
           <div class="featured-products-list">
             <div *ngFor="let hs of selectedRoom.hotspots" class="featured-product-row">
@@ -106,7 +106,7 @@
 
               <!-- View Product Detail Action -->
               <button class="btn-view-detail" (click)="redirectToProduct(hs.product.id, $event)">
-                View product details
+                Xem chi tiết sản phẩm
               </button>
             </div>
           </div>
@@ -122,7 +122,7 @@
   <span class="font-medium text-sm tracking-wide">{{ toastMessage }}</span>
 
   <a routerLink="/cart" class="ml-6 text-xs text-gray-300 underline hover:text-white transition-colors cursor-pointer border-l border-gray-600 pl-4">
-    View cart
+    Xem giỏ hàng
   </a>
 
 </div>

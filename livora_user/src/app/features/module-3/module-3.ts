@@ -307,6 +307,6 @@ export class Module3 implements OnDestroy {
       image: prod.image
     });
 
-    this.showToastNotification(`Added ${prod.name} to cart!`);
+    this.showToastNotification(`Đã thêm ${prod.name} vào giỏ hàng!`);
   }
 }

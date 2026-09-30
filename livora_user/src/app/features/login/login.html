@@ -1,8 +1,8 @@
 <div class="login-container">
     @if (isForgot) {
     <div class="login-card slide-right">
-        <h2 class="login-title">FORGOT PASSWORD</h2>
-        <p class="login-subtitle">Enter your email or phone number<br>to reset your password.</p>
+        <h2 class="login-title">QUÊN MẬT KHẨU</h2>
+        <p class="login-subtitle">Nhập email hoặc số điện thoại<br>để đặt lại mật khẩu.</p>
 
         <div class="login-form">
             @if (errorMessage) {
@@ -18,24 +18,24 @@
             </div>
             }
             <div class="input-group" style="margin-bottom: 20px;">
-                <input type="text" placeholder="Email / Phone number" [(ngModel)]="resetEmail" name="resetEmail">
+                <input type="text" placeholder="Email / Số điện thoại" [(ngModel)]="resetEmail" name="resetEmail">
                 <span class="icon">
                     <i class="bi bi-envelope"></i>
                 </span>
             </div>
 
-            <button type="button" class="btn-login" (click)="doResetPassword($event)">Reset password</button>
+            <button type="button" class="btn-login" (click)="doResetPassword($event)">Đặt lại mật khẩu</button>
 
             <p class="register-link" style="margin-top: 24px;">
-                Remembered your password?
-                <a href="#" style="color: #6B4949;" (click)="showLoginForm($event)">Log in now</a>
+                Đã nhớ mật khẩu?
+                <a href="#" style="color: #6B4949;" (click)="showLoginForm($event)">Đăng nhập ngay</a>
             </p>
         </div>
     </div>
     } @else if (isLogin) {
     <div class="login-card slide-right">
-        <h2 class="login-title">LOG IN</h2>
-        <p class="login-subtitle">Welcome back! Please log in<br>to your account.</p>
+        <h2 class="login-title">ĐĂNG NHẬP</h2>
+        <p class="login-subtitle">Chào mừng trở lại! Vui lòng đăng nhập<br>vào tài khoản của bạn.</p>
 
         <div class="login-form">
             @if (errorMessage) {
@@ -45,14 +45,14 @@
             </div>
             }
             <div class="input-group">
-                <input type="text" placeholder="Email / Phone number" [(ngModel)]="username" name="username">
+                <input type="text" placeholder="Email / Số điện thoại" [(ngModel)]="username" name="username">
                 <span class="icon">
                     <i class="bi bi-telephone"></i>
                 </span>
             </div>
 
             <div class="input-group" style="margin-bottom: 5px; position: relative;">
-                <input [type]="showPassword ? 'text' : 'password'" placeholder="Password" [(ngModel)]="password" name="password" style="padding-right: 40px;">
+                <input [type]="showPassword ? 'text' : 'password'" placeholder="Mật khẩu" [(ngModel)]="password" name="password" style="padding-right: 40px;">
                 <span class="icon">
                     <i class="bi bi-lock"></i>
                 </span>
@@ -66,39 +66,39 @@
                 <label class="remember-me">
                     <input type="checkbox">
                     <span class="checkmark"></span>
-                    <span class="label-text">Remember me</span>
+                    <span class="label-text">Ghi nhớ đăng nhập</span>
                 </label>
-                <a href="#" (click)="showForgotForm($event)" class="forgot-password">Forgot password</a>
+                <a href="#" (click)="showForgotForm($event)" class="forgot-password">Quên mật khẩu</a>
             </div>
 
-            <button type="button" class="btn-login" (click)="doLogin($event)">Log in</button>
+            <button type="button" class="btn-login" (click)="doLogin($event)">Đăng nhập</button>
 
             <button type="button" class="btn-google" (click)="blockAction($event)">
                 <img class="google-logo" src="google-icon.png" alt="Google Logo">
-                Sign in with Google
+                Đăng nhập với Google
             </button>
 
             <p class="register-link">
-                Don't have an account?
-                <a href="#" style="color: #6B4949;" (click)="toggleForm($event)">Sign up now</a>
+                Chưa có tài khoản?
+                <a href="#" style="color: #6B4949;" (click)="toggleForm($event)">Đăng ký ngay</a>
             </p>
         </div>
     </div>
     } @else {
     <div class="login-card slide-left">
-        <h2 class="login-title">SIGN UP</h2>
-        <p class="login-subtitle">Welcome! Please sign up to<br>start using the system.</p>
+        <h2 class="login-title">ĐĂNG KÝ</h2>
+        <p class="login-subtitle">Chào mừng! Vui lòng đăng ký để<br>bắt đầu sử dụng hệ thống.</p>
 
         <div class="login-form">
             <div class="input-group">
-                <input type="text" placeholder="Email / Phone number">
+                <input type="text" placeholder="Email / Số điện thoại">
                 <span class="icon">
                     <i class="bi bi-telephone"></i>
                 </span>
             </div>
 
             <div class="input-group" style="position: relative;">
-                <input [type]="showSignUpPassword ? 'text' : 'password'" placeholder="Password" style="padding-right: 40px;">
+                <input [type]="showSignUpPassword ? 'text' : 'password'" placeholder="Mật khẩu" style="padding-right: 40px;">
                 <span class="icon">
                     <i class="bi bi-lock"></i>
                 </span>
@@ -108,7 +108,7 @@
             </div>
 
             <div class="input-group" style="position: relative;">
-                <input [type]="showSignUpConfirmPassword ? 'text' : 'password'" placeholder="Confirm password" style="padding-right: 40px;">
+                <input [type]="showSignUpConfirmPassword ? 'text' : 'password'" placeholder="Xác nhận mật khẩu" style="padding-right: 40px;">
                 <span class="icon">
                     <i class="bi bi-lock"></i>
                 </span>
@@ -117,16 +117,16 @@
                 </span>
             </div>
 
-            <button type="button" class="btn-login" (click)="blockAction($event)">Sign up</button>
+            <button type="button" class="btn-login" (click)="blockAction($event)">Đăng ký</button>
 
             <button type="button" class="btn-google" (click)="blockAction($event)">
                 <img class="google-logo" src="google-icon.png" alt="Google Logo">
-                Sign in with Google
+                Đăng nhập với Google
             </button>
 
             <p class="register-link">
-                Already have an account?
-                <a href="#" style="color: #6B4949;" (click)="toggleForm($event)">Log in now</a>
+                Đã có tài khoản?
+                <a href="#" style="color: #6B4949;" (click)="toggleForm($event)">Đăng nhập ngay</a>
             </p>
         </div>
     </div>

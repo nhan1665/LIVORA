@@ -9,19 +9,19 @@
         </svg>
         LIVORA KREATIV
       </span>
-      <h1 class="hero-title">Design the perfect<br>space with AI</h1>
+      <h1 class="hero-title">Thiết kế không gian<br>hoàn hảo với AI</h1>
       <p class="hero-subtitle">
-        Visualise, plan, and create the home of your dreams.
-        See how LIVORA furniture comes together in your space before you buy.
+        Hình dung, lên kế hoạch và tạo ra ngôi nhà mơ ước của bạn.
+        Xem nội thất LIVORA kết hợp trong không gian của bạn trước khi mua.
       </p>
       <div class="hero-actions">
-        <button type="button" class="btn btn-primary" (click)="roomsSection.scrollIntoView({ behavior: 'smooth' })">Start designing</button>
+        <button type="button" class="btn btn-primary" (click)="roomsSection.scrollIntoView({ behavior: 'smooth' })">Bắt đầu thiết kế</button>
       </div>
     </div>
 
     <div class="hero-media">
-      <img src="intro.2.png" alt="A room designed with LIVORA AI" class="hero-image">
-      <button type="button" class="hero-play" aria-label="Preview">
+      <img src="intro.2.png" alt="Phòng được thiết kế với LIVORA AI" class="hero-image">
+      <button type="button" class="hero-play" aria-label="Xem trước">
         <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden="true">
           <path d="M8 5v14l11-7z" />
         </svg>
@@ -33,12 +33,12 @@
   <section class="rooms" #roomsSection>
     <div class="rooms-head" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
       <div>
-        <h2 class="rooms-title">Empty rooms</h2>
-        <p class="rooms-hint">Select a room to start designing</p>
+        <h2 class="rooms-title">Phòng trống</h2>
+        <p class="rooms-hint">Chọn một phòng để bắt đầu thiết kế</p>
       </div>
       <button class="btn btn-primary" (click)="openCreateSpaceModal()" style="display: flex; align-items: center; gap: 8px;">
         <i class="bi bi-plus-lg"></i>
-        Create Space
+        Tạo không gian
       </button>
     </div>
 
@@ -48,7 +48,7 @@
           <div class="room-thumb">
             <img [src]="room.image" [alt]="room.name" loading="lazy">
             <span class="room-tag">{{ room.tag }}</span>
-            <button type="button" class="room-add" aria-label="Design this room">
+            <button type="button" class="room-add" aria-label="Thiết kế phòng này">
               <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true">
                 <path d="M11 5h2v6h6v2h-6v6h-2v-6H5v-2h6V5z" />
               </svg>
@@ -74,24 +74,24 @@
       <div class="bar-left">
         <button class="bar-tab" [class.active]="activeTab() === 'add'" (click)="setTab('add')">
           <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M11 5h2v6h6v2h-6v6h-2v-6H5v-2h6V5z"/></svg>
-          Add
+          Thêm
         </button>
         <button class="bar-tab" [class.active]="activeTab() === 'list'" (click)="setTab('list')">
           <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M3 5h18v2H3V5zm0 6h18v2H3v-2zm0 6h18v2H3v-2z"/></svg>
-          List
+          Danh sách
         </button>
       </div>
       <div class="bar-center">
         <span class="bar-back">&lsaquo;</span>
-        <span class="bar-title">Design {{ activeRoom()?.name }}</span>
+        <span class="bar-title">Thiết kế {{ activeRoom()?.name }}</span>
       </div>
       <div class="bar-right">
-        <button class="bar-icon" aria-label="Screenshot"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M9 3l-1.8 2H4a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-3.2L15 3H9zm3 5a5 5 0 1 1 0 10 5 5 0 0 1 0-10z"/></svg></button>
-        <button class="bar-icon" aria-label="Save" (click)="saveDesign()"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 3v10.6l3.3-3.3 1.4 1.4L12 17.4l-4.7-5.7 1.4-1.4L12 13.6V3h0zM5 19h14v2H5z"/></svg></button>
-        <button class="bar-icon" aria-label="Cart"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M7 18a2 2 0 1 0 .001 4.001A2 2 0 0 0 7 18zm10 0a2 2 0 1 0 .001 4.001A2 2 0 0 0 17 18zM7.2 14h9.5l3-9H6.2l-.7-3H2v2h2l2.6 11z"/></svg></button>
+        <button class="bar-icon" aria-label="Chụp ảnh"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M9 3l-1.8 2H4a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-3.2L15 3H9zm3 5a5 5 0 1 1 0 10 5 5 0 0 1 0-10z"/></svg></button>
+        <button class="bar-icon" aria-label="Lưu" (click)="saveDesign()"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 3v10.6l3.3-3.3 1.4 1.4L12 17.4l-4.7-5.7 1.4-1.4L12 13.6V3h0zM5 19h14v2H5z"/></svg></button>
+        <button class="bar-icon" aria-label="Giỏ hàng"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M7 18a2 2 0 1 0 .001 4.001A2 2 0 0 0 7 18zm10 0a2 2 0 1 0 .001 4.001A2 2 0 0 0 17 18zM7.2 14h9.5l3-9H6.2l-.7-3H2v2h2l2.6 11z"/></svg></button>
         <span class="bar-total">${{ total() }}</span>
-        <button class="bar-summary" (click)="goCheckout()">Summary <span>&rsaquo;</span></button>
-        <button class="bar-close" (click)="closePlanner()" aria-label="Close">&times;</button>
+        <button class="bar-summary" (click)="goCheckout()">Tổng kết <span>&rsaquo;</span></button>
+        <button class="bar-close" (click)="closePlanner()" aria-label="Đóng">&times;</button>
       </div>
     </header>
 
@@ -102,7 +102,7 @@
         @if (activeTab() === 'add') {
           <div class="side-search">
             <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
-            <input type="text" placeholder="What are you looking for?" (input)="onSearch($event)">
+            <input type="text" placeholder="Bạn đang tìm kiếm gì?" (input)="onSearch($event)">
           </div>
 
           <button class="side-room">
@@ -119,40 +119,40 @@
           <div class="side-list">
             @for (p of filteredProducts(); track trackId($index, p)) {
               <div class="prod">
-                <button class="prod-thumb" (click)="addProduct(p)" [attr.aria-label]="'Add ' + p.name">
+                <button class="prod-thumb" (click)="addProduct(p)" [attr.aria-label]="'Thêm ' + p.name">
                   <img [src]="p.image" [alt]="p.name" loading="lazy">
                 </button>
                 <div class="prod-info">
                   <span class="prod-name">{{ p.name }}</span>
                   <span class="prod-desc">{{ p.desc }}</span>
                   <span class="prod-price">${{ p.price }}</span>
-                  <span class="prod-avail"><i class="dot"></i> Delivery status...</span>
-                  <span class="prod-avail"><i class="dot"></i> Stock status...</span>
+                  <span class="prod-avail"><i class="dot"></i> Trạng thái giao hàng...</span>
+                  <span class="prod-avail"><i class="dot"></i> Tình trạng kho...</span>
                 </div>
               </div>
             }
             @if (filteredProducts().length === 0) {
-              <p class="side-empty">No products found.</p>
+              <p class="side-empty">Không tìm thấy sản phẩm.</p>
             }
           </div>
         } @else {
           <!-- Saved designs list -->
           <div class="side-saved-designs">
-            <h3 style="font-size: 16px; font-weight: 700; color: var(--ink); margin-top: 0; margin-bottom: 15px;">Saved Designs</h3>
+            <h3 style="font-size: 16px; font-weight: 700; color: var(--ink); margin-top: 0; margin-bottom: 15px;">Thiết kế đã lưu</h3>
             <div class="saved-item">
-              <strong>My Cosy Bedroom</strong>
-              <span style="font-size: 12px; color: var(--muted);">Saved on: Jul 01, 2026</span>
-              <span style="font-size: 13px; color: var(--ink); font-weight: 500;">2 items | Total: $598</span>
+              <strong>Phòng ngủ ấm cúng</strong>
+              <span style="font-size: 12px; color: var(--muted);">Đã lưu: 01/07/2026</span>
+              <span style="font-size: 13px; color: var(--ink); font-weight: 500;">2 sản phẩm | Tổng: $598</span>
               <div style="display: flex; gap: 10px; margin-top: 5px;">
-                <button (click)="loadSavedDesign('bedroom')" style="flex: 1; padding: 8px 12px; font-size: 12px; background: var(--ink); color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600;">Load</button>
+                <button (click)="loadSavedDesign('bedroom')" style="flex: 1; padding: 8px 12px; font-size: 12px; background: var(--ink); color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600;">Tải</button>
               </div>
             </div>
             <div class="saved-item">
-              <strong>Minimalist Living Room</strong>
-              <span style="font-size: 12px; color: var(--muted);">Saved on: Jul 05, 2026</span>
-              <span style="font-size: 13px; color: var(--ink); font-weight: 500;">2 items | Total: $524</span>
+              <strong>Phòng khách tối giản</strong>
+              <span style="font-size: 12px; color: var(--muted);">Đã lưu: 05/07/2026</span>
+              <span style="font-size: 13px; color: var(--ink); font-weight: 500;">2 sản phẩm | Tổng: $524</span>
               <div style="display: flex; gap: 10px; margin-top: 5px;">
-                <button (click)="loadSavedDesign('living-room')" style="flex: 1; padding: 8px 12px; font-size: 12px; background: var(--ink); color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600;">Load</button>
+                <button (click)="loadSavedDesign('living-room')" style="flex: 1; padding: 8px 12px; font-size: 12px; background: var(--ink); color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600;">Tải</button>
               </div>
             </div>
           </div>
@@ -162,8 +162,8 @@
       <!-- 3D stage -->
       <div class="stage">
         <div class="stage-zoom">
-          <button aria-label="Zoom in">+</button>
-          <button aria-label="Zoom out">&minus;</button>
+          <button aria-label="Phóng to">+</button>
+          <button aria-label="Thu nhỏ">&minus;</button>
         </div>
 
         <div class="room3d" [attr.data-view]="view()">
@@ -177,7 +177,7 @@
           @for (p of placed(); track $index) {
             <div class="room-item" [style.left.%]="18 + ($index % 4) * 18" [style.top.%]="40 + ($index % 3) * 14">
               <img [src]="p.image" [alt]="p.name">
-              <button class="item-remove" (click)="removeProduct($index)" aria-label="Remove">&times;</button>
+              <button class="item-remove" (click)="removeProduct($index)" aria-label="Xóa">&times;</button>
             </div>
           }
         </div>
@@ -185,15 +185,15 @@
         <div class="view-switch">
           <button [class.active]="view() === 'dollhouse'" (click)="setView('dollhouse')">
             <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12 3 2 12h3v8h6v-5h2v5h6v-8h3z"/></svg>
-            <span>Dollhouse</span>
+            <span>Nhà<br>mô hình</span>
           </button>
           <button [class.active]="view() === 'top'" (click)="setView('top')">
             <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M3 3h8v8H3V3zm10 0h8v8h-8V3zM3 13h8v8H3v-8zm10 0h8v8h-8v-8z"/></svg>
-            <span>Top<br>view</span>
+            <span>Nhìn<br>từ trên</span>
           </button>
           <button [class.active]="view() === 'side'" (click)="setView('side')">
             <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M4 5h16v14H4z" fill="none" stroke="currentColor" stroke-width="2"/></svg>
-            <span>Side<br>view</span>
+            <span>Nhìn<br>ngang</span>
             <svg class="caret" viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M7 10l5 5 5-5z"/></svg>
           </button>
         </div>
@@ -206,32 +206,32 @@
 @if (showCreateSpaceModal) {
   <div class="modal-overlay" (click)="closeCreateSpaceModal()">
     <div class="modal-content" (click)="$event.stopPropagation()">
-      <h3 class="modal-title">Create Custom Space</h3>
-      <p class="modal-subtitle">Enter details for your new space layout</p>
+      <h3 class="modal-title">Tạo không gian tùy chỉnh</h3>
+      <p class="modal-subtitle">Nhập thông tin cho bố cục không gian mới</p>
       
       <div class="modal-form-group">
-        <label>Space Name</label>
-        <input type="text" [(ngModel)]="newSpaceName" placeholder="e.g. Office, Kids Room" style="width: 100%; box-sizing: border-box;">
+        <label>Tên không gian</label>
+        <input type="text" [(ngModel)]="newSpaceName" placeholder="VD: Phòng làm việc, Phòng trẻ em" style="width: 100%; box-sizing: border-box;">
       </div>
       
       <div class="modal-form-group">
-        <label>Description Tag</label>
-        <input type="text" [(ngModel)]="newSpaceTag" placeholder="e.g. Quiet & focused" style="width: 100%; box-sizing: border-box;">
+        <label>Mô tả ngắn</label>
+        <input type="text" [(ngModel)]="newSpaceTag" placeholder="VD: Yên tĩnh & tập trung" style="width: 100%; box-sizing: border-box;">
       </div>
       
       <div class="modal-form-group">
-        <label>Default Length (m)</label>
+        <label>Chiều dài mặc định (m)</label>
         <input type="number" [(ngModel)]="newSpaceLength" min="2" max="15" style="width: 100%; box-sizing: border-box;">
       </div>
       
       <div class="modal-form-group">
-        <label>Default Width (m)</label>
+        <label>Chiều rộng mặc định (m)</label>
         <input type="number" [(ngModel)]="newSpaceWidth" min="2" max="15" style="width: 100%; box-sizing: border-box;">
       </div>
       
       <div class="modal-actions">
-        <button class="btn btn-ghost" (click)="closeCreateSpaceModal()">Cancel</button>
-        <button class="btn btn-primary" (click)="createCustomSpace()">Create</button>
+        <button class="btn btn-ghost" (click)="closeCreateSpaceModal()">Hủy</button>
+        <button class="btn btn-primary" (click)="createCustomSpace()">Tạo</button>
       </div>
     </div>
   </div>
@@ -241,20 +241,20 @@
 @if (showSelectSizeModal) {
   <div class="modal-overlay" (click)="closeSelectSizeModal()">
     <div class="modal-content" (click)="$event.stopPropagation()">
-      <h3 class="modal-title">Choose Room Dimensions</h3>
-      <p class="modal-subtitle">Configure size for {{ pendingRoomSelection?.name }}</p>
+      <h3 class="modal-title">Chọn kích thước phòng</h3>
+      <p class="modal-subtitle">Cấu hình kích thước cho {{ pendingRoomSelection?.name }}</p>
       
       <div class="preset-options">
         <button class="preset-btn" [class.active]="selectedPreset === 'small'" (click)="selectSizePreset('small', 4, 3)">
-          <strong>Small</strong>
+          <strong>Nhỏ</strong>
           <span>4m x 3m (12 m²)</span>
         </button>
         <button class="preset-btn" [class.active]="selectedPreset === 'medium'" (click)="selectSizePreset('medium', 6, 4)">
-          <strong>Medium</strong>
+          <strong>Vừa</strong>
           <span>6m x 4m (24 m²)</span>
         </button>
         <button class="preset-btn" [class.active]="selectedPreset === 'large'" (click)="selectSizePreset('large', 8, 5)">
-          <strong>Large</strong>
+          <strong>Lớn</strong>
           <span>8m x 5m (40 m²)</span>
         </button>
       </div>
@@ -262,14 +262,14 @@
       <div class="custom-dimension-controls" style="display: flex; flex-direction: column; gap: 16px; margin-bottom: 20px;">
         <div>
           <label style="display: flex; justify-content: space-between; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: var(--ink);">
-            <span>Length (meters)</span>
+            <span>Chiều dài (mét)</span>
             <span>{{ selectLength }}m</span>
           </label>
           <input type="range" min="3" max="12" [(ngModel)]="selectLength" (input)="selectedPreset = 'custom'" style="width: 100%;">
         </div>
         <div>
           <label style="display: flex; justify-content: space-between; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: var(--ink);">
-            <span>Width (meters)</span>
+            <span>Chiều rộng (mét)</span>
             <span>{{ selectWidth }}m</span>
           </label>
           <input type="range" min="3" max="10" [(ngModel)]="selectWidth" (input)="selectedPreset = 'custom'" style="width: 100%;">
@@ -277,8 +277,8 @@
       </div>
 
       <div class="modal-actions">
-        <button class="btn btn-ghost" (click)="closeSelectSizeModal()">Cancel</button>
-        <button class="btn btn-primary" (click)="confirmRoomSize()">Confirm & Start Designing</button>
+        <button class="btn btn-ghost" (click)="closeSelectSizeModal()">Hủy</button>
+        <button class="btn btn-primary" (click)="confirmRoomSize()">Xác nhận & Bắt đầu thiết kế</button>
       </div>
     </div>
   </div>

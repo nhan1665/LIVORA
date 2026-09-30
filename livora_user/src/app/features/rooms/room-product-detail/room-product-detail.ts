@@ -385,7 +385,7 @@ export class RoomProductDetail implements OnInit, OnDestroy {
   addToCart() {
     const itemToBuy = this.createCartItem();
     this.cartService.addToCart(itemToBuy);
-    this.showToastNotification(`Added ${this.product.name} (Colour: ${this.selectedColor}) to cart!`);
+    this.showToastNotification(`Đã thêm ${this.product.name} (Màu: ${this.selectedColor}) vào giỏ hàng!`);
   }
 
   buyNow() {

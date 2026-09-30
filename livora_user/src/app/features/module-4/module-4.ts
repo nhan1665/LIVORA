@@ -92,11 +92,11 @@ export class Module4 {
 
   saveDesign() {
     if (this.authService.isLoggedIn) {
-      alert('Your 3D design has been successfully saved to the list!');
+      alert('Thiết kế 3D của bạn đã được lưu thành công vào danh sách!');
       //sau này có Backend sẽ lưu thiệt
     } else {
       const confirmLogin = confirm(
-        'The design saving feature is only available to members. Would you like to go directly to the login page?'
+        'Tính năng lưu thiết kế chỉ dành cho thành viên. Bạn có muốn chuyển đến trang đăng nhập không?'
       );
       
       if (confirmLogin) {
@@ -133,7 +133,7 @@ export class Module4 {
 
   openCreateSpaceModal() {
     this.newSpaceName = '';
-    this.newSpaceTag = 'Modern & cosy';
+    this.newSpaceTag = 'Hiện đại & ấm cúng';
     this.newSpaceLength = 5;
     this.newSpaceWidth = 4;
     this.showCreateSpaceModal = true;
@@ -149,7 +149,7 @@ export class Module4 {
         name: this.newSpaceName.trim(),
         area: `${this.newSpaceLength * this.newSpaceWidth} m²`,
         image: 'images/rooms/living-room.png',
-        tag: this.newSpaceTag.trim() || 'Custom space'
+        tag: this.newSpaceTag.trim() || 'Không gian tùy chỉnh'
       });
     }
     this.showCreateSpaceModal = false;
@@ -191,7 +191,7 @@ export class Module4 {
       ].filter(Boolean) as PlannerProduct[];
       this.placed.set(items);
     }
-    alert('Design loaded onto 3D canvas!');
+    alert('Thiết kế đã được tải lên bản vẽ 3D!');
   }
 
   openPlanner(room: RoomDesign) {
@@ -209,7 +209,7 @@ export class Module4 {
   setTab(tab: 'add' | 'list') {
     if (tab === 'list' && !this.authService.isLoggedIn) {
       const confirmLogin = confirm(
-        'You need to log in to view your saved designs. Redirect to the login page?'
+        'Bạn cần đăng nhập để xem các thiết kế đã lưu. Chuyển đến trang đăng nhập?'
       );
       if (confirmLogin) {
         this.plannerOpen.set(false);

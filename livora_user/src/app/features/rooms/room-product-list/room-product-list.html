@@ -1,7 +1,7 @@
 <div class="w-full max-w-[1440px] mx-auto px-4 md:px-8 py-6">
 
   <nav class="text-xs text-gray-500 space-x-2 mb-8 capitalize">
-    <a routerLink="/rooms" class="hover:underline cursor-pointer text-gray-700">Rooms</a>
+    <a routerLink="/rooms" class="hover:underline cursor-pointer text-gray-700">Phòng</a>
     <span>&gt;</span>
     <a [routerLink]="['/rooms', currentRoom]" class="hover:underline cursor-pointer text-gray-700">{{ formattedRoomName }}</a>
     <span>&gt;</span>
@@ -9,7 +9,7 @@
   </nav>
 
   <section class="mb-12">
-    <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">Categories</h3>
+    <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">Danh mục</h3>
     <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2 md:gap-4">
       @for (cat of subCategories; track cat.id) {
         <a [routerLink]="['/rooms', currentRoom, cat.id]"
@@ -31,13 +31,13 @@
     <p class="text-sm text-gray-600 leading-relaxed" [innerHTML]="currentDescription"></p>
   </section>
 
-  <div class="text-xs text-gray-500 mb-4 font-medium">{{ displayedProducts.length }} items</div>
+  <div class="text-xs text-gray-500 mb-4 font-medium">{{ displayedProducts.length }} sản phẩm</div>
 
   <div class="grid grid-cols-1 lg:grid-cols-4 gap-8 items-start">
 
     <aside class="space-y-4 border-t border-gray-100 lg:sticky lg:top-24">
 
-      @let filters = ['Sort', 'Material', 'Price', 'Customer ratings'];
+      @let filters = ['Sắp xếp', 'Chất liệu', 'Giá', 'Đánh giá'];
       @for (filter of filters; track filter) {
         <div class="border-b border-gray-200 py-4 flex flex-col cursor-pointer group" (click)="toggleFilter(filter)">
 
@@ -50,18 +50,18 @@
 
           @if (activeFilter === filter) {
             <div class="pt-4 pb-2 space-y-3" (click)="$event.stopPropagation()">
-              @if (filter === 'Sort') {
+              @if (filter === 'Sắp xếp') {
                 <label class="flex items-center space-x-3 cursor-pointer group/item">
                   <input type="radio" name="sortMenu" value="price-asc" [(ngModel)]="sortOption" class="w-4 h-4 text-gray-900 focus:ring-gray-900 cursor-pointer">
-                  <span class="text-sm text-gray-600 group-hover/item:text-gray-900">Price: Low to High</span>
+                  <span class="text-sm text-gray-600 group-hover/item:text-gray-900">Giá: Thấp đến Cao</span>
                 </label>
                 <label class="flex items-center space-x-3 cursor-pointer group/item">
                   <input type="radio" name="sortMenu" value="price-desc" [(ngModel)]="sortOption" class="w-4 h-4 text-gray-900 focus:ring-gray-900 cursor-pointer">
-                  <span class="text-sm text-gray-600 group-hover/item:text-gray-900">Price: High to Low</span>
+                  <span class="text-sm text-gray-600 group-hover/item:text-gray-900">Giá: Cao đến Thấp</span>
                 </label>
               }
-              @if (filter !== 'Sort') {
-                <span class="text-xs text-gray-400 italic">Feature coming soon...</span>
+              @if (filter !== 'Sắp xếp') {
+                <span class="text-xs text-gray-400 italic">Tính năng sắp ra mắt...</span>
               }
             </div>
           }
@@ -69,7 +69,7 @@
       }
 
       <div class="pt-4 flex items-center justify-between">
-        <label for="best-seller" class="text-sm font-bold text-gray-900 cursor-pointer">Best seller</label>
+        <label for="best-seller" class="text-sm font-bold text-gray-900 cursor-pointer">Bán chạy</label>
         <div class="flex items-center space-x-2">
           <span class="text-xs text-gray-400">{{ bestSellerCount }}</span>
           <input type="checkbox" id="best-seller" [(ngModel)]="isBestSellerOnly" class="w-4 h-4 rounded border-gray-300 text-gray-900 focus:ring-gray-900 cursor-pointer">

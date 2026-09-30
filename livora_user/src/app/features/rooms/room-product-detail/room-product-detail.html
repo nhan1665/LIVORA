@@ -2,7 +2,7 @@
 <div class="w-full max-w-[1440px] mx-auto px-4 md:px-8 py-6">
 
   <nav class="text-xs text-gray-500 space-x-2 mb-8 capitalize">
-    <a routerLink="/rooms" class="hover:underline text-gray-700">Rooms</a>
+    <a routerLink="/rooms" class="hover:underline text-gray-700">Phòng</a>
     <span>&gt;</span>
     <a [routerLink]="['/rooms', currentRoom]" class="hover:underline text-gray-700">{{ currentRoom }}</a>
     <span>&gt;</span>
@@ -50,7 +50,7 @@
       </div>
 
       <div class="mb-6">
-        <p class="text-sm font-bold mb-2">Choose colour: <span class="font-normal">{{ selectedColor }}</span></p>
+        <p class="text-sm font-bold mb-2">Chọn màu: <span class="font-normal">{{ selectedColor }}</span></p>
         <div class="flex gap-2">
           @for (color of product.colors; track color.name) {
             <button (click)="selectColor(color.name)"
@@ -64,7 +64,7 @@
       </div>
 
       <div class="mb-8">
-        <p class="text-sm font-bold mb-3">Choose size</p>
+        <p class="text-sm font-bold mb-3">Chọn kích thước</p>
         <div class="grid grid-cols-3 gap-2">
           @for (sizeOpt of getProductSizes(); track sizeOpt.name) {
             <button (click)="selectSize(sizeOpt.name)"
@@ -83,23 +83,23 @@
       <div class="space-y-3 mb-8">
 
         <button (click)="buyNow()" class="w-full bg-[#0058A3] text-white font-bold py-4 rounded-full hover:bg-[#004f93] transition-colors cursor-pointer">
-          Buy now
+          Mua ngay
         </button>
 
         <button (click)="addToCart()" class="w-full bg-white border border-gray-300 text-gray-900 font-bold py-4 rounded-full hover:border-gray-900 transition-colors cursor-pointer">
-          Add to cart
+          Thêm vào giỏ hàng
         </button>
 
       </div>
 
       <div class="border-t border-b border-gray-200 py-4 cursor-pointer" (click)="toggleDetails()">
         <div class="flex justify-between items-center">
-          <span class="font-bold">Product details</span>
+          <span class="font-bold">Chi tiết sản phẩm</span>
           <svg [class.rotate-180]="isDetailsOpen" class="h-5 w-5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M19 9l-7 7-7-7"/></svg>
         </div>
         @if (isDetailsOpen) {
           <div class="pt-4 text-xs text-gray-600 space-y-2">
-            <p><strong>Article Number:</strong> {{ product.articleNumber }}</p>
+            <p><strong>Mã sản phẩm:</strong> {{ product.articleNumber }}</p>
             <p>{{ product.description }}</p>
           </div>
         }
@@ -110,33 +110,33 @@
   <section class="mt-20 border border-blue-500 p-8 rounded-sm">
     <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
       <div>
-        <h2 class="text-2xl font-bold mb-4">Customer reviews</h2>
+        <h2 class="text-2xl font-bold mb-4">Đánh giá của khách hàng</h2>
         <div class="text-5xl font-bold mb-2">4.2</div>
         <div class="flex text-black mb-1">
           @for (i of [1,2,3,4]; track i) { <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 .587l3.668 7.431 8.2 1.192-5.934 5.787 1.4 8.168L12 18.896l-7.334 3.857 1.4-8.168L.132 9.21l8.2-1.192z"/></svg> }
         </div>
-        <p class="text-xs text-gray-500 mb-6">{{ product.reviews }} reviews</p>
-        <button (click)="toggleReviewModal()" class="border border-gray-300 px-6 py-2 rounded-full font-bold text-sm cursor-pointer hover:bg-gray-100 transition-colors">Show all reviews</button>
+        <p class="text-xs text-gray-500 mb-6">{{ product.reviews }} đánh giá</p>
+        <button (click)="toggleReviewModal()" class="border border-gray-300 px-6 py-2 rounded-full font-bold text-sm cursor-pointer hover:bg-gray-100 transition-colors">Xem tất cả đánh giá</button>
       </div>
 
       <div class="bg-gray-50 p-6">
-        <h4 class="font-bold text-sm mb-2">Solid, well made bed frame</h4>
+        <h4 class="font-bold text-sm mb-2">Khung giường chắc chắn, hoàn thiện tốt</h4>
         <div class="flex text-black mb-3">5 \u2605</div>
-        <p class="text-xs text-gray-600 leading-relaxed italic">"We love this bed. It's sturdy and looks great. No wonder it was named the best bed for storage."</p>
-        <p class="text-[10px] text-gray-400 mt-4">Anonymous reviewer, Canada</p>
+        <p class="text-xs text-gray-600 leading-relaxed italic">"Chúng tôi rất thích chiếc giường này. Nó chắc chắn và trông rất đẹp. Không ngạc nhiên nó được bình chọn là chiếc giường lưu trữ tốt nhất."</p>
+        <p class="text-[10px] text-gray-400 mt-4">Người đánh giá ẩn danh, Canada</p>
       </div>
 
       <div class="bg-gray-50 p-6">
-        <h4 class="font-bold text-sm mb-2">One year!</h4>
+        <h4 class="font-bold text-sm mb-2">Một năm rồi!</h4>
         <div class="flex text-black mb-3">5 \u2605</div>
-        <p class="text-xs text-gray-600 leading-relaxed italic">"I've had this frame for a year and I honestly have no complaints. It's amazing."</p>
-        <p class="text-[10px] text-gray-400 mt-4">Anonymous reviewer, United States</p>
+        <p class="text-xs text-gray-600 leading-relaxed italic">"Tôi đã dùng khung giường này một năm và thành thật mà nói tôi không có gì phải phàn nàn. Nó tuyệt vời."</p>
+        <p class="text-[10px] text-gray-400 mt-4">Người đánh giá ẩn danh, Hoa Kỳ</p>
       </div>
     </div>
   </section>
 
   <section class="mt-20">
-    <h3 class="text-xl font-bold mb-8">You may also like</h3>
+    <h3 class="text-xl font-bold mb-8">Có thể bạn cũng thích</h3>
     <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
       @for (item of relatedProducts; track item.id) {
 
@@ -166,7 +166,7 @@
         <div class="flex flex-col md:flex-row h-full overflow-hidden">
 
           <div class="w-full md:w-[35%] border-r border-gray-200 p-8 overflow-y-auto no-scrollbar bg-white">
-            <h2 class="text-2xl font-extrabold text-gray-900 mb-6">Customer reviews</h2>
+            <h2 class="text-2xl font-extrabold text-gray-900 mb-6">Đánh giá của khách hàng</h2>
 
             <div class="flex items-center space-x-4 mb-2">
               <span class="text-5xl font-extrabold text-gray-900">4.2</span>
@@ -185,7 +185,7 @@
                 }
               </div>
             </div>
-            <p class="text-xs text-gray-500 mb-8">Based on {{ product.reviews }} reviews</p>
+            <p class="text-xs text-gray-500 mb-8">Dựa trên {{ product.reviews }} đánh giá</p>
 
             <div class="space-y-2 mb-10 border-b border-gray-200 pb-8">
               @for (bar of [{s:5, w:'70%', n:648}, {s:4, w:'15%', n:162}, {s:3, w:'5%', n:53}, {s:2, w:'3%', n:34}, {s:1, w:'7%', n:29}]; track bar.s) {
@@ -201,7 +201,7 @@
             </div>
 
             <div class="space-y-4 mb-8">
-              @for (metric of [ {name: 'Appearance', score: 4.5}, {name: 'Ease of assembly/installation', score: 4.1}, {name: 'Product quality', score: 4.0}, {name: 'Value for money', score: 4.2}, {name: 'Works as expected', score: 4.2} ]; track metric.name) {
+              @for (metric of [ {name: 'Ngoại hình', score: 4.5}, {name: 'Dễ lắp ráp', score: 4.1}, {name: 'Chất lượng sản phẩm', score: 4.0}, {name: 'Đáng đồng tiền', score: 4.2}, {name: 'Hoạt động như mong đợi', score: 4.2} ]; track metric.name) {
                 <div class="flex justify-between items-center text-xs">
                   <span class="text-gray-600 w-3/5">{{ metric.name }}</span>
                   <div class="flex space-x-1 items-center">
@@ -215,11 +215,11 @@
             </div>
 
             <p class="text-[10px] text-gray-500 mb-4">
-              Please log in to leave a review. <a href="#" class="underline">Learn more about submitting reviews</a>
+              Vui lòng đăng nhập để viết đánh giá. <a href="#" class="underline">Tìm hiểu thêm về việc gửi đánh giá</a>
             </p>
 
             <button (click)="toggleWriteReview()" class="w-full border border-gray-300 font-bold py-3 rounded-full hover:border-gray-900 transition-colors text-sm cursor-pointer">
-              Write a review
+              Viết đánh giá
             </button>
           </div>
 
@@ -230,11 +230,11 @@
               <div class="relative">
                 <button (click)="toggleFilterMenu()" class="flex items-center space-x-2 border border-gray-300 rounded-full px-4 py-1.5 text-sm font-bold hover:bg-gray-50 cursor-pointer transition-colors" [class.bg-gray-100]="isFilterMenuOpen">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/></svg>
-                  <span>Filter</span>
+                  <span>Lọc</span>
                 </button>
                 @if (isFilterMenuOpen) {
                   <div class="absolute top-10 left-0 w-48 bg-white border border-gray-200 shadow-lg rounded-sm z-20 py-2">
-                    <p class="px-4 py-2 text-xs text-gray-500 italic">Filter feature coming soon...</p>
+                    <p class="px-4 py-2 text-xs text-gray-500 italic">Tính năng lọc sắp ra mắt...</p>
                   </div>
                 }
               </div>
@@ -242,13 +242,13 @@
               <div class="relative">
                 <button (click)="toggleSortMenu()" class="flex items-center space-x-2 border border-gray-300 rounded-full px-4 py-1.5 text-sm font-bold hover:bg-gray-50 cursor-pointer transition-colors" [class.bg-gray-100]="isSortMenuOpen">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"/></svg>
-                  <span>Sort by: <span class="font-normal capitalize">{{ currentSort }}</span></span>
+                  <span>Sắp xếp: <span class="font-normal capitalize">{{ currentSort }}</span></span>
                 </button>
                 @if (isSortMenuOpen) {
                   <div class="absolute top-10 left-0 w-48 bg-white border border-gray-200 shadow-lg rounded-sm z-20 py-2">
-                    <button (click)="changeSort('newest')" class="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 cursor-pointer">Newest</button>
-                    <button (click)="changeSort('highest')" class="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 cursor-pointer">Highest rating</button>
-                    <button (click)="changeSort('lowest')" class="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 cursor-pointer">Lowest rating</button>
+                    <button (click)="changeSort('newest')" class="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 cursor-pointer">Mới nhất</button>
+                    <button (click)="changeSort('highest')" class="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 cursor-pointer">Đánh giá cao nhất</button>
+                    <button (click)="changeSort('lowest')" class="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 cursor-pointer">Đánh giá thấp nhất</button>
                   </div>
                 }
               </div>
@@ -256,16 +256,16 @@
 
             <div class="flex space-x-6 border-b border-gray-200 mb-8">
               <button (click)="setReviewTab('UK')" class="pb-3 text-sm font-bold cursor-pointer transition-all" [class.border-b-2]="activeReviewTab === 'UK'" [class.border-gray-900]="activeReviewTab === 'UK'" [class.text-gray-900]="activeReviewTab === 'UK'" [class.text-gray-500]="activeReviewTab !== 'UK'">
-                United Kingdom
+                Việt Nam
               </button>
               <button (click)="setReviewTab('Other')" class="pb-3 text-sm font-bold cursor-pointer transition-all" [class.border-b-2]="activeReviewTab === 'Other'" [class.border-gray-900]="activeReviewTab === 'Other'" [class.text-gray-900]="activeReviewTab === 'Other'" [class.text-gray-500]="activeReviewTab !== 'Other'">
-                Other countries
+                Các quốc gia khác
               </button>
             </div>
 
             <div class="space-y-8">
               @if (processedReviews.length === 0) {
-                <p class="text-gray-500 text-sm">No reviews found for this selection.</p>
+                <p class="text-gray-500 text-sm">Không tìm thấy đánh giá cho lựa chọn này.</p>
               }
 
               @for (review of processedReviews; track review.id) {
@@ -283,14 +283,14 @@
                   <div class="flex justify-between items-center text-xs">
                     <span class="text-gray-500">{{ review.author }}, {{ review.country }}</span>
                     <div class="space-x-4">
-                      <button class="underline font-bold text-gray-600 hover:text-gray-900 cursor-pointer">Report</button>
-                      <button class="border border-gray-300 rounded-full px-4 py-1.5 font-bold hover:border-gray-900 cursor-pointer">Helpful? ({{ review.helpful }})</button>
+                      <button class="underline font-bold text-gray-600 hover:text-gray-900 cursor-pointer">Báo cáo</button>
+                      <button class="border border-gray-300 rounded-full px-4 py-1.5 font-bold hover:border-gray-900 cursor-pointer">Hữu ích? ({{ review.helpful }})</button>
                     </div>
                   </div>
 
                   @if (review.response) {
                     <div class="bg-gray-50 p-4 mt-6 border-l-4 border-gray-400">
-                      <p class="text-xs font-bold text-gray-900 mb-1">Response from LIVORA:</p>
+                      <p class="text-xs font-bold text-gray-900 mb-1">Phản hồi từ LIVORA:</p>
                       <p class="text-xs text-gray-600">{{ review.response }}</p>
                     </div>
                   }
@@ -304,34 +304,34 @@
         @if (isWriteReviewOpen) {
           <div class="absolute inset-0 bg-white z-30 flex flex-col p-8 rounded-sm overflow-y-auto">
             <div class="flex justify-between items-center mb-8 border-b border-gray-200 pb-4">
-              <h2 class="text-2xl font-extrabold text-gray-900">Write a review</h2>
+              <h2 class="text-2xl font-extrabold text-gray-900">Viết đánh giá</h2>
               <button (click)="toggleWriteReview()" class="text-gray-500 hover:text-gray-900 cursor-pointer">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
               </button>
             </div>
 
             <div class="max-w-xl mx-auto w-full flex-1">
-              <p class="text-sm text-gray-600 mb-6">Share your thoughts with other customers. Your review helps us improve.</p>
+              <p class="text-sm text-gray-600 mb-6">Chia sẻ suy nghĩ của bạn với những khách hàng khác. Đánh giá của bạn giúp chúng tôi cải thiện.</p>
 
               <div class="space-y-6">
                 <div>
-                  <label class="block text-sm font-bold text-gray-900 mb-2">Overall rating</label>
+                  <label class="block text-sm font-bold text-gray-900 mb-2">Đánh giá tổng thể</label>
                   <div class="flex space-x-1 text-gray-300 cursor-pointer">
                     @for (i of [1,2,3,4,5]; track i) { <svg class="w-8 h-8 hover:text-gray-900 transition-colors" fill="currentColor" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.122-6.545L.488 6.91l6.564-.955L10 0l2.948 5.955 6.564.955-4.756 4.635 1.122 6.545z"/></svg> }
                   </div>
                 </div>
 
                 <div>
-                  <label class="block text-sm font-bold text-gray-900 mb-2">Review title</label>
-                  <input type="text" placeholder="Sum up your experience" class="w-full border border-gray-300 rounded-sm px-4 py-3 focus:outline-none focus:border-gray-900 text-sm">
+                  <label class="block text-sm font-bold text-gray-900 mb-2">Tiêu đề đánh giá</label>
+                  <input type="text" placeholder="Tóm tắt trải nghiệm của bạn" class="w-full border border-gray-300 rounded-sm px-4 py-3 focus:outline-none focus:border-gray-900 text-sm">
                 </div>
 
                 <div>
-                  <label class="block text-sm font-bold text-gray-900 mb-2">Your review</label>
-                  <textarea rows="5" placeholder="Tell us what you liked or disliked..." class="w-full border border-gray-300 rounded-sm px-4 py-3 focus:outline-none focus:border-gray-900 text-sm"></textarea>
+                  <label class="block text-sm font-bold text-gray-900 mb-2">Đánh giá của bạn</label>
+                  <textarea rows="5" placeholder="Cho chúng tôi biết bạn thích hoặc không thích điều gì..." class="w-full border border-gray-300 rounded-sm px-4 py-3 focus:outline-none focus:border-gray-900 text-sm"></textarea>
                 </div>
 
-                <button (click)="toggleWriteReview()" class="w-full bg-gray-900 text-white font-bold py-4 rounded-full hover:bg-black transition-colors cursor-pointer">Submit review</button>
+                <button (click)="toggleWriteReview()" class="w-full bg-gray-900 text-white font-bold py-4 rounded-full hover:bg-black transition-colors cursor-pointer">Gửi đánh giá</button>
               </div>
             </div>
           </div>
@@ -349,7 +349,7 @@
       <span class="font-medium text-sm tracking-wide">{{ toastMessage }}</span>
 
       <a routerLink="/cart" class="ml-6 text-xs text-gray-300 underline hover:text-white transition-colors cursor-pointer border-l border-gray-600 pl-4">
-        View cart
+        Xem giỏ hàng
       </a>
 
     </div>

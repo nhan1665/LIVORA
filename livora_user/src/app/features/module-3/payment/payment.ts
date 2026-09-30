@@ -255,10 +255,10 @@ export class Payment implements OnInit {
     if (!this.promoInput.trim()) return;
     const success = this.cartService.applyDiscountCode(this.promoInput);
     if (success) {
-      this.promoMessage = 'Discount code applied successfully!';
+      this.promoMessage = 'Áp dụng mã giảm giá thành công!';
       this.promoError = false;
     } else {
-      this.promoMessage = 'Invalid discount code.';
+      this.promoMessage = 'Mã giảm giá không hợp lệ.';
       this.promoError = true;
     }
   }

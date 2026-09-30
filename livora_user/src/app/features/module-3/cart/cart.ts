@@ -83,10 +83,10 @@ export class Cart {
     if (!this.promoInput.trim()) return;
     const success = this.cartService.applyDiscountCode(this.promoInput);
     if (success) {
-      this.promoMessage = 'Discount code applied successfully!';
+      this.promoMessage = 'Áp dụng mã giảm giá thành công!';
       this.promoError = false;
     } else {
-      this.promoMessage = 'Invalid discount code. Try: LIVORA10 or GIAM20';
+      this.promoMessage = 'Mã giảm giá không hợp lệ. Thử: LIVORA10 hoặc GIAM20';
       this.promoError = true;
     }
   }
