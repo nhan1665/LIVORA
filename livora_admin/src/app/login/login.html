@@ -1,0 +1,311 @@
+<div class="auth-page">
+  <!-- Left Side: Brand Visual & Interior Showcase -->
+  <div class="auth-hero">
+    <div class="hero-overlay"></div>
+    <div class="hero-content">
+      <!-- Brand Logo -->
+      <div class="hero-brand">
+        <div class="hero-logo-badge">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 18v2M20 18v2" />
+            <path d="M19 9V6a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v3" />
+            <path d="M3 11a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+          </svg>
+        </div>
+        <div>
+          <span class="hero-brand-name">LIVORA</span>
+          <span class="hero-brand-tag">ADMIN PORTAL</span>
+        </div>
+      </div>
+
+      <!-- Main Headline -->
+      <div class="hero-body">
+        <span class="hero-badge">HỆ THỐNG ĐIỀU HÀNH NỘI BỘ</span>
+        <h1 class="hero-title">Kiến Tạo Không Gian Sống Đẳng Cấp</h1>
+        <p class="hero-desc">
+          Nền tảng quản trị tập trung toàn diện: Theo dõi đơn hàng thời gian thực, quản lý không gian 3D, điều phối sản
+          phẩm và dữ liệu khách hàng.
+        </p>
+
+        <!-- Feature List -->
+        <div class="hero-features">
+          <div class="feature-item">
+            <i class="bi bi-shield-check"></i>
+            <span>Bảo mật dữ liệu định danh 2 lớp (2FA)</span>
+          </div>
+          <div class="feature-item">
+            <i class="bi bi-box-seam"></i>
+            <span>Đồng bộ kho hàng & sản phẩm đa kênh</span>
+          </div>
+          <div class="feature-item">
+            <i class="bi bi-graph-up-arrow"></i>
+            <span>Báo cáo doanh thu & tăng trưởng tức thì</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Hero Footer -->
+      <div class="hero-footer">
+        <span class="system-version">LIVORA ENTERPRISE • PHIÊN BẢN 2.5</span>
+        <span class="copyright">© 2026 LIVORA FURNITURE. ALL RIGHTS RESERVED.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right Side: Interactive Authentication Form -->
+  <div class="auth-panel">
+    <div class="auth-card">
+
+      <!-- ================= MODE 1: LOGIN ================= -->
+      @if (viewMode === 'LOGIN') {
+      <div class="card-header">
+        <span class="portal-badge">PORTAL NHÂN VIÊN</span>
+        <h2 class="card-title">Đăng Nhập</h2>
+        <p class="card-subtitle">Vui lòng nhập Mã nhân viên và Mật khẩu để tiếp tục.</p>
+      </div>
+
+      <!-- Quick Demo Pill -->
+      <div class="demo-credential-pill" (click)="fillDemoCredentials()">
+        <i class="bi bi-lightning-charge-fill"></i>
+        <span>Tài khoản mẫu: <strong>NV2709</strong> / <strong>livora&#64;2026</strong> (Click để điền)</span>
+      </div>
+
+      <!-- Alerts -->
+      @if (errorMessage) {
+      <div class="alert alert-error">
+        <i class="bi bi-exclamation-circle-fill"></i>
+        <span>{{ errorMessage }}</span>
+      </div>
+      }
+      @if (successMessage) {
+      <div class="alert alert-success">
+        <i class="bi bi-check-circle-fill"></i>
+        <span>{{ successMessage }}</span>
+      </div>
+      }
+
+      <!-- Form Fields -->
+      <form (ngSubmit)="onLoginSubmit()" class="auth-form">
+        <!-- Mã nhân viên -->
+        <div class="form-group">
+          <label class="form-label" for="employeeCode">
+            <span>Mã Nhân Viên</span>
+          </label>
+          <div class="input-wrapper">
+            <i class="bi bi-person-vcard input-icon"></i>
+            <input id="employeeCode" name="employeeCode" type="text" class="form-input text-uppercase"
+              placeholder="VD: NV2709, AD001" [value]="employeeCode" (input)="onEmployeeCodeInput($event, 'login')"
+              autocomplete="username" />
+          </div>
+          <span class="input-hint">Nhập mã định danh nhân sự do Livora cấp</span>
+        </div>
+
+        <!-- Mật khẩu -->
+        <div class="form-group">
+          <label class="form-label" for="password">
+            <span>Mật Khẩu</span>
+          </label>
+          <div class="input-wrapper">
+            <i class="bi bi-shield-lock input-icon"></i>
+            <input id="password" name="password" [type]="showPassword ? 'text' : 'password'" class="form-input"
+              placeholder="Nhập mật khẩu của bạn..." [(ngModel)]="password" autocomplete="current-password" />
+            <button type="button" class="password-toggle" (click)="togglePasswordVisibility()" title="Ẩn/Hiện mật khẩu">
+              <i [class]="showPassword ? 'bi bi-eye-slash' : 'bi bi-eye'"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Helpers Row: Remember me & Forgot password -->
+        <div class="helpers-row">
+          <label class="checkbox-container">
+            <input type="checkbox" name="rememberMe" [(ngModel)]="rememberMe" />
+            <span class="checkmark"></span>
+            <span class="checkbox-label">Ghi nhớ đăng nhập</span>
+          </label>
+          <button type="button" class="forgot-link" (click)="switchMode('FORGOT_STEP_1')">
+            Quên mật khẩu?
+          </button>
+        </div>
+
+        <!-- Submit Button -->
+        <button type="submit" class="submit-btn" [disabled]="isLoading">
+          @if (isLoading) {
+          <span class="spinner"></span>
+          <span>Đang kiểm tra bảo mật...</span>
+          } @else {
+          <span>ĐĂNG NHẬP VÀO HỆ THỐNG</span>
+          <i class="bi bi-arrow-right"></i>
+          }
+        </button>
+      </form>
+      }
+
+      <!-- ================= MODE 2: FORGOT PASSWORD STEP 1 ================= -->
+      @if (viewMode === 'FORGOT_STEP_1') {
+      <div class="card-header">
+        <button type="button" class="back-link" (click)="switchMode('LOGIN')">
+          <i class="bi bi-arrow-left"></i>
+          <span>Quay lại đăng nhập</span>
+        </button>
+        <span class="portal-badge badge-warning">XÁC THỰC DANH TÍNH</span>
+        <h2 class="card-title">Quên Mật Khẩu?</h2>
+        <p class="card-subtitle">
+          Nhập Mã nhân viên và Email/SĐT đã đăng ký trong hồ sơ để nhận mã xác thực (OTP).
+        </p>
+      </div>
+
+      @if (errorMessage) {
+      <div class="alert alert-error">
+        <i class="bi bi-exclamation-circle-fill"></i>
+        <span>{{ errorMessage }}</span>
+      </div>
+      }
+      @if (successMessage) {
+      <div class="alert alert-success">
+        <i class="bi bi-check-circle-fill"></i>
+        <span>{{ successMessage }}</span>
+      </div>
+      }
+
+      <form (ngSubmit)="onRequestOtp()" class="auth-form">
+        <div class="form-group">
+          <label class="form-label" for="forgotEmpCode">
+            <span>Mã Nhân Viên</span>
+            <span class="required">*</span>
+          </label>
+          <div class="input-wrapper">
+            <i class="bi bi-person-vcard input-icon"></i>
+            <input id="forgotEmpCode" name="forgotEmpCode" type="text" class="form-input text-uppercase"
+              placeholder="VD: NV2709" [value]="forgotEmployeeCode" (input)="onEmployeeCodeInput($event, 'forgot')"
+              required />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="recoveryContact">
+            <span>Email Nội Bộ hoặc Số Điện Thoại</span>
+            <span class="required">*</span>
+          </label>
+          <div class="input-wrapper">
+            <i class="bi bi-envelope-at input-icon"></i>
+            <input id="recoveryContact" name="recoveryContact" type="text" class="form-input"
+              placeholder="VD: nhan.dt@livora.com hoặc 090xxxxxxx" [(ngModel)]="recoveryEmailOrPhone" required />
+          </div>
+          <span class="input-hint">Hệ thống sẽ gửi mã OTP 6 số đến địa chỉ liên hệ này</span>
+        </div>
+
+        <button type="submit" class="submit-btn" [disabled]="isLoading">
+          @if (isLoading) {
+          <span class="spinner"></span>
+          <span>Đang gửi mã xác thực...</span>
+          } @else {
+          <span>GỬI MÃ XÁC THỰC (OTP)</span>
+          <i class="bi bi-send-fill"></i>
+          }
+        </button>
+      </form>
+
+      <!-- IT Support Callout -->
+      <div class="it-support-box">
+        <i class="bi bi-headset"></i>
+        <div>
+          <strong>Không thể nhận mã hoặc tài khoản bị khóa?</strong>
+          <p>Liên hệ Bộ phận IT Admin: <span>1900 6868 (Ext: 102)</span> hoặc gửi email
+            <span>admin-support&#64;livora.vn</span>
+          </p>
+        </div>
+      </div>
+      }
+
+      <!-- ================= MODE 3: FORGOT PASSWORD STEP 2 (SET NEW PASSWORD) ================= -->
+      @if (viewMode === 'FORGOT_STEP_2') {
+      <div class="card-header">
+        <button type="button" class="back-link" (click)="switchMode('FORGOT_STEP_1')">
+          <i class="bi bi-arrow-left"></i>
+          <span>Thay đổi thông tin liên hệ</span>
+        </button>
+        <span class="portal-badge badge-success">BƯỚC 2: THIẾT LẬP MẬT KHẨU</span>
+        <h2 class="card-title">Đặt Mật Khẩu Mới</h2>
+        <p class="card-subtitle">
+          Mã OTP đã được gửi. Vui lòng nhập OTP và thiết lập mật khẩu mới cho nhân viên <strong>{{ forgotEmployeeCode
+            }}</strong>.
+        </p>
+      </div>
+
+      @if (errorMessage) {
+      <div class="alert alert-error">
+        <i class="bi bi-exclamation-circle-fill"></i>
+        <span>{{ errorMessage }}</span>
+      </div>
+      }
+      @if (successMessage) {
+      <div class="alert alert-success">
+        <i class="bi bi-check-circle-fill"></i>
+        <span>{{ successMessage }}</span>
+      </div>
+      }
+
+      <form (ngSubmit)="onResetPassword()" class="auth-form">
+        <div class="form-group">
+          <label class="form-label" for="otpCode">
+            <span>Mã Xác Thực OTP (6 Chữ Số)</span>
+            <span class="required">*</span>
+          </label>
+          <div class="input-wrapper">
+            <i class="bi bi-key input-icon"></i>
+            <input id="otpCode" name="otpCode" type="text" maxlength="6" class="form-input otp-input"
+              placeholder="Nhập 6 số OTP (VD: 123456)" [(ngModel)]="otpCode" required />
+          </div>
+          <span class="input-hint">Kiểm tra hộp thư đến hoặc tin nhắn SMS</span>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="newPassword">
+            <span>Mật Khẩu Mới</span>
+            <span class="required">*</span>
+          </label>
+          <div class="input-wrapper">
+            <i class="bi bi-lock input-icon"></i>
+            <input id="newPassword" name="newPassword" [type]="showNewPassword ? 'text' : 'password'" class="form-input"
+              placeholder="Tối thiểu 6 ký tự..." [(ngModel)]="newPassword" required />
+            <button type="button" class="password-toggle" (click)="toggleNewPasswordVisibility()">
+              <i [class]="showNewPassword ? 'bi bi-eye-slash' : 'bi bi-eye'"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="confirmNewPassword">
+            <span>Xác Nhận Mật Khẩu Mới</span>
+            <span class="required">*</span>
+          </label>
+          <div class="input-wrapper">
+            <i class="bi bi-lock-fill input-icon"></i>
+            <input id="confirmNewPassword" name="confirmNewPassword" [type]="showNewPassword ? 'text' : 'password'"
+              class="form-input" placeholder="Nhập lại mật khẩu mới..." [(ngModel)]="confirmNewPassword" required />
+          </div>
+        </div>
+
+        <button type="submit" class="submit-btn" [disabled]="isLoading">
+          @if (isLoading) {
+          <span class="spinner"></span>
+          <span>Đang cập nhật mật khẩu...</span>
+          } @else {
+          <span>CẬP NHẬT MẬT KHẨU & ĐĂNG NHẬP</span>
+          <i class="bi bi-check2-circle"></i>
+          }
+        </button>
+      </form>
+      }
+
+      <!-- Security Notice Footer -->
+      <div class="auth-security-notice">
+        <i class="bi bi-shield-lock-fill"></i>
+        <span>Hệ thống chỉ dành riêng cho cán bộ nhân viên Livora. Mọi hoạt động truy cập đều được giám sát và lưu nhật
+          ký.</span>
+      </div>
+
+    </div>
+  </div>
+</div>

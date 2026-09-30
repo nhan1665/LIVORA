@@ -1,0 +1,73 @@
+<div class="dashboard-page">
+  <!-- Page Header -->
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Báo Cáo Doanh Thu & Tổng Quan</h1>
+      <p class="page-subtitle">Cập nhật số liệu kinh doanh nội bộ hệ thống Livora Furniture.</p>
+    </div>
+    <div class="header-actions">
+      <button class="action-btn secondary-btn">
+        <i class="bi bi-download"></i>
+        <span>Xuất Báo Cáo</span>
+      </button>
+      <button class="action-btn primary-btn">
+        <i class="bi bi-arrow-repeat"></i>
+        <span>Làm Mới Dữ Liệu</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Stats Grid -->
+  <div class="stats-grid">
+    @for (card of stats; track card.title) {
+      <div class="stat-card">
+        <div class="stat-icon-wrapper">
+          <i class="bi {{ card.icon }}"></i>
+        </div>
+        <div class="stat-info">
+          <span class="stat-title">{{ card.title }}</span>
+          <h3 class="stat-value">{{ card.value }}</h3>
+          <span class="stat-trend" [class.positive]="card.isPositive">
+            <i class="bi bi-arrow-up-right"></i> {{ card.change }} so với tháng trước
+          </span>
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- Recent Orders Table -->
+  <div class="content-card">
+    <div class="content-header">
+      <h2 class="content-title">Đơn Hàng Gần Đây</h2>
+      <span class="badge-tag">Mới cập nhật</span>
+    </div>
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>MÃ ĐƠN HÀNG</th>
+            <th>KHÁCH HÀNG</th>
+            <th>SẢN PHẨM NỘI THẤT</th>
+            <th>TỔNG TIỀN</th>
+            <th>TRẠNG THÁI</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (order of recentOrders; track order.id) {
+            <tr>
+              <td class="order-code">{{ order.id }}</td>
+              <td class="customer-name">{{ order.customer }}</td>
+              <td class="product-name">{{ order.product }}</td>
+              <td class="amount">{{ order.amount }}</td>
+              <td>
+                <span class="status-pill" [class.completed]="order.status === 'Hoàn thành'" [class.shipping]="order.status === 'Đang giao'" [class.pending]="order.status === 'Chờ xử lý'">
+                  {{ order.status }}
+                </span>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,24 @@
+@if (isLoginPage()) {
+  <router-outlet></router-outlet>
+} @else {
+  <div class="admin-wrapper">
+    <app-sidebar></app-sidebar>
+    <main class="admin-main">
+      <header class="admin-topbar">
+        <div class="topbar-breadcrumb">
+          <span>Báo cáo doanh thu</span>
+        </div>
+        <div class="topbar-user">
+          <span class="user-name">Quản trị viên (NV2709)</span>
+          <button class="logout-btn" (click)="logout()" title="Đăng xuất">
+            <i class="bi bi-box-arrow-right"></i>
+            <span>Đăng xuất</span>
+          </button>
+        </div>
+      </header>
+      <div class="admin-content">
+        <router-outlet></router-outlet>
+      </div>
+    </main>
+  </div>
+}
