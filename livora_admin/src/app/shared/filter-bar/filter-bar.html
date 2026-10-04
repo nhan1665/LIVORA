@@ -1,0 +1,99 @@
+<div class="filter-bar-container">
+  <!-- Search Keyword Field -->
+  @if (showSearch) {
+    <div class="filter-group keyword-group">
+      @if (searchLabel) {
+        <label class="filter-label">{{ searchLabel }}</label>
+      }
+      <div class="search-input-wrapper">
+        <span class="search-icon">
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="#8A7E78"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+        </span>
+        <input
+          type="text"
+          class="filter-input"
+          [placeholder]="searchPlaceholder"
+          [ngModel]="searchValue"
+          (ngModelChange)="onSearchInput($event)"
+          (keyup.enter)="onApplyFilter()"
+        />
+      </div>
+    </div>
+  }
+
+  <!-- Status Dropdown Field -->
+  @if (showStatus) {
+    <div class="filter-group status-group">
+      @if (statusLabel) {
+        <label class="filter-label">{{ statusLabel }}</label>
+      }
+      <div class="select-wrapper">
+        <select
+          class="filter-select"
+          [ngModel]="statusValue"
+          (ngModelChange)="onStatusSelect($event)"
+        >
+          @for (opt of statusOptions; track opt.value) {
+            <option [value]="opt.value">{{ opt.label }}</option>
+          }
+        </select>
+      </div>
+    </div>
+  }
+
+  <!-- Projection slot for custom extra filter controls -->
+  <ng-content></ng-content>
+
+  <!-- Filter Action Buttons -->
+  <div class="filter-actions-group">
+    <button type="button" class="btn-filter" (click)="onApplyFilter()">
+      <svg
+        width="15"
+        height="15"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+      </svg>
+      <span>{{ filterButtonText }}</span>
+    </button>
+
+    @if (showResetButton) {
+      <button
+        type="button"
+        class="btn-reset"
+        (click)="onReset()"
+        title="Đặt lại bộ lọc"
+      >
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
+        </svg>
+      </button>
+    }
+  </div>
+</div>

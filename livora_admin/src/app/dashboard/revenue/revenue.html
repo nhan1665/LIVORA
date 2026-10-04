@@ -1,0 +1,151 @@
+<div class="revenue-page">
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="header-left">
+      <h1 class="page-title">Báo Cáo Doanh Thu</h1>
+      <p class="page-subtitle">Cập nhật số liệu kinh doanh và báo cáo doanh thu hệ thống Livora Furniture.</p>
+    </div>
+
+    <div class="header-right">
+      <!-- Period Selector Filter Pills -->
+      <div class="period-pills-bar">
+        <button
+          type="button"
+          class="period-pill-btn"
+          [class.active]="selectedPeriod === 'today'"
+          (click)="setPeriod('today')"
+        >
+          Hôm nay
+        </button>
+        <button
+          type="button"
+          class="period-pill-btn"
+          [class.active]="selectedPeriod === 'week'"
+          (click)="setPeriod('week')"
+        >
+          7 ngày qua
+        </button>
+        <button
+          type="button"
+          class="period-pill-btn"
+          [class.active]="selectedPeriod === 'month'"
+          (click)="setPeriod('month')"
+        >
+          Tháng này
+        </button>
+        <button
+          type="button"
+          class="period-pill-btn"
+          [class.active]="selectedPeriod === 'year'"
+          (click)="setPeriod('year')"
+        >
+          Năm nay
+        </button>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="header-actions">
+        <button type="button" class="action-btn secondary-btn" (click)="exportReport()" title="Xuất file báo cáo">
+          <i class="bi bi-download"></i>
+          <span>Xuất Báo Cáo</span>
+        </button>
+        <button type="button" class="action-btn primary-btn" (click)="refreshData()" title="Làm mới số liệu">
+          <i class="bi bi-arrow-repeat"></i>
+          <span>Làm Mới Dữ Liệu</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats Grid -->
+  <div class="stats-grid">
+    @for (card of stats; track card.title) {
+      <div class="stat-card">
+        <div class="stat-icon-wrapper">
+          <i class="bi {{ card.icon }}"></i>
+        </div>
+        <div class="stat-info">
+          <span class="stat-title">{{ card.title }}</span>
+          <h3 class="stat-value">{{ card.value }}</h3>
+          <span class="stat-trend neutral">
+            <span class="trend-badge">{{ card.change }}</span>
+            <span class="trend-text">{{ card.subtext }}</span>
+          </span>
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- Revenue Analytics Chart Section (Empty state when no orders) -->
+  <div class="content-card chart-card">
+    <div class="content-header">
+      <div class="content-header-left">
+        <h2 class="content-title">Biểu Đồ Xu Hướng Doanh Thu</h2>
+        <span class="badge-tag">Kỳ báo cáo: {{ getPeriodLabel(selectedPeriod) }}</span>
+      </div>
+      <div class="chart-summary-note">
+        <span class="dot-indicator"></span>
+        <span>Thời gian thực</span>
+      </div>
+    </div>
+
+    <div class="chart-empty-state">
+      <div class="chart-visual-placeholder">
+        <div class="chart-axis-y">
+          <span>100M</span>
+          <span>50M</span>
+          <span>10M</span>
+          <span>0 ₫</span>
+        </div>
+        <div class="chart-canvas-mock">
+          <div class="chart-grid-line"></div>
+          <div class="chart-grid-line"></div>
+          <div class="chart-grid-line"></div>
+          <div class="chart-baseline"></div>
+
+          <div class="empty-chart-overlay">
+            <div class="empty-chart-icon-box">
+              <i class="bi bi-bar-chart-line"></i>
+            </div>
+            <h4 class="empty-chart-title">Chưa có phát sinh dữ liệu doanh thu</h4>
+            <p class="empty-chart-desc">
+              Hệ thống chưa ghi nhận đơn hàng hoặc giao dịch thanh toán thành công nào trong khoảng thời gian đã chọn để vẽ biểu đồ tăng trưởng.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Transactions Table Section -->
+  <div class="content-card">
+    <div class="content-header">
+      <div class="content-header-left">
+        <h2 class="content-title">Chi Tiết Giao Dịch Doanh Thu</h2>
+        <span class="badge-tag">0 giao dịch</span>
+      </div>
+    </div>
+
+    <div class="table-wrapper">
+      <app-data-table
+        [columns]="columns"
+        [data]="transactions"
+        [totalItems]="transactions.length"
+        [currentPage]="currentPage"
+        [itemsPerPage]="itemsPerPage"
+        [itemLabel]="'giao dịch'"
+        [showPagination]="false"
+        emptyMessage="Chưa có dữ liệu doanh thu"
+        emptySubMessage="Hiện tại hệ thống chưa ghi nhận đơn hàng hay phát sinh giao dịch nào."
+      ></app-data-table>
+    </div>
+  </div>
+
+  <!-- Toast Notification Feedback -->
+  @if (toastMessage) {
+    <div class="toast-notification">
+      <span class="toast-dot"></span>
+      <span class="toast-text">{{ toastMessage }}</span>
+    </div>
+  }
+</div>

@@ -10,31 +10,115 @@
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 .admin-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
   height: 64px;
-  background-color: #ffffff;
+  background-color: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(8px);
   border-bottom: 1px solid #e9e6e2;
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 28px;
+  box-shadow: 0 1px 4px rgba(89, 60, 59, 0.03);
 }
 
 .topbar-breadcrumb {
-  font-size: 15px;
-  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13.5px;
+  color: #665b5a;
+}
+
+.breadcrumb-link {
+  color: #776a66;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.15s ease;
+}
+
+.breadcrumb-link:hover {
+  color: #593c3b;
+}
+
+.breadcrumb-separator {
+  color: #baa4a1;
+  font-size: 12px;
+}
+
+.breadcrumb-current {
   color: #3b2c2b;
+  font-weight: 600;
+}
+
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.notification-btn {
+  position: relative;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  border: 1px solid #ebe5df;
+  background-color: #faf7f4;
+  color: #593c3b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.notification-btn:hover {
+  background-color: #f3ece4;
+  border-color: #dfd4c9;
+}
+
+.notification-dot {
+  position: absolute;
+  top: 7px;
+  right: 8px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: #b96a6a;
 }
 
 .topbar-user {
-  font-size: 13.5px;
-  color: #665b5a;
   display: flex;
   align-items: center;
   gap: 16px;
+}
+
+.user-meta {
+  display: flex;
+  flex-direction: column;
+  text-align: right;
+  line-height: 1.25;
+}
+
+.user-name {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #332625;
+}
+
+.user-role {
+  font-size: 11.5px;
+  color: #7e716c;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
 }
 
 .logout-btn {
@@ -46,7 +130,7 @@
   color: #593c3b;
   border: 1px solid #e5dad6;
   border-radius: 6px;
-  font-size: 12.5px;
+  font-size: 12px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;

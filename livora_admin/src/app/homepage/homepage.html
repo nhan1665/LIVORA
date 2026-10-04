@@ -1,0 +1,498 @@
+<div class="homepage-container">
+  <!-- Page Header Title -->
+  <div class="page-header">
+    <h1 class="page-title">Quản lý trang chủ</h1>
+  </div>
+
+  <!-- Tabs Navigation -->
+  <div class="tabs-nav-bar">
+    <button
+      type="button"
+      class="tab-btn"
+      [class.active]="activeTab === 'marquee'"
+      (click)="setTab('marquee')"
+    >
+      <span class="tab-icon">
+        <svg
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <rect width="20" height="14" x="2" y="5" rx="2" />
+          <line x1="2" x2="22" y1="10" />
+        </svg>
+      </span>
+      <span class="tab-text">Thông báo Marquee</span>
+      <span class="tab-active-dot"></span>
+    </button>
+
+    <button
+      type="button"
+      class="tab-btn"
+      [class.active]="activeTab === 'banner'"
+      (click)="setTab('banner')"
+    >
+      <span class="tab-icon">
+        <svg
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <rect width="18" height="18" x="3" y="3" rx="2" />
+          <path d="m3 9 18 0" />
+          <circle cx="9" cy="6" r="1" />
+        </svg>
+      </span>
+      <span class="tab-text">Banner</span>
+    </button>
+
+    <button
+      type="button"
+      class="tab-btn"
+      [class.active]="activeTab === 'brand'"
+      (click)="setTab('brand')"
+    >
+      <span class="tab-icon">
+        <svg
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path
+            d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"
+          />
+        </svg>
+      </span>
+      <span class="tab-text">Thương hiệu</span>
+    </button>
+
+    <button
+      type="button"
+      class="tab-btn"
+      [class.active]="activeTab === 'footer'"
+      (click)="setTab('footer')"
+    >
+      <span class="tab-icon">
+        <svg
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <rect width="18" height="18" x="3" y="3" rx="2" />
+          <path d="M3 15h18" />
+        </svg>
+      </span>
+      <span class="tab-text">Footer</span>
+    </button>
+  </div>
+
+  <!-- TAB CONTENT: 1. THÔNG BÁO MARQUEE -->
+  @if (activeTab === 'marquee') {
+    <div class="content-card">
+      <!-- Card Header -->
+      <div class="card-header">
+        <div class="header-left">
+          <h2 class="card-title">Quản lý thông báo Marquee</h2>
+          <span class="active-pill-badge">
+            <span class="pill-dot"></span>
+            <span>Đang hoạt động: {{ activeCount }}/5 thông báo</span>
+          </span>
+        </div>
+        <div class="header-right">
+          <button type="button" class="btn-primary" (click)="openCreateModal()">
+            <svg
+              width="15"
+              height="15"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.4"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            <span>Thêm thông báo</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Quota Notice Alert Box -->
+      <div class="quota-notice-box">
+        <div class="notice-info-wrapper">
+          <div class="notice-icon">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#6B5953"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="16" x2="12" y2="12"></line>
+              <line x1="12" y1="8" x2="12.01" y2="8"></line>
+            </svg>
+          </div>
+          <p class="notice-text">
+            Hệ thống cho phép tối đa 5 thông báo Marquee đang hoạt động cùng lúc để đảm bảo
+            trải nghiệm khách hàng tối ưu và giữ gìn khoảng lặng thẩm mỹ.
+          </p>
+        </div>
+
+        <div class="quota-progress-container">
+          <span class="quota-label">HẠN NGẠCH</span>
+          <div class="quota-progress-bar">
+            <div
+              class="quota-progress-fill"
+              [style.width.%]="activeQuotaPercentage"
+            ></div>
+          </div>
+          <span class="quota-value">{{ activeQuotaPercentage }}%</span>
+        </div>
+      </div>
+
+      <!-- Reusable Filter Bar -->
+      <app-filter-bar
+        searchPlaceholder="Nhập nội dung thông báo..."
+        searchLabel="TỪ KHÓA"
+        statusLabel="TRẠNG THÁI"
+        [(searchValue)]="filterKeyword"
+        [(statusValue)]="filterStatus"
+        (filter)="onFilter()"
+        (reset)="onResetFilter()"
+      ></app-filter-bar>
+
+      <!-- Reusable DataTable -->
+      <div class="table-section">
+        <app-data-table
+          [columns]="columns"
+          [data]="paginatedData"
+          [totalItems]="filteredData.length"
+          [currentPage]="currentPage"
+          [itemsPerPage]="itemsPerPage"
+          [itemLabel]="'thông báo'"
+          [showPagination]="true"
+          (pageChange)="onPageChange($event)"
+          (actionClick)="handleAction($event)"
+        ></app-data-table>
+      </div>
+    </div>
+  }
+
+  <!-- TAB CONTENT: OTHER TABS (Placeholder / Preview) -->
+  @if (activeTab === 'banner') {
+    <div class="content-card placeholder-card">
+      <div class="placeholder-content">
+        <div class="placeholder-icon-wrap">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#C59A52" stroke-width="1.8">
+            <rect width="18" height="18" x="3" y="3" rx="2" />
+            <path d="m3 9 18 0" />
+            <circle cx="9" cy="6" r="1" />
+          </svg>
+        </div>
+        <h3>Quản lý Banner Trang chủ</h3>
+        <p>Quản lý các slide ảnh và thông điệp nổi bật trên đầu trang chủ.</p>
+      </div>
+    </div>
+  }
+
+  @if (activeTab === 'brand') {
+    <div class="content-card placeholder-card">
+      <div class="placeholder-content">
+        <div class="placeholder-icon-wrap">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#C59A52" stroke-width="1.8">
+            <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" />
+          </svg>
+        </div>
+        <h3>Quản lý Khối Thương hiệu</h3>
+        <p>Cấu hình logo đối tác, chứng nhận và câu chuyện thương hiệu Livora.</p>
+      </div>
+    </div>
+  }
+
+  @if (activeTab === 'footer') {
+    <div class="content-card placeholder-card">
+      <div class="placeholder-content">
+        <div class="placeholder-icon-wrap">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#C59A52" stroke-width="1.8">
+            <rect width="18" height="18" x="3" y="3" rx="2" />
+            <path d="M3 15h18" />
+          </svg>
+        </div>
+        <h3>Cấu hình Chân trang (Footer)</h3>
+        <p>Tùy chỉnh thông tin liên hệ, liên kết nhanh, bản quyền và mạng xã hội.</p>
+      </div>
+    </div>
+  }
+
+  <!-- CUSTOM CELL TEMPLATES FOR DATA TABLE -->
+  <!-- 1. Code Template -->
+  <ng-template #codeTemplate let-value let-row="row">
+    <span class="code-badge">{{ row.code }}</span>
+  </ng-template>
+
+  <!-- 2. Title Template with Category Icon -->
+  <ng-template #titleTemplate let-value let-row="row">
+    <div class="title-cell-wrapper">
+      <span class="title-type-icon">
+        @switch (row.iconType) {
+          @case ('truck') {
+            <!-- Delivery Truck -->
+            <svg
+              width="17"
+              height="17"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#593C3B"
+              stroke-width="1.8"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2" />
+              <path d="M15 18H9" />
+              <path d="M19 18h2a1 1 0 0 0 1-1v-5l-4-4h-4v10" />
+              <circle cx="7" cy="18" r="2" />
+              <circle cx="17" cy="18" r="2" />
+            </svg>
+          }
+          @case ('sparkle') {
+            <!-- Sparkles / Collection -->
+            <svg
+              width="17"
+              height="17"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#593C3B"
+              stroke-width="1.8"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path
+                d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"
+              />
+            </svg>
+          }
+          @case ('user') {
+            <!-- User / Consultation -->
+            <svg
+              width="17"
+              height="17"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#593C3B"
+              stroke-width="1.8"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+              <circle cx="12" cy="7" r="4" />
+            </svg>
+          }
+          @case ('sofa') {
+            <!-- Sofa / Furniture -->
+            <svg
+              width="17"
+              height="17"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#593C3B"
+              stroke-width="1.8"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M4 18v2M20 18v2" />
+              <path d="M19 9V6a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v3" />
+              <path d="M3 11a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+            </svg>
+          }
+          @case ('discount') {
+            <!-- Discount / Voucher Tag -->
+            <svg
+              width="17"
+              height="17"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#593C3B"
+              stroke-width="1.8"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path
+                d="M12 2H2v10l9.29 9.29c.94.94 2.48.94 3.42 0l6.58-6.58c.94-.94.94-2.48 0-3.42L12 2Z"
+              />
+              <path d="M7 7h.01" />
+            </svg>
+          }
+          @default {
+            <!-- Default Bell -->
+            <svg
+              width="17"
+              height="17"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#593C3B"
+              stroke-width="1.8"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
+              <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
+            </svg>
+          }
+        }
+      </span>
+      <span class="title-content-text" [title]="row.title">{{ row.title }}</span>
+    </div>
+  </ng-template>
+
+  <!-- 3. Order Badge Template -->
+  <ng-template #orderTemplate let-value let-row="row">
+    <span class="custom-order-badge">{{ row.order }}</span>
+  </ng-template>
+
+  <!-- Reusable Form Modal -->
+  <app-form-modal
+    [isOpen]="isModalOpen"
+    [title]="modalMode === 'create' ? 'Thêm thông báo Marquee mới' : 'Chỉnh sửa thông báo Marquee'"
+    [subtitle]="'Cấu hình nội dung chữ chạy nổi bật trên đầu trang chủ Livora'"
+    [submitText]="modalMode === 'create' ? 'Lưu thông báo' : 'Cập nhật'"
+    (close)="closeModal()"
+    (submit)="saveNotification()"
+  >
+    <div class="form-row form-row-2">
+      <div class="form-group">
+        <label class="form-label">MÃ THÔNG BÁO</label>
+        <input
+          type="text"
+          class="form-control"
+          [(ngModel)]="notificationForm.code"
+          name="code"
+          readonly
+        />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">BIỂU TƯỢNG (ICON)</label>
+        <select
+          class="form-control"
+          [(ngModel)]="notificationForm.iconType"
+          name="iconType"
+        >
+          <option value="truck">Xe tải / Giao hàng</option>
+          <option value="sparkle">Ngôi sao / Bộ sưu tập</option>
+          <option value="user">Chuyên gia / Tư vấn</option>
+          <option value="sofa">Sofa / Nội thất</option>
+          <option value="discount">Ưu đãi / Giảm giá</option>
+          <option value="bell">Chuông / Thông báo</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">
+        NỘI DUNG THÔNG BÁO <span class="required">*</span>
+      </label>
+      <textarea
+        class="form-control form-textarea"
+        rows="3"
+        placeholder="Nhập thông điệp hiển thị trên thanh marquee..."
+        [(ngModel)]="notificationForm.title"
+        name="title"
+        required
+      ></textarea>
+    </div>
+
+    <div class="form-row form-row-2">
+      <div class="form-group">
+        <label class="form-label">TỪ NGÀY</label>
+        <input
+          type="text"
+          class="form-control"
+          placeholder="DD/MM/YYYY"
+          [(ngModel)]="notificationForm.startDate"
+          name="startDate"
+        />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">ĐẾN NGÀY</label>
+        <input
+          type="text"
+          class="form-control"
+          placeholder="DD/MM/YYYY"
+          [(ngModel)]="notificationForm.endDate"
+          name="endDate"
+        />
+      </div>
+    </div>
+
+    <div class="form-row form-row-2">
+      <div class="form-group">
+        <label class="form-label">THỨ TỰ HIỂN THỊ</label>
+        <input
+          type="number"
+          min="1"
+          max="10"
+          class="form-control"
+          [(ngModel)]="notificationForm.order"
+          name="order"
+        />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">TRẠNG THÁI</label>
+        <select
+          class="form-control"
+          [(ngModel)]="notificationForm.status"
+          name="status"
+        >
+          <option value="Đang hoạt động">Đang hoạt động</option>
+          <option value="Đã ẩn">Đã ẩn</option>
+        </select>
+      </div>
+    </div>
+  </app-form-modal>
+
+  <!-- Reusable Confirm Dialog -->
+  <app-confirm-dialog
+    [isOpen]="isConfirmOpen"
+    [title]="confirmTitle"
+    [message]="confirmMessage"
+    confirmText="Đồng ý ẩn"
+    type="warning"
+    (confirm)="onConfirmAction()"
+    (cancel)="onCancelConfirm()"
+  ></app-confirm-dialog>
+
+  <!-- Toast Feedback Notification -->
+  @if (toastMessage) {
+    <div class="toast-notification">
+      <span class="toast-dot"></span>
+      <span class="toast-text">{{ toastMessage }}</span>
+    </div>
+  }
+</div>

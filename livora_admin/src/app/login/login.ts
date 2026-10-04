@@ -71,9 +71,9 @@ export class Login {
     this.errorMessage = '';
   }
 
-  // Handle Login submission - Tự động vào thẳng dashboard không cần check mật khẩu
+  // Handle Login submission - Tự động vào thẳng Báo cáo doanh thu không cần check mật khẩu
   onLoginSubmit(): void {
-    this.router.navigate(['/dashboard']);
+    this.router.navigate(['/dashboard/revenue']);
   }
 
   // Handle Request OTP (Forgot Password Step 1)

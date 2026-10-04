@@ -1,0 +1,127 @@
+:host {
+  display: block;
+  width: 100%;
+}
+
+.pagination-container {
+  background-color: #ffffff;
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  user-select: none;
+}
+
+.pagination-info {
+  font-size: 13px;
+  color: #777777;
+  font-weight: 400;
+}
+
+.pagination-info .highlight {
+  color: #593c3b;
+  font-weight: 600;
+}
+
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.page-numbers-group {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.page-nav-btn {
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 6px;
+  background-color: #e8ded3;
+  color: #593c3b;
+  border: none;
+  font-size: 12.5px;
+  font-weight: 500;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.18s ease;
+}
+
+.page-nav-btn:hover:not(:disabled) {
+  background-color: #ddcfbf;
+  color: #3b2828;
+}
+
+.page-nav-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.page-number-btn {
+  min-width: 32px;
+  height: 32px;
+  padding: 0 8px;
+  border-radius: 6px;
+  border: none;
+  background-color: #e8ded3;
+  color: #593c3b;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.18s ease;
+}
+
+.page-number-btn:hover:not(:disabled):not(.active) {
+  background-color: #ddcfbf;
+  color: #3b2828;
+}
+
+.page-number-btn.active {
+  background-color: #6b4949;
+  color: #ffffff;
+  font-weight: 600;
+  box-shadow: 0 2px 6px rgba(107, 73, 73, 0.25);
+  cursor: default;
+}
+
+.page-number-btn:disabled {
+  cursor: not-allowed;
+}
+
+.page-ellipsis {
+  min-width: 26px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #8c7f76;
+  font-size: 13px;
+}
+
+@media (max-width: 768px) {
+  .pagination-container {
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+  }
+
+  .pagination-info {
+    text-align: center;
+  }
+
+  .pagination-controls {
+    width: 100%;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+}
