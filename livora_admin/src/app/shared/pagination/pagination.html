@@ -1,0 +1,79 @@
+<div class="pagination-container">
+  <!-- Left side: Summary info text -->
+  <div class="pagination-info">
+    @if (totalItems > 0) {
+      Hiển thị <span class="highlight">{{ startItemIndex }}–{{ endItemIndex }}</span> trên tổng số
+      <span class="highlight">{{ totalItems }}</span>{{ itemLabel ? ' ' + itemLabel : '' }}
+    } @else {
+      Hiển thị 0 trên tổng số 0{{ itemLabel ? ' ' + itemLabel : '' }}
+    }
+  </div>
+
+  <!-- Right side: Controls -->
+  <div class="pagination-controls">
+    <!-- Previous Page Button -->
+    <button
+      type="button"
+      class="page-nav-btn"
+      [disabled]="currentPage <= 1 || disabled || totalItems === 0"
+      (click)="onPrevPage()"
+      title="Trang trước"
+    >
+      <svg
+        width="14"
+        height="14"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2.4"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <polyline points="15 18 9 12 15 6"></polyline>
+      </svg>
+      <span class="btn-text">Trước</span>
+    </button>
+
+    <!-- Page Numbers -->
+    <div class="page-numbers-group">
+      @for (page of pageNumbers; track $index) {
+        @if (page === '...') {
+          <span class="page-ellipsis">…</span>
+        } @else {
+          <button
+            type="button"
+            class="page-number-btn"
+            [class.active]="page === currentPage"
+            [disabled]="disabled"
+            (click)="onPageChange(page)"
+          >
+            {{ page }}
+          </button>
+        }
+      }
+    </div>
+
+    <!-- Next Page Button -->
+    <button
+      type="button"
+      class="page-nav-btn"
+      [disabled]="currentPage >= totalPagesCount || disabled || totalItems === 0"
+      (click)="onNextPage()"
+      title="Trang sau"
+    >
+      <span class="btn-text">Sau</span>
+      <svg
+        width="14"
+        height="14"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2.4"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <polyline points="9 18 15 12 9 6"></polyline>
+      </svg>
+    </button>
+  </div>
+</div>

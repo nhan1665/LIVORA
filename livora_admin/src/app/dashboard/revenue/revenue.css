@@ -1,0 +1,414 @@
+/* ==========================================================================
+   LIVORA Admin - Revenue Report Styles
+   ========================================================================== */
+
+:host {
+  display: block;
+  width: 100%;
+}
+
+.revenue-page {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+}
+
+/* 1. PAGE HEADER */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.page-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #2b201f;
+  margin: 0;
+  letter-spacing: -0.3px;
+}
+
+.page-subtitle {
+  font-size: 13.5px;
+  color: #796c6a;
+  margin: 0;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* Period selector pills */
+.period-pills-bar {
+  display: inline-flex;
+  align-items: center;
+  background-color: #ede7df;
+  padding: 3px;
+  border-radius: 9px;
+  gap: 2px;
+}
+
+.period-pill-btn {
+  border: none;
+  background: transparent;
+  padding: 6px 14px;
+  border-radius: 7px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: #635754;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  user-select: none;
+}
+
+.period-pill-btn:hover:not(.active) {
+  color: #2b201f;
+  background-color: rgba(255, 255, 255, 0.4);
+}
+
+.period-pill-btn.active {
+  background-color: #ffffff;
+  color: #593c3b;
+  font-weight: 600;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+/* Header Action buttons */
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 15px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+  height: 38px;
+}
+
+.secondary-btn {
+  background-color: #ffffff;
+  color: #593c3b;
+  border: 1px solid #d8cec5;
+}
+
+.secondary-btn:hover {
+  background-color: #faf6f2;
+  border-color: #cbbdb2;
+}
+
+.primary-btn {
+  background-color: #593c3b;
+  color: #ffffff;
+}
+
+.primary-btn:hover {
+  background-color: #482f2e;
+  box-shadow: 0 3px 8px rgba(89, 60, 59, 0.25);
+}
+
+.action-btn i {
+  font-size: 14px;
+}
+
+/* 2. STATS GRID */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.stat-card {
+  background-color: #ffffff;
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  box-shadow: 0 2px 8px rgba(89, 60, 59, 0.04);
+  border: 1px solid #ebe5e1;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 14px rgba(89, 60, 59, 0.07);
+}
+
+.stat-icon-wrapper {
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
+  background-color: #f5efe9;
+  color: #593c3b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.stat-info {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.stat-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: #8c7c79;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.stat-value {
+  font-size: 22px;
+  font-weight: 700;
+  color: #2b1f1e;
+  margin: 3px 0;
+  letter-spacing: -0.3px;
+}
+
+.stat-trend {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  color: #8c7c79;
+}
+
+.trend-badge {
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background-color: #f2ede8;
+  color: #6d5e5b;
+}
+
+.trend-text {
+  color: #9c8e8b;
+}
+
+/* 3. CONTENT CARD */
+.content-card {
+  background-color: #ffffff;
+  border-radius: 12px;
+  padding: 22px 24px;
+  box-shadow: 0 2px 8px rgba(89, 60, 59, 0.04);
+  border: 1px solid #ebe5e1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.content-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.content-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.content-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #2b1f1e;
+  margin: 0;
+}
+
+.badge-tag {
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 20px;
+  background-color: #f5eee9;
+  color: #593c3b;
+}
+
+.chart-summary-note {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #796c6a;
+}
+
+.dot-indicator {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: #10b981;
+}
+
+/* 4. CHART EMPTY STATE */
+.chart-empty-state {
+  width: 100%;
+  background-color: #fdfbf9;
+  border-radius: 10px;
+  border: 1px dashed #dcd4cc;
+  padding: 32px 24px;
+}
+
+.chart-visual-placeholder {
+  display: flex;
+  gap: 16px;
+  min-height: 220px;
+  position: relative;
+}
+
+.chart-axis-y {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-end;
+  font-size: 11px;
+  font-weight: 500;
+  color: #b5a9a4;
+  padding-bottom: 20px;
+  min-width: 44px;
+}
+
+.chart-canvas-mock {
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding-bottom: 20px;
+}
+
+.chart-grid-line {
+  width: 100%;
+  height: 1px;
+  background: repeating-linear-gradient(
+    to right,
+    #ebe2da 0,
+    #ebe2da 6px,
+    transparent 6px,
+    transparent 12px
+  );
+}
+
+.chart-baseline {
+  width: 100%;
+  height: 2px;
+  background-color: #d6cac0;
+}
+
+.empty-chart-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  max-width: 420px;
+}
+
+.empty-chart-icon-box {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background-color: #f4ece6;
+  color: #8c7a75;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  margin-bottom: 12px;
+}
+
+.empty-chart-title {
+  font-size: 14.5px;
+  font-weight: 600;
+  color: #4a3c39;
+  margin: 0 0 6px 0;
+}
+
+.empty-chart-desc {
+  font-size: 12.5px;
+  color: #8b7d79;
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* 5. TABLE WRAPPER */
+.table-wrapper {
+  width: 100%;
+}
+
+/* 6. TOAST FEEDBACK */
+.toast-notification {
+  position: fixed;
+  bottom: 28px;
+  right: 28px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background-color: #2b1f1e;
+  color: #ffffff;
+  padding: 12px 20px;
+  border-radius: 9px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+  font-size: 13.5px;
+  font-weight: 500;
+  z-index: 9999;
+  animation: slideInToast 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.toast-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: #c59a52;
+}
+
+@keyframes slideInToast {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 768px) {
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .header-right {
+    width: 100%;
+    justify-content: space-between;
+  }
+}
