@@ -1,12 +1,12 @@
 @if (product) {
 <div class="w-full max-w-[1440px] mx-auto px-4 md:px-8 py-6">
 
-  <nav class="text-xs text-gray-500 space-x-2 mb-8 capitalize">
+  <nav class="text-xs text-gray-500 space-x-2 mb-8">
     <a routerLink="/rooms" class="hover:underline text-gray-700">Phòng</a>
     <span>&gt;</span>
-    <a [routerLink]="['/rooms', currentRoom]" class="hover:underline text-gray-700">{{ currentRoom }}</a>
+    <a [routerLink]="['/rooms', currentRoom]" class="hover:underline text-gray-700">{{ formattedRoomName }}</a>
     <span>&gt;</span>
-    <a [routerLink]="['/rooms', currentRoom, currentCategory]" class="hover:underline text-gray-700">{{ currentCategory }}</a>
+    <a [routerLink]="['/rooms', currentRoom, currentCategory]" class="hover:underline text-gray-700">{{ formattedCategoryName }}</a>
     <span>&gt;</span>
     <span class="text-gray-900 font-medium">{{ product.name }}</span>
   </nav>

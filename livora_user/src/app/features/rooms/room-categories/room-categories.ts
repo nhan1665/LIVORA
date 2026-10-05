@@ -10,10 +10,10 @@ import { RouterLink } from '@angular/router';
 })
 export class RoomCategories {
   rooms = [
-    { id: 1, name: 'Bedroom', slug: 'bedroom', image: '/images/rooms/bedroom.png' },
-    { id: 2, name: 'Kitchens', slug: 'kitchen', image: '/images/rooms/kitchen.png' },
-    { id: 3, name: 'Living room', slug: 'living-room', image: '/images/rooms/living-room.png' },
-    { id: 4, name: 'Dining room', slug: 'dining-room', image: '/images/rooms/dining-room.png' },
-    { id: 5, name: 'Bathroom', slug: 'bathroom', image: '/images/rooms/bathroom.jpg' },
+    { id: 1, name: 'Phòng ngủ', slug: 'bedroom', image: '/images/rooms/bedroom.png' },
+    { id: 2, name: 'Phòng bếp', slug: 'kitchen', image: '/images/rooms/kitchen.png' },
+    { id: 3, name: 'Phòng khách', slug: 'living-room', image: '/images/rooms/living-room.png' },
+    { id: 4, name: 'Phòng ăn', slug: 'dining-room', image: '/images/rooms/dining-room.png' },
+    { id: 5, name: 'Phòng tắm', slug: 'bathroom', image: '/images/rooms/bathroom.jpg' },
   ];
 }

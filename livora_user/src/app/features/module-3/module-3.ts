@@ -2,8 +2,6 @@ import { Component, inject, ChangeDetectorRef, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { CartService } from '../../services/cart.service';
-import { Header } from '../../layouts/header/header';
-import { Footer } from '../../layouts/footer/footer';
 
 export interface Product {
   id: string;
@@ -23,7 +21,7 @@ export interface Hotspot {
 export interface Room {
   id: string;
   name: string;
-  category: 'Bedroom' | 'Living Room' | 'Kitchen' | 'Bathroom' | 'Dining room';
+  category: 'Phòng ngủ' | 'Phòng khách' | 'Phòng bếp' | 'Phòng tắm' | 'Phòng ăn' | 'Bedroom' | 'Living Room' | 'Kitchen' | 'Bathroom' | 'Dining room' | string;
   image: string;
   hotspots: Hotspot[];
 }
@@ -31,7 +29,7 @@ export interface Room {
 @Component({
   selector: 'app-module-3',
   standalone: true,
-  imports: [CommonModule, RouterModule, Header, Footer],
+  imports: [CommonModule, RouterModule],
   templateUrl: './module-3.html',
   styleUrl: './module-3.css',
 })
@@ -45,17 +43,17 @@ export class Module3 implements OnDestroy {
   private readonly cdr = inject(ChangeDetectorRef);
 
   // Active filter category
-  selectedCategory: string = 'All';
+  selectedCategory: string = 'Tất cả';
 
   // Filter options matching the screenshot exactly
-  readonly categories: string[] = ['All', 'Bedroom', 'Living Room', 'Kitchen', 'Bathroom', 'Dining room'];
+  readonly categories: string[] = ['Tất cả', 'Phòng ngủ', 'Phòng khách', 'Phòng bếp', 'Phòng tắm', 'Phòng ăn'];
 
   // Shop the Look Rooms database
   readonly rooms: Room[] = [
     {
       id: 'bedroom-scandic',
-      name: 'Peaceful Scandinavian bedroom',
-      category: 'Bedroom',
+      name: 'Phòng ngủ phong cách Bắc Âu thanh bình',
+      category: 'Phòng ngủ',
       image: 'https://images.unsplash.com/photo-1616594039964-ae9021a400a0?auto=format&fit=crop&w=1200&q=80',
       hotspots: [
         {
@@ -63,10 +61,10 @@ export class Module3 implements OnDestroy {
           left: 38,
           product: {
             id: '10',
-            name: 'DVALA bedding set',
-            category: 'Bedding',
+            name: 'Bộ chăn ga DVALA',
+            category: 'Bộ chăn ga',
             price: 20,
-            description: 'Soft, easy-care cotton that feels comfortable against skin.',
+            description: 'Chất liệu cotton mềm mại, dễ giặt ủi và thân thiện với làn da.',
             image: 'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=600&q=80'
           }
         },
@@ -75,10 +73,10 @@ export class Module3 implements OnDestroy {
           left: 50,
           product: {
             id: '1',
-            name: 'NEIDEN pine bed frame',
-            category: 'Beds',
+            name: 'Khung giường gỗ thông NEIDEN',
+            category: 'Giường',
             price: 89,
-            description: 'Compact design, perfect for tight spaces or under low ceilings.',
+            description: 'Thiết kế nhỏ gọn, hoàn hảo cho không gian hẹp hoặc trần nhà thấp.',
             image: 'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=600&q=80'
           }
         },
@@ -87,10 +85,10 @@ export class Module3 implements OnDestroy {
           left: 75,
           product: {
             id: '16',
-            name: 'FADO smoke glass lamp',
-            category: 'Lighting',
+            name: 'Đèn thủy tinh mờ FADO',
+            category: 'Đèn',
             price: 19,
-            description: 'Frosted glass shade spreads a soft, diffused glow in the room.',
+            description: 'Chao đèn thủy tinh mờ lan tỏa ánh sáng dịu nhẹ khắp căn phòng.',
             image: 'https://images.unsplash.com/photo-1507473885765-e6ed057f782c?auto=format&fit=crop&w=600&q=80'
           }
         }
@@ -98,8 +96,8 @@ export class Module3 implements OnDestroy {
     },
     {
       id: 'living-cosy',
-      name: 'Cosy minimalist living room',
-      category: 'Living Room',
+      name: 'Phòng khách tối giản ấm cúng',
+      category: 'Phòng khách',
       image: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=1200&q=80',
       hotspots: [
         {
@@ -107,10 +105,10 @@ export class Module3 implements OnDestroy {
           left: 32,
           product: {
             id: '40',
-            name: 'ODGER upholstered chair',
-            category: 'Chairs',
+            name: 'Ghế bọc đệm ODGER',
+            category: 'Ghế',
             price: 45,
-            description: 'Ergonomic design with rounded bowl seat for comfort.',
+            description: 'Thiết kế công thái học với lòng ghế uốn cong tạo cảm giác dễ chịu khi ngồi.',
             image: 'https://images.unsplash.com/photo-1503602642458-232111445657?auto=format&fit=crop&w=600&q=80'
           }
         },
@@ -119,10 +117,10 @@ export class Module3 implements OnDestroy {
           left: 72,
           product: {
             id: '38',
-            name: 'LISABO oak dining table',
-            category: 'Dining Tables',
+            name: 'Bàn ăn gỗ sồi LISABO',
+            category: 'Bàn ăn',
             price: 79,
-            description: 'Traditional pine dining table that comes with 4 matching chairs.',
+            description: 'Bộ bàn ăn gỗ thông truyền thống đi kèm 4 ghế đồng bộ thanh lịch.',
             image: 'https://images.unsplash.com/photo-1577140917170-285929fb55b7?auto=format&fit=crop&w=600&q=80'
           }
         },
@@ -131,10 +129,10 @@ export class Module3 implements OnDestroy {
           left: 68,
           product: {
             id: '16',
-            name: 'FADO smoke glass lamp',
-            category: 'Lighting',
+            name: 'Đèn thủy tinh mờ FADO',
+            category: 'Đèn',
             price: 19,
-            description: 'Frosted glass shade spreads a soft, diffused glow in the room.',
+            description: 'Chao đèn thủy tinh mờ lan tỏa ánh sáng dịu nhẹ khắp căn phòng.',
             image: 'https://images.unsplash.com/photo-1507473885765-e6ed057f782c?auto=format&fit=crop&w=600&q=80'
           }
         }
@@ -142,8 +140,8 @@ export class Module3 implements OnDestroy {
     },
     {
       id: 'kitchen-modern',
-      name: 'Modern and minimal kitchen',
-      category: 'Kitchen',
+      name: 'Phòng bếp hiện đại và tinh tế',
+      category: 'Phòng bếp',
       image: 'https://images.unsplash.com/photo-1617228069096-4638a7ffc906?q=80&w=1742&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
       hotspots: [
         {
@@ -151,10 +149,10 @@ export class Module3 implements OnDestroy {
           left: 45,
           product: {
             id: '38',
-            name: 'LISABO oak dining table',
-            category: 'Dining Tables',
+            name: 'Bàn ăn gỗ sồi LISABO',
+            category: 'Bàn ăn',
             price: 79,
-            description: 'Traditional pine dining table that comes with 4 matching chairs.',
+            description: 'Bộ bàn ăn gỗ thông truyền thống đi kèm 4 ghế đồng bộ thanh lịch.',
             image: 'https://images.unsplash.com/photo-1577140917170-285929fb55b7?auto=format&fit=crop&w=600&q=80'
           }
         },
@@ -163,10 +161,10 @@ export class Module3 implements OnDestroy {
           left: 62,
           product: {
             id: '40',
-            name: 'ODGER seating chair',
-            category: 'Chairs',
+            name: 'Ghế ăn ODGER',
+            category: 'Ghế',
             price: 45,
-            description: 'Ergonomic design with rounded bowl seat for comfort.',
+            description: 'Thiết kế công thái học với lòng ghế uốn cong tạo cảm giác dễ chịu khi ngồi.',
             image: 'https://images.unsplash.com/photo-1503602642458-232111445657?auto=format&fit=crop&w=600&q=80'
           }
         }
@@ -174,8 +172,8 @@ export class Module3 implements OnDestroy {
     },
     {
       id: 'bathroom-spa',
-      name: 'Relaxing spa-style bathroom',
-      category: 'Bathroom',
+      name: 'Phòng tắm phong cách spa thư giãn',
+      category: 'Phòng tắm',
       image: 'https://images.unsplash.com/photo-1618220179428-22790b461013?auto=format&fit=crop&w=1200&q=80',
       hotspots: [
         {
@@ -183,10 +181,10 @@ export class Module3 implements OnDestroy {
           left: 50,
           product: {
             id: '16',
-            name: 'FADO smoke glass lamp',
-            category: 'Lighting',
+            name: 'Đèn thủy tinh mờ FADO',
+            category: 'Đèn',
             price: 19,
-            description: 'Frosted glass shade spreads a soft, diffused glow in the room.',
+            description: 'Chao đèn thủy tinh mờ lan tỏa ánh sáng dịu nhẹ khắp căn phòng.',
             image: 'https://images.unsplash.com/photo-1507473885765-e6ed057f782c?auto=format&fit=crop&w=600&q=80'
           }
         }
@@ -194,8 +192,8 @@ export class Module3 implements OnDestroy {
     },
     {
       id: 'dining-room-warm',
-      name: 'Warm family dining room',
-      category: 'Dining room',
+      name: 'Phòng ăn gia đình sum họp ấm áp',
+      category: 'Phòng ăn',
       image: 'https://images.unsplash.com/photo-1616486886892-ff366aa67ba4?q=80&w=1160&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
       hotspots: [
         {
@@ -203,10 +201,10 @@ export class Module3 implements OnDestroy {
           left: 40,
           product: {
             id: '40',
-            name: 'ODGER upholstered chair',
-            category: 'Chairs',
+            name: 'Ghế bọc đệm ODGER',
+            category: 'Ghế',
             price: 45,
-            description: 'Ergonomic design with rounded bowl seat for comfort.',
+            description: 'Thiết kế công thái học với lòng ghế uốn cong tạo cảm giác dễ chịu khi ngồi.',
             image: 'https://images.unsplash.com/photo-1503602642458-232111445657?auto=format&fit=crop&w=600&q=80'
           }
         },
@@ -215,10 +213,10 @@ export class Module3 implements OnDestroy {
           left: 65,
           product: {
             id: '38',
-            name: 'LISABO oak table',
-            category: 'Dining Tables',
+            name: 'Bàn ăn gỗ sồi LISABO',
+            category: 'Bàn ăn',
             price: 79,
-            description: 'Traditional pine dining table that comes with 4 matching chairs.',
+            description: 'Bộ bàn ăn gỗ thông truyền thống đi kèm 4 ghế đồng bộ thanh lịch.',
             image: 'https://images.unsplash.com/photo-1577140917170-285929fb55b7?auto=format&fit=crop&w=600&q=80'
           }
         }
@@ -250,7 +248,7 @@ export class Module3 implements OnDestroy {
   }
 
   get filteredRooms(): Room[] {
-    if (this.selectedCategory === 'All') {
+    if (this.selectedCategory === 'Tất cả') {
       return this.rooms;
     }
     return this.rooms.filter(room => room.category === this.selectedCategory);
