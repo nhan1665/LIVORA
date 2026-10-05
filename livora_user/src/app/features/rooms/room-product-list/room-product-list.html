@@ -5,7 +5,7 @@
     <span>&gt;</span>
     <a [routerLink]="['/rooms', currentRoom]" class="hover:underline cursor-pointer text-gray-700">{{ formattedRoomName }}</a>
     <span>&gt;</span>
-    <span class="text-gray-900 font-medium">{{ currentCategory }}</span>
+    <span class="text-gray-900 font-medium">{{ formattedCategoryName }}</span>
   </nav>
 
   <section class="mb-12">
@@ -27,7 +27,7 @@
   </section>
 
   <section class="mb-10 max-w-4xl">
-    <h1 class="text-4xl font-bold text-gray-900 mb-4 capitalize">{{ currentCategory }}</h1>
+    <h1 class="text-4xl font-bold text-gray-900 mb-4 capitalize">{{ formattedCategoryName }}</h1>
     <p class="text-sm text-gray-600 leading-relaxed" [innerHTML]="currentDescription"></p>
   </section>
 
@@ -88,8 +88,8 @@
 
                 @if (product.badge) {
                   <span class="absolute top-2 left-2 z-10 text-[9px] md:text-[10px] font-bold tracking-wider uppercase px-1.5 py-0.5 md:px-2 md:py-1 text-white"
-                        [class.bg-[#E50046]]="product.badge === 'Best seller'"
-                        [class.bg-orange-500]="product.badge === 'New'">
+                        [class.bg-[#E50046]]="product.badge === 'Best seller' || product.badge === 'Bán chạy'"
+                        [class.bg-orange-500]="product.badge === 'New' || product.badge === 'Mới'">
                     {{ product.badge }}
                   </span>
                 }

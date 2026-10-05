@@ -2,14 +2,12 @@ import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { CartService, CartItem } from '../../../services/cart.service';
-import { Header } from '../../../layouts/header/header';
-import { Footer } from '../../../layouts/footer/footer';
 import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-cart',
   standalone: true,
-  imports: [CommonModule, RouterModule, Header, Footer, FormsModule],
+  imports: [CommonModule, RouterModule, FormsModule],
   templateUrl: './cart.html',
   styleUrl: './cart.css',
 })
@@ -22,7 +20,7 @@ export class Cart {
     {
       id: '1',
       name: 'NEIDEN',
-      description: 'Bed frame, solid pine, Standard Double',
+      description: 'Khung giường gỗ thông tự nhiên, Giường đôi tiêu chuẩn',
       price: 89,
       image: 'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=600&q=80',
       rating: 4.8,
@@ -34,7 +32,7 @@ export class Cart {
     {
       id: '40',
       name: 'ODGER',
-      description: 'Ergonomic composite chair, bowl seat',
+      description: 'Ghế ăn công thái học composite, lòng ghế uốn cong',
       price: 45,
       image: 'https://images.unsplash.com/photo-1503602642458-232111445657?auto=format&fit=crop&w=600&q=80',
       rating: 4.5,
@@ -46,7 +44,7 @@ export class Cart {
     {
       id: '16',
       name: 'FADO',
-      description: 'Frosted glass shade table lamp spread diffused glow',
+      description: 'Đèn bàn chao thủy tinh mờ lan tỏa ánh sáng dịu nhẹ',
       price: 19,
       image: 'https://images.unsplash.com/photo-1507473885765-e6ed057f782c?auto=format&fit=crop&w=600&q=80',
       rating: 4.9,

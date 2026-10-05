@@ -32,7 +32,7 @@
           <h2>Đơn hàng #{{ orderInfo.code }}</h2>
           <span class="order-date">Đặt ngày {{ orderInfo.date }}</span>
         </div>
-        <div class="order-status-badge">{{ orderInfo.status }}</div>
+        <div class="order-status-badge">{{ orderInfo.statusDisplay || orderInfo.status }}</div>
       </div>
 
       <!-- Timeline Tracking -->

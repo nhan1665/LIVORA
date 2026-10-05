@@ -36,10 +36,10 @@ export class Module4 {
   private readonly cartService = inject(CartService);
 
   rooms: RoomDesign[] = [
-    { name: 'Living Room', area: '32 m\u00B2', image: 'images/rooms/living-room.png', tag: 'Spacious & cosy' },
-    { name: 'Bedroom', area: '23 m\u00B2', image: 'images/rooms/bedroom.png', tag: 'Quiet & relaxing' },
-    { name: 'Kitchen', area: '18 m\u00B2', image: 'images/rooms/kitchen.png', tag: 'Bright & functional' },
-    { name: 'Dining Room', area: '21 m\u00B2', image: 'images/rooms/dining-room.png', tag: 'Warm & intimate' },
+    { name: 'Phòng khách', area: '32 m\u00B2', image: 'images/rooms/living-room.png', tag: 'Rộng rãi & ấm cúng' },
+    { name: 'Phòng ngủ', area: '23 m\u00B2', image: 'images/rooms/bedroom.png', tag: 'Yên tĩnh & thư giãn' },
+    { name: 'Phòng bếp', area: '18 m\u00B2', image: 'images/rooms/kitchen.png', tag: 'Sáng sủa & tiện nghi' },
+    { name: 'Phòng ăn', area: '21 m\u00B2', image: 'images/rooms/dining-room.png', tag: 'Ấm áp & sum vầy' },
   ];
 
   // Select Size Modal state
@@ -56,24 +56,24 @@ export class Module4 {
   newSpaceLength = 5;
   newSpaceWidth = 4;
 
-  categories = ['All categories', 'Beds', 'Wardrobes', 'Drawers'];
+  categories = ['Tất cả danh mục', 'Giường', 'Tủ quần áo', 'Ngăn kéo'];
 
   products: PlannerProduct[] = [
-    { id: 'idanas', name: 'IDAN\u00C5S', desc: '6-drawer chest, white, 84x135 cm', price: 299, image: 'images/products/bedroom/beds/MALM.png', category: 'Drawers' },
-    { id: 'vihals', name: 'VIHALS', desc: '6-drawer chest, white, 89x48x122 cm', price: 179, image: 'images/products/bedroom/beds/VIHALS.png', category: 'Drawers' },
-    { id: 'gullaberg', name: 'GULLABERG', desc: '6-drawer chest, white, 89x48x122 cm', price: 225, image: 'images/products/bedroom/beds/GULLABERG.png', category: 'Drawers' },
-    { id: 'slattum', name: 'SLATTUM', desc: 'Upholstered bed frame, 160x200 cm', price: 349, image: 'images/products/bedroom/beds/SLATTUM.png', category: 'Beds' },
-    { id: 'malm', name: 'MALM', desc: 'Bed frame, high, white, 160x200 cm', price: 279, image: 'images/products/bedroom/beds/MALM-2.png', category: 'Beds' },
-    { id: 'neiden', name: 'NEIDEN', desc: 'Bed frame, pine, 90x200 cm', price: 89, image: 'images/products/bedroom/beds/NEIDEN.png', category: 'Beds' },
-    { id: 'ramnefjall', name: 'RAMNEFJ\u00C4LL', desc: 'Upholstered bed frame, 140x200 cm', price: 399, image: 'images/products/bedroom/beds/RAMNEFJ\u00C4LL.png', category: 'Beds' },
-    { id: 'vihals-w', name: 'VIHALS', desc: '2-door wardrobe, white, 105 cm', price: 249, image: 'images/products/bedroom/beds/MALM-3.png', category: 'Wardrobes' },
+    { id: 'idanas', name: 'IDAN\u00C5S', desc: 'Tủ 6 ngăn kéo, trắng, 84x135 cm', price: 299, image: 'images/products/bedroom/beds/MALM.png', category: 'Ngăn kéo' },
+    { id: 'vihals', name: 'VIHALS', desc: 'Tủ 6 ngăn kéo, trắng, 89x48x122 cm', price: 179, image: 'images/products/bedroom/beds/VIHALS.png', category: 'Ngăn kéo' },
+    { id: 'gullaberg', name: 'GULLABERG', desc: 'Tủ 6 ngăn kéo, trắng, 89x48x122 cm', price: 225, image: 'images/products/bedroom/beds/GULLABERG.png', category: 'Ngăn kéo' },
+    { id: 'slattum', name: 'SLATTUM', desc: 'Khung giường bọc nệm, 160x200 cm', price: 349, image: 'images/products/bedroom/beds/SLATTUM.png', category: 'Giường' },
+    { id: 'malm', name: 'MALM', desc: 'Khung giường cao, trắng, 160x200 cm', price: 279, image: 'images/products/bedroom/beds/MALM-2.png', category: 'Giường' },
+    { id: 'neiden', name: 'NEIDEN', desc: 'Khung giường gỗ thông, 90x200 cm', price: 89, image: 'images/products/bedroom/beds/NEIDEN.png', category: 'Giường' },
+    { id: 'ramnefjall', name: 'RAMNEFJ\u00C4LL', desc: 'Khung giường bọc nệm, 140x200 cm', price: 399, image: 'images/products/bedroom/beds/RAMNEFJ\u00C4LL.png', category: 'Giường' },
+    { id: 'vihals-w', name: 'VIHALS', desc: 'Tủ quần áo 2 cánh, trắng, 105 cm', price: 249, image: 'images/products/bedroom/beds/MALM-3.png', category: 'Tủ quần áo' },
   ];
 
   // ---- planner state ----
   plannerOpen = signal(false);
   activeRoom = signal<RoomDesign | null>(null);
   activeTab = signal<'add' | 'list'>('add');
-  activeCategory = signal('All categories');
+  activeCategory = signal('Tất cả danh mục');
   searchTerm = signal('');
   view = signal<ViewMode>('dollhouse');
   placed = signal<PlannerProduct[]>([]);
@@ -82,7 +82,7 @@ export class Module4 {
     const cat = this.activeCategory();
     const term = this.searchTerm().trim().toLowerCase();
     return this.products.filter((p) => {
-      if (cat !== 'All categories' && p.category !== cat) return false;
+      if (cat !== 'Tất cả danh mục' && p.category !== cat) return false;
       if (term && !(p.name.toLowerCase().includes(term) || p.desc.toLowerCase().includes(term))) return false;
       return true;
     });
@@ -169,7 +169,7 @@ export class Module4 {
         price: item.price,
         image: item.image,
         productId: item.id,
-        roomName: this.activeRoom()?.name || 'Living Room',
+        roomName: this.activeRoom()?.name || 'Phòng khách',
         categoryName: item.category
       });
     });

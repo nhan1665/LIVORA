@@ -1,14 +1,12 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Header } from '../../layouts/header/header';
-import { Footer } from '../../layouts/footer/footer';
 import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-module6',
   standalone: true,
-  imports: [CommonModule, FormsModule, Header, Footer, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './module-6.html',
   styleUrl: './module-6.css',
 })
@@ -30,24 +28,25 @@ export class Module6 {
       this.orderInfo = {
         code: 'ORD-1234',
         status: 'Delivering', // Pending, Shipping, Delivering, Delivered
-        date: 'Oct 24, 2025',
+        statusDisplay: 'Đang vận chuyển',
+        date: '24/10/2025',
         customer: {
-          name: phone === '0901234567' ? 'Nguyen Van A' : 'Khách hàng thân thiết',
+          name: phone === '0901234567' ? 'Nguyễn Văn A' : 'Khách hàng thân thiết',
           phone: phone,
-          address: '123 Nguyen Hue, District 1, Ho Chi Minh City'
+          address: '123 Nguyễn Huệ, Quận 1, TP. Hồ Chí Minh'
         },
         items: [
           {
-            name: 'Premium minimalist 4-leg bed frame with headboard guard (stainless steel)',
+            name: 'Khung giường 4 chân cao cấp tối giản kèm thanh chắn (thép không gỉ)',
             image: 'item.png',
-            color: 'White - Black',
+            color: 'Trắng - Đen',
             quantity: 1,
             price: 899
           },
           {
-            name: 'Modern bedside table with drawer',
+            name: 'Bàn đầu giường hiện đại có ngăn kéo',
             image: 'item.png', // Fallback to item.png
-            color: 'Oak Wood',
+            color: 'Gỗ sồi tự nhiên',
             quantity: 2,
             price: 150
           }
