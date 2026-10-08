@@ -6,100 +6,47 @@
 
   <!-- Tabs Navigation -->
   <div class="tabs-nav-bar">
-    <button
-      type="button"
-      class="tab-btn"
-      [class.active]="activeTab === 'marquee'"
-      (click)="setTab('marquee')"
-    >
+    <button type="button" class="tab-btn" [class.active]="activeTab === 'marquee'" (click)="setTab('marquee')">
       <span class="tab-icon">
-        <svg
-          width="18"
-          height="18"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-        >
-          <rect width="20" height="14" x="2" y="5" rx="2" />
-          <line x1="2" x2="22" y1="10" />
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="m3 11 18-5v12L3 13v-2z" />
+          <path d="M11.6 16.8a3 3 0 1 1-5.8-1.6" />
         </svg>
       </span>
       <span class="tab-text">Thông báo Marquee</span>
-      <span class="tab-active-dot"></span>
     </button>
 
-    <button
-      type="button"
-      class="tab-btn"
-      [class.active]="activeTab === 'banner'"
-      (click)="setTab('banner')"
-    >
+    <button type="button" class="tab-btn" [class.active]="activeTab === 'banner'" (click)="setTab('banner')">
       <span class="tab-icon">
-        <svg
-          width="18"
-          height="18"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="1.8"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-        >
-          <rect width="18" height="18" x="3" y="3" rx="2" />
-          <path d="m3 9 18 0" />
-          <circle cx="9" cy="6" r="1" />
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+          stroke-linecap="round" stroke-linejoin="round">
+          <rect width="18" height="14" x="3" y="4" rx="2" />
+          <path d="M7 20h10" />
+          <path d="M12 18v2" />
         </svg>
       </span>
       <span class="tab-text">Banner</span>
     </button>
 
-    <button
-      type="button"
-      class="tab-btn"
-      [class.active]="activeTab === 'brand'"
-      (click)="setTab('brand')"
-    >
+    <button type="button" class="tab-btn" [class.active]="activeTab === 'brand'" (click)="setTab('brand')">
       <span class="tab-icon">
-        <svg
-          width="18"
-          height="18"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="1.8"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-        >
-          <path
-            d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"
-          />
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+          stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10" />
+          <polygon points="12 7 13.5 10.5 17 11 14.5 13.5 15 17 12 15.2 9 17 9.5 13.5 7 11 10.5 10.5 12 7"
+            fill="currentColor" />
         </svg>
       </span>
       <span class="tab-text">Thương hiệu</span>
     </button>
 
-    <button
-      type="button"
-      class="tab-btn"
-      [class.active]="activeTab === 'footer'"
-      (click)="setTab('footer')"
-    >
+    <button type="button" class="tab-btn" [class.active]="activeTab === 'footer'" (click)="setTab('footer')">
       <span class="tab-icon">
-        <svg
-          width="18"
-          height="18"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="1.8"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-        >
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+          stroke-linecap="round" stroke-linejoin="round">
           <rect width="18" height="18" x="3" y="3" rx="2" />
-          <path d="M3 15h18" />
+          <line x1="3" x2="21" y1="15" y2="15" />
         </svg>
       </span>
       <span class="tab-text">Footer</span>
@@ -108,145 +55,658 @@
 
   <!-- TAB CONTENT: 1. THÔNG BÁO MARQUEE -->
   @if (activeTab === 'marquee') {
-    <div class="content-card">
-      <!-- Card Header -->
-      <div class="card-header">
-        <div class="header-left">
-          <h2 class="card-title">Quản lý thông báo Marquee</h2>
-          <span class="active-pill-badge">
-            <span class="pill-dot"></span>
-            <span>Đang hoạt động: {{ activeCount }}/5 thông báo</span>
+  <div class="content-card">
+    <!-- Card Header -->
+    <div class="card-header">
+      <div class="header-left">
+        <h2 class="card-title">Quản lý thông báo Marquee</h2>
+        <span class="active-pill-badge">
+          <span class="pill-dot"></span>
+          <span>Đang hoạt động: {{ activeCount }}/5 thông báo</span>
+        </span>
+      </div>
+      <div class="header-right">
+        <button type="button" class="btn-primary" (click)="openCreateModal()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"
+            stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          <span>Thêm thông báo</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Quota Notice Alert Box -->
+    <div class="quota-notice-box">
+      <div class="notice-info-wrapper">
+        <div class="notice-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6B5953" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="16" x2="12" y2="12"></line>
+            <line x1="12" y1="8" x2="12.01" y2="8"></line>
+          </svg>
+        </div>
+        <p class="notice-text">
+          Hệ thống cho phép tối đa 5 thông báo Marquee đang hoạt động cùng lúc để đảm bảo
+          trải nghiệm khách hàng tối ưu và giữ gìn khoảng lặng thẩm mỹ.
+        </p>
+      </div>
+
+      <div class="quota-progress-container">
+        <span class="quota-label">HẠN NGẠCH</span>
+        <div class="quota-progress-bar">
+          <div class="quota-progress-fill" [style.width.%]="activeQuotaPercentage"></div>
+        </div>
+        <span class="quota-value">{{ activeQuotaPercentage }}%</span>
+      </div>
+    </div>
+
+    <!-- Reusable Filter Bar -->
+    <app-filter-bar searchPlaceholder="Nhập nội dung thông báo..." searchLabel="TỪ KHÓA" statusLabel="TRẠNG THÁI"
+      [(searchValue)]="filterKeyword" [(statusValue)]="filterStatus" (filter)="onFilter()"
+      (reset)="onResetFilter()"></app-filter-bar>
+
+    <!-- Reusable DataTable -->
+    <div class="table-section">
+      <app-data-table [columns]="columns" [data]="paginatedData" [totalItems]="filteredData.length"
+        [currentPage]="currentPage" [itemsPerPage]="itemsPerPage" [itemLabel]="'thông báo'" [showPagination]="true"
+        (pageChange)="onPageChange($event)" (actionClick)="handleAction($event)"></app-data-table>
+    </div>
+  </div>
+  }
+
+  <!-- TAB CONTENT: 2. QUẢN LÝ BANNER -->
+  @if (activeTab === 'banner') {
+  <div class="content-card">
+    <!-- Card Header -->
+    <div class="card-header">
+      <div class="header-left-col">
+        <h2 class="card-title">Quản lý Banner</h2>
+        <p class="card-subtitle">Danh sách các banner hero slider trình chiếu ở trang chủ</p>
+      </div>
+      <div class="header-right">
+        <button type="button" class="btn-primary" (click)="openCreateBannerModal()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"
+            stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          <span>Thêm Banner</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Banner Filter Box matching exact screenshot -->
+    <div class="banner-filter-box">
+      <!-- TRẠNG THÁI -->
+      <div class="filter-col">
+        <label class="filter-label">TRẠNG THÁI</label>
+        <div class="custom-select-wrapper">
+          <select class="filter-input-control filter-select" [(ngModel)]="bannerFilterStatus"
+            (change)="onBannerFilter()">
+            <option value="all">Tất cả</option>
+            <option value="Đang hiển thị">Đang hiển thị</option>
+            <option value="Đã ẩn">Đã ẩn</option>
+          </select>
+          <span class="select-arrow">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
           </span>
         </div>
-        <div class="header-right">
-          <button type="button" class="btn-primary" (click)="openCreateModal()">
-            <svg
-              width="15"
-              height="15"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2.4"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <line x1="12" y1="5" x2="12" y2="19"></line>
-              <line x1="5" y1="12" x2="19" y2="12"></line>
+      </div>
+
+      <!-- TỪ NGÀY -->
+      <div class="filter-col">
+        <label class="filter-label">TỪ NGÀY</label>
+        <div class="date-input-wrapper">
+          <input type="text" class="filter-input-control date-input" placeholder="01/01/2026"
+            [(ngModel)]="bannerFilterStartDate" (keyup.enter)="onBannerFilter()" />
+          <span class="calendar-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+              stroke-linecap="round" stroke-linejoin="round">
+              <rect width="18" height="18" x="3" y="4" rx="2" ry="2" />
+              <line x1="16" x2="16" y1="2" y2="6" />
+              <line x1="8" x2="8" y1="2" y2="6" />
+              <line x1="3" x2="21" y1="10" y2="10" />
             </svg>
-            <span>Thêm thông báo</span>
+          </span>
+        </div>
+      </div>
+
+      <!-- ĐẾN NGÀY -->
+      <div class="filter-col">
+        <label class="filter-label">ĐẾN NGÀY</label>
+        <div class="date-input-wrapper">
+          <input type="text" class="filter-input-control date-input" placeholder="31/12/2026"
+            [(ngModel)]="bannerFilterEndDate" (keyup.enter)="onBannerFilter()" />
+          <span class="calendar-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+              stroke-linecap="round" stroke-linejoin="round">
+              <rect width="18" height="18" x="3" y="4" rx="2" ry="2" />
+              <line x1="16" x2="16" y1="2" y2="6" />
+              <line x1="8" x2="8" y1="2" y2="6" />
+              <line x1="3" x2="21" y1="10" y2="10" />
+            </svg>
+          </span>
+        </div>
+      </div>
+
+      <!-- NÚT LỌC -->
+      <div class="filter-action-col">
+        <button type="button" class="btn-filter-apply" (click)="onBannerFilter()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <line x1="4" y1="21" x2="4" y2="14"></line>
+            <line x1="4" y1="10" x2="4" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="12"></line>
+            <line x1="12" y1="8" x2="12" y2="3"></line>
+            <line x1="20" y1="21" x2="20" y2="16"></line>
+            <line x1="20" y1="12" x2="20" y2="3"></line>
+            <line x1="1" y1="14" x2="7" y2="14"></line>
+            <line x1="9" y1="8" x2="15" y2="8"></line>
+            <line x1="17" y1="16" x2="23" y2="16"></line>
+          </svg>
+          <span>Lọc</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Banner Table -->
+    <div class="banner-table-container">
+      <table class="banner-data-table">
+        <thead>
+          <tr>
+            <th class="th-img">ẢNH</th>
+            <th class="th-title">TIÊU ĐỀ BANNER</th>
+            <th class="th-status">TRẠNG THÁI</th>
+            <th class="th-date">TỪ NGÀY</th>
+            <th class="th-date">ĐẾN NGÀY</th>
+            <th class="th-actions">THAO TÁC</th>
+          </tr>
+        </thead>
+        <tbody>
+          @if (paginatedBannerList.length === 0) {
+          <tr>
+            <td colspan="6" class="empty-table-cell">
+              <div class="empty-table-state">
+                <p class="empty-msg-title">Không tìm thấy banner nào phù hợp</p>
+                <p class="empty-msg-sub">Vui lòng thử thay đổi điều kiện lọc trạng thái hoặc thời gian.</p>
+                <button type="button" class="btn-reset-filter" (click)="onBannerResetFilter()">
+                  Đặt lại bộ lọc
+                </button>
+              </div>
+            </td>
+          </tr>
+          } @else {
+          @for (banner of paginatedBannerList; track banner.id) {
+          <tr class="banner-row-item">
+            <!-- 1. Ảnh -->
+            <td class="td-img">
+              <div class="banner-thumb-wrapper">
+                <img [src]="banner.imageUrl" [alt]="banner.title" class="banner-thumbnail"
+                  (error)="onBannerImgError($event)" loading="lazy" />
+              </div>
+            </td>
+
+            <!-- 2. Tiêu đề Banner -->
+            <td class="td-title">
+              <div class="banner-info-block">
+                <h4 class="banner-title-heading">{{ banner.title }}</h4>
+                <p class="banner-subtitle-desc">{{ banner.subtitle }}</p>
+              </div>
+            </td>
+
+            <!-- 3. Trạng thái -->
+            <td class="td-status">
+              <span class="banner-status-pill" [class.status-active]="banner.status === 'Đang hiển thị'"
+                [class.status-hidden]="banner.status === 'Đã ẩn'">
+                <span class="status-indicator-dot"></span>
+                <span class="status-text">{{ banner.status }}</span>
+              </span>
+            </td>
+
+            <!-- 4. Từ ngày -->
+            <td class="td-date">{{ banner.startDate }}</td>
+
+            <!-- 5. Đến ngày -->
+            <td class="td-date">{{ banner.endDate }}</td>
+
+            <!-- 6. Thao tác -->
+            <td class="td-actions">
+              <div class="action-buttons-wrap">
+                <!-- Chỉnh sửa (Pencil icon) -->
+                <button type="button" class="btn-table-action" title="Chỉnh sửa banner"
+                  (click)="openEditBannerModal(banner)">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
+                  </svg>
+                </button>
+
+                <!-- Ẩn / Hiện (Eye Slash / Eye icon) -->
+                @if (banner.status === 'Đang hiển thị') {
+                <button type="button" class="btn-table-action" title="Ẩn banner" (click)="promptToggleBanner(banner)">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" />
+                    <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68" />
+                    <path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61" />
+                    <line x1="2" y1="2" x2="22" y2="22" />
+                  </svg>
+                </button>
+                } @else {
+                <button type="button" class="btn-table-action" title="Hiển thị banner"
+                  (click)="promptToggleBanner(banner)">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
+                    <circle cx="12" cy="12" r="3" />
+                  </svg>
+                </button>
+                }
+
+                <!-- Xóa (Trash bin icon) -->
+                <button type="button" class="btn-table-action action-delete" title="Xóa banner"
+                  (click)="promptDeleteBanner(banner)">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="3 6 5 6 21 6" />
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                    <line x1="10" x2="10" y1="11" y2="17" />
+                    <line x1="14" x2="14" y1="11" y2="17" />
+                  </svg>
+                </button>
+              </div>
+            </td>
+          </tr>
+          }
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Banner Pagination Footer matching exact screenshot -->
+    <div class="banner-pagination-footer">
+      <div class="pagination-summary">
+        Hiển thị <strong>{{ bannerStartIdx }}–{{ bannerEndIdx }}</strong> trên <strong>{{ filteredBannerList.length
+          }}</strong> banner
+      </div>
+      <div class="pagination-actions">
+        <!-- Nút Prev -->
+        <button type="button" class="btn-page-arrow" [disabled]="bannerCurrentPage <= 1"
+          (click)="onBannerPageChange(bannerCurrentPage - 1)" title="Trang trước">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 18 9 12 15 6"></polyline>
+          </svg>
+        </button>
+
+        <!-- Danh sách trang số [1] [2] -->
+        <div class="page-numbers-list">
+          @for (page of bannerPageNumbers; track page) {
+          <button type="button" class="btn-page-num" [class.active]="page === bannerCurrentPage"
+            (click)="onBannerPageChange(page)">
+            {{ page }}
           </button>
-        </div>
-      </div>
-
-      <!-- Quota Notice Alert Box -->
-      <div class="quota-notice-box">
-        <div class="notice-info-wrapper">
-          <div class="notice-icon">
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="#6B5953"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <circle cx="12" cy="12" r="10"></circle>
-              <line x1="12" y1="16" x2="12" y2="12"></line>
-              <line x1="12" y1="8" x2="12.01" y2="8"></line>
-            </svg>
-          </div>
-          <p class="notice-text">
-            Hệ thống cho phép tối đa 5 thông báo Marquee đang hoạt động cùng lúc để đảm bảo
-            trải nghiệm khách hàng tối ưu và giữ gìn khoảng lặng thẩm mỹ.
-          </p>
+          }
         </div>
 
-        <div class="quota-progress-container">
-          <span class="quota-label">HẠN NGẠCH</span>
-          <div class="quota-progress-bar">
-            <div
-              class="quota-progress-fill"
-              [style.width.%]="activeQuotaPercentage"
-            ></div>
-          </div>
-          <span class="quota-value">{{ activeQuotaPercentage }}%</span>
-        </div>
-      </div>
-
-      <!-- Reusable Filter Bar -->
-      <app-filter-bar
-        searchPlaceholder="Nhập nội dung thông báo..."
-        searchLabel="TỪ KHÓA"
-        statusLabel="TRẠNG THÁI"
-        [(searchValue)]="filterKeyword"
-        [(statusValue)]="filterStatus"
-        (filter)="onFilter()"
-        (reset)="onResetFilter()"
-      ></app-filter-bar>
-
-      <!-- Reusable DataTable -->
-      <div class="table-section">
-        <app-data-table
-          [columns]="columns"
-          [data]="paginatedData"
-          [totalItems]="filteredData.length"
-          [currentPage]="currentPage"
-          [itemsPerPage]="itemsPerPage"
-          [itemLabel]="'thông báo'"
-          [showPagination]="true"
-          (pageChange)="onPageChange($event)"
-          (actionClick)="handleAction($event)"
-        ></app-data-table>
-      </div>
-    </div>
-  }
-
-  <!-- TAB CONTENT: OTHER TABS (Placeholder / Preview) -->
-  @if (activeTab === 'banner') {
-    <div class="content-card placeholder-card">
-      <div class="placeholder-content">
-        <div class="placeholder-icon-wrap">
-          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#C59A52" stroke-width="1.8">
-            <rect width="18" height="18" x="3" y="3" rx="2" />
-            <path d="m3 9 18 0" />
-            <circle cx="9" cy="6" r="1" />
+        <!-- Nút Next -->
+        <button type="button" class="btn-page-arrow" [disabled]="bannerCurrentPage >= bannerTotalPages"
+          (click)="onBannerPageChange(bannerCurrentPage + 1)" title="Trang sau">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="9 18 15 12 9 6"></polyline>
           </svg>
-        </div>
-        <h3>Quản lý Banner Trang chủ</h3>
-        <p>Quản lý các slide ảnh và thông điệp nổi bật trên đầu trang chủ.</p>
+        </button>
       </div>
     </div>
+  </div>
   }
 
+  <!-- TAB CONTENT: 3. THƯƠNG HIỆU -->
   @if (activeTab === 'brand') {
-    <div class="content-card placeholder-card">
-      <div class="placeholder-content">
-        <div class="placeholder-icon-wrap">
-          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#C59A52" stroke-width="1.8">
-            <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" />
+  <div class="content-card">
+    <!-- Card Header -->
+    <div class="card-header">
+      <div class="header-left-col">
+        <h2 class="card-title">Quản lý thương hiệu</h2>
+        <p class="brand-subtitle-caps">DANH MỤC ĐỐI TÁC CAO CẤP ĐƯỢC GIÁM TUYỂN</p>
+      </div>
+      <div class="header-right">
+        <button type="button" class="btn-primary" (click)="openCreateBrandModal()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"
+            stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
           </svg>
-        </div>
-        <h3>Quản lý Khối Thương hiệu</h3>
-        <p>Cấu hình logo đối tác, chứng nhận và câu chuyện thương hiệu Livora.</p>
+          <span>Thêm thương hiệu</span>
+        </button>
       </div>
     </div>
+
+    <!-- Brand Filter Bar -->
+    <div class="brand-filter-box">
+      <!-- TỪ KHÓA -->
+      <div class="brand-filter-col brand-col-search">
+        <label class="filter-label">TỪ KHÓA</label>
+        <div class="bm-input-affix-wrapper">
+          <span class="bm-input-prefix-icon">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+          </span>
+          <input type="text" class="filter-input-control bm-has-prefix" placeholder="Nhập tiêu đề thương hiệu..."
+            [(ngModel)]="brandFilterKeyword" (keyup.enter)="onBrandFilter()" />
+        </div>
+      </div>
+
+      <!-- TRẠNG THÁI -->
+      <div class="brand-filter-col brand-col-status">
+        <label class="filter-label">TRẠNG THÁI</label>
+        <div class="custom-select-wrapper">
+          <select class="filter-input-control filter-select" [(ngModel)]="brandFilterStatus" (change)="onBrandFilter()">
+            <option value="all">Tất cả</option>
+            <option value="Đang hiển thị">Đang hiển thị</option>
+            <option value="Đã ẩn">Đã ẩn</option>
+          </select>
+          <span class="select-arrow">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </span>
+        </div>
+      </div>
+
+      <!-- NÚT LỌC -->
+      <div class="filter-action-col">
+        <button type="button" class="btn-filter-apply" (click)="onBrandFilter()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <line x1="4" y1="21" x2="4" y2="14"></line>
+            <line x1="4" y1="10" x2="4" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="12"></line>
+            <line x1="12" y1="8" x2="12" y2="3"></line>
+            <line x1="20" y1="21" x2="20" y2="16"></line>
+            <line x1="20" y1="12" x2="20" y2="3"></line>
+            <line x1="1" y1="14" x2="7" y2="14"></line>
+            <line x1="9" y1="8" x2="15" y2="8"></line>
+            <line x1="17" y1="16" x2="23" y2="16"></line>
+          </svg>
+          <span>Lọc</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Brand Table -->
+    <div class="banner-table-container">
+      <table class="banner-data-table brand-data-table">
+        <thead>
+          <tr>
+            <th class="th-brand-title">TIÊU ĐỀ</th>
+            <th class="th-brand-desc">NỘI DUNG</th>
+            <th class="th-brand-status">TRẠNG THÁI</th>
+            <th class="th-brand-actions">THAO TÁC</th>
+          </tr>
+        </thead>
+        <tbody>
+          @if (paginatedBrandList.length === 0) {
+          <tr>
+            <td colspan="4" class="empty-table-cell">
+              <div class="empty-table-state">
+                <p class="empty-msg-title">Không tìm thấy thương hiệu nào phù hợp</p>
+                <p class="empty-msg-sub">Vui lòng thử tìm kiếm với từ khóa khác.</p>
+                <button type="button" class="btn-reset-filter" (click)="onBrandResetFilter()">
+                  Đặt lại bộ lọc
+                </button>
+              </div>
+            </td>
+          </tr>
+          } @else {
+          @for (brand of paginatedBrandList; track brand.id) {
+          <tr class="banner-row-item">
+            <!-- Tiêu đề + Origin -->
+            <td class="td-brand-title">
+              <div class="brand-title-wrap">
+                <div class="brand-name-main">{{ brand.name }}</div>
+                <div class="brand-origin-sub">{{ brand.origin }}</div>
+              </div>
+            </td>
+
+            <!-- Nội dung mô tả -->
+            <td class="td-brand-desc">
+              <p class="brand-desc-text">{{ brand.description }}</p>
+            </td>
+
+            <!-- Trạng thái -->
+            <td class="td-status">
+              <span class="banner-status-pill" [class.status-active]="brand.status === 'Đang hiển thị'"
+                [class.status-hidden]="brand.status === 'Đã ẩn'">
+                <span class="status-indicator-dot"></span>
+                <span class="status-text">{{ brand.status }}</span>
+              </span>
+            </td>
+
+            <!-- Thao tác -->
+            <td class="td-actions">
+              <div class="action-buttons-wrap">
+                <button type="button" class="btn-table-action" title="Chỉnh sửa thương hiệu"
+                  (click)="openEditBrandModal(brand)">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
+                  </svg>
+                </button>
+
+                @if (brand.status === 'Đang hiển thị') {
+                <button type="button" class="btn-table-action" title="Ẩn thương hiệu"
+                  (click)="promptToggleBrand(brand)">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" />
+                    <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68" />
+                    <path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61" />
+                    <line x1="2" y1="2" x2="22" y2="22" />
+                  </svg>
+                </button>
+                } @else {
+                <button type="button" class="btn-table-action" title="Hiển thị thương hiệu"
+                  (click)="promptToggleBrand(brand)">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
+                    <circle cx="12" cy="12" r="3" />
+                  </svg>
+                </button>
+                }
+
+                <button type="button" class="btn-table-action action-delete" title="Xóa thương hiệu"
+                  (click)="promptDeleteBrand(brand)">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="3 6 5 6 21 6" />
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                    <line x1="10" x2="10" y1="11" y2="17" />
+                    <line x1="14" x2="14" y1="11" y2="17" />
+                  </svg>
+                </button>
+              </div>
+            </td>
+          </tr>
+          }
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Brand Pagination Footer -->
+    <div class="banner-pagination-footer">
+      <div class="pagination-summary">
+        Hiển thị <strong>{{ brandStartIdx }}–{{ brandEndIdx }}</strong> trên <strong>{{ filteredBrandList.length
+          }}</strong> thương hiệu đối tác
+      </div>
+      <div class="pagination-actions">
+        <button type="button" class="btn-page-arrow" [disabled]="brandCurrentPage <= 1"
+          (click)="onBrandPageChange(brandCurrentPage - 1)" title="Trang trước">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 18 9 12 15 6"></polyline>
+          </svg>
+        </button>
+
+        <div class="page-numbers-list">
+          @for (page of brandPageNumbers; track page) {
+          <button type="button" class="btn-page-num" [class.active]="page === brandCurrentPage"
+            (click)="onBrandPageChange(page)">
+            {{ page }}
+          </button>
+          }
+        </div>
+
+        <button type="button" class="btn-page-arrow" [disabled]="brandCurrentPage >= brandTotalPages"
+          (click)="onBrandPageChange(brandCurrentPage + 1)" title="Trang sau">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="9 18 15 12 9 6"></polyline>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
   }
 
+  <!-- TAB CONTENT: 4. CẤU HÌNH FOOTER -->
   @if (activeTab === 'footer') {
-    <div class="content-card placeholder-card">
-      <div class="placeholder-content">
-        <div class="placeholder-icon-wrap">
-          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#C59A52" stroke-width="1.8">
-            <rect width="18" height="18" x="3" y="3" rx="2" />
-            <path d="M3 15h18" />
-          </svg>
+  <div class="content-card">
+    <!-- Card Header -->
+    <div class="card-header">
+      <div class="header-left-col">
+        <h2 class="card-title">Quản lý Footer</h2>
+        <p class="card-subtitle">Cấu hình thông tin mạng xã hội và hotline hiển thị tại chân trang website.</p>
+      </div>
+      <div class="header-right">
+        <div class="live-version-badge">
+          <span class="live-badge-label">PHIÊN BẢN LIVE</span>
+          <span class="live-badge-ver">2.4</span>
         </div>
-        <h3>Cấu hình Chân trang (Footer)</h3>
-        <p>Tùy chỉnh thông tin liên hệ, liên kết nhanh, bản quyền và mạng xã hội.</p>
       </div>
     </div>
+
+    <!-- Footer Channels List -->
+    <div class="footer-channels-list">
+      @for (item of footerConfig; track item.id) {
+      <div class="footer-channel-row-card">
+        <!-- Channel Info & Icon -->
+        <div class="channel-identity-col">
+          <div class="channel-avatar-circle" [ngClass]="'avatar-' + item.key">
+            @switch (item.key) {
+            @case ('facebook') {
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path>
+            </svg>
+            }
+            @case ('instagram') {
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <rect width="20" height="20" x="2" y="2" rx="5" ry="5"></rect>
+              <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+              <line x1="17.5" x2="17.51" y1="6.5" y2="6.5"></line>
+            </svg>
+            }
+            @case ('zalo') {
+            <span class="zalo-text-icon">Zalo</span>
+            }
+            @case ('phone') {
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path
+                d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z">
+              </path>
+            </svg>
+            }
+            }
+          </div>
+          <div class="channel-text-info">
+            <span class="channel-name-title">{{ item.name }}</span>
+            <span class="channel-desc-sub">{{ item.subtitle }}</span>
+          </div>
+        </div>
+
+        <!-- Value Input -->
+        <div class="channel-value-col">
+          <div class="bm-input-affix-wrapper">
+            <span class="bm-input-prefix-icon">
+              @if (item.key === 'phone') {
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path
+                  d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z">
+                </path>
+              </svg>
+              } @else {
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+              </svg>
+              }
+            </span>
+            <input type="text" class="filter-input-control bm-has-prefix channel-input-box" [(ngModel)]="item.value" />
+          </div>
+        </div>
+
+        <!-- Status Dropdown -->
+        <div class="channel-status-col">
+          <div class="custom-select-wrapper">
+            <select class="filter-input-control filter-select channel-status-select" [(ngModel)]="item.status">
+              <option value="Hiển thị">Hiển thị</option>
+              <option value="Ẩn">Ẩn</option>
+            </select>
+            <span class="select-arrow">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </span>
+          </div>
+        </div>
+      </div>
+      }
+    </div>
+
+    <!-- Footer Action & Live Note Bar -->
+    <div class="footer-control-action-bar">
+      <div class="footer-live-note">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7d706a" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="16" x2="12" y2="12"></line>
+          <line x1="12" y1="8" x2="12.01" y2="8"></line>
+        </svg>
+        <span>Thay đổi sẽ tự động áp dụng ngay vào chân trang người dùng.</span>
+      </div>
+      <div class="footer-action-buttons">
+        <button type="button" class="btn-footer-cancel" (click)="resetFooterConfig()">
+          Hủy bỏ
+        </button>
+        <button type="button" class="btn-footer-save" (click)="saveFooterConfig()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"
+            stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+          <span>Lưu thay đổi</span>
+        </button>
+      </div>
+    </div>
+  </div>
   }
 
   <!-- CUSTOM CELL TEMPLATES FOR DATA TABLE -->
@@ -260,109 +720,58 @@
     <div class="title-cell-wrapper">
       <span class="title-type-icon">
         @switch (row.iconType) {
-          @case ('truck') {
-            <!-- Delivery Truck -->
-            <svg
-              width="17"
-              height="17"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="#593C3B"
-              stroke-width="1.8"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2" />
-              <path d="M15 18H9" />
-              <path d="M19 18h2a1 1 0 0 0 1-1v-5l-4-4h-4v10" />
-              <circle cx="7" cy="18" r="2" />
-              <circle cx="17" cy="18" r="2" />
-            </svg>
-          }
-          @case ('sparkle') {
-            <!-- Sparkles / Collection -->
-            <svg
-              width="17"
-              height="17"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="#593C3B"
-              stroke-width="1.8"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <path
-                d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"
-              />
-            </svg>
-          }
-          @case ('user') {
-            <!-- User / Consultation -->
-            <svg
-              width="17"
-              height="17"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="#593C3B"
-              stroke-width="1.8"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
-              <circle cx="12" cy="7" r="4" />
-            </svg>
-          }
-          @case ('sofa') {
-            <!-- Sofa / Furniture -->
-            <svg
-              width="17"
-              height="17"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="#593C3B"
-              stroke-width="1.8"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <path d="M4 18v2M20 18v2" />
-              <path d="M19 9V6a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v3" />
-              <path d="M3 11a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-            </svg>
-          }
-          @case ('discount') {
-            <!-- Discount / Voucher Tag -->
-            <svg
-              width="17"
-              height="17"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="#593C3B"
-              stroke-width="1.8"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <path
-                d="M12 2H2v10l9.29 9.29c.94.94 2.48.94 3.42 0l6.58-6.58c.94-.94.94-2.48 0-3.42L12 2Z"
-              />
-              <path d="M7 7h.01" />
-            </svg>
-          }
-          @default {
-            <!-- Default Bell -->
-            <svg
-              width="17"
-              height="17"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="#593C3B"
-              stroke-width="1.8"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
-              <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
-            </svg>
-          }
+        @case ('truck') {
+        <!-- Delivery Truck -->
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#593C3B" stroke-width="1.8"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2" />
+          <path d="M15 18H9" />
+          <path d="M19 18h2a1 1 0 0 0 1-1v-5l-4-4h-4v10" />
+          <circle cx="7" cy="18" r="2" />
+          <circle cx="17" cy="18" r="2" />
+        </svg>
+        }
+        @case ('sparkle') {
+        <!-- Sparkles / Collection -->
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#593C3B" stroke-width="1.8"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path
+            d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z" />
+        </svg>
+        }
+        @case ('user') {
+        <!-- User / Consultation -->
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#593C3B" stroke-width="1.8"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+          <circle cx="12" cy="7" r="4" />
+        </svg>
+        }
+        @case ('sofa') {
+        <!-- Sofa / Furniture -->
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#593C3B" stroke-width="1.8"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 18v2M20 18v2" />
+          <path d="M19 9V6a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v3" />
+          <path d="M3 11a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+        </svg>
+        }
+        @case ('discount') {
+        <!-- Discount / Voucher Tag -->
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#593C3B" stroke-width="1.8"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2H2v10l9.29 9.29c.94.94 2.48.94 3.42 0l6.58-6.58c.94-.94.94-2.48 0-3.42L12 2Z" />
+          <path d="M7 7h.01" />
+        </svg>
+        }
+        @default {
+        <!-- Default Bell -->
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#593C3B" stroke-width="1.8"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
+          <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
+        </svg>
+        }
         }
       </span>
       <span class="title-content-text" [title]="row.title">{{ row.title }}</span>
@@ -375,33 +784,21 @@
   </ng-template>
 
   <!-- Reusable Form Modal -->
-  <app-form-modal
-    [isOpen]="isModalOpen"
+  <app-form-modal [isOpen]="isModalOpen"
     [title]="modalMode === 'create' ? 'Thêm thông báo Marquee mới' : 'Chỉnh sửa thông báo Marquee'"
     [subtitle]="'Cấu hình nội dung chữ chạy nổi bật trên đầu trang chủ Livora'"
-    [submitText]="modalMode === 'create' ? 'Lưu thông báo' : 'Cập nhật'"
-    (close)="closeModal()"
-    (submit)="saveNotification()"
-  >
+    [submitText]="modalMode === 'create' ? 'Lưu thông báo' : 'Cập nhật'" (close)="closeModal()"
+    (submit)="saveNotification()">
     <div class="form-row form-row-2">
       <div class="form-group">
         <label class="form-label">MÃ THÔNG BÁO</label>
-        <input
-          type="text"
-          class="form-control"
-          [(ngModel)]="notificationForm.code"
-          name="code"
-          readonly
-        />
+        <input type="text" class="form-control" placeholder="Hệ thống tự tạo mã" [(ngModel)]="notificationForm.code"
+          name="code" readonly />
       </div>
 
       <div class="form-group">
         <label class="form-label">BIỂU TƯỢNG (ICON)</label>
-        <select
-          class="form-control"
-          [(ngModel)]="notificationForm.iconType"
-          name="iconType"
-        >
+        <select class="form-control" [(ngModel)]="notificationForm.iconType" name="iconType">
           <option value="truck">Xe tải / Giao hàng</option>
           <option value="sparkle">Ngôi sao / Bộ sưu tập</option>
           <option value="user">Chuyên gia / Tư vấn</option>
@@ -416,60 +813,34 @@
       <label class="form-label">
         NỘI DUNG THÔNG BÁO <span class="required">*</span>
       </label>
-      <textarea
-        class="form-control form-textarea"
-        rows="3"
-        placeholder="Nhập thông điệp hiển thị trên thanh marquee..."
-        [(ngModel)]="notificationForm.title"
-        name="title"
-        required
-      ></textarea>
+      <textarea class="form-control form-textarea" rows="3" placeholder="Nhập thông điệp hiển thị trên thanh marquee..."
+        [(ngModel)]="notificationForm.title" name="title" required></textarea>
     </div>
 
     <div class="form-row form-row-2">
       <div class="form-group">
         <label class="form-label">TỪ NGÀY</label>
-        <input
-          type="text"
-          class="form-control"
-          placeholder="DD/MM/YYYY"
-          [(ngModel)]="notificationForm.startDate"
-          name="startDate"
-        />
+        <input type="text" class="form-control" placeholder="DD/MM/YYYY" [(ngModel)]="notificationForm.startDate"
+          name="startDate" />
       </div>
 
       <div class="form-group">
         <label class="form-label">ĐẾN NGÀY</label>
-        <input
-          type="text"
-          class="form-control"
-          placeholder="DD/MM/YYYY"
-          [(ngModel)]="notificationForm.endDate"
-          name="endDate"
-        />
+        <input type="text" class="form-control" placeholder="DD/MM/YYYY" [(ngModel)]="notificationForm.endDate"
+          name="endDate" />
       </div>
     </div>
 
     <div class="form-row form-row-2">
       <div class="form-group">
         <label class="form-label">THỨ TỰ HIỂN THỊ</label>
-        <input
-          type="number"
-          min="1"
-          max="10"
-          class="form-control"
-          [(ngModel)]="notificationForm.order"
-          name="order"
-        />
+        <input type="number" min="1" max="10" class="form-control" placeholder="Ví dụ: 1"
+          [(ngModel)]="notificationForm.order" name="order" />
       </div>
 
       <div class="form-group">
         <label class="form-label">TRẠNG THÁI</label>
-        <select
-          class="form-control"
-          [(ngModel)]="notificationForm.status"
-          name="status"
-        >
+        <select class="form-control" [(ngModel)]="notificationForm.status" name="status">
           <option value="Đang hoạt động">Đang hoạt động</option>
           <option value="Đã ẩn">Đã ẩn</option>
         </select>
@@ -477,22 +848,324 @@
     </div>
   </app-form-modal>
 
+  <!-- ================================================================= -->
+  <!-- MODAL: THÊM MỚI / CHỈNH SỬA BANNER (ĐÚNG THIẾT KẾ THAM KHẢO)       -->
+  <!-- ================================================================= -->
+  @if (isBannerModalOpen) {
+  <div class="bm-modal-backdrop" (click)="onBannerBackdropClick($event)">
+    <div class="bm-modal-container" (click)="$event.stopPropagation()">
+      <!-- Header -->
+      <div class="bm-modal-header">
+        <div class="bm-header-content">
+          <div class="bm-title-badge-row">
+            <h3 class="bm-modal-title">
+              {{ bannerModalMode === 'create' ? 'Thêm mới Banner' : 'Chỉnh sửa Banner' }}
+            </h3>
+            @if (bannerModalMode === 'create') {
+            <span class="bm-badge-new">MỚI</span>
+            }
+          </div>
+          <p class="bm-modal-subtitle">Tải lên và cấu hình banner hero slider trên trang chủ</p>
+        </div>
+        <button type="button" class="bm-btn-close" (click)="closeBannerModal()" aria-label="Đóng">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Body -->
+      <div class="bm-modal-body">
+        <!-- 1. TIÊU ĐỀ BANNER * -->
+        <div class="bm-form-group">
+          <label class="bm-form-label">
+            TIÊU ĐỀ BANNER <span class="bm-required">*</span>
+          </label>
+          <input type="text" class="bm-form-control" placeholder="Bộ sưu tập Xuân Hè Atelier 2026"
+            [(ngModel)]="bannerForm.title" />
+        </div>
+
+        <!-- 2. PHỤ ĐỀ / MÔ TẢ NGẮN -->
+        <div class="bm-form-group">
+          <label class="bm-form-label">PHỤ ĐỀ / MÔ TẢ NGẮN</label>
+          <input type="text" class="bm-form-control"
+            placeholder="Khám phá các thiết kế không gian tinh tế từ nghệ nhân bậc thầy"
+            [(ngModel)]="bannerForm.subtitle" />
+        </div>
+
+        <!-- 3. TẢI LÊN HÌNH ẢNH BANNER * -->
+        <div class="bm-form-group">
+          <label class="bm-form-label">
+            TẢI LÊN HÌNH ẢNH BANNER <span class="bm-required">*</span>
+          </label>
+          <div class="bm-dropzone-box" [class.drag-over]="isDraggingOver" (dragover)="onDragOver($event)"
+            (dragleave)="onDragLeave($event)" (drop)="onDropFile($event)">
+            <input #bannerFileInput type="file" class="bm-hidden-file-input"
+              accept="image/png, image/jpeg, image/jpg, image/webp" (change)="onFileSelected($event)" />
+
+            <!-- Thumbnail bên trái -->
+            <div class="bm-dropzone-thumb-wrap">
+              @if (bannerForm.imageUrl) {
+              <img [src]="bannerForm.imageUrl" alt="Banner Preview" class="bm-dropzone-img"
+                (error)="onBannerImgError($event)" />
+              } @else {
+              <div class="bm-thumb-empty-placeholder">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9e9188" stroke-width="1.6">
+                  <rect width="18" height="18" x="3" y="3" rx="2" />
+                  <circle cx="9" cy="9" r="2" />
+                  <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
+                </svg>
+              </div>
+              }
+            </div>
+
+            <!-- Nội dung thông tin dropzone bên phải -->
+            <div class="bm-dropzone-text-col">
+              <div class="bm-dropzone-action-line">
+                <svg class="bm-cloud-svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z" />
+                </svg>
+                <span>Kéo thả hình ảnh hoặc</span>
+                <button type="button" class="bm-browse-btn-link" (click)="bannerFileInput.click()">
+                  Chọn tệp từ máy tính
+                </button>
+              </div>
+              <p class="bm-dropzone-notes">
+                Độ phân giải chuẩn: 1920 × 750px (tỷ lệ 16:9 hoặc slider rộng), định dạng JPG/PNG/WebP, tối đa 5MB
+              </p>
+              @if (uploadedFileName) {
+              <div class="bm-uploaded-status-line">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#2e7d32" stroke-width="2.2"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                  <polyline points="22 4 12 14.01 9 11.01" />
+                </svg>
+                <span>Đã tải lên: {{ uploadedFileName }} ({{ uploadedFileSize }})</span>
+              </div>
+              }
+            </div>
+          </div>
+        </div>
+
+        <!-- 4. ĐƯỜNG DẪN LIÊN KẾT (CTA LINK) -->
+        <div class="bm-form-group">
+          <label class="bm-form-label">ĐƯỜNG DẪN LIÊN KẾT (CTA LINK)</label>
+          <div class="bm-input-affix-wrapper">
+            <span class="bm-input-prefix-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+              </svg>
+            </span>
+            <input type="text" class="bm-form-control bm-has-prefix" placeholder="/bo-suu-tap/spring-atelier-2026"
+              [(ngModel)]="bannerForm.linkUrl" />
+          </div>
+        </div>
+
+        <!-- 5. TỪ NGÀY & ĐẾN NGÀY -->
+        <div class="bm-form-grid-2">
+          <div class="bm-form-group">
+            <label class="bm-form-label">TỪ NGÀY</label>
+            <div class="bm-input-affix-wrapper">
+              <input type="text" class="bm-form-control bm-has-suffix" placeholder="01/03/2026"
+                [(ngModel)]="bannerForm.startDate" />
+              <span class="bm-input-suffix-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <rect width="18" height="18" x="3" y="4" rx="2" ry="2" />
+                  <line x1="16" x2="16" y1="2" y2="6" />
+                  <line x1="8" x2="8" y1="2" y2="6" />
+                  <line x1="3" x2="21" y1="10" y2="10" />
+                </svg>
+              </span>
+            </div>
+          </div>
+
+          <div class="bm-form-group">
+            <label class="bm-form-label">ĐẾN NGÀY</label>
+            <div class="bm-input-affix-wrapper">
+              <input type="text" class="bm-form-control bm-has-suffix" placeholder="31/05/2026"
+                [(ngModel)]="bannerForm.endDate" />
+              <span class="bm-input-suffix-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <rect width="18" height="18" x="3" y="4" rx="2" ry="2" />
+                  <line x1="16" x2="16" y1="2" y2="6" />
+                  <line x1="8" x2="8" y1="2" y2="6" />
+                  <line x1="3" x2="21" y1="10" y2="10" />
+                </svg>
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 6. THỨ TỰ ƯU TIÊN HIỂN THỊ & TRẠNG THÁI XUẤT BẢN -->
+        <div class="bm-form-grid-2">
+          <div class="bm-form-group">
+            <label class="bm-form-label">THỨ TỰ ƯU TIÊN HIỂN THỊ</label>
+            <div class="bm-input-affix-wrapper">
+              <input type="number" min="1" max="20" class="bm-form-control bm-has-suffix" placeholder="1"
+                [(ngModel)]="bannerForm.order" />
+              <span class="bm-input-suffix-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="8" y1="6" x2="21" y2="6" />
+                  <line x1="8" y1="12" x2="21" y2="12" />
+                  <line x1="8" y1="18" x2="21" y2="18" />
+                  <line x1="3" y1="6" x2="3.01" y2="6" />
+                  <line x1="3" y1="12" x2="3.01" y2="12" />
+                  <line x1="3" y1="18" x2="3.01" y2="18" />
+                </svg>
+              </span>
+            </div>
+          </div>
+
+          <div class="bm-form-group">
+            <label class="bm-form-label">TRẠNG THÁI XUẤT BẢN</label>
+            <div class="bm-publish-toggle-box" (click)="toggleBannerFormStatus()" role="button" tabindex="0">
+              <span class="bm-toggle-text">
+                {{ bannerForm.status === 'Đang hiển thị' ? 'Hiển thị ngay trên trang chủ' : 'Đã ẩn khỏi trang chủ' }}
+              </span>
+              <div class="bm-switch-track" [class.active]="bannerForm.status === 'Đang hiển thị'">
+                <div class="bm-switch-thumb"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="bm-modal-footer">
+        <button type="button" class="bm-btn-dismiss" (click)="closeBannerModal()">
+          Hủy bỏ
+        </button>
+        <button type="button" class="bm-btn-publish" (click)="saveBanner()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2v10" />
+            <path d="m17 7-5-5-5 5" />
+            <path d="M4 14v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4" />
+          </svg>
+          <span>Lưu & Xuất bản Banner</span>
+        </button>
+      </div>
+    </div>
+  </div>
+  }
+
+  <!-- MODAL: THÊM MỚI / CHỈNH SỬA THƯƠNG HIỆU -->
+  @if (isBrandModalOpen) {
+  <div class="bm-modal-backdrop" (click)="onBrandBackdropClick($event)" role="dialog" aria-modal="true">
+    <div class="bm-modal-container brand-modal-dialog" (click)="$event.stopPropagation()">
+      <!-- Header -->
+      <div class="bm-modal-header">
+        <div class="bm-header-content">
+          <h3 class="bm-modal-title">
+            {{ brandModalMode === 'create' ? 'Thêm mới Thương hiệu' : 'Chỉnh sửa Thương hiệu' }}
+          </h3>
+          <p class="bm-modal-subtitle">
+            Thêm thương hiệu đối tác nội thất cao cấp vào danh mục trang chủ
+          </p>
+        </div>
+        <button type="button" class="bm-btn-close" (click)="closeBrandModal()" title="Đóng hộp thoại">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
+      </div>
+
+      <!-- Body Form -->
+      <div class="brand-modal-body">
+        <!-- 1. Tiêu đề thương hiệu -->
+        <div class="brand-form-group">
+          <label class="brand-field-label">
+            TIÊU ĐỀ THƯƠNG HIỆU <span class="required-star">*</span>
+          </label>
+          <input type="text" class="brand-modal-input"
+            placeholder="Nhập tên thương hiệu đối tác (Ví dụ: Minotti, Poliform, Cassina..)"
+            [(ngModel)]="brandForm.name" />
+        </div>
+
+
+
+        <!-- 3. Nội dung giới thiệu thương hiệu -->
+        <div class="brand-form-group">
+          <div class="brand-label-row">
+            <label class="brand-field-label">
+              NỘI DUNG GIỚI THIỆU THƯƠNG HIỆU <span class="required-star">*</span>
+            </label>
+            <span class="brand-hint-text">Gợi ý 50–250 từ</span>
+          </div>
+          <textarea rows="4" class="brand-modal-textarea"
+            placeholder="Mô tả về di sản kiến trúc, phong cách thủ công hoặc kỹ thuật cốt lõi của thương hiệu đối tác..."
+            [(ngModel)]="brandForm.description"></textarea>
+        </div>
+
+        <!-- 4. Trạng thái hiển thị -->
+        <div class="brand-form-group">
+          <label class="brand-field-label">
+            TRẠNG THÁI HIỂN THỊ
+          </label>
+          <div class="custom-select-wrapper">
+            <select class="brand-modal-input brand-modal-select" [(ngModel)]="brandForm.status">
+              <option value="Đang hiển thị">Đang hiển thị</option>
+              <option value="Đã ẩn">Đã ẩn</option>
+            </select>
+            <span class="select-arrow">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </span>
+          </div>
+        </div>
+
+        <!-- 5. Ghi chú lưu ý -->
+        <div class="brand-modal-alert">
+          <div class="brand-alert-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="16" x2="12" y2="12"></line>
+              <line x1="12" y1="8" x2="12.01" y2="8"></line>
+            </svg>
+          </div>
+          <p class="brand-alert-text">
+            Lưu ý: Thương hiệu mới thêm sẽ được hiển thị tại danh mục đối tác tuyển chọn ở trang chủ theo đúng thứ tự
+            cập nhật.
+          </p>
+        </div>
+      </div>
+
+      <!-- Footer Actions -->
+      <div class="brand-modal-footer">
+        <button type="button" class="btn-brand-cancel" (click)="closeBrandModal()">
+          Hủy bỏ
+        </button>
+        <button type="button" class="btn-brand-submit" (click)="saveBrand()">
+          {{ brandModalMode === 'create' ? 'Thêm thương hiệu' : 'Lưu thay đổi' }}
+        </button>
+      </div>
+    </div>
+  </div>
+  }
+
   <!-- Reusable Confirm Dialog -->
-  <app-confirm-dialog
-    [isOpen]="isConfirmOpen"
-    [title]="confirmTitle"
-    [message]="confirmMessage"
-    confirmText="Đồng ý ẩn"
-    type="warning"
-    (confirm)="onConfirmAction()"
-    (cancel)="onCancelConfirm()"
-  ></app-confirm-dialog>
+  <app-confirm-dialog [isOpen]="isConfirmOpen" [title]="confirmTitle" [message]="confirmMessage"
+    [confirmText]="confirmText" [type]="confirmType" (confirm)="onConfirmAction()"
+    (cancel)="onCancelConfirm()"></app-confirm-dialog>
 
   <!-- Toast Feedback Notification -->
   @if (toastMessage) {
-    <div class="toast-notification">
-      <span class="toast-dot"></span>
-      <span class="toast-text">{{ toastMessage }}</span>
-    </div>
+  <div class="toast-notification">
+    <span class="toast-dot"></span>
+    <span class="toast-text">{{ toastMessage }}</span>
+  </div>
   }
 </div>
