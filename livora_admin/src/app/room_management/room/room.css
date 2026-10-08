@@ -1,0 +1,167 @@
+app-room{
+  --room-brown: #704b4a;
+  --room-brown-dark: #593c3b;
+  --room-ink: #493635;
+  --room-muted: #7c6e68;
+  --room-paper: #fffaf4;
+  --room-cream: #f7f0e6;
+  --room-line: #eee7df;
+  display: block;
+  color: var(--room-ink);
+}
+app-room .room-page{ max-width: 1600px; margin: 0 auto; }
+app-room .room-heading-row{ display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; margin: 0 0 23px; }
+app-room .eyebrow{ margin: 0 0 5px; color: #8a716a; font-size: 10px; font-weight: 700; letter-spacing: .12em; }
+app-room h1{ margin: 0; color: #573b3a; font-family: Georgia, 'Times New Roman', serif; font-size: clamp(27px, 2.35vw, 34px); font-weight: 600; line-height: 1.18; }
+app-room .heading-actions{ display: flex; align-items: center; gap: 10px; }
+app-room .button{ min-height: 40px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 0 15px; border: 1px solid transparent; border-radius: 8px; font-family: inherit; font-size: 12.5px; font-weight: 600; line-height: 1.2; cursor: pointer; transition: background-color .18s ease, border-color .18s ease, color .18s ease, box-shadow .18s ease; }
+app-room .button svg{ width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+app-room .button:focus-visible, app-room .icon-button:focus-visible, app-room .switch-button:focus-visible, app-room .page-button:focus-visible{ outline: 3px solid #d5b5a9; outline-offset: 2px; }
+app-room .button-primary{ background: var(--room-brown); color: #fff; box-shadow: 0 2px 5px #593c3b26; }
+app-room .button-primary:hover:not(:disabled){ background: #5f3f3f; box-shadow: 0 4px 9px #593c3b32; }
+app-room .button-secondary{ border-color: #e9e0d7; background: #fff; color: #513d3b; }
+app-room .button-secondary:hover:not(:disabled){ background: #f8f2eb; }
+app-room .button:disabled{ cursor: not-allowed; opacity: .58; }
+app-room .add-room-button{ min-width: 144px; }
+app-room .filter-panel{ display: grid; grid-template-columns: minmax(260px, 1fr) 205px auto; align-items: center; gap: 14px; margin-bottom: 23px; padding: 14px 16px; border: 1px solid #f2ece4; border-radius: 13px; background: #fff; box-shadow: 0 2px 8px #45332b08; }
+app-room .search-field, app-room .status-field{ min-width: 0; height: 42px; display: flex; align-items: center; gap: 11px; padding: 0 13px; border: 1px solid transparent; border-radius: 8px; background: #f8f2e9; }
+app-room .search-field:focus-within, app-room .status-field:focus-within{ border-color: #c9aaa2; box-shadow: 0 0 0 3px #704b4a16; }
+app-room .search-field svg{ width: 17px; height: 17px; flex: 0 0 auto; fill: none; stroke: #776965; stroke-width: 2; stroke-linecap: round; }
+app-room .search-field input{ width: 100%; min-width: 0; border: 0; outline: 0; background: transparent; color: #493b37; font-family: inherit; font-size: 13px; font-weight: 400; line-height: 1.3; }
+app-room .search-field input::placeholder{ color: #867a73; opacity: 1; }
+app-room .search-field input::-webkit-search-cancel-button{ cursor: pointer; }
+app-room .status-field{ position: relative; padding-right: 10px; }
+app-room .status-field::after{ content: ''; position: absolute; right: 14px; width: 7px; height: 7px; border-right: 1.5px solid #62534e; border-bottom: 1.5px solid #62534e; transform: translateY(-2px) rotate(45deg); pointer-events: none; }
+app-room .status-field select{ width: 100%; height: 100%; appearance: none; border: 0; outline: 0; padding-right: 17px; background: transparent; color: #493b37; font-family: inherit; font-size: 13px; font-weight: 400; line-height: 1.3; cursor: pointer; }
+app-room .filter-actions{ display: flex; align-items: center; gap: 9px; }
+app-room .filter-button{ min-width: 88px; }
+app-room .button-reset{ min-height: 40px; padding: 0 12px; border-color: transparent; background: #fbf6ee; color: #675852; }
+app-room .button-reset:hover{ border-color: #e8ddd1; background: #f4eadc; }
+app-room .button-reset svg{ width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+app-room .table-card{ overflow: hidden; border: 1px solid #f0e9e1; border-radius: 14px; background: #fff; box-shadow: 0 2px 8px #45332b08; }
+app-room .table-scroll{ width: 100%; overflow-x: auto; }
+app-room table{ width: 100%; min-width: 890px; border-collapse: separate; border-spacing: 0; table-layout: fixed; }
+app-room thead{ background: #f8f2e8; }
+app-room th{ height: 65px; padding: 12px 16px; color: #5b4b46; font-size: 10.5px; font-weight: 750; letter-spacing: .045em; line-height: 1.35; text-align: left; text-transform: uppercase; }
+app-room td{ height: 80px; padding: 10px 16px; border-top: 1px solid #f4eee7; color: #463734; font-size: 12.5px; vertical-align: middle; }
+app-room tbody tr:not(.skeleton-row):hover{ background: #fffcf8; }
+app-room .code-col{ width: 125px; }
+app-room .image-col{ width: 104px; }
+app-room .name-col{ width: 225px; }
+app-room .description-col{ width: auto; }
+app-room .status-col{ width: 185px; }
+app-room .actions-col{ width: 150px; text-align: center; }
+app-room .room-code{ color: #664646; font-size: 12px; font-weight: 750; letter-spacing: .025em; white-space: nowrap; }
+app-room .room-thumbnail{ display: block; width: 65px; height: 48px; object-fit: cover; border-radius: 7px; background: #eee7de; box-shadow: 0 1px 3px #00000012; }
+app-room .room-name-cell strong{ display: block; max-width: 210px; color: #493633; font-size: 12.5px; font-weight: 650; line-height: 1.4; }
+app-room .room-description{ max-width: 240px; color: #6b5f5a; font-size: 12px; line-height: 1.45; }
+app-room .status-badge{ width: fit-content; max-width: 150px; min-height: 25px; display: inline-flex; align-items: center; gap: 7px; padding: 4px 11px; border-radius: 20px; font-size: 11px; font-weight: 600; line-height: 1.2; }
+app-room .status-active{ background: #f5eee4; color: #69504a; }
+app-room .status-inactive{ background: #eee8e1; color: #716761; }
+app-room .status-dot{ width: 7px; height: 7px; flex: 0 0 auto; border-radius: 50%; background: #765451; }
+app-room .status-inactive .status-dot, app-room .inactive-hint .status-dot{ background: #9a8e84; }
+app-room .row-actions{ display: flex; align-items: center; justify-content: center; gap: 12px; }
+app-room .icon-button{ width: 28px; height: 32px; display: inline-grid; place-items: center; border: 0; border-radius: 5px; background: transparent; color: #655451; cursor: pointer; }
+app-room .icon-button:hover{ background: #f7eee7; color: #593c3b; }
+app-room .icon-button svg{ width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+app-room .switch-button{ width: 37px; height: 21px; display: inline-flex; align-items: center; padding: 3px; border: 0; border-radius: 14px; background: #e9e1d9; cursor: pointer; transition: background .16s ease; }
+app-room .switch-button span{ width: 15px; height: 15px; border-radius: 50%; background: #fff; box-shadow: 0 1px 2px #0002; transition: transform .16s ease; }
+app-room .switch-button.switch-on{ background: #704b4a; }
+app-room .switch-button.switch-on span{ transform: translateX(16px); }
+app-room .table-footer{ min-height: 68px; display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 12px 16px; background: #fcf9f5; }
+app-room .table-footer p{ margin: 0; color: #6e625d; font-size: 12.5px; }
+app-room .table-footer strong{ color: #4f3a37; font-weight: 650; }
+app-room .pagination{ display: flex; align-items: center; gap: 6px; }
+app-room .page-button{ min-width: 36px; height: 36px; display: inline-grid; place-items: center; padding: 0 9px; border: 1px solid #eee8e1; border-radius: 8px; background: #fff; color: #473b38; font-family: inherit; font-size: 12px; font-weight: 500; line-height: 1; cursor: pointer; }
+app-room .page-button:hover:not(:disabled):not(.current-page){ border-color: #d7c6bc; background: #f8f1e9; }
+app-room .page-button.current-page{ border-color: var(--room-brown); background: var(--room-brown); color: #fff; }
+app-room .page-button:disabled{ color: #b3aaa2; cursor: not-allowed; }
+app-room .page-arrow svg{ width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+app-room .skeleton-row td{ height: 80px; }
+app-room .skeleton{ display: block; overflow: hidden; position: relative; border-radius: 6px; background: #f0ece7; }
+app-room .skeleton::after{ content: ''; position: absolute; inset: 0; transform: translateX(-100%); background: linear-gradient(90deg, transparent, #ffffffa6, transparent); animation: shimmer 1.5s infinite; }
+app-room .skeleton-code{ width: 80px; height: 13px; }
+app-room .skeleton-image{ width: 65px; height: 48px; }
+app-room .skeleton-name{ width: 150px; height: 14px; margin-bottom: 8px; }
+app-room .skeleton-line{ width: 86%; height: 11px; margin: 4px 0; }
+app-room .skeleton-line.short{ width: 58%; }
+app-room .skeleton-badge{ width: 100px; height: 24px; border-radius: 14px; }
+app-room .skeleton-actions{ width: 95px; height: 25px; margin: auto; }
+
+@keyframes shimmer {to{ transform: translateX(100%); }
+ }
+app-room .state-card, app-room .empty-state{ display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+app-room .state-card{ min-height: 380px; padding: 36px 20px; border: 1px solid #eee7df; border-radius: 14px; background: #fff; }
+app-room .empty-state{ min-height: 300px; padding: 36px 18px; }
+app-room .state-icon{ width: 48px; height: 48px; display: grid; place-items: center; margin-bottom: 14px; border-radius: 50%; background: #f5eee5; color: #765452; }
+app-room .state-icon svg{ width: 23px; height: 23px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+app-room .error-icon{ background: #faeeee; color: #aa5c58; font-size: 24px; font-weight: 700; }
+app-room .state-card h2, app-room .empty-state h2{ margin: 0 0 7px; color: #493633; font-size: 16px; font-weight: 650; }
+app-room .state-card p, app-room .empty-state p{ max-width: 420px; margin: 0 0 17px; color: #796d66; font-size: 13px; line-height: 1.5; }
+app-room .text-button{ border: 0; background: transparent; color: #704b4a; font-family: inherit; font-size: 13px; font-weight: 600; line-height: 1.4; text-decoration: underline; cursor: pointer; }
+app-room .sr-only, app-room .visually-hidden{ position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; clip-path: inset(50%); }
+app-room app-form-modal .modal-dialog.modal-lg{ max-width: min(680px, calc(100vw - 32px)) !important; }
+app-room /* The shared modal and confirmation components retain their established styles. */
+.room-form{ margin: 0; }
+app-room .form-grid{ display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 18px; row-gap: 17px; }
+app-room .form-field{ min-width: 0; display: flex; flex-direction: column; gap: 7px; }
+app-room .form-field-full{ grid-column: 1 / -1; }
+app-room .form-field > label, app-room .label-with-count label{ color: #3d302d; font-size: 12.5px; font-weight: 650; }
+app-room .required-mark{ color: #bd5146; }
+app-room .optional-label{ color: #8a7b74; font-weight: 400; }
+app-room .form-field input:not([type=file]), app-room .form-field select, app-room .form-field textarea{ width: 100%; min-height: 42px; border: 1px solid #e8dfd6; border-radius: 8px; outline: 0; padding: 10px 13px; background: #fff; color: #3d3330; font-family: inherit; font-size: 13px; font-weight: 400; line-height: 1.4; transition: border-color .16s ease, box-shadow .16s ease; }
+app-room .form-field textarea{ min-height: 104px; resize: vertical; }
+app-room .form-field input::placeholder, app-room .form-field textarea::placeholder{ color: #998d85; opacity: 1; }
+app-room .form-field input:focus, app-room .form-field select:focus, app-room .form-field textarea:focus{ border-color: #ad8880; box-shadow: 0 0 0 3px #704b4a18; }
+app-room .form-field input:disabled, app-room .form-field select:disabled, app-room .form-field textarea:disabled{ background: #faf7f3; color: #605451; opacity: 1; }
+app-room .form-field small{ color: #857870; font-size: 10.5px; line-height: 1.4; }
+app-room .form-field .field-error{ color: #a33f38; }
+app-room .label-with-count{ display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+app-room .label-with-count span{ color: #806c65; font-size: 10.5px; font-weight: 600; }
+app-room .status-hint{ display: flex; align-items: flex-start; gap: 7px; color: #55724f !important; }
+app-room .status-hint .status-dot{ margin-top: 3px; background: #6c9566; }
+app-room .status-hint.inactive-hint{ color: #80736d !important; }
+app-room .form-alert{ margin-bottom: 15px; padding: 10px 12px; border: 1px solid #f0d4ce; border-radius: 7px; background: #fff4f1; color: #9a4039; font-size: 12px; line-height: 1.4; }
+app-room .image-upload{ min-height: 175px; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 9px; overflow: hidden; padding: 18px; border: 1px dashed #d8c8ba; border-radius: 11px; background: #fdfbf8; color: #4a3935; text-align: center; }
+app-room .image-upload.has-image{ min-height: 190px; padding: 12px; border-style: solid; background: #faf7f2; }
+app-room .image-upload strong{ font-size: 12.5px; font-weight: 650; }
+app-room .image-upload > span{ color: #766a64; font-size: 11px; line-height: 1.45; }
+app-room .upload-icon{ width: 34px; height: 34px; fill: none; stroke: #704b4a; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+app-room .file-picker-label, app-room .replace-image{ color: #704b4a; font-weight: 650; text-decoration: underline; cursor: pointer; }
+app-room .image-preview{ display: block; max-width: 100%; max-height: 220px; object-fit: contain; border-radius: 7px; }
+app-room .file-input{ position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); clip-path: inset(50%); white-space: nowrap; }
+app-room .remove-image{ position: absolute; top: 18px; right: 18px; width: 30px; height: 30px; border: 0; border-radius: 50%; background: #fff; color: #754d49; font-size: 22px; line-height: 1; box-shadow: 0 1px 5px #0002; cursor: pointer; }
+app-room .replace-image{ align-self: flex-start; font-size: 11px; }
+app-room .upload-note{ color: #9a887c !important; }
+app-room .status-error-toast, app-room .toast-message{ position: fixed; z-index: 1200; right: 25px; bottom: 24px; max-width: min(440px, calc(100vw - 32px)); display: flex; align-items: center; gap: 14px; padding: 13px 16px; border: 1px solid #f0d4ce; border-radius: 9px; background: #fff6f4; color: #91453f; box-shadow: 0 7px 24px #40251c20; font-size: 12.5px; line-height: 1.45; }
+app-room .toast-message{ border-color: #dce9d9; background: #f6fbf4; color: #496748; }
+app-room .toast-message.toast-error{ border-color: #f0d4ce; background: #fff6f4; color: #91453f; }
+app-room .status-error-toast button, app-room .toast-message button{ flex: 0 0 auto; border: 0; background: transparent; color: inherit; font-size: 19px; cursor: pointer; }
+
+
+@media (max-width: 1100px) {app-room .room-heading-row{ align-items: flex-start; flex-direction: column; }
+app-room .heading-actions{ flex-wrap: wrap; }
+app-room .filter-panel{ grid-template-columns: minmax(220px, 1fr) 190px; }
+app-room .filter-actions{ grid-column: 1 / -1; justify-content: flex-end; }
+
+}
+
+
+@media (max-width: 700px) {app-room .room-heading-row{ gap: 16px; margin-bottom: 18px; }
+app-room .heading-actions{ width: 100%; }
+app-room .import-button{ display: none; }
+app-room .add-room-button{ flex: 1; }
+app-room .filter-panel{ grid-template-columns: 1fr; gap: 10px; padding: 12px; }
+app-room .filter-actions{ grid-column: auto; justify-content: stretch; }
+app-room .filter-actions .button{ flex: 1; }
+app-room .table-footer{ align-items: center; flex-direction: column; gap: 10px; }
+app-room .form-grid{ grid-template-columns: 1fr; }
+app-room .form-field-full{ grid-column: auto; }
+app-room .status-error-toast, app-room .toast-message{ right: 12px; bottom: 12px; }
+
+}
+
+
+@media (prefers-reduced-motion: reduce) {app-room *, app-room *::before, app-room *::after{ scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+
+}

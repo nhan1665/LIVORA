@@ -19,4 +19,9 @@ describe('Inspiration', () => {
   it('should create', () => {
     expect(component).toBeTruthy();
   });
+  it('opens the multi-section create form', () => {
+    component.openCreate(); fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Điểm ghim sản phẩm');
+    expect(fixture.nativeElement.textContent).toContain('Hiển thị công khai');
+  });
 });
