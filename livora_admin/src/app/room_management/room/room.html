@@ -1,1 +1,312 @@
-<p>room works!</p>
+<section class="room-page" aria-labelledby="room-page-title">
+  <div class="room-heading-row">
+    <div>
+      <p class="eyebrow">KIẾN TRÚC &amp; KHÔNG GIAN</p>
+      <h1 id="room-page-title">Danh sách phòng</h1>
+    </div>
+    <div class="heading-actions">
+      <button class="button button-secondary import-button" type="button" disabled title="Chưa có quy trình nhập Excel được phê duyệt">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5M4 15v4a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-4" /></svg>
+        Nhập Excel
+      </button>
+      <button class="button button-secondary import-button" type="button" disabled title="Chưa có quy trình xuất Excel được phê duyệt">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v12m0 0 4.5-4.5M12 16l-4.5-4.5M4 15v4a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-4" /></svg>
+        Xuất Excel
+      </button>
+      <button class="button button-primary add-room-button" type="button" (click)="openCreateModal()">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
+        Thêm phòng
+      </button>
+    </div>
+  </div>
+
+  <div class="filter-panel" role="search" aria-label="Tìm kiếm và lọc phòng">
+    <label class="search-field">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m20 20-4-4" /></svg>
+      <input
+        type="search"
+        name="roomSearch"
+        [(ngModel)]="searchDraft"
+        (keyup.enter)="applyFilters()"
+        placeholder="Tìm theo mã phòng hoặc tên phòng..."
+        aria-label="Tìm theo mã phòng hoặc tên phòng"
+      />
+    </label>
+    <label class="status-field">
+      <span class="sr-only">Lọc theo trạng thái</span>
+      <select name="roomStatus" [(ngModel)]="statusDraft" (ngModelChange)="applyFilters()" aria-label="Lọc theo trạng thái">
+        <option value="all">Tất cả trạng thái</option>
+        <option value="active">Hoạt động</option>
+        <option value="inactive">Ngừng hoạt động</option>
+      </select>
+    </label>
+    <div class="filter-actions">
+      <button class="button button-primary filter-button" type="button" (click)="applyFilters()">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16l-6.2 7v5l-3.6 2v-7L4 5Z" /></svg>
+        Lọc
+      </button>
+      <button class="button button-reset" type="button" (click)="resetFilters()" aria-label="Đặt lại bộ lọc" title="Đặt lại bộ lọc">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 2.6-6.4L3 8m0-5v5h5" /></svg>
+        Đặt lại
+      </button>
+    </div>
+  </div>
+
+  @if (loadError()) {
+    <div class="state-card error-state" role="alert">
+      <span class="state-icon error-icon" aria-hidden="true">!</span>
+      <h2>Không tải được danh sách phòng</h2>
+      <p>{{ loadError() }}</p>
+      <button class="button button-secondary" type="button" (click)="retryLoad()">Thử lại</button>
+    </div>
+  } @else {
+    <div class="table-card">
+      <div class="table-scroll" [attr.aria-busy]="loading()">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col" class="code-col">Mã phòng</th>
+              <th scope="col" class="image-col">Hình ảnh</th>
+              <th scope="col" class="name-col">Tên phòng</th>
+              <th scope="col" class="description-col">Mô tả kiến trúc<br />&amp; phong cách</th>
+              <th scope="col" class="status-col">Trạng thái</th>
+              <th scope="col" class="actions-col">Thao tác</th>
+            </tr>
+          </thead>
+          <tbody>
+            @if (loading()) {
+              @for (row of [1, 2, 3, 4, 5, 6, 7]; track row) {
+                <tr class="skeleton-row" aria-hidden="true">
+                  <td><span class="skeleton skeleton-code"></span></td>
+                  <td><span class="skeleton skeleton-image"></span></td>
+                  <td><span class="skeleton skeleton-name"></span><span class="skeleton skeleton-line"></span></td>
+                  <td><span class="skeleton skeleton-line"></span><span class="skeleton skeleton-line short"></span></td>
+                  <td><span class="skeleton skeleton-badge"></span></td>
+                  <td><span class="skeleton skeleton-actions"></span></td>
+                </tr>
+              }
+            } @else if (rooms().length === 0) {
+              <tr>
+                <td colspan="6">
+                  <div class="empty-state">
+                    <span class="state-icon" aria-hidden="true">
+                      <svg viewBox="0 0 24 24"><path d="M3 10.5 12 4l9 6.5M5.5 9v10h13V9M9 19v-6h6v6" /></svg>
+                    </span>
+                    <h2>{{ searchDraft || statusDraft !== 'all' ? 'Không tìm thấy phòng phù hợp' : 'Chưa có phòng nào' }}</h2>
+                    <p>{{ searchDraft || statusDraft !== 'all' ? 'Thử thay đổi từ khóa hoặc đặt lại bộ lọc.' : 'Thêm phòng để bắt đầu quản lý danh mục không gian.' }}</p>
+                    @if (searchDraft || statusDraft !== 'all') {
+                      <button class="text-button" type="button" (click)="resetFilters()">Đặt lại bộ lọc</button>
+                    } @else {
+                      <button class="button button-primary" type="button" (click)="openCreateModal()">Thêm phòng</button>
+                    }
+                  </div>
+                </td>
+              </tr>
+            } @else {
+              @for (room of rooms(); track room.id) {
+                <tr>
+                  <td class="room-code">{{ room.code }}</td>
+                  <td>
+                    <img class="room-thumbnail" [src]="room.thumbnail" [alt]="'Ảnh ' + room.name" />
+                  </td>
+                  <td class="room-name-cell">
+                    <strong>{{ room.name }}</strong>
+                  </td>
+                  <td class="room-description">{{ room.description || '—' }}</td>
+                  <td>
+                    <span class="status-badge" [class.status-active]="room.isActive" [class.status-inactive]="!room.isActive">
+                      <span class="status-dot" aria-hidden="true"></span>{{ statusText(room.isActive) }}
+                    </span>
+                  </td>
+                  <td>
+                    <div class="row-actions">
+                      <button class="icon-button" type="button" (click)="openViewModal(room)" [attr.aria-label]="'Xem ' + room.name" title="Xem chi tiết">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.4-6 9.5-6 9.5 6 9.5 6-3.4 6-9.5 6-9.5-6-9.5-6Z" /><circle cx="12" cy="12" r="2.6" /></svg>
+                      </button>
+                      <button class="icon-button" type="button" (click)="openEditModal(room)" [attr.aria-label]="'Sửa ' + room.name" title="Chỉnh sửa">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 16.5-.8 4.3 4.3-.8L19.8 7.7a2 2 0 0 0-2.9-2.9L4 16.5Z" /><path d="m15.5 6.3 2.9 2.9" /></svg>
+                      </button>
+                      <button
+                        class="switch-button"
+                        [class.switch-on]="room.isActive"
+                        type="button"
+                        role="switch"
+                        [attr.aria-checked]="room.isActive"
+                        [attr.aria-label]="(room.isActive ? 'Ngừng hoạt động: ' : 'Kích hoạt: ') + room.name"
+                        [title]="room.isActive ? 'Ngừng hoạt động' : 'Kích hoạt'"
+                        (click)="requestStatusChange(room)"
+                      ><span></span></button>
+                    </div>
+                  </td>
+                </tr>
+              }
+            }
+          </tbody>
+        </table>
+      </div>
+
+      @if (!loading() && !loadError() && totalItems() > 0) {
+        <footer class="table-footer">
+          <p>Hiển thị <strong>{{ (currentPage() - 1) * pageSize + 1 }}–{{ (currentPage() - 1) * pageSize + rooms().length }}</strong> trên <strong>{{ totalItems() }}</strong> phòng</p>
+          <nav class="pagination" aria-label="Phân trang danh sách phòng">
+            <button type="button" class="page-button page-arrow" [disabled]="currentPage() === 1" (click)="changePage(currentPage() - 1)" aria-label="Trang trước">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>
+            </button>
+            @for (page of pageNumbers(); track page) {
+              <button type="button" class="page-button" [class.current-page]="page === currentPage()" [attr.aria-current]="page === currentPage() ? 'page' : null" (click)="changePage(page)">{{ page }}</button>
+            }
+            <button type="button" class="page-button page-arrow" [disabled]="currentPage() === totalPages()" (click)="changePage(currentPage() + 1)" aria-label="Trang sau">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg>
+            </button>
+          </nav>
+        </footer>
+      }
+    </div>
+  }
+</section>
+
+@if (isModalOpen()) {
+  <app-form-modal
+    [isOpen]="true"
+    [title]="modalTitle()"
+    [subtitle]="modalMode === 'view' ? 'Thông tin chi tiết phòng' : ''"
+    size="lg"
+    [showFooter]="modalMode !== 'view'"
+    [submitText]="modalMode === 'create' ? 'Thêm phòng' : 'Lưu thay đổi'"
+    cancelText="Hủy bỏ"
+    [isSubmitting]="isSubmitting()"
+    (close)="requestCloseModal()"
+    (submit)="saveRoom(roomForm)"
+  >
+    <form #roomForm="ngForm" class="room-form" (ngSubmit)="saveRoom(roomForm)" novalidate>
+      @if (formError()) {
+        <div class="form-alert" role="alert">{{ formError() }}</div>
+      }
+
+      <div class="form-grid">
+        <div class="form-field">
+          <label for="room-code">Mã phòng <span class="required-mark">*</span></label>
+          <input
+            id="room-code"
+            name="code"
+            type="text"
+            [(ngModel)]="form.code"
+            (input)="normalizeCode($event)"
+            #codeControl="ngModel"
+            required
+            pattern="RM-[A-Z0-9]+(-[A-Z0-9]+)*"
+            maxlength="32"
+            placeholder="Ví dụ: RM-LIV-08"
+            [disabled]="modalMode === 'view' || isSubmitting()"
+            aria-describedby="room-code-help room-code-error"
+          />
+          <small id="room-code-help">Định dạng demo hiện tại: RM-XXX.</small>
+          @if (codeControl.invalid && (codeControl.touched || codeControl.dirty)) {
+            <small class="field-error" id="room-code-error">Mã phòng bắt buộc và cần theo định dạng RM-XXX.</small>
+          }
+        </div>
+
+        <div class="form-field">
+          <label for="room-status">Trạng thái vận hành <span class="required-mark">*</span></label>
+          <select id="room-status" name="isActive" [(ngModel)]="form.isActive" (ngModelChange)="markChanged()" [disabled]="modalMode === 'view' || isSubmitting()">
+            <option [ngValue]="true">Hoạt động (Hiển thị trên hệ thống)</option>
+            <option [ngValue]="false">Ngừng hoạt động</option>
+          </select>
+          <small class="status-hint" [class.inactive-hint]="!form.isActive">
+            <span class="status-dot" aria-hidden="true"></span>
+            {{ form.isActive ? 'Sẵn sàng hiển thị trong danh mục phòng.' : 'Không hiển thị cho lựa chọn mới trên website.' }}
+          </small>
+        </div>
+
+        <div class="form-field form-field-full">
+          <label for="room-name">Tên phòng <span class="required-mark">*</span></label>
+          <input
+            id="room-name"
+            name="name"
+            type="text"
+            [(ngModel)]="form.name"
+            (ngModelChange)="markChanged()"
+            #nameControl="ngModel"
+            required
+            maxlength="120"
+            placeholder="Ví dụ: Phòng khách Penthouse / Studio Nghệ thuật"
+            [disabled]="modalMode === 'view' || isSubmitting()"
+          />
+          @if (nameControl.invalid && nameControl.touched) {
+            <small class="field-error">Vui lòng nhập tên phòng.</small>
+          }
+        </div>
+
+        <div class="form-field form-field-full">
+          <div class="label-with-count">
+            <label for="room-description">Mô tả kiến trúc <span class="optional-label">(Tùy chọn)</span></label>
+            <span>{{ form.description.length }}/400 ký tự</span>
+          </div>
+          <textarea
+            id="room-description"
+            name="description"
+            [(ngModel)]="form.description"
+            (ngModelChange)="markChanged()"
+            maxlength="400"
+            rows="4"
+            placeholder="Mô tả phong cách, công năng và đặc điểm của không gian phòng..."
+            [disabled]="modalMode === 'view' || isSubmitting()"
+          ></textarea>
+        </div>
+
+        <div class="form-field form-field-full">
+          <label for="room-image">Hình ảnh đại diện phòng <span class="required-mark">*</span></label>
+          <div class="image-upload" [class.has-image]="!!form.thumbnail">
+            @if (form.thumbnail) {
+              <img class="image-preview" [src]="form.thumbnail" alt="Xem trước ảnh đại diện phòng" />
+              @if (modalMode !== 'view') {
+                <button class="remove-image" type="button" (click)="removeSelectedImage()" aria-label="Xóa ảnh đã chọn">×</button>
+              }
+            } @else {
+              <svg class="upload-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4m0 0L7 9m5-5 5 5M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3" /></svg>
+              @if (modalMode !== 'view') {
+                <strong>Kéo thả hình ảnh vào đây, hoặc <label for="room-image" class="file-picker-label">chọn từ thiết bị</label></strong>
+                <span>JPG, PNG hoặc WEBP · tỷ lệ 16:9 · tối thiểu 1920×1080 px · tối đa 10 MB</span>
+              } @else {
+                <span>Chưa có ảnh đại diện.</span>
+              }
+            }
+            @if (!form.thumbnail && modalMode !== 'view') {
+              <label class="visually-hidden" for="room-image">Chọn hình ảnh phòng</label>
+            }
+            <input id="room-image" class="file-input" type="file" accept="image/jpeg,image/png,image/webp" (change)="onFileSelected($event)" [disabled]="modalMode === 'view' || isSubmitting()" />
+          </div>
+          @if (form.thumbnail && modalMode !== 'view') {
+            <label class="replace-image" for="room-image">Chọn ảnh khác</label>
+          }
+          @if (imageError()) {
+            <small class="field-error" role="alert">{{ imageError() }}</small>
+          }
+          <small class="upload-note">Ảnh tải lên chỉ được giữ trong bộ nhớ phiên demo này.</small>
+        </div>
+      </div>
+    </form>
+  </app-form-modal>
+}
+
+<app-confirm-dialog
+  [isOpen]="!!pendingStatusRoom()"
+  title="Ngừng hoạt động phòng?"
+  [message]="'Phòng ' + (pendingStatusRoom()?.name || '') + ' sẽ không còn xuất hiện trong các lựa chọn mới. Phòng đang được tham chiếu sẽ không thể ngừng hoạt động.'"
+  confirmText="Ngừng hoạt động"
+  cancelText="Hủy bỏ"
+  type="warning"
+  [isConfirming]="isStatusChanging()"
+  (confirm)="confirmStatusChange()"
+  (cancel)="cancelStatusChange()"
+></app-confirm-dialog>
+
+@if (statusError()) {
+  <div class="status-error-toast" role="alert">{{ statusError() }}<button type="button" (click)="statusError.set('')" aria-label="Đóng">×</button></div>
+}
+@if (toastMessage()) {
+  <div class="toast-message" [class.toast-error]="toastType() === 'error'" role="status">
+    <span>{{ toastMessage() }}</span>
+    <button type="button" (click)="toastMessage.set('')" aria-label="Đóng thông báo">×</button>
+  </div>
+}

@@ -1,0 +1,135 @@
+{
+  "runAt": "2026-10-08T17:18:02.452Z",
+  "browser": "Microsoft Edge via cached Playwright 1.64.0",
+  "viewport": "1317x982",
+  "checks": [
+    {
+      "name": "Inspiration route and table",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Inspiration create modal sections",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Inspiration required fields",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Inspiration create and image preview",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Inspiration search",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Inspiration view",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Inspiration edit",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Inspiration pagination",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Space route and table",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Space create modal metric and GLB controls",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Space required fields",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Space rejects invalid GLB header",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Space create session metadata",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Space search",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Space view",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Space edit",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Design tab list",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Design read-only details",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Design search",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Design pagination",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Room regression route",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Inspiration mobile modal fits viewport",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Space mobile modal fits viewport",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "No browser page errors",
+      "ok": true,
+      "detail": ""
+    }
+  ],
+  "errors": [],
+  "designButtonStyle": {
+    "background": "rgb(245, 238, 228)",
+    "border": "0px none rgb(112, 75, 74)",
+    "color": "rgb(112, 75, 74)"
+  },
+  "mobileViewport": "390x844",
+  "mobileDocumentWidth": 1228
+}

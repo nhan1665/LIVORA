@@ -1,0 +1,15 @@
+{
+  "browser": "Microsoft Edge via Playwright 1.64.0",
+  "url": "http://127.0.0.1:4200/rooms/list",
+  "viewport": "1317x982; mobile 390x844",
+  "list": "passed; seven rows on page one",
+  "view": "passed read-only details modal",
+  "edit": "passed; edited description saved and rendered",
+  "create": "passed required-image validation and create using 1920x1080 test image; session-only fixture",
+  "search": "passed case-insensitive name search",
+  "filter": "passed inactive filter and no-result state",
+  "pagination": "passed next and previous pages",
+  "reactivation": "passed for unreferenced inactive fixture",
+  "dependencyGuard": "passed; referenced Room remained active and reported Products + Inspirations",
+  "pageErrors": []
+}
