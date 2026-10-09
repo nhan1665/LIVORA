@@ -1,6 +1,6 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink, RouterLinkActive } from '@angular/router';
+import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 
 export interface SubMenuItem {
   title: string;
@@ -24,6 +24,8 @@ export interface MenuItem {
   styleUrl: './sidebar.css',
 })
 export class Sidebar {
+  private router = inject(Router);
+
   menuItems: MenuItem[] = [
     {
       id: 'dashboard',
@@ -106,5 +108,11 @@ export class Sidebar {
     if (item.children && item.children.length > 0) {
       item.isOpen = !item.isOpen;
     }
+  }
+
+  navigate(route: string, event: MouseEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.router.navigateByUrl(route);
   }
 }
