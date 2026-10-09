@@ -1,1 +1,191 @@
-<p>refund works!</p>
+<div class="refund-page">
+  <!-- Feedback Notice -->
+  @if (notice) {
+    <div class="refund-notice" [class.error]="notice.type === 'error'">
+      <span>{{ notice.message }}</span>
+      <button type="button" (click)="dismissNotice()">&times;</button>
+    </div>
+  }
+
+  <!-- Heading -->
+  <header class="refund-heading">
+    <div>
+      <p class="eyebrow">LIVORA ADMINISTRATION &bull; QUẢN LÝ ĐƠN HÀNG</p>
+      <h1>Yêu cầu hoàn tiền</h1>
+    </div>
+  </header>
+
+  <!-- KPI Stats -->
+  <section class="refund-kpi-grid">
+    <div class="kpi-card">
+      <span class="kpi-label">TỔNG HỒ SƠ</span>
+      <strong class="kpi-value">{{ stats.total }}</strong>
+      <small class="kpi-desc">Toàn bộ yêu cầu phát sinh</small>
+    </div>
+    <div class="kpi-card pending">
+      <span class="kpi-label">CHỜ PHÊ DUYỆT</span>
+      <strong class="kpi-value">{{ stats.pending }}</strong>
+      <small class="kpi-desc">Cần kế toán đối soát</small>
+    </div>
+    <div class="kpi-card completed">
+      <span class="kpi-label">ĐÃ HOÀN TẤT</span>
+      <strong class="kpi-value">{{ stats.completed }}</strong>
+      <small class="kpi-desc">Đã hoàn trả cho khách</small>
+    </div>
+    <div class="kpi-card total-amount">
+      <span class="kpi-label">TỔNG TIỀN ĐÃ HOÀN</span>
+      <strong class="kpi-value">{{ stats.totalRefundedAmount.toLocaleString('vi-VN') }} đ</strong>
+      <small class="kpi-desc">Tổng ngân sách đã chi hoàn</small>
+    </div>
+  </section>
+
+  <!-- Filter Bar -->
+  <section class="refund-filters">
+    <app-filter-bar
+      searchPlaceholder="Tìm mã hoàn tiền, mã đơn, tên hoặc SĐT..."
+      [searchValue]="keyword"
+      [statusValue]="statusFilter"
+      [statusOptions]="statusOptions"
+      (filter)="onFilter($event)"
+      (reset)="onResetFilter()"
+    ></app-filter-bar>
+  </section>
+
+  <!-- Refunds Table -->
+  <section class="refund-table-card">
+    <app-data-table
+      [columns]="columns"
+      [data]="refunds"
+      [loading]="loading"
+      [currentPage]="currentPage"
+      [totalItems]="totalItems"
+      [itemsPerPage]="pageSize"
+      itemLabel="hồ sơ"
+      emptyMessage="Chưa có yêu cầu hoàn tiền nào"
+      emptySubMessage="Hiện tại không có hồ sơ hoàn tiền nào cần xử lý."
+      (rowClick)="onRowClick($event)"
+      (actionClick)="onTableAction($event)"
+      (pageChange)="onPageChange($event)"
+    ></app-data-table>
+  </section>
+</div>
+
+<!-- ================= REFUND DETAIL & APPROVAL MODAL ================= -->
+<app-form-modal
+  [isOpen]="isModalOpen"
+  title="Xét duyệt & Đối soát hoàn tiền"
+  [subtitle]="selectedRefund ? ('Hồ sơ: ' + selectedRefund.refundCode + ' - Đơn hàng: ' + selectedRefund.orderCode) : ''"
+  size="md"
+  [showFooter]="false"
+  (close)="closeModal()"
+>
+  @if (selectedRefund) {
+    <div class="refund-modal-container">
+      <!-- Status Card -->
+      <div class="refund-meta-banner">
+        <div class="meta-col">
+          <span class="meta-label">MÃ PHIẾU HOÀN TIỀN</span>
+          <strong class="meta-value">{{ selectedRefund.refundCode }}</strong>
+        </div>
+        <div class="meta-col">
+          <span class="meta-label">TRẠNG THÁI HIỆN TẠI</span>
+          <span class="badge" [class]="'badge-' + selectedRefund.status">
+            {{ getStatusLabel(selectedRefund.status) }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Details List -->
+      <div class="refund-info-box">
+        <div class="info-row">
+          <span class="info-label">Mã đơn hàng liên kết:</span>
+          <strong class="info-val font-semibold text-brown">{{ selectedRefund.orderCode }}</strong>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Khách hàng yêu cầu:</span>
+          <span class="info-val">{{ selectedRefund.customerName }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Số điện thoại liên hệ:</span>
+          <span class="info-val highlight">{{ selectedRefund.contactPhone }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Tổng giá trị đơn hàng:</span>
+          <span class="info-val">{{ selectedRefund.orderTotalAmount.toLocaleString('vi-VN') }} đ</span>
+        </div>
+        <div class="info-row highlight-amount">
+          <span class="info-label">SỐ TIỀN YÊU CẦU HOÀN:</span>
+          <strong class="info-val refund-price">{{ selectedRefund.refundAmount.toLocaleString('vi-VN') }} đ</strong>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Hình thức hoàn:</span>
+          <span class="info-val">{{ selectedRefund.refundType === 'full' ? 'Hoàn toàn bộ đơn' : 'Hoàn một phần' }} (qua {{ selectedRefund.refundMethod }})</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Thời điểm yêu cầu:</span>
+          <span class="info-val">{{ selectedRefund.createdAt | date:'dd/MM/yyyy HH:mm' }}</span>
+        </div>
+        <div class="info-row full-width">
+          <span class="info-label">Lý do yêu cầu hoàn tiền:</span>
+          <p class="reason-text">{{ selectedRefund.reason }}</p>
+        </div>
+
+        @if (selectedRefund.status === 'completed') {
+          <div class="info-row">
+            <span class="info-label">Nhân sự thực hiện:</span>
+            <span class="info-val text-green font-semibold">{{ selectedRefund.processedBy }} ({{ selectedRefund.completedAt | date:'dd/MM/yyyy HH:mm' }})</span>
+          </div>
+        }
+
+        @if (selectedRefund.status === 'rejected') {
+          <div class="info-row full-width reject-alert">
+            <span class="info-label text-red">Lý do từ chối:</span>
+            <p class="reason-text text-red">{{ selectedRefund.rejectReason }}</p>
+          </div>
+        }
+      </div>
+
+      <!-- Reject Input Box if in Reject Mode -->
+      @if (isRejectMode) {
+        <div class="reject-box">
+          <label>Nhập lý do từ chối yêu cầu hoàn tiền <span class="req">*</span></label>
+          <textarea
+            rows="3"
+            placeholder="Nêu rõ lý do không đủ điều kiện hoàn tiền..."
+            [(ngModel)]="rejectReasonInput"
+          ></textarea>
+          <div class="reject-actions">
+            <button type="button" class="btn-secondary" (click)="toggleRejectMode()">Hủy</button>
+            <button type="button" class="btn-danger-confirm" (click)="submitReject()">Xác nhận từ chối</button>
+          </div>
+        </div>
+      }
+
+      <!-- Modal Footer Controls -->
+      <div class="modal-footer-controls">
+        <button type="button" class="btn-secondary" (click)="closeModal()">Đóng</button>
+
+        @if (selectedRefund.status === 'pending' && !isRejectMode) {
+          <button type="button" class="btn-danger-outline" (click)="toggleRejectMode()">
+            Từ chối hoàn tiền
+          </button>
+
+          <button type="button" class="btn-success" (click)="promptApprove()">
+            &check; Phê duyệt & Hoàn tiền ngay
+          </button>
+        }
+      </div>
+    </div>
+  }
+</app-form-modal>
+
+<!-- ================= CONFIRM APPROVE DIALOG ================= -->
+<app-confirm-dialog
+  [isOpen]="isApproveConfirmOpen"
+  title="Xác nhận phê duyệt hoàn tiền"
+  [message]="selectedRefund ? ('Bạn có chắc chắn muốn phê duyệt hoàn trả số tiền ' + selectedRefund.refundAmount.toLocaleString('vi-VN') + ' đ cho khách hàng ' + selectedRefund.customerName + ' (Đơn hàng ' + selectedRefund.orderCode + ') không?') : ''"
+  confirmText="Đồng ý hoàn tiền"
+  type="info"
+  (confirm)="confirmApprove()"
+  (cancel)="cancelApproveConfirm()"
+></app-confirm-dialog>

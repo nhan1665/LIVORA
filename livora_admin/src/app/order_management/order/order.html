@@ -1,1 +1,515 @@
-<p>order works!</p>
+<div class="order-page">
+  <!-- Feedback Notice -->
+  @if (notice) {
+    <div class="order-notice" [class.error]="notice.type === 'error'">
+      <span>{{ notice.message }}</span>
+      <button type="button" (click)="dismissNotice()">&times;</button>
+    </div>
+  }
+
+  <!-- Header -->
+  <header class="order-heading">
+    <div>
+      <p class="eyebrow">LIVORA ADMINISTRATION &bull; QUẢN LÝ ĐƠN HÀNG</p>
+      <h1>Danh sách đơn hàng</h1>
+    </div>
+    <div class="order-actions">
+      <button type="button" class="btn-create" (click)="openCreateOrderModal()">
+        + Tạo đơn hàng mới
+      </button>
+    </div>
+  </header>
+
+  <!-- KPI Stats Summary -->
+  <section class="order-kpi-grid">
+    <div class="kpi-card">
+      <span class="kpi-label">TỔNG ĐƠN HÀNG</span>
+      <strong class="kpi-value">{{ stats.totalOrders }}</strong>
+      <small class="kpi-desc">Tất cả đơn trong hệ thống</small>
+    </div>
+    <div class="kpi-card pending">
+      <span class="kpi-label">CHỜ XÁC NHẬN</span>
+      <strong class="kpi-value">{{ stats.pendingCount }}</strong>
+      <small class="kpi-desc">Cần nhân viên xử lý sớm</small>
+    </div>
+    <div class="kpi-card shipping">
+      <span class="kpi-label">ĐANG GIAO HÀNG</span>
+      <strong class="kpi-value">{{ stats.shippingCount }}</strong>
+      <small class="kpi-desc">Đang trên đường vận chuyển</small>
+    </div>
+    <div class="kpi-card delivered">
+      <span class="kpi-label">ĐÃ GIAO THÀNH CÔNG</span>
+      <strong class="kpi-value">{{ stats.deliveredCount }}</strong>
+      <small class="kpi-desc">Đơn hàng hoàn tất</small>
+    </div>
+    <div class="kpi-card revenue">
+      <span class="kpi-label">DOANH THU ĐÃ THU</span>
+      <strong class="kpi-value">{{ stats.totalRevenue.toLocaleString('vi-VN') }} đ</strong>
+      <small class="kpi-desc">Tổng thanh toán thành công</small>
+    </div>
+  </section>
+
+  <!-- Filter Bar -->
+  <section class="order-filters-container">
+    <div class="filter-main">
+      <app-filter-bar
+        searchPlaceholder="Tìm mã đơn, tên hoặc SĐT khách hàng..."
+        [searchValue]="keyword"
+        [statusValue]="orderStatusFilter"
+        [statusOptions]="statusOptions"
+        (filter)="onFilter($event)"
+        (reset)="onResetFilter()"
+      ></app-filter-bar>
+    </div>
+    <div class="filter-extra">
+      <label class="filter-label">THANH TOÁN</label>
+      <select
+        class="filter-select"
+        [ngModel]="paymentStatusFilter"
+        (ngModelChange)="onPaymentStatusChange($event)"
+      >
+        @for (opt of paymentOptions; track opt.value) {
+          <option [value]="opt.value">{{ opt.label }}</option>
+        }
+      </select>
+    </div>
+  </section>
+
+  <!-- Orders Data Table -->
+  <section class="order-table-card">
+    <app-data-table
+      [columns]="columns"
+      [data]="orders"
+      [loading]="loading"
+      [currentPage]="currentPage"
+      [totalItems]="totalItems"
+      [itemsPerPage]="pageSize"
+      itemLabel="đơn hàng"
+      emptyMessage="Chưa có đơn hàng nào"
+      emptySubMessage="Không tìm thấy đơn hàng nào phù hợp với điều kiện tìm kiếm."
+      (rowClick)="onRowClick($event)"
+      (actionClick)="onTableAction($event)"
+      (pageChange)="onPageChange($event)"
+    ></app-data-table>
+  </section>
+</div>
+
+<!-- ================= ORDER DETAIL MODAL ================= -->
+<app-form-modal
+  [isOpen]="isDetailOpen"
+  title="Chi tiết đơn hàng"
+  [subtitle]="selectedOrder ? ('Mã đơn: ' + selectedOrder.orderCode) : ''"
+  size="lg"
+  [showFooter]="false"
+  (close)="closeDetail()"
+>
+  @if (selectedOrder) {
+    <div class="detail-container">
+      <!-- Top Status Summary -->
+      <div class="detail-header-card">
+        <div class="meta-item">
+          <span class="meta-title">MÃ ĐƠN HÀNG</span>
+          <strong class="meta-val highlight">{{ selectedOrder.orderCode }}</strong>
+        </div>
+        <div class="meta-item">
+          <span class="meta-title">NGÀY ĐẶT HÀNG</span>
+          <span class="meta-val">{{ selectedOrder.createdAt | date:'dd/MM/yyyy HH:mm' }}</span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-title">TRẠNG THÁI ĐƠN</span>
+          <span class="badge" [class]="'badge-' + selectedOrder.orderStatus">
+            {{ getStatusLabel(selectedOrder.orderStatus) }}
+          </span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-title">THANH TOÁN</span>
+          <span class="badge" [class]="'badge-pay-' + selectedOrder.paymentStatus">
+            {{ getPaymentLabel(selectedOrder.paymentStatus) }} ({{ selectedOrder.paymentMethod }})
+          </span>
+        </div>
+      </div>
+
+      <!-- Lifecycle Progress Stepper -->
+      <div class="stepper-section">
+        <h4 class="section-title">TIẾN TRÌNH XỬ LÝ ĐƠN HÀNG</h4>
+        <div class="stepper-bar">
+          <div
+            class="step-item"
+            [class.active]="selectedOrder.orderStatus === 'pending'"
+            [class.completed]="selectedOrder.orderStatus !== 'pending' && selectedOrder.orderStatus !== 'cancelled'"
+          >
+            <div class="step-circle">1</div>
+            <span class="step-text">Chờ xác nhận</span>
+          </div>
+          <div class="step-line" [class.done]="selectedOrder.orderStatus !== 'pending' && selectedOrder.orderStatus !== 'cancelled'"></div>
+
+          <div
+            class="step-item"
+            [class.active]="selectedOrder.orderStatus === 'confirmed'"
+            [class.completed]="selectedOrder.orderStatus === 'processing' || selectedOrder.orderStatus === 'shipping' || selectedOrder.orderStatus === 'delivered'"
+          >
+            <div class="step-circle">2</div>
+            <span class="step-text">Đã xác nhận</span>
+          </div>
+          <div class="step-line" [class.done]="selectedOrder.orderStatus === 'processing' || selectedOrder.orderStatus === 'shipping' || selectedOrder.orderStatus === 'delivered'"></div>
+
+          <div
+            class="step-item"
+            [class.active]="selectedOrder.orderStatus === 'processing'"
+            [class.completed]="selectedOrder.orderStatus === 'shipping' || selectedOrder.orderStatus === 'delivered'"
+          >
+            <div class="step-circle">3</div>
+            <span class="step-text">Đang xử lý</span>
+          </div>
+          <div class="step-line" [class.done]="selectedOrder.orderStatus === 'shipping' || selectedOrder.orderStatus === 'delivered'"></div>
+
+          <div
+            class="step-item"
+            [class.active]="selectedOrder.orderStatus === 'shipping'"
+            [class.completed]="selectedOrder.orderStatus === 'delivered'"
+          >
+            <div class="step-circle">4</div>
+            <span class="step-text">Đang giao</span>
+          </div>
+          <div class="step-line" [class.done]="selectedOrder.orderStatus === 'delivered'"></div>
+
+          <div
+            class="step-item"
+            [class.active]="selectedOrder.orderStatus === 'delivered'"
+            [class.completed]="selectedOrder.orderStatus === 'delivered'"
+          >
+            <div class="step-circle">5</div>
+            <span class="step-text">Đã giao</span>
+          </div>
+        </div>
+
+        @if (selectedOrder.orderStatus === 'cancelled') {
+          <div class="cancelled-banner">
+            <strong>ĐƠN HÀNG ĐÃ BỊ HỦY</strong>
+            <p>{{ selectedOrder.cancelReason || 'Không có lý do chi tiết.' }}</p>
+          </div>
+        }
+      </div>
+
+      <!-- Customer & Shipping Info -->
+      <div class="detail-split-grid">
+        <div class="info-card">
+          <h4 class="section-title">THÔNG TIN KHÁCH HÀNG & NHẬN HÀNG</h4>
+          <div class="info-row">
+            <span class="info-label">Người nhận:</span>
+            <span class="info-val font-semibold">{{ selectedOrder.customerInfo.name }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Số điện thoại:</span>
+            <span class="info-val highlight">{{ selectedOrder.customerInfo.phone }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Email:</span>
+            <span class="info-val">{{ selectedOrder.customerInfo.email || 'Không có' }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Địa chỉ giao hàng:</span>
+            <span class="info-val">{{ selectedOrder.customerInfo.address }}</span>
+          </div>
+          @if (selectedOrder.notes) {
+            <div class="info-row">
+              <span class="info-label">Ghi chú của khách:</span>
+              <span class="info-val italic">{{ selectedOrder.notes }}</span>
+            </div>
+          }
+        </div>
+
+        <!-- Financial Summary -->
+        <div class="info-card">
+          <h4 class="section-title">TỔNG KẾT THANH TOÁN</h4>
+          <div class="info-row">
+            <span class="info-label">Tạm tính (tiền hàng):</span>
+            <span class="info-val">{{ selectedOrder.subtotalAmount.toLocaleString('vi-VN') }} đ</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Giảm giá voucher:</span>
+            <span class="info-val text-green">- {{ selectedOrder.discountAmount.toLocaleString('vi-VN') }} đ</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Phí vận chuyển:</span>
+            <span class="info-val">{{ selectedOrder.shippingFee.toLocaleString('vi-VN') }} đ</span>
+          </div>
+          <div class="info-row total-row">
+            <span class="info-label">TỔNG THANH TOÁN:</span>
+            <span class="info-val total-price">{{ selectedOrder.totalAmount.toLocaleString('vi-VN') }} đ</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Phương thức:</span>
+            <span class="info-val">{{ selectedOrder.paymentMethod }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Items List -->
+      <div class="items-card">
+        <h4 class="section-title">DANH SÁCH SẢN PHẨM TRONG ĐƠN ({{ selectedOrder.items.length }})</h4>
+        <div class="table-responsive">
+          <table class="detail-items-table">
+            <thead>
+              <tr>
+                <th>Sản phẩm</th>
+                <th>Màu sắc</th>
+                <th class="text-right">Đơn giá</th>
+                <th class="text-center">Số lượng</th>
+                <th class="text-right">Thành tiền</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (item of selectedOrder.items; track item.productId) {
+                <tr>
+                  <td>
+                    <div class="item-cell">
+                      <img [src]="item.thumbnail" [alt]="item.productName" class="item-thumb" />
+                      <div>
+                        <strong>{{ item.productName }}</strong>
+                        <small>SKU: {{ item.sku }}</small>
+                      </div>
+                    </div>
+                  </td>
+                  <td>{{ item.color || 'Tiêu chuẩn' }}</td>
+                  <td class="text-right">{{ item.price.toLocaleString('vi-VN') }} đ</td>
+                  <td class="text-center">{{ item.quantity }}</td>
+                  <td class="text-right font-semibold">{{ item.subtotal.toLocaleString('vi-VN') }} đ</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Quick Action Controls -->
+      <div class="detail-footer-actions">
+        <button type="button" class="btn-secondary" (click)="closeDetail()">Đóng</button>
+
+        @if (selectedOrder.orderStatus !== 'delivered' && selectedOrder.orderStatus !== 'cancelled') {
+          <button
+            type="button"
+            class="btn-danger"
+            (click)="promptCancelOrder(selectedOrder)"
+          >
+            Hủy đơn hàng này
+          </button>
+
+          <button
+            type="button"
+            class="btn-primary"
+            (click)="promptAdvanceStatus(selectedOrder)"
+          >
+            Chuyển sang: {{ getNextStatusLabel(selectedOrder.orderStatus) }} &rarr;
+          </button>
+        }
+      </div>
+    </div>
+  }
+</app-form-modal>
+
+<!-- ================= CREATE ORDER MODAL ================= -->
+<app-form-modal
+  [isOpen]="isCreateOpen"
+  title="Tạo đơn hàng mới (Admin POS)"
+  subtitle="Tạo đơn hàng trực tiếp thay cho khách hàng qua điện thoại hoặc trực tiếp"
+  size="lg"
+  submitText="Hoàn tất tạo đơn"
+  (close)="closeCreateOrderModal()"
+  (submit)="submitCreateOrder()"
+>
+  <div class="create-order-body">
+    @if (createFormError) {
+      <div class="form-error-banner">{{ createFormError }}</div>
+    }
+
+    <!-- Bước 1: Khách hàng -->
+    <div class="form-section">
+      <h4 class="form-section-title">1. THÔNG TIN KHÁCH HÀNG & GIAO NHẬN</h4>
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label>Số điện thoại khách hàng <span class="req">*</span></label>
+          <input
+            type="text"
+            placeholder="Ví dụ: 0912345678"
+            [(ngModel)]="customerPhone"
+            (blur)="onPhoneBlur()"
+          />
+          @if (phoneLookupFound) {
+            <small class="lookup-badge">&check; Đã tìm thấy khách hàng cũ. Thông tin đã được tự động điền!</small>
+          } @else {
+            <small class="lookup-hint">Nhập SĐT để tự tra cứu hoặc tạo mới nếu là khách vãng lai.</small>
+          }
+        </div>
+        <div class="form-group">
+          <label>Họ và tên khách hàng <span class="req">*</span></label>
+          <input type="text" placeholder="Nhập họ tên đầy đủ..." [(ngModel)]="customerName" />
+        </div>
+      </div>
+
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label>Email liên hệ</label>
+          <input type="email" placeholder="example@gmail.com" [(ngModel)]="customerEmail" />
+        </div>
+        <div class="form-group">
+          <label>Địa chỉ nhận hàng chi tiết <span class="req">*</span></label>
+          <input type="text" placeholder="Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành..." [(ngModel)]="customerAddress" />
+        </div>
+      </div>
+    </div>
+
+    <!-- Bước 2: Chọn sản phẩm -->
+    <div class="form-section">
+      <h4 class="form-section-title">2. CHỌN SẢN PHẨM VÀO ĐƠN HÀNG</h4>
+      <div class="product-picker-bar">
+        <div class="form-group flex-2">
+          <label>Chọn mặt hàng nội thất</label>
+          <select [(ngModel)]="selectedProductId" (ngModelChange)="onProductSelectChange()">
+            @for (p of availableProducts; track p.productId) {
+              <option [value]="p.productId">
+                {{ p.name }} - {{ p.price.toLocaleString('vi-VN') }}đ (Kho: {{ p.stockQuantity }})
+              </option>
+            }
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Màu sắc</label>
+          <input type="text" [(ngModel)]="selectedColor" placeholder="Màu sắc..." />
+        </div>
+
+        <div class="form-group flex-small">
+          <label>Số lượng</label>
+          <input type="number" min="1" [(ngModel)]="selectedQuantity" />
+        </div>
+
+        <div class="form-group flex-btn">
+          <button type="button" class="btn-add-product" (click)="addProductToOrder()">
+            + Thêm vào đơn
+          </button>
+        </div>
+      </div>
+
+      <!-- Danh sách sản phẩm đã chọn -->
+      @if (orderItemsToCreate.length > 0) {
+        <table class="selected-items-table">
+          <thead>
+            <tr>
+              <th>Sản phẩm</th>
+              <th>Màu sắc</th>
+              <th class="text-right">Đơn giá</th>
+              <th class="text-center">SL</th>
+              <th class="text-right">Thành tiền</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (item of orderItemsToCreate; track item.productId; let idx = $index) {
+              <tr>
+                <td>
+                  <strong>{{ item.productName }}</strong>
+                  <small>{{ item.sku }}</small>
+                </td>
+                <td>{{ item.color }}</td>
+                <td class="text-right">{{ item.price.toLocaleString('vi-VN') }} đ</td>
+                <td class="text-center">{{ item.quantity }}</td>
+                <td class="text-right font-semibold">{{ (item.price * item.quantity).toLocaleString('vi-VN') }} đ</td>
+                <td class="text-center">
+                  <button type="button" class="btn-remove-item" (click)="removeProductFromOrder(idx)">&times;</button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      } @else {
+        <div class="empty-picker-box">Chưa có sản phẩm nào được thêm vào đơn hàng.</div>
+      }
+    </div>
+
+    <!-- Bước 3: Voucher & Thanh toán -->
+    <div class="form-section">
+      <h4 class="form-section-title">3. THANH TOÁN & GHI CHÚ</h4>
+      <div class="form-grid-3">
+        <div class="form-group">
+          <label>Mã giảm giá (Voucher)</label>
+          <input type="text" placeholder="Nhập mã (ví dụ: LIVORA10)" [(ngModel)]="voucherCodeInput" />
+          <small class="lookup-hint">Mã LIVORA10: Giảm 10% tối đa 200.000đ.</small>
+        </div>
+
+        <div class="form-group">
+          <label>Phương thức thanh toán</label>
+          <select [(ngModel)]="paymentMethodInput">
+            <option value="COD">Thanh toán khi nhận hàng (COD)</option>
+            <option value="Banking">Chuyển khoản ngân hàng (Banking)</option>
+            <option value="VNPay">Cổng VNPay</option>
+            <option value="MoMo">Ví MoMo</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Ghi chú đơn hàng</label>
+          <input type="text" placeholder="Ghi chú đóng gói / giao hàng..." [(ngModel)]="orderNotesInput" />
+        </div>
+      </div>
+
+      <!-- Dự toán chi phí -->
+      <div class="order-estimate-card">
+        <div class="est-row">
+          <span>Tiền hàng:</span>
+          <strong>{{ createSubtotal.toLocaleString('vi-VN') }} đ</strong>
+        </div>
+        <div class="est-row">
+          <span>Giảm giá voucher:</span>
+          <span class="text-green">- {{ createDiscount.toLocaleString('vi-VN') }} đ</span>
+        </div>
+        <div class="est-row">
+          <span>Phí vận chuyển:</span>
+          <span>{{ createShipping.toLocaleString('vi-VN') }} đ</span>
+        </div>
+        <div class="est-row est-total">
+          <span>TỔNG THANH TOÁN DỰ TÍNH:</span>
+          <strong class="total-price">{{ createTotal.toLocaleString('vi-VN') }} đ</strong>
+        </div>
+      </div>
+    </div>
+  </div>
+</app-form-modal>
+
+<!-- ================= CANCEL ORDER DIALOG ================= -->
+<app-form-modal
+  [isOpen]="isCancelOpen"
+  title="Xác nhận hủy đơn hàng"
+  [subtitle]="cancelTargetOrder ? ('Đơn hàng: ' + cancelTargetOrder.orderCode) : ''"
+  size="sm"
+  submitText="Xác nhận hủy đơn"
+  cancelText="Quay lại"
+  (close)="cancelCancelDialog()"
+  (submit)="confirmCancelOrder()"
+>
+  <div class="cancel-modal-content">
+    <p class="warning-text">
+      &Delta; Lưu ý: Khi hủy đơn hàng, hệ thống sẽ tự động hoàn trả số lượng các mặt hàng trong đơn về tồn kho khả dụng.
+    </p>
+
+    <div class="form-group">
+      <label>Lý do hủy đơn hàng <span class="req">*</span></label>
+      <textarea
+        rows="3"
+        placeholder="Nhập lý do khách hủy hoặc lý do sự cố đơn hàng..."
+        [(ngModel)]="cancelReason"
+      ></textarea>
+    </div>
+  </div>
+</app-form-modal>
+
+<!-- ================= ADVANCE STATUS CONFIRM DIALOG ================= -->
+<app-confirm-dialog
+  [isOpen]="isAdvanceConfirmOpen"
+  title="Xác nhận chuyển trạng thái đơn hàng"
+  [message]="advanceConfirmMessage"
+  confirmText="Đồng ý chuyển"
+  type="info"
+  (confirm)="confirmAdvanceStatus()"
+  (cancel)="cancelAdvanceStatus()"
+></app-confirm-dialog>
