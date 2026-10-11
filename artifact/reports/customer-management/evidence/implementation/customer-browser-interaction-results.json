@@ -1,0 +1,122 @@
+{
+  "runAt": "2026-10-09T21:49:14",
+  "browser": "Microsoft Edge (Playwright)",
+  "checks": [
+    {
+      "name": "Page Title Rendered",
+      "passed": true,
+      "detail": "Danh sách khách hàng"
+    },
+    {
+      "name": "Total Customers Metric",
+      "passed": true,
+      "detail": "Value: 125"
+    },
+    {
+      "name": "Registered Metric",
+      "passed": true,
+      "detail": "Value: 94"
+    },
+    {
+      "name": "Guest Metric",
+      "passed": true,
+      "detail": "Value: 31"
+    },
+    {
+      "name": "Active This Month Metric",
+      "passed": true,
+      "detail": "Value: 118"
+    },
+    {
+      "name": "Page 1 Row Count",
+      "passed": true,
+      "detail": "Rows: 10"
+    },
+    {
+      "name": "First Customer Name",
+      "passed": true,
+      "detail": "KTS. Hoàng Nam"
+    },
+    {
+      "name": "Search by Name",
+      "passed": true,
+      "detail": "Rows found: 1"
+    },
+    {
+      "name": "Reset Filter Restores Rows",
+      "passed": true,
+      "detail": "Rows after reset: 10"
+    },
+    {
+      "name": "Filter Guest Type",
+      "passed": true,
+      "detail": "31 khách hàng"
+    },
+    {
+      "name": "Filter Inactive Status",
+      "passed": true,
+      "detail": "7 khách hàng"
+    },
+    {
+      "name": "Navigate to Page 2",
+      "passed": true,
+      "detail": "● Đang xem: Trang 2/13"
+    },
+    {
+      "name": "Modal Profile Name",
+      "passed": true,
+      "detail": "Hồ sơ khách hàng: KTS. Hoàng Nam"
+    },
+    {
+      "name": "Customer Code Badge",
+      "passed": true,
+      "detail": "#270926-001"
+    },
+    {
+      "name": "Customer Code in Info Box",
+      "passed": true,
+      "detail": "270926-001"
+    },
+    {
+      "name": "Customer Email in Info Box",
+      "passed": true,
+      "detail": "hoangnam.arch@gmail.com"
+    },
+    {
+      "name": "Address Cards Count",
+      "passed": true,
+      "detail": "Addresses: 2"
+    },
+    {
+      "name": "Orders Count in Mini Table",
+      "passed": true,
+      "detail": "Orders: 4"
+    },
+    {
+      "name": "Total Order Value",
+      "passed": true,
+      "detail": "TỔNG GIÁ TRỊ: 457.500.000đ"
+    },
+    {
+      "name": "Full Orders Tab Active",
+      "passed": true,
+      "detail": "Orders in tab: 4"
+    },
+    {
+      "name": "Edit Mode Input Visible",
+      "passed": true,
+      "detail": "Edit form rendered"
+    },
+    {
+      "name": "Save Edit Toast",
+      "passed": true,
+      "detail": "Cập nhật thông tin khách hàng thành công."
+    },
+    {
+      "name": "Default Address Checkmark Present",
+      "passed": true,
+      "detail": "Address default updated"
+    }
+  ],
+  "errors": []
+}
