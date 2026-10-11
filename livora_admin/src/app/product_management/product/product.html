@@ -1,1 +1,641 @@
-<p>product works!</p>
+<div class="product-page">
+  <!-- Page Header -->
+  <header class="page-header">
+    <div class="header-left">
+      <div class="breadcrumb">
+        <span>Sản phẩm</span>
+        <span class="sep">/</span>
+        <span class="current">Danh sách sản phẩm</span>
+      </div>
+      <h1 class="page-title">Quản lý danh sách sản phẩm</h1>
+      <p class="page-desc">Quản lý thông tin chi tiết, giá bán, tồn kho và file 3D AR toàn bộ sản phẩm trên hệ thống LIVORA</p>
+    </div>
+    <div class="header-right">
+      <button type="button" class="btn btn-primary" (click)="openCreateModal()">
+        <svg class="btn-icon" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
+        </svg>
+        <span>Thêm sản phẩm mới</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Metric Statistics Cards -->
+  <section class="metrics-grid">
+    <div class="metric-card">
+      <div class="metric-info">
+        <span class="metric-label">Tổng sản phẩm</span>
+        <span class="metric-value">{{ metrics().totalProducts }}</span>
+      </div>
+      <div class="metric-icon icon-total">📦</div>
+    </div>
+
+    <div class="metric-card">
+      <div class="metric-info">
+        <span class="metric-label">Đang kinh doanh</span>
+        <span class="metric-value text-success">{{ metrics().activeProducts }}</span>
+      </div>
+      <div class="metric-icon icon-active">🟢</div>
+    </div>
+
+    <div class="metric-card">
+      <div class="metric-info">
+        <span class="metric-label">Hết hàng</span>
+        <span class="metric-value text-danger">{{ metrics().outOfStockProducts }}</span>
+      </div>
+      <div class="metric-icon icon-danger">⚠️</div>
+    </div>
+
+    <div class="metric-card">
+      <div class="metric-info">
+        <span class="metric-label">Có file 3D AR (.GLB)</span>
+        <span class="metric-value text-teal">{{ metrics().has3DCount }}</span>
+      </div>
+      <div class="metric-icon icon-3d">🧊</div>
+    </div>
+  </section>
+
+  <!-- Filter & Search Toolbar -->
+  <section class="toolbar-card">
+    <div class="search-box">
+      <svg class="search-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor">
+        <circle cx="9" cy="9" r="6" stroke-width="1.8" />
+        <path d="M13.5 13.5L18 18" stroke-width="1.8" stroke-linecap="round" />
+      </svg>
+      <input
+        type="text"
+        class="search-input"
+        placeholder="Tìm theo tên sản phẩm, mã SKU, chất liệu..."
+        [(ngModel)]="searchDraft"
+        (input)="onSearchChange()"
+      />
+      <button *ngIf="searchDraft" type="button" class="clear-btn" (click)="clearSearch()">✕</button>
+    </div>
+
+    <div class="filter-controls">
+      <!-- Category Filter -->
+      <div class="filter-group">
+        <label for="filter-category">Danh mục:</label>
+        <select
+          id="filter-category"
+          class="select-control"
+          [(ngModel)]="categoryDraft"
+          (change)="onFilterChange()"
+        >
+          <option value="all">Tất cả danh mục</option>
+          <option *ngFor="let cat of availableCategories" [value]="cat.id">
+            {{ cat.name }}
+          </option>
+        </select>
+      </div>
+
+      <!-- Status Filter -->
+      <div class="filter-group">
+        <label for="filter-status">Trạng thái:</label>
+        <select
+          id="filter-status"
+          class="select-control"
+          [(ngModel)]="statusDraft"
+          (change)="onFilterChange()"
+        >
+          <option value="all">Tất cả trạng thái</option>
+          <option value="active">Đang kinh doanh</option>
+          <option value="inactive">Ngưng kinh doanh</option>
+          <option value="in_stock">Còn hàng</option>
+          <option value="out_of_stock">Hết hàng</option>
+        </select>
+      </div>
+
+      <!-- 3D Filter -->
+      <div class="filter-group">
+        <label for="filter-3d">Mô hình 3D:</label>
+        <select
+          id="filter-3d"
+          class="select-control"
+          [(ngModel)]="has3DDraft"
+          (change)="onFilterChange()"
+        >
+          <option value="all">Tất cả</option>
+          <option value="has_3d">Có file .GLB</option>
+          <option value="no_3d">Chưa có file</option>
+        </select>
+      </div>
+
+      <!-- Sort By -->
+      <div class="filter-group">
+        <label for="filter-sort">Sắp xếp:</label>
+        <select
+          id="filter-sort"
+          class="select-control"
+          [(ngModel)]="sortDraft"
+          (change)="onFilterChange()"
+        >
+          <option value="newest">Mới nhất</option>
+          <option value="price_asc">Giá: Thấp đến cao</option>
+          <option value="price_desc">Giá: Cao đến thấp</option>
+          <option value="stock_asc">Tồn kho: Tăng dần</option>
+          <option value="stock_desc">Tồn kho: Giảm dần</option>
+        </select>
+      </div>
+
+      <button *ngIf="isFiltering()" type="button" class="btn btn-secondary btn-sm" (click)="resetFilters()">
+        <span>Đặt lại</span>
+      </button>
+    </div>
+  </section>
+
+  <!-- Products Table Card -->
+  <div class="table-card">
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th class="col-check">
+              <input type="checkbox" [checked]="isAllSelected()" (change)="toggleSelectAll()" aria-label="Chọn tất cả" />
+            </th>
+            <th class="col-product">SẢN PHẨM</th>
+            <th class="col-cat">LOẠI SẢN PHẨM</th>
+            <th class="col-price text-right">GIÁ BÁN</th>
+            <th class="col-stock text-center">TỒN KHO</th>
+            <th class="col-3d text-center">MÔ HÌNH 3D AR (.GLB)</th>
+            <th class="col-status text-center">TRẠNG THÁI</th>
+            <th class="col-actions text-right">THAO TÁC</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of products()" [class.row-selected]="isSelected(item.id)">
+            <td class="col-check">
+              <input type="checkbox" [checked]="isSelected(item.id)" (change)="toggleSelect(item.id)" aria-label="Chọn dòng" />
+            </td>
+
+            <td class="col-product">
+              <div class="product-cell">
+                <div class="thumb-wrap">
+                  <img [src]="item.thumbnail" [alt]="item.name" class="product-thumb" />
+                  <span *ngIf="item.isFeatured" class="featured-badge" title="Sản phẩm nổi bật">★</span>
+                </div>
+                <div class="product-meta">
+                  <span class="product-name" [title]="item.name">{{ item.name }}</span>
+                  <div class="product-sub">
+                    <span class="sku-code">{{ item.sku }}</span>
+                    <span class="room-pill" *ngFor="let rName of item.roomNames">{{ rName }}</span>
+                  </div>
+                </div>
+              </div>
+            </td>
+
+            <td class="col-cat">
+              <span class="cat-pill">{{ item.categoryName }}</span>
+            </td>
+
+            <td class="col-price text-right">
+              <div class="price-stack">
+                <span class="effective-price">{{ formatCurrency(item.salePrice ?? item.price) }}</span>
+                <span *ngIf="item.salePrice" class="original-price">{{ formatCurrency(item.price) }}</span>
+              </div>
+            </td>
+
+            <td class="col-stock text-center">
+              <div class="stock-stack">
+                <span class="stock-num">{{ item.stockQuantity }} sp</span>
+                <span
+                  class="stock-badge"
+                  [class.badge-in-stock]="item.stockQuantity > 0"
+                  [class.badge-out-stock]="item.stockQuantity === 0"
+                >
+                  {{ item.stockQuantity > 0 ? 'Còn hàng' : 'Hết hàng' }}
+                </span>
+              </div>
+            </td>
+
+            <td class="col-3d text-center">
+              <span *ngIf="item.has3DModel" class="badge-3d has-3d" title="Có tệp .glb mô hình 3D AR">
+                <svg class="cube-icon" viewBox="0 0 20 20" fill="currentColor">
+                  <path d="M11 17a1 1 0 001.447.894l4-2A1 1 0 0017 15V9.236a1 1 0 00-1.447-.894l-4 2a1 1 0 00-.553.894V17zM15.211 6.276a1 1 0 000-1.788l-4.764-2.382a1 1 0 00-.894 0L4.789 4.488a1 1 0 000 1.788l4.764 2.382a1 1 0 00.894 0l4.764-2.382zM3 9.236V15a1 1 0 00.553.894l4 2A1 1 0 009 17v-5.764a1 1 0 00-.553-.894l-4-2A1 1 0 003 9.236z" />
+                </svg>
+                <span>Có file .GLB</span>
+              </span>
+              <span *ngIf="!item.has3DModel" class="badge-3d no-3d">
+                <span>— Chưa có</span>
+              </span>
+            </td>
+
+            <td class="col-status text-center">
+              <button
+                type="button"
+                class="status-btn"
+                [class.status-active]="item.status === 'Đang kinh doanh'"
+                [class.status-inactive]="item.status !== 'Đang kinh doanh'"
+                (click)="toggleStatus(item)"
+                [title]="item.status === 'Đang kinh doanh' ? 'Nhấp để ngưng kinh doanh' : 'Nhấp để kinh doanh lại'"
+              >
+                <span class="status-indicator"></span>
+                <span>{{ item.status }}</span>
+              </button>
+            </td>
+
+            <td class="col-actions text-right">
+              <div class="action-buttons">
+                <button type="button" class="icon-btn edit-btn" (click)="openEditModal(item)" title="Chỉnh sửa sản phẩm">
+                  <svg viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                  </svg>
+                </button>
+                <button type="button" class="icon-btn delete-btn" (click)="confirmDelete(item)" title="Xóa sản phẩm">
+                  <svg viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
+                  </svg>
+                </button>
+              </div>
+            </td>
+          </tr>
+
+          <!-- Empty state -->
+          <tr *ngIf="products().length === 0">
+            <td colspan="8" class="empty-cell">
+              <div class="empty-state">
+                <div class="empty-icon">🛋️</div>
+                <h3>Không tìm thấy sản phẩm nào</h3>
+                <p>Vui lòng thử từ khóa tìm kiếm khác hoặc điều chỉnh lại các tiêu chí lọc.</p>
+                <button type="button" class="btn btn-secondary btn-sm" (click)="resetFilters()">Đặt lại bộ lọc</button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination Footer -->
+    <footer class="pagination-footer">
+      <div class="pagination-info">
+        Hiển thị <strong>{{ paginationStartIndex() }}</strong> - <strong>{{ paginationEndIndex() }}</strong> trong tổng số <strong>{{ totalItems() }}</strong> sản phẩm
+      </div>
+      <div class="pagination-nav">
+        <button
+          type="button"
+          class="page-btn nav-arrow"
+          [disabled]="currentPage() === 1"
+          (click)="changePage(currentPage() - 1)"
+          aria-label="Trang trước"
+        >
+          &lt;
+        </button>
+        <button
+          *ngFor="let p of visiblePageNumbers()"
+          type="button"
+          class="page-btn"
+          [class.active]="p === currentPage()"
+          (click)="changePage(p)"
+        >
+          {{ p }}
+        </button>
+        <button
+          type="button"
+          class="page-btn nav-arrow"
+          [disabled]="currentPage() === totalPages()"
+          (click)="changePage(currentPage() + 1)"
+          aria-label="Trang kế tiếp"
+        >
+          &gt;
+        </button>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Modal: Thêm mới / Chỉnh sửa sản phẩm -->
+  <div *ngIf="isModalOpen()" class="modal-backdrop" (click)="onBackdropClick($event)">
+    <div class="modal-dialog product-modal-dialog" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <h2 class="modal-title">{{ isEditMode() ? 'Chỉnh sửa sản phẩm' : 'Thêm mới sản phẩm' }}</h2>
+          <p class="modal-subtitle">Điền đầy đủ thông số kỹ thuật, hình ảnh và mô hình 3D cho sản phẩm</p>
+        </div>
+        <button type="button" class="modal-close-btn" (click)="closeModal()" aria-label="Đóng cửa sổ">✕</button>
+      </div>
+
+      <form (ngSubmit)="saveProduct()" class="modal-body">
+        <!-- Tab Navigation inside Modal -->
+        <div class="modal-tabs">
+          <button
+            type="button"
+            class="tab-btn"
+            [class.active]="activeModalTab() === 'general'"
+            (click)="setModalTab('general')"
+          >
+            1. Thông tin chung & Giá
+          </button>
+          <button
+            type="button"
+            class="tab-btn"
+            [class.active]="activeModalTab() === 'dimensions'"
+            (click)="setModalTab('dimensions')"
+          >
+            2. Thông số & Kích thước
+          </button>
+          <button
+            type="button"
+            class="tab-btn"
+            [class.active]="activeModalTab() === 'media'"
+            (click)="setModalTab('media')"
+          >
+            3. Hình ảnh & Mô hình 3D AR
+          </button>
+        </div>
+
+        <!-- TAB 1: General Info & Pricing -->
+        <div *ngIf="activeModalTab() === 'general'" class="tab-content">
+          <div class="form-row">
+            <div class="form-group col-half">
+              <label for="prod-sku" class="form-label required">Mã sản phẩm (SKU)</label>
+              <input
+                id="prod-sku"
+                type="text"
+                class="form-input"
+                [(ngModel)]="formDraft.sku"
+                name="prodSku"
+                placeholder="VD: LIV-SOFA-01"
+                required
+              />
+              <span class="field-hint">Mã định danh duy nhất quản lý tồn kho</span>
+            </div>
+
+            <div class="form-group col-half">
+              <label for="prod-cat" class="form-label required">Loại sản phẩm (Danh mục)</label>
+              <select
+                id="prod-cat"
+                class="select-control form-input"
+                [(ngModel)]="formDraft.categoryId"
+                name="prodCategory"
+                required
+              >
+                <option *ngFor="let cat of availableCategories" [value]="cat.id">
+                  {{ cat.name }} ({{ cat.code }})
+                </option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="prod-name" class="form-label required">Tên sản phẩm</label>
+            <input
+              id="prod-name"
+              type="text"
+              class="form-input"
+              [(ngModel)]="formDraft.name"
+              name="prodName"
+              placeholder="VD: Sofa Góc L Nordic Modern"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Không gian phòng (Có thể chọn nhiều)</label>
+            <div class="room-checkbox-grid">
+              <label *ngFor="let rm of availableRooms" class="room-check-label">
+                <input
+                  type="checkbox"
+                  [checked]="isRoomSelected(rm.id)"
+                  (change)="toggleRoom(rm.id)"
+                />
+                <span>{{ rm.name }}</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group col-third">
+              <label for="prod-price" class="form-label required">Giá gốc (VNĐ)</label>
+              <input
+                id="prod-price"
+                type="number"
+                class="form-input"
+                [(ngModel)]="formDraft.price"
+                name="prodPrice"
+                min="0"
+                step="10000"
+                required
+              />
+            </div>
+
+            <div class="form-group col-third">
+              <label for="prod-sale-price" class="form-label">Giá khuyến mãi (VNĐ)</label>
+              <input
+                id="prod-sale-price"
+                type="number"
+                class="form-input"
+                [(ngModel)]="formDraft.salePrice"
+                name="prodSalePrice"
+                min="0"
+                step="10000"
+                placeholder="Để trống nếu không giảm"
+              />
+            </div>
+
+            <div class="form-group col-third">
+              <label for="prod-stock" class="form-label required">Số lượng tồn kho</label>
+              <input
+                id="prod-stock"
+                type="number"
+                class="form-input"
+                [(ngModel)]="formDraft.stockQuantity"
+                name="prodStock"
+                min="0"
+                required
+              />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="prod-desc" class="form-label">Mô tả sản phẩm</label>
+            <textarea
+              id="prod-desc"
+              class="form-textarea"
+              rows="3"
+              [(ngModel)]="formDraft.description"
+              name="prodDesc"
+              placeholder="Mô tả công năng, thiết kế và điểm nổi bật của món đồ..."
+            ></textarea>
+          </div>
+        </div>
+
+        <!-- TAB 2: Dimensions & Specifications -->
+        <div *ngIf="activeModalTab() === 'dimensions'" class="tab-content">
+          <div class="section-title">Kích thước vật lý (Đơn vị: cm, kg)</div>
+          <div class="form-row">
+            <div class="form-group col-fourth">
+              <label for="dim-len" class="form-label">Chiều dài (L)</label>
+              <input
+                id="dim-len"
+                type="number"
+                class="form-input"
+                [(ngModel)]="formDraft.dimensions.length"
+                name="dimLength"
+                min="0"
+              />
+            </div>
+            <div class="form-group col-fourth">
+              <label for="dim-wid" class="form-label">Chiều rộng (W)</label>
+              <input
+                id="dim-wid"
+                type="number"
+                class="form-input"
+                [(ngModel)]="formDraft.dimensions.width"
+                name="dimWidth"
+                min="0"
+              />
+            </div>
+            <div class="form-group col-fourth">
+              <label for="dim-hei" class="form-label">Chiều cao (H)</label>
+              <input
+                id="dim-hei"
+                type="number"
+                class="form-input"
+                [(ngModel)]="formDraft.dimensions.height"
+                name="dimHeight"
+                min="0"
+              />
+            </div>
+            <div class="form-group col-fourth">
+              <label for="dim-wei" class="form-label">Trọng lượng (kg)</label>
+              <input
+                id="dim-wei"
+                type="number"
+                class="form-input"
+                [(ngModel)]="formDraft.dimensions.weight"
+                name="dimWeight"
+                min="0"
+              />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="prod-materials" class="form-label">Chất liệu cấu thành (cách nhau bởi dấu phẩy)</label>
+            <input
+              id="prod-materials"
+              type="text"
+              class="form-input"
+              [(ngModel)]="materialsInput"
+              name="prodMaterials"
+              placeholder="VD: Gỗ sồi tự nhiên, Vải nỉ cao cấp, Khung thép sơn tĩnh điện"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="prod-colors" class="form-label">Tùy chọn màu sắc (cách nhau bởi dấu phẩy)</label>
+            <input
+              id="prod-colors"
+              type="text"
+              class="form-input"
+              [(ngModel)]="colorsInput"
+              name="prodColors"
+              placeholder="VD: Xám tro, Be nhạt, Xanh navy, Trắng tinh"
+            />
+          </div>
+
+          <div class="form-row options-row">
+            <div class="form-group col-half">
+              <label class="form-label">Trạng thái kinh doanh</label>
+              <div class="radio-inline-group">
+                <label class="radio-label">
+                  <input
+                    type="radio"
+                    name="prodOpStatus"
+                    value="Đang kinh doanh"
+                    [(ngModel)]="formDraft.status"
+                  />
+                  <span>Đang kinh doanh</span>
+                </label>
+                <label class="radio-label">
+                  <input
+                    type="radio"
+                    name="prodOpStatus"
+                    value="ngưng kinh doanh"
+                    [(ngModel)]="formDraft.status"
+                  />
+                  <span>Ngưng kinh doanh</span>
+                </label>
+              </div>
+            </div>
+
+            <div class="form-group col-half">
+              <label class="form-label">Sản phẩm nổi bật (Featured)</label>
+              <label class="checkbox-container">
+                <input
+                  type="checkbox"
+                  [(ngModel)]="formDraft.isFeatured"
+                  name="prodFeatured"
+                />
+                <span>Ghim hiển thị trên banner & mục nổi bật trang chủ</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 3: Media & 3D AR Model -->
+        <div *ngIf="activeModalTab() === 'media'" class="tab-content">
+          <div class="form-group">
+            <label for="prod-thumb" class="form-label required">Đường dẫn ảnh đại diện (Thumbnail)</label>
+            <div class="thumb-input-row">
+              <input
+                id="prod-thumb"
+                type="text"
+                class="form-input"
+                [(ngModel)]="formDraft.thumbnail"
+                name="prodThumb"
+                placeholder="https://images.unsplash.com/photo-..."
+                required
+              />
+              <img
+                *ngIf="formDraft.thumbnail"
+                [src]="formDraft.thumbnail"
+                alt="Xem trước ảnh"
+                class="preview-box"
+              />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="prod-images" class="form-label">Danh sách ảnh phối cảnh (URL cách nhau bởi dấu phẩy)</label>
+            <textarea
+              id="prod-images"
+              class="form-textarea"
+              rows="2"
+              [(ngModel)]="imagesInput"
+              name="prodImages"
+              placeholder="https://image1.jpg, https://image2.jpg"
+            ></textarea>
+          </div>
+
+          <div class="form-group ar-box">
+            <div class="ar-box-header">
+              <div class="ar-icon">🧊</div>
+              <div>
+                <label for="prod-glb" class="form-label">Mô hình 3D AR (.GLB URL)</label>
+                <p class="field-hint">Hỗ trợ định dạng .GLB chuẩn WebGL/ARCore/ARKit cho tính năng xem trực tiếp trong phòng thực tế ảo</p>
+              </div>
+            </div>
+            <input
+              id="prod-glb"
+              type="text"
+              class="form-input"
+              [(ngModel)]="formDraft.file3DUrl"
+              name="prodGlb"
+              placeholder="https://assets.livora.vn/models/3d/product-name.glb"
+            />
+          </div>
+        </div>
+
+        <div *ngIf="errorMessage()" class="alert-error">
+          {{ errorMessage() }}
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="closeModal()">Hủy bỏ</button>
+          <button type="submit" class="btn btn-primary" [disabled]="isSubmitting()">
+            {{ isSubmitting() ? 'Đang lưu...' : (isEditMode() ? 'Cập nhật sản phẩm' : 'Lưu sản phẩm mới') }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

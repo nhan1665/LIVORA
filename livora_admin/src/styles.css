@@ -1,5 +1,8 @@
 @import './app/room_management/room/room.css';
 @import './app/room_management/catalog.css';
+@import './app/customer_management/customer/customer.css';
+@import './app/product_management/category/category.css';
+@import './app/product_management/product/product.css';
 @import './app/order_management/order/order.css';
 @import './app/order_management/refund/refund.css';
 

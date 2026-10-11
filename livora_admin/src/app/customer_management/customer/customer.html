@@ -1,1 +1,774 @@
-<p>customer works!</p>
+<div class="customer-page-container">
+  <!-- Page Header -->
+  <header class="page-header">
+    <div class="page-title-wrap">
+      <h1 class="page-title">Danh sách khách hàng</h1>
+    </div>
+  </header>
+
+  <!-- Metric Summary Cards -->
+  <section class="metrics-grid" aria-label="Tổng hợp số liệu khách hàng">
+    <!-- Card 1: Tổng khách hàng -->
+    <div class="metric-card">
+      <div class="metric-content">
+        <span class="metric-label">TỔNG KHÁCH HÀNG</span>
+        <span class="metric-value">{{ summary().totalCustomers }}</span>
+      </div>
+      <div class="metric-icon-wrap" aria-hidden="true">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+          <circle cx="9" cy="7" r="4" />
+          <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+          <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+        </svg>
+      </div>
+    </div>
+
+    <!-- Card 2: Đã đăng ký -->
+    <div class="metric-card">
+      <div class="metric-content">
+        <span class="metric-label">ĐÃ ĐĂNG KÝ</span>
+        <span class="metric-value">{{ summary().registeredCustomers }}</span>
+      </div>
+      <div class="metric-icon-wrap" aria-hidden="true">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+          <polyline points="9 12 11 14 15 10" />
+        </svg>
+      </div>
+    </div>
+
+    <!-- Card 3: Khách vãng lai -->
+    <div class="metric-card">
+      <div class="metric-content">
+        <span class="metric-label">KHÁCH VÃNG LAI</span>
+        <span class="metric-value">{{ summary().guestCustomers }}</span>
+      </div>
+      <div class="metric-icon-wrap" aria-hidden="true">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="4" width="18" height="16" rx="3" />
+          <circle cx="9" cy="10" r="2" />
+          <line x1="15" y1="8" x2="17" y2="8" />
+          <line x1="15" y1="12" x2="17" y2="12" />
+          <path d="M7 16a2 2 0 0 1 4 0" />
+        </svg>
+      </div>
+    </div>
+
+    <!-- Card 4: Hoạt động tháng này -->
+    <div class="metric-card">
+      <div class="metric-content">
+        <span class="metric-label">HOẠT ĐỘNG THÁNG NÀY</span>
+        <span class="metric-value">{{ summary().activeThisMonth }}</span>
+      </div>
+      <div class="metric-icon-wrap" aria-hidden="true">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+        </svg>
+      </div>
+    </div>
+  </section>
+
+  <!-- Search & Filter Card -->
+  <section class="filter-card" aria-label="Bộ lọc tìm kiếm">
+    <div class="filter-card-header">
+      <div class="filter-title-group">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="4" y1="21" x2="4" y2="14" />
+          <line x1="4" y1="10" x2="4" y2="3" />
+          <line x1="12" y1="21" x2="12" y2="12" />
+          <line x1="12" y1="8" x2="12" y2="3" />
+          <line x1="20" y1="21" x2="20" y2="16" />
+          <line x1="20" y1="12" x2="20" y2="3" />
+          <line x1="1" y1="14" x2="7" y2="14" />
+          <line x1="9" y1="8" x2="15" y2="8" />
+          <line x1="17" y1="16" x2="23" y2="16" />
+        </svg>
+        <span class="filter-title">Bộ lọc tìm kiếm</span>
+      </div>
+      <span class="filter-subtitle-right">HỆ THỐNG PHÂN NHÓM</span>
+    </div>
+
+    <div class="filter-card-body">
+      <!-- Keyword Input -->
+      <div class="filter-field search-field">
+        <label for="customerSearchInput" class="filter-label">TỪ KHÓA</label>
+        <div class="input-with-icon">
+          <svg class="field-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8" />
+            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+          </svg>
+          <input
+            id="customerSearchInput"
+            type="text"
+            class="filter-input"
+            placeholder="Tìm theo mã, họ tên, số điện thoại hoặc email"
+            [(ngModel)]="searchDraft"
+            (keyup.enter)="applyFilter()"
+          />
+        </div>
+      </div>
+
+      <!-- Customer Type Select -->
+      <div class="filter-field">
+        <label for="customerTypeSelect" class="filter-label">LOẠI KHÁCH HÀNG</label>
+        <div class="select-wrapper">
+          <select id="customerTypeSelect" class="filter-select" [(ngModel)]="customerTypeDraft">
+            <option value="all">Tất cả phân loại</option>
+            <option value="registered">Khách đã đăng ký</option>
+            <option value="guest">Khách vãng lai</option>
+          </select>
+          <svg class="chevron-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
+        </div>
+      </div>
+
+      <!-- Status Select -->
+      <div class="filter-field">
+        <label for="customerStatusSelect" class="filter-label">TRẠNG THÁI</label>
+        <div class="select-wrapper">
+          <select id="customerStatusSelect" class="filter-select" [(ngModel)]="statusDraft">
+            <option value="all">Tất cả</option>
+            <option value="active">Hoạt động</option>
+            <option value="inactive">Ngừng hoạt động</option>
+          </select>
+          <svg class="chevron-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
+        </div>
+      </div>
+
+      <!-- Filter & Reset Actions -->
+      <div class="filter-actions">
+        <button type="button" class="btn-filter" (click)="applyFilter()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
+          </svg>
+          <span>Lọc</span>
+        </button>
+        <button type="button" class="btn-reset" (click)="resetFilter()" title="Đặt lại bộ lọc">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Customer Table Section -->
+  <section class="table-card" aria-label="Danh sách hồ sơ khách hàng">
+    <div class="table-card-header">
+      <div class="header-left">
+        <h2 class="table-title">Hồ sơ khách hàng</h2>
+        <span class="count-badge">{{ totalItems() }} khách hàng</span>
+      </div>
+      <div class="header-right">
+        <span class="page-indicator">● Đang xem: Trang {{ currentPage() }}/{{ totalPages() }}</span>
+      </div>
+    </div>
+
+    <!-- Table Responsive Wrap -->
+    <div class="table-wrap">
+      @if (loading()) {
+        <div class="loading-state">
+          <div class="spinner"></div>
+          <p>Đang tải dữ liệu khách hàng...</p>
+        </div>
+      } @else if (loadError()) {
+        <div class="error-state">
+          <p>{{ loadError() }}</p>
+          <button type="button" class="btn-filter" (click)="loadCustomers()">Thử lại</button>
+        </div>
+      } @else if (customers().length === 0) {
+        <div class="empty-state">
+          <p>Không tìm thấy khách hàng nào phù hợp với bộ lọc.</p>
+          <button type="button" class="btn-reset-empty" (click)="resetFilter()">Đặt lại bộ lọc</button>
+        </div>
+      } @else {
+        <table class="customer-table">
+          <thead>
+            <tr>
+              <th scope="col" class="th-name">HỌ VÀ TÊN</th>
+              <th scope="col" class="th-phone">SỐ ĐIỆN THOẠI</th>
+              <th scope="col" class="th-email">EMAIL</th>
+              <th scope="col" class="th-type">LOẠI KHÁCH HÀNG</th>
+              <th scope="col" class="th-date">NGÀY TẠO</th>
+              <th scope="col" class="th-status">TRẠNG THÁI</th>
+              <th scope="col" class="th-actions text-right"></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (cust of customers(); track cust.id) {
+              <tr class="customer-row" (click)="openDetailModal(cust)">
+                <!-- Name with Avatar -->
+                <td class="td-name">
+                  <div class="customer-cell">
+                    <div class="customer-avatar" aria-hidden="true">{{ cust.initials }}</div>
+                    <span class="customer-name">{{ cust.fullName }}</span>
+                  </div>
+                </td>
+
+                <!-- Phone -->
+                <td class="td-phone">{{ cust.phone }}</td>
+
+                <!-- Email -->
+                <td class="td-email">{{ cust.email }}</td>
+
+                <!-- Customer Type -->
+                <td class="td-type">
+                  <span class="type-pill" [class.type-registered]="cust.customerType === 'registered'" [class.type-guest]="cust.customerType === 'guest'">
+                    {{ cust.customerType === 'registered' ? 'Khách đã đăng ký' : 'Khách vãng lai' }}
+                  </span>
+                </td>
+
+                <!-- Created Date -->
+                <td class="td-date">{{ cust.createdAt }}</td>
+
+                <!-- Status Badge -->
+                <td class="td-status">
+                  <span class="status-badge" [class.status-active]="cust.status === 'active'" [class.status-inactive]="cust.status === 'inactive'">
+                    <span class="status-dot"></span>
+                    <span>{{ cust.status === 'active' ? 'Hoạt động' : 'Ngưng hoạt động' }}</span>
+                  </span>
+                </td>
+
+                <!-- Actions -->
+                <td class="td-actions text-right" (click)="$event.stopPropagation()">
+                  <div class="action-btn-group">
+                    <button type="button" class="btn-action-text" (click)="openDetailModal(cust)" title="Xem chi tiết khách hàng">
+                      Xem
+                    </button>
+                    <button type="button" class="btn-action-text" (click)="openEditModal(cust)" title="Chỉnh sửa thông tin khách hàng">
+                      Chỉnh sửa
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+    </div>
+
+    <!-- Table Footer / Pagination -->
+    @if (!loading() && !loadError() && totalItems() > 0) {
+      <div class="table-footer">
+        <div class="footer-info">
+          Hiển thị <strong>{{ (currentPage() - 1) * pageSize + 1 }}–{{ (currentPage() - 1) * pageSize + customers().length }}</strong> trên <strong>{{ totalItems() }}</strong> khách hàng
+        </div>
+
+        <nav class="pagination-nav" aria-label="Phân trang danh sách khách hàng">
+          <!-- Previous Page Button -->
+          <button
+            type="button"
+            class="page-btn page-arrow"
+            [disabled]="currentPage() === 1"
+            (click)="changePage(currentPage() - 1)"
+            aria-label="Trang trước"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="15 18 9 12 15 6" />
+            </svg>
+          </button>
+
+          <!-- Page numbers -->
+          @for (item of getPaginationPages(); track $index) {
+            @if (item === '...') {
+              <span class="page-ellipsis">...</span>
+            } @else {
+              <button
+                type="button"
+                class="page-btn"
+                [class.active]="item === currentPage()"
+                (click)="changePage(+item)"
+              >
+                {{ item }}
+              </button>
+            }
+          }
+
+          <!-- Next Page Button -->
+          <button
+            type="button"
+            class="page-btn page-arrow"
+            [disabled]="currentPage() === totalPages()"
+            (click)="changePage(currentPage() + 1)"
+            aria-label="Trang sau"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="9 18 15 12 9 6" />
+            </svg>
+          </button>
+        </nav>
+      </div>
+    }
+  </section>
+
+  <!-- ============================================================== -->
+  <!-- CUSTOMER DETAIL / EDIT MODAL DIALOG                            -->
+  <!-- ============================================================== -->
+  @if (isDetailModalOpen() && selectedCustomer()) {
+    <div class="modal-backdrop" (click)="closeDetailModal()">
+      <div class="customer-modal-dialog" (click)="$event.stopPropagation()">
+        <!-- Modal Top Header -->
+        <div class="modal-top-header">
+          <div class="modal-header-profile">
+            <div class="modal-avatar">{{ selectedCustomer()?.initials }}</div>
+            <div class="modal-profile-info">
+              <div class="profile-title-row">
+                <h2 class="modal-profile-name">Hồ sơ khách hàng: {{ selectedCustomer()?.fullName }}</h2>
+                <span class="badge-code">#{{ selectedCustomer()?.code }}</span>
+                <span class="type-pill" [class.type-registered]="selectedCustomer()?.customerType === 'registered'" [class.type-guest]="selectedCustomer()?.customerType === 'guest'">
+                  {{ selectedCustomer()?.customerType === 'registered' ? 'Khách đã đăng ký' : 'Khách vãng lai' }}
+                </span>
+                <span class="status-badge" [class.status-active]="selectedCustomer()?.status === 'active'" [class.status-inactive]="selectedCustomer()?.status === 'inactive'">
+                  <span class="status-dot"></span>
+                  <span>{{ selectedCustomer()?.status === 'active' ? 'Hoạt động' : 'Ngưng hoạt động' }}</span>
+                </span>
+              </div>
+              <div class="profile-subtitle">
+                {{ selectedCustomer()?.tierSubtitle || 'HỒ SƠ ĐỊNH DANH MAISON ATELIER VIP' }}
+              </div>
+            </div>
+          </div>
+
+          <button type="button" class="btn-modal-close" (click)="closeDetailModal()" aria-label="Đóng cửa sổ">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </div>
+
+        <!-- Modal Tabs -->
+        <div class="modal-tabs-bar">
+          <button
+            type="button"
+            class="modal-tab-btn"
+            [class.active]="activeModalTab() === 'detail'"
+            (click)="switchModalTab('detail')"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+              <circle cx="12" cy="7" r="4" />
+            </svg>
+            <span>Chi tiết khách hàng</span>
+          </button>
+
+          <button
+            type="button"
+            class="modal-tab-btn"
+            [class.active]="activeModalTab() === 'orders'"
+            (click)="switchModalTab('orders')"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z" />
+              <line x1="3" y1="6" x2="21" y2="6" />
+              <path d="M16 10a4 4 0 0 1-8 0" />
+            </svg>
+            <span>Lịch sử đơn hàng ({{ selectedCustomer()?.orders?.length || 0 }} đơn)</span>
+          </button>
+        </div>
+
+        <!-- Modal Body Content -->
+        <div class="modal-body-content">
+          @if (activeModalTab() === 'detail') {
+            <!-- SECTION 1: THÔNG TIN CÁ NHÂN & TÀI KHOẢN -->
+            <section class="modal-section" aria-label="Thông tin cá nhân & tài khoản">
+              <div class="section-title-bar">
+                <div class="section-title-left">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="4" width="18" height="16" rx="3" />
+                    <circle cx="9" cy="10" r="2" />
+                    <line x1="15" y1="8" x2="17" y2="8" />
+                    <line x1="15" y1="12" x2="17" y2="12" />
+                  </svg>
+                  <h3>1. THÔNG TIN CÁ NHÂN & TÀI KHOẢN</h3>
+                </div>
+                <span class="section-badge-right">ĐỊNH DANH SỐ</span>
+              </div>
+
+              <!-- VIEW MODE -->
+              @if (!isEditMode()) {
+                <div class="info-card-box">
+                  <div class="info-row grid-3">
+                    <div class="info-item">
+                      <span class="info-item-label">MÃ KHÁCH HÀNG</span>
+                      <strong class="info-item-value code-value">{{ selectedCustomer()?.code }}</strong>
+                    </div>
+                    <div class="info-item">
+                      <span class="info-item-label">HỌ VÀ TÊN</span>
+                      <strong class="info-item-value highlight-value">{{ selectedCustomer()?.fullName }}</strong>
+                    </div>
+                    <div class="info-item">
+                      <span class="info-item-label">SỐ ĐIỆN THOẠI</span>
+                      <strong class="info-item-value">{{ selectedCustomer()?.phone }}</strong>
+                    </div>
+                  </div>
+
+                  <div class="info-row grid-3">
+                    <div class="info-item">
+                      <span class="info-item-label">EMAIL</span>
+                      <span class="info-item-value email-value">{{ selectedCustomer()?.email }}</span>
+                    </div>
+                    <div class="info-item">
+                      <span class="info-item-label">NGÀY SINH</span>
+                      <span class="info-item-value">{{ selectedCustomer()?.birthDate || 'Chưa cập nhật' }}</span>
+                    </div>
+                    <div class="info-item">
+                      <span class="info-item-label">GIỚI TÍNH</span>
+                      <span class="info-item-value">{{ selectedCustomer()?.gender || 'Nam' }}</span>
+                    </div>
+                  </div>
+
+                  <div class="info-row grid-3">
+                    <div class="info-item">
+                      <span class="info-item-label">LOẠI KHÁCH HÀNG</span>
+                      <span class="type-pill" [class.type-registered]="selectedCustomer()?.customerType === 'registered'" [class.type-guest]="selectedCustomer()?.customerType === 'guest'">
+                        {{ selectedCustomer()?.customerType === 'registered' ? 'Khách đã đăng ký' : 'Khách vãng lai' }}
+                      </span>
+                    </div>
+                    <div class="info-item">
+                      <span class="info-item-label">TRẠNG THÁI</span>
+                      <span class="status-badge" [class.status-active]="selectedCustomer()?.status === 'active'" [class.status-inactive]="selectedCustomer()?.status === 'inactive'">
+                        <span class="status-dot"></span>
+                        <span>{{ selectedCustomer()?.status === 'active' ? 'Hoạt động' : 'Ngưng hoạt động' }}</span>
+                      </span>
+                    </div>
+                    <div class="info-item">
+                      <span class="info-item-label">NGÀY TẠO KHÁCH HÀNG</span>
+                      <span class="info-item-value">
+                        {{ selectedCustomer()?.createdAt }}
+                        <small class="sub-note">{{ selectedCustomer()?.firstOrderNote }}</small>
+                      </span>
+                    </div>
+                  </div>
+
+                  <div class="info-row grid-1">
+                    <div class="info-item">
+                      <span class="info-item-label">NGÀY ĐĂNG KÝ TÀI KHOẢN</span>
+                      <span class="info-item-value">
+                        <strong>{{ selectedCustomer()?.registeredAt || 'Chưa đăng ký tài khoản trực tuyến' }}</strong>
+                        @if (selectedCustomer()?.registerNote) {
+                          <span class="register-note-text">{{ selectedCustomer()?.registerNote }}</span>
+                        }
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              } @else {
+                <!-- EDIT MODE -->
+                <div class="info-card-box edit-box">
+                  <div class="edit-grid-3">
+                    <div class="form-group">
+                      <label class="form-label" for="editFullName">Họ và tên *</label>
+                      <input id="editFullName" type="text" class="form-control" [(ngModel)]="editForm.fullName" />
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label" for="editPhone">Số điện thoại *</label>
+                      <input id="editPhone" type="text" class="form-control" [(ngModel)]="editForm.phone" />
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label" for="editEmail">Email *</label>
+                      <input id="editEmail" type="email" class="form-control" [(ngModel)]="editForm.email" />
+                    </div>
+                  </div>
+
+                  <div class="edit-grid-3">
+                    <div class="form-group">
+                      <label class="form-label" for="editBirthDate">Ngày sinh</label>
+                      <input id="editBirthDate" type="text" placeholder="DD/MM/YYYY" class="form-control" [(ngModel)]="editForm.birthDate" />
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label" for="editGender">Giới tính</label>
+                      <select id="editGender" class="form-control" [(ngModel)]="editForm.gender">
+                        <option value="Nam">Nam</option>
+                        <option value="Nữ">Nữ</option>
+                        <option value="Khác">Khác</option>
+                      </select>
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label" for="editStatus">Trạng thái</label>
+                      <select id="editStatus" class="form-control" [(ngModel)]="editForm.status">
+                        <option value="active">Hoạt động</option>
+                        <option value="inactive">Ngừng hoạt động</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div class="edit-grid-2">
+                    <div class="form-group">
+                      <label class="form-label" for="editCustomerType">Loại khách hàng</label>
+                      <select id="editCustomerType" class="form-control" [(ngModel)]="editForm.customerType">
+                        <option value="registered">Khách đã đăng ký</option>
+                        <option value="guest">Khách vãng lai</option>
+                      </select>
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label" for="editTierSubtitle">Phân nhóm / VIP Note</label>
+                      <input id="editTierSubtitle" type="text" class="form-control" [(ngModel)]="editForm.tierSubtitle" placeholder="e.g. HỒ SƠ ĐỊNH DANH MAISON ATELIER VIP" />
+                    </div>
+                  </div>
+                </div>
+              }
+            </section>
+
+            <!-- SECTION 2: DANH SÁCH ĐỊA CHỈ KHÁCH HÀNG -->
+            <section class="modal-section" aria-label="Danh sách địa chỉ khách hàng">
+              <div class="section-title-bar">
+                <div class="section-title-left">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                    <circle cx="12" cy="10" r="3" />
+                  </svg>
+                  <h3>2. DANH SÁCH ĐỊA CHỈ KHÁCH HÀNG</h3>
+                </div>
+                <button type="button" class="btn-add-address" (click)="openAddAddressModal()">
+                  + Thêm địa chỉ mới
+                </button>
+              </div>
+
+              <div class="address-cards-list">
+                @for (addr of selectedCustomer()?.addresses; track addr.addressId) {
+                  <div class="address-item-card" [class.is-default-card]="addr.isDefault">
+                    <div class="address-icon-wrap" aria-hidden="true">
+                      @if (addr.isDefault) {
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                          <polyline points="9 22 9 12 15 12 15 22" />
+                        </svg>
+                      } @else {
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <rect x="4" y="2" width="16" height="20" rx="2" />
+                          <line x1="9" y1="22" x2="9" y2="2" />
+                          <line x1="8" y1="6" x2="8" y2="6.01" />
+                          <line x1="16" y1="6" x2="16" y2="6.01" />
+                          <line x1="8" y1="10" x2="8" y2="10.01" />
+                          <line x1="16" y1="10" x2="16" y2="10.01" />
+                        </svg>
+                      }
+                    </div>
+
+                    <div class="address-card-body">
+                      <div class="address-card-header">
+                        <strong class="address-title">{{ addr.label }}</strong>
+                        @if (addr.isDefault) {
+                          <span class="default-badge">Địa chỉ mặc định</span>
+                        }
+                      </div>
+                      <p class="address-full-line">{{ addr.fullAddress }}</p>
+                      <p class="address-recipient-line">Người nhận: {{ addr.recipientName }} • {{ addr.recipientPhone }}</p>
+                      @if (addr.note) {
+                        <p class="address-note-line">Ghi chú: {{ addr.note }}</p>
+                      }
+                    </div>
+
+                    <div class="address-card-action">
+                      @if (addr.isDefault) {
+                        <div class="default-check-icon" title="Địa chỉ giao hàng mặc định">
+                          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10" />
+                            <polyline points="9 12 12 15 16 10" />
+                          </svg>
+                        </div>
+                      } @else {
+                        <button type="button" class="btn-set-default" (click)="setDefaultAddress(addr.addressId)">
+                          Đặt làm mặc định
+                        </button>
+                      }
+                    </div>
+                  </div>
+                }
+              </div>
+            </section>
+
+            <!-- SECTION 3: DANH SÁCH ĐƠN HÀNG ĐÃ THỰC HIỆN -->
+            <section class="modal-section" aria-label="Lịch sử đơn hàng">
+              <div class="section-title-bar">
+                <h3 class="orders-section-heading">DANH SÁCH ĐƠN HÀNG ĐÃ THỰC HIỆN</h3>
+                <span class="total-order-badge">TỔNG GIÁ TRỊ: {{ formatCurrency(selectedCustomer()?.totalOrderValue || 0) }}</span>
+              </div>
+
+              <div class="mini-orders-wrap">
+                <table class="mini-orders-table">
+                  <thead>
+                    <tr>
+                      <th scope="col">MÃ ĐƠN</th>
+                      <th scope="col">NGÀY ĐẶT</th>
+                      <th scope="col">CHI TIẾT SẢN PHẨM</th>
+                      <th scope="col">TỔNG TIỀN</th>
+                      <th scope="col">TRẠNG THÁI</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (ord of selectedCustomer()?.orders; track ord.orderId) {
+                      <tr>
+                        <td class="order-code-cell">#{{ ord.orderCode }}</td>
+                        <td>{{ ord.orderDate }}</td>
+                        <td class="order-product-cell">{{ ord.productDetails }}</td>
+                        <td class="order-amount-cell">{{ formatCurrency(ord.totalAmount) }}</td>
+                        <td>
+                          <span class="order-status-badge">{{ ord.status }}</span>
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          } @else {
+            <!-- TAB 2: FULL ORDERS HISTORY TAB -->
+            <section class="modal-section" aria-label="Toàn bộ lịch sử đơn hàng">
+              <div class="section-title-bar">
+                <h3 class="orders-section-heading">TOÀN BỘ LỊCH SỬ ĐƠN HÀNG</h3>
+                <span class="total-order-badge">TỔNG TÍCH LŨY: {{ formatCurrency(selectedCustomer()?.totalOrderValue || 0) }}</span>
+              </div>
+
+              <div class="full-orders-wrap">
+                @if (!selectedCustomer()?.orders?.length) {
+                  <p class="empty-orders-text">Khách hàng chưa phát sinh đơn hàng nào trên hệ thống.</p>
+                } @else {
+                  <table class="mini-orders-table">
+                    <thead>
+                      <tr>
+                        <th scope="col">MÃ ĐƠN</th>
+                        <th scope="col">NGÀY ĐẶT</th>
+                        <th scope="col">CHI TIẾT SẢN PHẨM</th>
+                        <th scope="col">TỔNG TIỀN</th>
+                        <th scope="col">TRẠNG THÁI</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      @for (ord of selectedCustomer()?.orders; track ord.orderId) {
+                        <tr>
+                          <td class="order-code-cell">#{{ ord.orderCode }}</td>
+                          <td>{{ ord.orderDate }}</td>
+                          <td class="order-product-cell">{{ ord.productDetails }}</td>
+                          <td class="order-amount-cell">{{ formatCurrency(ord.totalAmount) }}</td>
+                          <td>
+                            <span class="order-status-badge">{{ ord.status }}</span>
+                          </td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                }
+              </div>
+            </section>
+          }
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="modal-bottom-footer">
+          <div class="footer-sync-notice">
+            <svg class="sync-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="23 4 23 10 17 10" />
+              <polyline points="1 20 1 14 7 14" />
+              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+            </svg>
+            <span>Hệ thống tự động đồng bộ tài khoản dựa trên số điện thoại khách hàng.</span>
+          </div>
+
+          <div class="footer-buttons">
+            <button type="button" class="btn-modal-cancel" (click)="closeDetailModal()">
+              Đóng
+            </button>
+            @if (isEditMode()) {
+              <button type="button" class="btn-modal-submit" [disabled]="isSubmitting()" (click)="saveEdit()">
+                @if (isSubmitting()) {
+                  <span>Đang lưu...</span>
+                } @else {
+                  <span>Lưu thay đổi</span>
+                }
+              </button>
+            } @else {
+              <button type="button" class="btn-modal-edit" (click)="toggleEditMode()">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
+                </svg>
+                <span>Chỉnh sửa thông tin</span>
+              </button>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- ============================================================== -->
+  <!-- ADD ADDRESS SUB-MODAL                                          -->
+  <!-- ============================================================== -->
+  @if (isAddAddressModalOpen()) {
+    <div class="modal-backdrop sub-backdrop" (click)="closeAddAddressModal()">
+      <div class="sub-dialog" (click)="$event.stopPropagation()">
+        <div class="sub-dialog-header">
+          <h3>Thêm địa chỉ giao hàng mới</h3>
+          <button type="button" class="btn-modal-close" (click)="closeAddAddressModal()" aria-label="Đóng">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </div>
+
+        <div class="sub-dialog-body">
+          <div class="form-group">
+            <label class="form-label">Tên nhãn địa chỉ</label>
+            <input type="text" class="form-control" [(ngModel)]="newAddressForm.label" placeholder="e.g. Địa chỉ công trình, Nhà riêng" />
+          </div>
+          <div class="edit-grid-2">
+            <div class="form-group">
+              <label class="form-label">Tên người nhận</label>
+              <input type="text" class="form-control" [(ngModel)]="newAddressForm.recipientName" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Số điện thoại</label>
+              <input type="text" class="form-control" [(ngModel)]="newAddressForm.recipientPhone" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Địa chỉ đường, số nhà *</label>
+            <input type="text" class="form-control" [(ngModel)]="newAddressForm.street" placeholder="e.g. 124 Pasteur" />
+          </div>
+          <div class="edit-grid-3">
+            <div class="form-group">
+              <label class="form-label">Phường / Xã</label>
+              <input type="text" class="form-control" [(ngModel)]="newAddressForm.ward" placeholder="e.g. Phường Bến Nghé" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Quận / Huyện</label>
+              <input type="text" class="form-control" [(ngModel)]="newAddressForm.district" placeholder="e.g. Quận 1" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Tỉnh / Thành phố</label>
+              <input type="text" class="form-control" [(ngModel)]="newAddressForm.province" placeholder="e.g. TP. Hồ Chí Minh" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Ghi chú giao hàng</label>
+            <input type="text" class="form-control" [(ngModel)]="newAddressForm.note" placeholder="e.g. Gọi điện trước khi giao" />
+          </div>
+          <div class="form-group checkbox-group">
+            <label class="checkbox-label">
+              <input type="checkbox" [(ngModel)]="newAddressForm.isDefault" />
+              <span>Đặt làm địa chỉ giao hàng mặc định</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="sub-dialog-footer">
+          <button type="button" class="btn-modal-cancel" (click)="closeAddAddressModal()">Hủy bỏ</button>
+          <button type="button" class="btn-modal-submit" (click)="saveNewAddress()">Thêm địa chỉ</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Toast Message -->
+  @if (toastMessage()) {
+    <div class="toast-alert" [class.toast-error]="toastType() === 'error'" role="status" aria-live="polite">
+      {{ toastMessage() }}
+    </div>
+  }
+</div>
