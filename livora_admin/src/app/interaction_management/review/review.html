@@ -1,1 +1,331 @@
-<p>review works!</p>
+<div class="review-page">
+  <header class="page-head">
+    <h1 class="page-title">Quản lý đánh giá</h1>
+  </header>
+
+  <section class="im-filter-card" aria-label="Bộ lọc đánh giá">
+    <div class="filter-search">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="11" cy="11" r="8" />
+        <line x1="21" y1="21" x2="16.65" y2="16.65" />
+      </svg>
+      <input
+        type="text"
+        class="filter-input"
+        placeholder="Tìm theo tên khách hàng hoặc tên sản phẩm..."
+        [(ngModel)]="searchDraft"
+        (keyup.enter)="applyFilter()"
+        aria-label="Tìm kiếm đánh giá"
+      />
+    </div>
+
+    <select class="filter-select" [(ngModel)]="ratingDraft" aria-label="Số sao">
+      <option value="all">Tất cả số sao</option>
+      <option [ngValue]="5">5 sao</option>
+      <option [ngValue]="4">4 sao</option>
+      <option [ngValue]="3">3 sao</option>
+      <option [ngValue]="2">2 sao</option>
+      <option [ngValue]="1">1 sao</option>
+    </select>
+
+    <select class="filter-select" [(ngModel)]="statusDraft" aria-label="Trạng thái hiển thị">
+      <option value="all">Tất cả trạng thái</option>
+      <option value="visible">Đang hiển thị</option>
+      <option value="hidden">Đã ẩn</option>
+    </select>
+
+    <div class="filter-actions">
+      <button type="button" class="btn-apply" (click)="applyFilter()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
+        </svg>
+        <span>Lọc</span>
+      </button>
+      <button type="button" class="btn-reset-icon" (click)="resetFilter()" title="Đặt lại bộ lọc" aria-label="Đặt lại bộ lọc">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
+        </svg>
+      </button>
+    </div>
+  </section>
+
+  <section class="im-table-card" aria-label="Danh sách đánh giá khách hàng">
+    <div class="table-wrap">
+      @if (loading()) {
+        <div class="state-block">
+          <div class="spinner" aria-hidden="true"></div>
+          <p>Đang tải danh sách đánh giá...</p>
+        </div>
+      } @else if (loadError()) {
+        <div class="state-block">
+          <p>{{ loadError() }}</p>
+          <button type="button" class="btn-apply" (click)="loadReviews()">Thử lại</button>
+        </div>
+      } @else if (reviews().length === 0) {
+        <div class="state-block">
+          <p>Không tìm thấy đánh giá nào phù hợp với bộ lọc.</p>
+          <button type="button" class="btn-reset-label" (click)="resetFilter()">Đặt lại bộ lọc</button>
+        </div>
+      } @else {
+        <table class="im-table review-table">
+          <thead>
+            <tr>
+              <th scope="col" class="col-code">MÃ ĐG</th>
+              <th scope="col" class="col-customer">KHÁCH HÀNG</th>
+              <th scope="col" class="col-product">SẢN PHẨM</th>
+              <th scope="col" class="col-rating">ĐÁNH GIÁ</th>
+              <th scope="col" class="col-comment">NỘI DUNG PHẢN HỒI</th>
+              <th scope="col" class="col-date">NGÀY GỬI</th>
+              <th scope="col" class="col-status">TRẠNG THÁI</th>
+              <th scope="col" class="col-actions">THAO TÁC</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (item of reviews(); track item.id) {
+              <tr class="im-row">
+                <td class="col-code">
+                  <span class="code-badge">{{ item.code }}</span>
+                </td>
+                <td class="col-customer">
+                  <div class="customer-cell">
+                    <span class="customer-name">{{ item.customerName }}</span>
+                    @if (item.customerContext) {
+                      <span class="customer-context">{{ item.customerContext }}</span>
+                    }
+                    @if (item.customerFlag) {
+                      <span class="customer-flag">{{ item.customerFlag }}</span>
+                    }
+                  </div>
+                </td>
+                <td class="col-product">
+                  <div class="product-cell">
+                    <img class="product-thumb" [src]="item.productThumbnail" [alt]="item.productName" />
+                    <div class="product-meta">
+                      <span class="product-name">{{ item.productName }}</span>
+                      <span class="product-sku">{{ item.productSku }}</span>
+                    </div>
+                  </div>
+                </td>
+                <td class="col-rating">
+                  <span class="stars" [attr.aria-label]="item.rating + ' trên 5 sao'">
+                    @for (star of stars; track star) {
+                      <svg
+                        width="14"
+                        height="14"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                        [class.star-filled]="star <= item.rating"
+                        [class.star-empty]="star > item.rating"
+                        aria-hidden="true"
+                      >
+                        <path d="M10 15l-5.878 3.09 1.122-6.545L.488 6.91l6.564-.955L10 0l2.948 5.955 6.564.955-4.756 4.635 1.122 6.545z" />
+                      </svg>
+                    }
+                  </span>
+                  <span class="rating-value">{{ item.rating }}/5 sao</span>
+                </td>
+                <td class="col-comment">
+                  <span class="review-comment" [class.flagged]="item.status === 'hidden'">{{ item.comment }}</span>
+                </td>
+                <td class="col-date">{{ formatDate(item.createdAt) }}</td>
+                <td class="col-status">
+                  <span
+                    class="status-pill"
+                    [class.status-visible]="item.status === 'visible'"
+                    [class.status-hidden]="item.status === 'hidden'"
+                  >
+                    <span class="status-dot" aria-hidden="true"></span>
+                    {{ item.status === 'visible' ? 'Hiển thị' : 'Đã ẩn' }}
+                  </span>
+                </td>
+                <td class="col-actions">
+                  <div class="row-actions">
+                    <button type="button" class="icon-btn" (click)="openDetailModal(item)" title="Xem chi tiết đánh giá" aria-label="Xem chi tiết đánh giá">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
+                        <circle cx="12" cy="12" r="3" />
+                      </svg>
+                    </button>
+                    <button
+                      type="button"
+                      class="icon-btn"
+                      [disabled]="item.status === 'hidden'"
+                      (click)="openHideModal(item)"
+                      [title]="item.status === 'hidden' ? 'Đánh giá đã được ẩn' : 'Ẩn đánh giá'"
+                      aria-label="Ẩn đánh giá"
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" />
+                        <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68" />
+                        <path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61" />
+                        <line x1="2" x2="22" y1="2" y2="22" />
+                      </svg>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+    </div>
+
+    @if (!loading() && !loadError() && totalItems() > 0) {
+      <div class="pagination-footer">
+        <span class="pagination-info">
+          Hiển thị
+          <strong>{{ (currentPage() - 1) * pageSize + 1 }} - {{ currentPage() * pageSize > totalItems() ? totalItems() : currentPage() * pageSize }}</strong>
+          trong số <strong>{{ totalItems() }}</strong> đánh giá khách hàng
+        </span>
+        <div class="pagination-controls">
+          <button type="button" class="page-nav" [disabled]="currentPage() === 1" (click)="changePage(currentPage() - 1)" aria-label="Trang trước">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polyline points="15 18 9 12 15 6" />
+            </svg>
+          </button>
+          @for (page of getPaginationPages(); track $index) {
+            @if (page === '...') {
+              <span class="page-ellipsis">...</span>
+            } @else {
+              <button type="button" class="page-number" [class.active]="page === currentPage()" (click)="changePage(+page)">{{ page }}</button>
+            }
+          }
+          <button type="button" class="page-nav" [disabled]="currentPage() === totalPages()" (click)="changePage(currentPage() + 1)" aria-label="Trang sau">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polyline points="9 18 15 12 9 6" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    }
+  </section>
+</div>
+
+<app-form-modal
+  [isOpen]="isDetailModalOpen()"
+  title="Chi tiết đánh giá"
+  [subtitle]="selectedReview() ? ('Mã đánh giá: ' + selectedReview()!.code) : ''"
+  size="md"
+  [showFooter]="false"
+  (close)="closeDetailModal()"
+>
+  @if (selectedReview(); as detail) {
+    <div class="review-detail">
+      <div class="review-detail-head">
+        <img class="product-thumb" [src]="detail.productThumbnail" [alt]="detail.productName" />
+        <div>
+          <h3 class="detail-title">{{ detail.productName }}</h3>
+          <span class="detail-sub">{{ detail.productSku }} • Đơn hàng {{ detail.orderId || '—' }}</span>
+        </div>
+      </div>
+
+      <dl class="review-detail-meta">
+        <div>
+          <dt>Khách hàng</dt>
+          <dd>
+            {{ detail.customerName }}
+            @if (detail.customerContext) {
+              <span class="customer-context">{{ detail.customerContext }}</span>
+            }
+          </dd>
+        </div>
+        <div>
+          <dt>Đánh giá</dt>
+          <dd>
+            <span class="stars" aria-hidden="true">
+              @for (star of stars; track star) {
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  [class.star-filled]="star <= detail.rating"
+                  [class.star-empty]="star > detail.rating"
+                >
+                  <path d="M10 15l-5.878 3.09 1.122-6.545L.488 6.91l6.564-.955L10 0l2.948 5.955 6.564.955-4.756 4.635 1.122 6.545z" />
+                </svg>
+              }
+            </span>
+            {{ detail.rating }}/5 sao
+          </dd>
+        </div>
+        <div>
+          <dt>Ngày gửi</dt>
+          <dd>{{ formatDate(detail.createdAt) }}</dd>
+        </div>
+        <div>
+          <dt>Trạng thái</dt>
+          <dd>
+            <span class="status-pill" [class.status-visible]="detail.status === 'visible'" [class.status-hidden]="detail.status === 'hidden'">
+              <span class="status-dot" aria-hidden="true"></span>
+              {{ detail.status === 'visible' ? 'Hiển thị' : 'Đã ẩn' }}
+            </span>
+          </dd>
+        </div>
+      </dl>
+
+      <div class="review-detail-comment">{{ detail.comment }}</div>
+
+      @if (detail.images.length > 0) {
+        <div class="review-images">
+          @for (image of detail.images; track image) {
+            <img [src]="image" [alt]="'Ảnh đánh giá ' + detail.code" />
+          }
+        </div>
+      }
+
+      @if (detail.status === 'hidden') {
+        <div class="hidden-reason-box">
+          <strong>Lý do ẩn:</strong> {{ detail.hiddenReason || '—' }}
+          <br />
+          <span>Kiểm duyệt bởi {{ detail.moderatedBy || '—' }}{{ detail.moderatedAt ? ' • ' + formatDate(detail.moderatedAt) : '' }}</span>
+        </div>
+      }
+
+      <div class="detail-actions">
+        <button type="button" class="btn-detail" (click)="closeDetailModal()">Đóng</button>
+        @if (detail.status === 'visible') {
+          <button type="button" class="btn-resolve" (click)="openHideModal(detail)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" />
+              <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68" />
+              <path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61" />
+              <line x1="2" x2="22" y1="2" y2="22" />
+            </svg>
+            <span>Ẩn đánh giá</span>
+          </button>
+        }
+      </div>
+    </div>
+  }
+</app-form-modal>
+
+<app-form-modal
+  [isOpen]="isHideModalOpen()"
+  title="Ẩn đánh giá"
+  [subtitle]="selectedReview() ? ('Mã đánh giá: ' + selectedReview()!.code) : ''"
+  size="sm"
+  submitText="Ẩn đánh giá"
+  cancelText="Hủy bỏ"
+  [isSubmitting]="isSubmitting()"
+  (close)="closeHideModal()"
+  (submit)="confirmHide()"
+>
+  <div class="form-field">
+    <label class="field-label" for="hideReasonInput">Lý do ẩn đánh giá</label>
+    <textarea
+      id="hideReasonInput"
+      class="field-textarea"
+      placeholder="Ví dụ: Nội dung tiêu cực, sai lệch hoặc vi phạm quy định kiểm duyệt..."
+      [(ngModel)]="hideReasonDraft"
+    ></textarea>
+    <span class="field-help">
+      Đánh giá sẽ bị ẩn khỏi trang sản phẩm nhưng vẫn được lưu trữ để quản lý và tra cứu. Thao tác ẩn không thể
+      hoàn tác trong phiên làm việc này.
+    </span>
+  </div>
+</app-form-modal>
+
+@if (toastMessage()) {
+  <div class="im-toast" [class.toast-error]="toastType() === 'error'" role="status">{{ toastMessage() }}</div>
+}

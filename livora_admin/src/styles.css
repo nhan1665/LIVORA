@@ -5,6 +5,8 @@
 @import './app/product_management/product/product.css';
 @import './app/order_management/order/order.css';
 @import './app/order_management/refund/refund.css';
+@import './app/interaction_management/interaction.css';
+@import './app/settings/settings.css';
 
 /* Global styles */
 * {

@@ -1,0 +1,178 @@
+{
+  "runAt": "2026-10-12T20:53:41",
+  "browser": "Microsoft Edge (Playwright) — development build",
+  "viewport": "1317x982 desktop, 390x844 mobile checks",
+  "checks": [
+    {
+      "name": "Contact page title",
+      "passed": true,
+      "detail": "Quản lý liên hệ"
+    },
+    {
+      "name": "Contact page 1 row count",
+      "passed": true,
+      "detail": "Rows: 5"
+    },
+    {
+      "name": "Contact record badge",
+      "passed": true,
+      "detail": "48 bản ghi"
+    },
+    {
+      "name": "Contact footer total",
+      "passed": true,
+      "detail": "Hiển thị 1 - 5 trong số 48 liên hệ tư vấn"
+    },
+    {
+      "name": "Contact first row code",
+      "passed": true,
+      "detail": "LH-2610-089"
+    },
+    {
+      "name": "Contact status filter (Đã xử lý)",
+      "passed": true,
+      "detail": "5 rows checked"
+    },
+    {
+      "name": "Contact reset filter",
+      "passed": true,
+      "detail": "Rows restored to 5"
+    },
+    {
+      "name": "Contact pagination page 2",
+      "passed": true,
+      "detail": "2"
+    },
+    {
+      "name": "Contact detail modal",
+      "passed": true,
+      "detail": "Chi tiết liên hệ"
+    },
+    {
+      "name": "Contact resolve confirmation shown",
+      "passed": true,
+      "detail": "Duyệt xử lý liên hệ"
+    },
+    {
+      "name": "Contact resolve toast",
+      "passed": true,
+      "detail": "Đã cập nhật liên hệ LH-2610-089 sang trạng thái Đã xử lý."
+    },
+    {
+      "name": "Contact row resolved after action",
+      "passed": true,
+      "detail": "Đã xử lý"
+    },
+    {
+      "name": "Review page title",
+      "passed": true,
+      "detail": "Quản lý đánh giá"
+    },
+    {
+      "name": "Review page 1 row count",
+      "passed": true,
+      "detail": "Rows: 5"
+    },
+    {
+      "name": "Review footer total",
+      "passed": true,
+      "detail": "Hiển thị 1 - 5 trong số 342 đánh giá khách hàng"
+    },
+    {
+      "name": "Review star filter (5 sao)",
+      "passed": true,
+      "detail": "5 rows checked"
+    },
+    {
+      "name": "Review hidden filter",
+      "passed": true,
+      "detail": "5 rows checked"
+    },
+    {
+      "name": "Review reset filter",
+      "passed": true,
+      "detail": "Rows restored to 5"
+    },
+    {
+      "name": "Review detail modal",
+      "passed": true,
+      "detail": "Chi tiết đánh giá"
+    },
+    {
+      "name": "Review hide toast",
+      "passed": true,
+      "detail": "Đã ẩn đánh giá DG-9021. Đánh giá không còn hiển thị trên trang sản phẩm."
+    },
+    {
+      "name": "Voucher page title",
+      "passed": true,
+      "detail": "Thiết lập Voucher"
+    },
+    {
+      "name": "Voucher page 1 row count",
+      "passed": true,
+      "detail": "Rows: 5"
+    },
+    {
+      "name": "Voucher footer total",
+      "passed": true,
+      "detail": "Hiển thị 1 - 5 trong số 36 voucher"
+    },
+    {
+      "name": "Voucher create modal",
+      "passed": true,
+      "detail": "Thêm mới Voucher khuyến mãi"
+    },
+    {
+      "name": "Voucher create toast",
+      "passed": true,
+      "detail": "Đã tạo voucher QA-VOUCHER-01 với 100 lượt phát hành."
+    },
+    {
+      "name": "Voucher total increased",
+      "passed": true,
+      "detail": "Hiển thị 1 - 5 trong số 37 voucher"
+    },
+    {
+      "name": "Voucher toggle toast",
+      "passed": true,
+      "detail": "Đã tạm tắt voucher QA-VOUCHER-01."
+    },
+    {
+      "name": "Shipping page title",
+      "passed": true,
+      "detail": "Thiết Lập Vận Chuyển"
+    },
+    {
+      "name": "Shipping page 1 row count",
+      "passed": true,
+      "detail": "Rows: 6"
+    },
+    {
+      "name": "Shipping footer total",
+      "passed": true,
+      "detail": "Hiển thị 1 - 6 trong số 54 cấu hình vận chuyển"
+    },
+    {
+      "name": "Shipping create modal",
+      "passed": true,
+      "detail": "Thêm mới Cấu hình vận chuyển"
+    },
+    {
+      "name": "Shipping create toast",
+      "passed": true,
+      "detail": "Đã thêm cấu hình vận chuyển cho TP. Hồ Chí Minh."
+    },
+    {
+      "name": "Shipping total increased",
+      "passed": true,
+      "detail": "Hiển thị 1 - 6 trong số 55 cấu hình vận chuyển"
+    },
+    {
+      "name": "Shipping toggle toast",
+      "passed": true,
+      "detail": "Đã ngừng áp dụng cấu hình vận chuyển TP. Hồ Chí Minh."
+    }
+  ],
+  "errors": []
+}

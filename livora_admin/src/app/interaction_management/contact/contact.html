@@ -1,1 +1,272 @@
-<p>contact works!</p>
+<div class="contact-page">
+  <header class="page-head">
+    <h1 class="page-title">Quản lý liên hệ</h1>
+  </header>
+
+  <section class="im-filter-card" aria-label="Bộ lọc liên hệ">
+    <div class="filter-search">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="11" cy="11" r="8" />
+        <line x1="21" y1="21" x2="16.65" y2="16.65" />
+      </svg>
+      <input
+        type="text"
+        class="filter-input"
+        placeholder="Tìm theo mã liên hệ, họ tên, điện thoại, email..."
+        [(ngModel)]="searchDraft"
+        (keyup.enter)="applyFilter()"
+        aria-label="Tìm kiếm liên hệ"
+      />
+    </div>
+
+    <select class="filter-select" [(ngModel)]="statusDraft" aria-label="Trạng thái xử lý">
+      <option value="all">Tất cả trạng thái</option>
+      <option value="new">Chưa xử lý</option>
+      <option value="resolved">Đã xử lý</option>
+    </select>
+
+    <select class="filter-select filter-time" [(ngModel)]="timeDraft" aria-label="Thời gian gửi">
+      <option value="all">Tất cả thời gian</option>
+      <option value="last7days">7 ngày gần đây</option>
+      <option value="last30days">30 ngày gần đây</option>
+    </select>
+
+    <div class="filter-actions">
+      <button type="button" class="btn-reset-label" (click)="resetFilter()">Đặt lại</button>
+      <button type="button" class="btn-apply" (click)="applyFilter()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
+        </svg>
+        <span>Lọc</span>
+      </button>
+    </div>
+  </section>
+
+  <section class="im-table-card" aria-label="Danh sách liên hệ dịch vụ">
+    <div class="table-card-header">
+      <div class="header-left">
+        <h2 class="table-title">Danh sách liên hệ dịch vụ</h2>
+        <span class="count-badge">{{ totalItems() }} bản ghi</span>
+      </div>
+      <div class="header-right">
+        <span class="priority-note">
+          <span class="priority-dot" aria-hidden="true"></span>
+          Ưu tiên khách tư vấn dự án độc bản &amp; KTS
+        </span>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      @if (loading()) {
+        <div class="state-block">
+          <div class="spinner" aria-hidden="true"></div>
+          <p>Đang tải danh sách liên hệ...</p>
+        </div>
+      } @else if (loadError()) {
+        <div class="state-block">
+          <p>{{ loadError() }}</p>
+          <button type="button" class="btn-apply" (click)="loadContacts()">Thử lại</button>
+        </div>
+      } @else if (contacts().length === 0) {
+        <div class="state-block">
+          <p>Không tìm thấy liên hệ nào phù hợp với bộ lọc.</p>
+          <button type="button" class="btn-reset-label" (click)="resetFilter()">Đặt lại bộ lọc</button>
+        </div>
+      } @else {
+        <table class="im-table contact-table">
+          <thead>
+            <tr>
+              <th scope="col" class="col-code">MÃ LIÊN HỆ</th>
+              <th scope="col" class="col-customer">KHÁCH HÀNG</th>
+              <th scope="col" class="col-phone">SỐ ĐIỆN THOẠI</th>
+              <th scope="col" class="col-email">EMAIL</th>
+              <th scope="col" class="col-subject">NỘI DUNG YÊU CẦU</th>
+              <th scope="col" class="col-time">THỜI GIAN GỬI</th>
+              <th scope="col" class="col-status">TRẠNG THÁI</th>
+              <th scope="col" class="col-actions">THAO TÁC</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (item of contacts(); track item.id) {
+              <tr class="im-row">
+                <td class="col-code">
+                  <span class="code-badge">{{ item.code }}</span>
+                </td>
+                <td class="col-customer">
+                  <div class="customer-cell">
+                    <span class="customer-name">{{ item.fullName }}</span>
+                    @if (item.customerContext) {
+                      <span class="customer-context">{{ item.customerContext }}</span>
+                    }
+                  </div>
+                </td>
+                <td class="col-phone">{{ item.phone }}</td>
+                <td class="col-email">{{ item.email }}</td>
+                <td class="col-subject">
+                  <span class="subject-text">{{ item.subject }}</span>
+                </td>
+                <td class="col-time">{{ formatDateTime(item.createdAt) }}</td>
+                <td class="col-status">
+                  <span class="status-pill" [class.status-new]="item.status === 'new'" [class.status-resolved]="item.status === 'resolved'">
+                    <span class="status-dot" aria-hidden="true"></span>
+                    {{ statusLabel(item.status) }}
+                  </span>
+                </td>
+                <td class="col-actions">
+                  <div class="row-actions">
+                    <button type="button" class="btn-detail" (click)="openDetailModal(item)">Chi tiết</button>
+                    @if (item.status === 'new') {
+                      <button type="button" class="btn-resolve" (click)="openResolveConfirm(item)">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                          <polyline points="20 6 9 17 4 12" />
+                        </svg>
+                        <span>Xử lý</span>
+                      </button>
+                    } @else {
+                      <button type="button" class="btn-done" disabled>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                          <polyline points="20 6 9 17 4 12" />
+                        </svg>
+                        <span>Hoàn tất</span>
+                      </button>
+                    }
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+    </div>
+
+    @if (!loading() && !loadError() && totalItems() > 0) {
+      <div class="pagination-footer">
+        <span class="pagination-info">
+          Hiển thị
+          <strong>{{ (currentPage() - 1) * pageSize + 1 }} - {{ currentPage() * pageSize > totalItems() ? totalItems() : currentPage() * pageSize }}</strong>
+          trong số <strong>{{ totalItems() }}</strong> liên hệ tư vấn
+        </span>
+        <div class="pagination-controls">
+          <button type="button" class="page-nav" [disabled]="currentPage() === 1" (click)="changePage(currentPage() - 1)" aria-label="Trang trước">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polyline points="15 18 9 12 15 6" />
+            </svg>
+          </button>
+          @for (page of getPaginationPages(); track $index) {
+            @if (page === '...') {
+              <span class="page-ellipsis">...</span>
+            } @else {
+              <button type="button" class="page-number" [class.active]="page === currentPage()" (click)="changePage(+page)">{{ page }}</button>
+            }
+          }
+          <button type="button" class="page-nav" [disabled]="currentPage() === totalPages()" (click)="changePage(currentPage() + 1)" aria-label="Trang sau">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polyline points="9 18 15 12 9 6" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    }
+  </section>
+</div>
+
+<app-form-modal
+  [isOpen]="isDetailModalOpen()"
+  title="Chi tiết liên hệ"
+  [subtitle]="selectedContact() ? ('Mã liên hệ: ' + selectedContact()!.code) : ''"
+  size="md"
+  [showFooter]="false"
+  (close)="closeDetailModal()"
+>
+  @if (selectedContact(); as detail) {
+    <div class="detail-body">
+      <dl class="detail-grid">
+        <div class="detail-item">
+          <dt>Mã liên hệ</dt>
+          <dd><span class="code-badge">{{ detail.code }}</span></dd>
+        </div>
+        <div class="detail-item">
+          <dt>Trạng thái</dt>
+          <dd>
+            <span class="status-pill" [class.status-new]="detail.status === 'new'" [class.status-resolved]="detail.status === 'resolved'">
+              <span class="status-dot" aria-hidden="true"></span>
+              {{ statusLabel(detail.status) }}
+            </span>
+          </dd>
+        </div>
+        <div class="detail-item">
+          <dt>Khách hàng</dt>
+          <dd>
+            {{ detail.fullName }}
+            @if (detail.customerContext) {
+              <span class="customer-context">{{ detail.customerContext }}</span>
+            }
+          </dd>
+        </div>
+        <div class="detail-item">
+          <dt>Điện thoại</dt>
+          <dd>{{ detail.phone }}</dd>
+        </div>
+        <div class="detail-item">
+          <dt>Email</dt>
+          <dd>{{ detail.email }}</dd>
+        </div>
+        <div class="detail-item">
+          <dt>Thời gian gửi</dt>
+          <dd>{{ formatDateTime(detail.createdAt) }}</dd>
+        </div>
+        <div class="detail-item detail-full">
+          <dt>Chủ đề</dt>
+          <dd>{{ detail.subject }}</dd>
+        </div>
+        <div class="detail-item detail-full">
+          <dt>Nội dung yêu cầu</dt>
+          <dd class="detail-message">{{ detail.message }}</dd>
+        </div>
+        @if (detail.status === 'resolved') {
+          <div class="detail-item">
+            <dt>Đã xử lý lúc</dt>
+            <dd>{{ detail.resolvedAt ? formatDateTime(detail.resolvedAt) : '—' }}</dd>
+          </div>
+          <div class="detail-item">
+            <dt>Nhân viên xử lý</dt>
+            <dd>{{ detail.respondedBy || '—' }}</dd>
+          </div>
+        }
+      </dl>
+
+      <p class="detail-note">
+        Hỗ trợ khách hàng được thực hiện ngoài hệ thống (Zalo / điện thoại); sau khi hoàn tất, nhân viên cập nhật
+        trạng thái bằng thao tác "Duyệt xử lý".
+      </p>
+
+      <div class="detail-actions">
+        <button type="button" class="btn-detail" (click)="closeDetailModal()">Đóng</button>
+        @if (detail.status === 'new') {
+          <button type="button" class="btn-resolve" (click)="openResolveConfirm(detail)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+            <span>Duyệt xử lý</span>
+          </button>
+        }
+      </div>
+    </div>
+  }
+</app-form-modal>
+
+<app-confirm-dialog
+  [isOpen]="isResolveConfirmOpen()"
+  title="Duyệt xử lý liên hệ"
+  [message]="resolveMessage()"
+  confirmText="Duyệt xử lý"
+  cancelText="Hủy bỏ"
+  type="warning"
+  [isConfirming]="isSubmitting()"
+  (confirm)="confirmResolve()"
+  (cancel)="cancelResolve()"
+></app-confirm-dialog>
+
+@if (toastMessage()) {
+  <div class="im-toast" [class.toast-error]="toastType() === 'error'" role="status">{{ toastMessage() }}</div>
+}

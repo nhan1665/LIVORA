@@ -1,1 +1,363 @@
-<p>shipping works!</p>
+<div class="shipping-page">
+  <header class="page-head">
+    <h1 class="page-title">Thiết Lập Vận Chuyển</h1>
+    <button type="button" class="btn-primary-create" (click)="openCreateModal()">
+      <span class="plus-mark">+</span>
+      <span>Thêm cấu hình</span>
+    </button>
+  </header>
+
+  <section class="im-filter-card" aria-label="Bộ lọc cấu hình vận chuyển">
+    <div class="filter-search">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="11" cy="11" r="8" />
+        <line x1="21" y1="21" x2="16.65" y2="16.65" />
+      </svg>
+      <input
+        type="text"
+        class="filter-input"
+        placeholder="Tìm kiếm theo tỉnh/thành (VD: Hà Nội, TP. HCM)..."
+        [(ngModel)]="searchDraft"
+        (keyup.enter)="applyFilter()"
+        aria-label="Tìm kiếm cấu hình vận chuyển"
+      />
+    </div>
+
+    <select class="filter-select" [(ngModel)]="methodDraft" aria-label="Phương thức vận chuyển">
+      <option value="all">Phương thức: Tất cả</option>
+      <option value="standard">Giao tiêu chuẩn</option>
+      <option value="express">Giao nhanh</option>
+    </select>
+
+    <select class="filter-select" [(ngModel)]="statusDraft" aria-label="Trạng thái">
+      <option value="all">Trạng thái: Tất cả</option>
+      <option value="active">Đang áp dụng</option>
+      <option value="off">Ngừng áp dụng</option>
+    </select>
+
+    <div class="filter-actions">
+      <button type="button" class="btn-apply" (click)="applyFilter()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
+        </svg>
+        <span>Lọc</span>
+      </button>
+      <button type="button" class="btn-reset-icon" (click)="resetFilter()" title="Đặt lại bộ lọc" aria-label="Đặt lại bộ lọc">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
+        </svg>
+      </button>
+    </div>
+  </section>
+
+  <section class="im-table-card" aria-label="Danh sách cấu hình vận chuyển">
+    <div class="table-wrap">
+      @if (loading()) {
+        <div class="state-block">
+          <div class="spinner" aria-hidden="true"></div>
+          <p>Đang tải cấu hình vận chuyển...</p>
+        </div>
+      } @else if (loadError()) {
+        <div class="state-block">
+          <p>{{ loadError() }}</p>
+          <button type="button" class="btn-apply" (click)="loadConfigs()">Thử lại</button>
+        </div>
+      } @else if (configs().length === 0) {
+        <div class="state-block">
+          <p>Không tìm thấy cấu hình vận chuyển nào phù hợp với bộ lọc.</p>
+          <button type="button" class="btn-reset-label" (click)="resetFilter()">Đặt lại bộ lọc</button>
+        </div>
+      } @else {
+        <table class="im-table shipping-table">
+          <thead>
+            <tr>
+              <th scope="col" class="col-method">PHƯƠNG THỨC</th>
+              <th scope="col" class="col-province">TỈNH / THÀNH</th>
+              <th scope="col" class="col-fee">PHÍ VẬN CHUYỂN</th>
+              <th scope="col" class="col-eta">THỜI GIAN GIAO DỰ KIẾN</th>
+              <th scope="col" class="col-status">TRẠNG THÁI</th>
+              <th scope="col" class="col-updated">NGÀY CẬP NHẬT</th>
+              <th scope="col" class="col-actions">THAO TÁC</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (item of configs(); track item.id) {
+              <tr class="im-row">
+                <td class="col-method">
+                  <span class="method-pill" [class.method-standard]="item.shippingMethod === 'standard'" [class.method-express]="item.shippingMethod === 'express'">
+                    @if (item.shippingMethod === 'standard') {
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2" />
+                        <path d="M15 18H9" />
+                        <path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.62l-3.48-4.35A1 1 0 0 0 17.52 8H14" />
+                        <circle cx="17" cy="18" r="2" />
+                        <circle cx="7" cy="18" r="2" />
+                      </svg>
+                    } @else {
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+                      </svg>
+                    }
+                    {{ methodLabel(item.shippingMethod) }}
+                  </span>
+                </td>
+                <td class="col-province">
+                  <div class="customer-cell">
+                    <span class="customer-name">{{ item.province }}</span>
+                    @if (item.hub) {
+                      <span class="province-hub">{{ item.hub }}</span>
+                    }
+                  </div>
+                </td>
+                <td class="col-fee">
+                  <span class="fee-value">{{ formatCurrency(item.fee) }}</span>
+                  @if (item.feeNote) {
+                    <span class="fee-note">{{ item.feeNote }}</span>
+                  }
+                </td>
+                <td class="col-eta">
+                  <span class="eta-cell">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <circle cx="12" cy="12" r="10" />
+                      <polyline points="12 6 12 12 16 14" />
+                    </svg>
+                    {{ item.estimatedDeliveryTime }}
+                  </span>
+                </td>
+                <td class="col-status">
+                  <span class="status-pill" [class.status-resolved]="item.isActive" [class.status-off]="!item.isActive">
+                    <span class="status-dot" aria-hidden="true"></span>
+                    {{ item.isActive ? 'Đang áp dụng' : 'Ngừng áp dụng' }}
+                  </span>
+                </td>
+                <td class="col-updated">{{ formatDate(item.updatedAt) }}</td>
+                <td class="col-actions">
+                  <div class="row-actions">
+                    <button type="button" class="icon-btn" (click)="openEditModal(item)" title="Chỉnh sửa cấu hình" aria-label="Chỉnh sửa cấu hình">
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+                        <path d="m15 5 4 4" />
+                      </svg>
+                    </button>
+                    <button
+                      type="button"
+                      class="toggle-switch"
+                      [class.on]="item.isActive"
+                      (click)="toggleConfig(item)"
+                      [attr.aria-checked]="item.isActive"
+                      role="switch"
+                      [title]="item.isActive ? 'Ngừng áp dụng' : 'Áp dụng cấu hình'"
+                    >
+                      <span class="toggle-knob"></span>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+    </div>
+
+    @if (!loading() && !loadError() && totalItems() > 0) {
+      <div class="pagination-footer">
+        <span class="pagination-info">
+          Hiển thị
+          <strong>{{ (currentPage() - 1) * pageSize + 1 }} - {{ currentPage() * pageSize > totalItems() ? totalItems() : currentPage() * pageSize }}</strong>
+          trong số <strong>{{ totalItems() }}</strong> cấu hình vận chuyển
+        </span>
+        <div class="pagination-controls">
+          <button type="button" class="page-nav" [disabled]="currentPage() === 1" (click)="changePage(currentPage() - 1)" aria-label="Trang trước">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polyline points="15 18 9 12 15 6" />
+            </svg>
+          </button>
+          @for (page of getPaginationPages(); track $index) {
+            @if (page === '...') {
+              <span class="page-ellipsis">...</span>
+            } @else {
+              <button type="button" class="page-number" [class.active]="page === currentPage()" (click)="changePage(+page)">{{ page }}</button>
+            }
+          }
+          <button type="button" class="page-nav" [disabled]="currentPage() === totalPages()" (click)="changePage(currentPage() + 1)" aria-label="Trang sau">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polyline points="9 18 15 12 9 6" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    }
+  </section>
+</div>
+
+<app-form-modal
+  [isOpen]="isFormModalOpen()"
+  [title]="isEditMode() ? 'Chỉnh sửa Cấu hình vận chuyển' : 'Thêm mới Cấu hình vận chuyển'"
+  [subtitle]="isEditMode() ? '' : 'ATELIER LOGISTICS · Thiết lập tuyến'"
+  size="lg"
+  [submitText]="isEditMode() ? 'Lưu thay đổi' : 'Lưu cấu hình vận chuyển'"
+  cancelText="Hủy bỏ"
+  [isSubmitting]="isSubmitting()"
+  (close)="closeFormModal()"
+  (submit)="saveConfig()"
+>
+  <div class="shipping-form">
+    @if (formError()) {
+      <div class="form-error-banner" role="alert">{{ formError() }}</div>
+    }
+
+    <div class="form-field">
+      <span class="field-label">1. Phương thức vận chuyển <span class="required">*</span></span>
+      <span class="field-help">Chọn định dạng quy trình xuất kho và giao nhận phù hợp chủng loại hàng</span>
+      <div class="method-card-grid">
+        <label class="method-card" [class.selected]="formDraft.shippingMethod === 'standard'">
+          <input type="radio" name="shippingMethod" value="standard" [(ngModel)]="formDraft.shippingMethod" />
+          <span class="method-card-head">
+            <span class="method-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2" />
+                <path d="M15 18H9" />
+                <path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.62l-3.48-4.35A1 1 0 0 0 17.52 8H14" />
+                <circle cx="17" cy="18" r="2" />
+                <circle cx="7" cy="18" r="2" />
+              </svg>
+            </span>
+            <strong>Giao tiêu chuẩn</strong>
+            <span class="method-eta-badge">2 - 4 ngày</span>
+          </span>
+          <span class="method-desc">Đội ngũ xe thùng chuyên dụng bọc lót nẹp gốc bảo vệ mọi chi tiết gỗ và da cao cấp.</span>
+          <span class="method-brand-note">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="10" />
+              <path d="m9 12 2 2 4-4" />
+            </svg>
+            Phương thức chuẩn Livora
+          </span>
+        </label>
+
+        <label class="method-card" [class.selected]="formDraft.shippingMethod === 'express'">
+          <input type="radio" name="shippingMethod" value="express" [(ngModel)]="formDraft.shippingMethod" />
+          <span class="method-card-head">
+            <span class="method-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+              </svg>
+            </span>
+            <strong>Giao nhanh / Hỏa tốc</strong>
+            <span class="method-eta-badge">24h nội thành</span>
+          </span>
+          <span class="method-desc">Ưu tiên điều phối trong ngày dành cho phụ kiện, đèn decor hoặc mặt hàng có sẵn.</span>
+          <span class="method-brand-note">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="10" />
+              <polyline points="12 6 12 12 16 14" />
+            </svg>
+            Khung giờ ưu tiên
+          </span>
+        </label>
+      </div>
+    </div>
+
+    <div class="form-field">
+      <label class="field-label" for="provinceSelect">2. Khu vực Tỉnh / Thành phố áp dụng <span class="required">*</span></label>
+      <select id="provinceSelect" class="field-input field-select" [(ngModel)]="formDraft.province">
+        @for (province of provinces; track province) {
+          <option [value]="province">{{ province }}{{ province === 'TP. Hồ Chí Minh' ? ' (Trung tâm & Vành đai Atelier)' : '' }}</option>
+        }
+      </select>
+      <span class="field-help">Tuyến kích hoạt sẽ tự động gồm các Quận/Huyện nội đô thuộc Hub chính.</span>
+    </div>
+
+    <div class="form-grid">
+      <div class="form-field">
+        <label class="field-label" for="feeInput">
+          3. Phí vận chuyển chuẩn <span class="required">*</span>
+          <span class="label-hint">Kiện &lt; 50kg</span>
+        </label>
+        <div class="input-affix">
+          <input id="feeInput" type="number" min="0" class="field-input has-suffix" [(ngModel)]="formDraft.fee" />
+          <span class="input-suffix">VNĐ</span>
+        </div>
+        <span class="field-help">Cước phí cơ bản cho kiện hàng dưới 50kg hoặc đơn cộng kềnh tiêu chuẩn.</span>
+      </div>
+
+      <div class="form-field">
+        <label class="field-label" for="freeShipInput">
+          4. Miễn phí cho đơn từ
+          <span class="inline-toggle">
+            <span class="field-help-inline">{{ formDraft.freeShipEnabled ? 'Kích hoạt' : 'Tắt' }}</span>
+            <button
+              type="button"
+              class="toggle-switch small"
+              [class.on]="formDraft.freeShipEnabled"
+              (click)="formDraft.freeShipEnabled = !formDraft.freeShipEnabled"
+              [attr.aria-checked]="formDraft.freeShipEnabled"
+              role="switch"
+              aria-label="Kích hoạt miễn phí vận chuyển"
+            >
+              <span class="toggle-knob"></span>
+            </button>
+          </span>
+        </label>
+        <div class="input-affix">
+          <input
+            id="freeShipInput"
+            type="number"
+            min="0"
+            class="field-input has-suffix"
+            [disabled]="!formDraft.freeShipEnabled"
+            [(ngModel)]="formDraft.freeShipThreshold"
+          />
+          <span class="input-suffix">VNĐ</span>
+        </div>
+        <span class="field-help">Tự động áp dụng cước 0đ tại giỏ hàng khi giá trị đơn đạt mốc.</span>
+      </div>
+
+      <div class="form-field">
+        <label class="field-label" for="etaInput">5. Thời gian giao dự kiến <span class="required">*</span></label>
+        <div class="input-affix">
+          <svg class="input-leading-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="10" />
+            <polyline points="12 6 12 12 16 14" />
+          </svg>
+          <input id="etaInput" type="text" class="field-input has-leading" placeholder="2 - 4 ngày" [(ngModel)]="formDraft.estimatedDeliveryTime" />
+        </div>
+        <span class="field-help">Hiển thị cho khách hàng tại bước thanh toán và email xác nhận.</span>
+      </div>
+
+      <div class="form-field">
+        <label class="field-label" for="timeSlotSelect">6. Khung giờ cam kết</label>
+        <select id="timeSlotSelect" class="field-input field-select" [(ngModel)]="formDraft.timeSlot">
+          @for (slot of timeSlots; track slot) {
+            <option [value]="slot">{{ slot }}</option>
+          }
+        </select>
+        <span class="field-help">Gia chủ có thể chọn khoảng giờ 2 tiếng chính xác với thợ kỹ thuật.</span>
+      </div>
+    </div>
+
+    <div class="white-glove-box">
+      <div class="white-glove-head">
+        <span class="field-label">7. Tiêu chuẩn White-Glove Atelier đi kèm</span>
+        <span class="white-glove-badge">Bao gồm sẵn</span>
+      </div>
+      <label class="white-glove-row">
+        <input type="checkbox" [(ngModel)]="formDraft.whiteGloveIncluded" />
+        <span class="radio-mark" aria-hidden="true"></span>
+        <span class="white-glove-text">
+          <strong>Lắp ráp &amp; vệ sinh hút bụi hoàn thiện</strong>
+          <small>Kỹ thuật viên Livora trực tiếp tháo dỡ đóng gói, kê đặt đúng bản vẽ và lau sạch bụi mùn cưa.</small>
+        </span>
+        <span class="white-glove-price">0 đ (Tiêu chuẩn)</span>
+      </label>
+    </div>
+  </div>
+
+  <span modal-footer-extra class="voucher-policy-note">
+    Cấu hình sẽ được cập nhật tức thời với ứng dụng Web &amp; Mobile LIVORA
+  </span>
+</app-form-modal>
+
+@if (toastMessage()) {
+  <div class="im-toast" [class.toast-error]="toastType() === 'error'" role="status">{{ toastMessage() }}</div>
+}

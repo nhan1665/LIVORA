@@ -1,0 +1,1091 @@
+/* ============================================================== */
+/* LIVORA Admin — Interaction Management module styles            */
+/* Contact + Review screens, plus the shared page-shell rules     */
+/* reused by the Voucher / Shipping settings screens (this file   */
+/* is imported once from styles.css). All rules are host-scoped.  */
+/* ============================================================== */
+
+app-contact,
+app-review {
+  display: block;
+  width: 100%;
+  color: #2c2828;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+app-contact .contact-page,
+app-review .review-page {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+}
+
+app-contact .page-head,
+app-review .page-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+app-contact .page-title,
+app-review .page-title,
+app-voucher .page-title,
+app-shipping .page-title {
+  font-family: 'Playfair Display', Georgia, 'Times New Roman', serif;
+  font-size: 26px;
+  font-weight: 600;
+  color: #2e2626;
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+
+/* -------------------------------------------------------------- */
+/* Filter card                                                    */
+/* -------------------------------------------------------------- */
+app-contact .im-filter-card,
+app-review .im-filter-card,
+app-voucher .im-filter-card,
+app-shipping .im-filter-card {
+  background: #ffffff;
+  border: 1px solid #ebe5dc;
+  border-radius: 12px;
+  padding: 16px 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+app-contact .filter-search,
+app-review .filter-search,
+app-voucher .filter-search,
+app-shipping .filter-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 280px;
+}
+
+app-contact .filter-search > svg,
+app-review .filter-search > svg,
+app-voucher .filter-search > svg,
+app-shipping .filter-search > svg {
+  position: absolute;
+  left: 14px;
+  color: #9c9288;
+  pointer-events: none;
+}
+
+app-contact .filter-input,
+app-review .filter-input,
+app-voucher .filter-input,
+app-shipping .filter-input {
+  width: 100%;
+  height: 42px;
+  padding: 0 14px 0 40px;
+  border: 1px solid #ded7cb;
+  border-radius: 10px;
+  font-size: 13px;
+  font-family: inherit;
+  color: #2c2828;
+  background: #ffffff;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+app-contact .filter-input:focus,
+app-review .filter-input:focus,
+app-voucher .filter-input:focus,
+app-shipping .filter-input:focus {
+  border-color: #593c3b;
+  box-shadow: 0 0 0 2px rgba(89, 60, 59, 0.08);
+}
+
+app-contact .filter-select,
+app-review .filter-select,
+app-voucher .filter-select,
+app-shipping .filter-select {
+  height: 42px;
+  min-width: 160px;
+  padding: 0 36px 0 14px;
+  border: 1px solid #ded7cb;
+  border-radius: 10px;
+  font-size: 13px;
+  font-family: inherit;
+  color: #2c2828;
+  background-color: #ffffff;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%238c8278' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  outline: none;
+  appearance: none;
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+}
+
+app-contact .filter-select:focus,
+app-review .filter-select:focus,
+app-voucher .filter-select:focus,
+app-shipping .filter-select:focus {
+  border-color: #593c3b;
+  box-shadow: 0 0 0 2px rgba(89, 60, 59, 0.08);
+}
+
+app-contact .filter-time {
+  min-width: 190px;
+}
+
+app-contact .filter-actions,
+app-review .filter-actions,
+app-voucher .filter-actions,
+app-shipping .filter-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+app-contact .btn-apply,
+app-review .btn-apply,
+app-voucher .btn-apply,
+app-shipping .btn-apply {
+  height: 42px;
+  padding: 0 22px;
+  background: #593c3b;
+  color: #ffffff;
+  border: none;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+app-contact .btn-apply:hover,
+app-review .btn-apply:hover,
+app-voucher .btn-apply:hover,
+app-shipping .btn-apply:hover {
+  background: #472f2e;
+}
+
+app-contact .btn-reset-label,
+app-review .btn-reset-label,
+app-voucher .btn-reset-label,
+app-shipping .btn-reset-label {
+  height: 42px;
+  padding: 0 16px;
+  background: #ffffff;
+  border: 1px solid #ded7cb;
+  border-radius: 10px;
+  color: #6a6057;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+app-contact .btn-reset-label:hover,
+app-review .btn-reset-label:hover,
+app-voucher .btn-reset-label:hover,
+app-shipping .btn-reset-label:hover {
+  background: #f7f4ee;
+  border-color: #593c3b;
+  color: #593c3b;
+}
+
+app-review .btn-reset-icon,
+app-voucher .btn-reset-icon,
+app-shipping .btn-reset-icon {
+  width: 42px;
+  height: 42px;
+  background: #ffffff;
+  border: 1px solid #ded7cb;
+  border-radius: 50%;
+  color: #6a6057;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+app-review .btn-reset-icon:hover,
+app-voucher .btn-reset-icon:hover,
+app-shipping .btn-reset-icon:hover {
+  background: #f7f4ee;
+  border-color: #593c3b;
+  color: #593c3b;
+}
+
+/* -------------------------------------------------------------- */
+/* Table card                                                     */
+/* -------------------------------------------------------------- */
+app-contact .im-table-card,
+app-review .im-table-card,
+app-voucher .im-table-card,
+app-shipping .im-table-card {
+  background: #ffffff;
+  border: 1px solid #ebe5dc;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+  overflow: hidden;
+}
+
+app-contact .table-card-header,
+app-review .table-card-header,
+app-voucher .table-card-header,
+app-shipping .table-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 22px;
+  border-bottom: 1px solid #f2ede6;
+  flex-wrap: wrap;
+}
+
+app-contact .header-left,
+app-review .header-left,
+app-voucher .header-left,
+app-shipping .header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+app-contact .table-title,
+app-review .table-title,
+app-voucher .table-title,
+app-shipping .table-title {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 16px;
+  font-weight: 600;
+  color: #2c2828;
+  margin: 0;
+}
+
+app-contact .count-badge,
+app-review .count-badge,
+app-voucher .count-badge,
+app-shipping .count-badge {
+  background: #f5ebe6;
+  color: #735048;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+
+app-contact .priority-note,
+app-review .priority-note,
+app-voucher .priority-note,
+app-shipping .priority-note {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  color: #796e65;
+  font-weight: 500;
+}
+
+app-contact .priority-dot,
+app-review .priority-dot,
+app-voucher .priority-dot,
+app-shipping .priority-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #c59a52;
+  flex-shrink: 0;
+}
+
+app-contact .table-wrap,
+app-review .table-wrap,
+app-voucher .table-wrap,
+app-shipping .table-wrap {
+  width: 100%;
+  overflow-x: auto;
+}
+
+app-contact .im-table,
+app-review .im-table,
+app-voucher .im-table,
+app-shipping .im-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  text-align: left;
+}
+
+app-contact .im-table th,
+app-review .im-table th,
+app-voucher .im-table th,
+app-shipping .im-table th {
+  background: #f9f7f4;
+  color: #6a6057;
+  font-weight: 600;
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  padding: 12px 18px;
+  border-bottom: 1px solid #ebe5dc;
+  white-space: nowrap;
+}
+
+app-contact .im-table td,
+app-review .im-table td,
+app-voucher .im-table td,
+app-shipping .im-table td {
+  padding: 14px 18px;
+  border-bottom: 1px solid #f2ede6;
+  color: #3b3231;
+  vertical-align: middle;
+}
+
+app-contact .im-table tbody tr:last-child td,
+app-review .im-table tbody tr:last-child td,
+app-voucher .im-table tbody tr:last-child td,
+app-shipping .im-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+app-contact .im-row,
+app-review .im-row,
+app-voucher .im-row,
+app-shipping .im-row {
+  transition: background 0.12s ease;
+}
+
+app-contact .im-row:hover,
+app-review .im-row:hover,
+app-voucher .im-row:hover,
+app-shipping .im-row:hover {
+  background: #fcfbfa;
+}
+
+app-contact .code-badge,
+app-review .code-badge,
+app-voucher .code-badge,
+app-shipping .code-badge {
+  display: inline-block;
+  background: #f7f4ee;
+  border: 1px solid #e8dfd6;
+  border-radius: 8px;
+  padding: 4px 10px;
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  color: #5a4a44;
+  white-space: nowrap;
+}
+
+app-contact .customer-cell,
+app-review .customer-cell,
+app-voucher .customer-cell,
+app-shipping .customer-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+app-contact .customer-name,
+app-review .customer-name,
+app-voucher .customer-name,
+app-shipping .customer-name {
+  font-weight: 600;
+  color: #2c2828;
+}
+
+app-contact .customer-context,
+app-review .customer-context,
+app-voucher .customer-context,
+app-shipping .customer-context {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: #8c8278;
+  text-transform: uppercase;
+}
+
+/* Status pills */
+app-contact .status-pill,
+app-review .status-pill,
+app-voucher .status-pill,
+app-shipping .status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 11px;
+  border-radius: 16px;
+  font-size: 11.5px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+app-contact .status-pill .status-dot,
+app-review .status-pill .status-dot,
+app-voucher .status-pill .status-dot,
+app-shipping .status-pill .status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+app-contact .status-new,
+app-review .status-new,
+app-voucher .status-new,
+app-shipping .status-new {
+  background: #f7edd8;
+  color: #96701c;
+}
+
+app-contact .status-new .status-dot,
+app-review .status-new .status-dot,
+app-voucher .status-new .status-dot,
+app-shipping .status-new .status-dot {
+  background: #d9a441;
+}
+
+app-contact .status-resolved,
+app-review .status-visible,
+app-voucher .status-resolved,
+app-shipping .status-resolved {
+  background: #e8f2e6;
+  color: #4c7a45;
+}
+
+app-contact .status-resolved .status-dot,
+app-review .status-visible .status-dot,
+app-voucher .status-resolved .status-dot,
+app-shipping .status-resolved .status-dot {
+  background: #6faa62;
+}
+
+app-review .status-hidden,
+app-voucher .status-off,
+app-shipping .status-off {
+  background: #fbe4e4;
+  color: #b4432f;
+}
+
+app-review .status-hidden .status-dot,
+app-voucher .status-off .status-dot,
+app-shipping .status-off .status-dot {
+  background: #d05c4a;
+}
+
+/* Row action buttons */
+app-contact .row-actions,
+app-review .row-actions,
+app-voucher .row-actions,
+app-shipping .row-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+app-contact .btn-detail,
+app-review .btn-detail,
+app-voucher .btn-detail,
+app-shipping .btn-detail {
+  height: 34px;
+  padding: 0 14px;
+  background: #ffffff;
+  border: 1px solid #ded7cb;
+  border-radius: 8px;
+  color: #5d534b;
+  font-size: 12.5px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+}
+
+app-contact .btn-detail:hover,
+app-review .btn-detail:hover,
+app-voucher .btn-detail:hover,
+app-shipping .btn-detail:hover {
+  border-color: #593c3b;
+  color: #593c3b;
+  background: #faf7f4;
+}
+
+app-contact .btn-resolve,
+app-review .btn-resolve,
+app-voucher .btn-resolve,
+app-shipping .btn-resolve {
+  height: 34px;
+  padding: 0 14px;
+  background: #593c3b;
+  border: 1px solid #593c3b;
+  border-radius: 8px;
+  color: #ffffff;
+  font-size: 12.5px;
+  font-weight: 600;
+  font-family: inherit;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s ease;
+}
+
+app-contact .btn-resolve:hover,
+app-review .btn-resolve:hover,
+app-voucher .btn-resolve:hover,
+app-shipping .btn-resolve:hover {
+  background: #472f2e;
+}
+
+app-contact .btn-done,
+app-review .btn-done,
+app-voucher .btn-done,
+app-shipping .btn-done {
+  height: 34px;
+  padding: 0 14px;
+  background: #f3efe9;
+  border: 1px solid #eee7dd;
+  border-radius: 8px;
+  color: #a69c8f;
+  font-size: 12.5px;
+  font-weight: 600;
+  font-family: inherit;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: default;
+  white-space: nowrap;
+}
+
+app-review .icon-btn,
+app-voucher .icon-btn,
+app-shipping .icon-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  border: 1px solid #e8e2da;
+  background: #ffffff;
+  color: #6a6057;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+}
+
+app-review .icon-btn:hover:not(:disabled),
+app-voucher .icon-btn:hover:not(:disabled),
+app-shipping .icon-btn:hover:not(:disabled) {
+  border-color: #593c3b;
+  color: #593c3b;
+  background: #faf7f4;
+}
+
+app-review .icon-btn:disabled,
+app-voucher .icon-btn:disabled,
+app-shipping .icon-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* -------------------------------------------------------------- */
+/* Pagination footer                                              */
+/* -------------------------------------------------------------- */
+app-contact .pagination-footer,
+app-review .pagination-footer,
+app-voucher .pagination-footer,
+app-shipping .pagination-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 14px 22px;
+  border-top: 1px solid #f2ede6;
+  flex-wrap: wrap;
+}
+
+app-contact .pagination-info,
+app-review .pagination-info,
+app-voucher .pagination-info,
+app-shipping .pagination-info {
+  font-size: 12.5px;
+  color: #796e65;
+}
+
+app-contact .pagination-info strong,
+app-review .pagination-info strong,
+app-voucher .pagination-info strong,
+app-shipping .pagination-info strong {
+  color: #3b3231;
+  font-weight: 600;
+}
+
+app-contact .pagination-controls,
+app-review .pagination-controls,
+app-voucher .pagination-controls,
+app-shipping .pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+app-contact .page-nav,
+app-review .page-nav,
+app-voucher .page-nav,
+app-shipping .page-nav,
+app-contact .page-number,
+app-review .page-number,
+app-voucher .page-number,
+app-shipping .page-number {
+  min-width: 34px;
+  height: 34px;
+  padding: 0 8px;
+  border: 1px solid #eee8e1;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #473b38;
+  font-size: 12.5px;
+  font-weight: 500;
+  font-family: inherit;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+
+app-contact .page-nav:hover:not(:disabled),
+app-review .page-nav:hover:not(:disabled),
+app-voucher .page-nav:hover:not(:disabled),
+app-shipping .page-nav:hover:not(:disabled),
+app-contact .page-number:hover,
+app-review .page-number:hover,
+app-voucher .page-number:hover,
+app-shipping .page-number:hover {
+  border-color: #593c3b;
+  color: #593c3b;
+}
+
+app-contact .page-nav:disabled,
+app-review .page-nav:disabled,
+app-voucher .page-nav:disabled,
+app-shipping .page-nav:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+app-contact .page-number.active,
+app-review .page-number.active,
+app-voucher .page-number.active,
+app-shipping .page-number.active {
+  background: #593c3b;
+  border-color: #593c3b;
+  color: #ffffff;
+}
+
+app-contact .page-ellipsis,
+app-review .page-ellipsis,
+app-voucher .page-ellipsis,
+app-shipping .page-ellipsis {
+  color: #9a8d80;
+  padding: 0 4px;
+  font-size: 12.5px;
+}
+
+/* -------------------------------------------------------------- */
+/* States & toast                                                 */
+/* -------------------------------------------------------------- */
+app-contact .state-block,
+app-review .state-block,
+app-voucher .state-block,
+app-shipping .state-block {
+  padding: 52px 24px;
+  text-align: center;
+  color: #796e65;
+  font-size: 13px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+app-contact .spinner,
+app-review .spinner,
+app-voucher .spinner,
+app-shipping .spinner {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 2.5px solid #e8dfd6;
+  border-top-color: #593c3b;
+  animation: im-spin 0.8s linear infinite;
+}
+
+@keyframes im-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+app-contact .im-toast,
+app-review .im-toast,
+app-voucher .im-toast,
+app-shipping .im-toast {
+  position: fixed;
+  right: 28px;
+  bottom: 28px;
+  z-index: 300;
+  background: #3b3231;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 12px 18px;
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(59, 50, 49, 0.25);
+  max-width: 420px;
+}
+
+app-contact .im-toast.toast-error,
+app-review .im-toast.toast-error,
+app-voucher .im-toast.toast-error,
+app-shipping .im-toast.toast-error {
+  background: #8c3f35;
+}
+
+/* -------------------------------------------------------------- */
+/* Contact: table cells + detail dialog                           */
+/* -------------------------------------------------------------- */
+app-contact .contact-table .col-subject {
+  max-width: 220px;
+}
+
+app-contact .subject-text {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  color: #4a4340;
+  line-height: 1.45;
+}
+
+app-contact .contact-table .col-email {
+  color: #554d46;
+}
+
+app-contact .contact-table .col-phone {
+  color: #554d46;
+  white-space: nowrap;
+}
+
+app-contact .contact-table .col-time {
+  color: #6a6057;
+  white-space: nowrap;
+}
+
+app-contact .contact-table .col-actions {
+  text-align: right;
+}
+
+app-contact .contact-table .row-actions {
+  justify-content: flex-end;
+}
+
+app-contact .detail-body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+app-contact .detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px 18px;
+}
+
+app-contact .detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+app-contact .detail-item dt {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #8c8278;
+}
+
+app-contact .detail-item dd {
+  font-size: 13.5px;
+  color: #2e2626;
+  font-weight: 500;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+app-contact .detail-full {
+  grid-column: 1 / -1;
+}
+
+app-contact .detail-message {
+  background: #faf7f3;
+  border: 1px solid #f0e9e0;
+  border-radius: 10px;
+  padding: 12px 14px;
+  line-height: 1.6;
+  font-weight: 400;
+  color: #4a4340;
+}
+
+app-contact .detail-note {
+  margin-top: 16px;
+  background: #f9f7f4;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 12px;
+  color: #8c8278;
+  line-height: 1.55;
+}
+
+app-contact .detail-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+/* -------------------------------------------------------------- */
+/* Review: table cells + dialogs                                  */
+/* -------------------------------------------------------------- */
+app-review .review-table .col-comment {
+  max-width: 260px;
+}
+
+app-review .review-comment {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  color: #4a4340;
+  line-height: 1.5;
+}
+
+app-review .review-comment.flagged {
+  color: #b4432f;
+  font-style: italic;
+}
+
+app-review .customer-flag {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: #b4432f;
+}
+
+app-review .product-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 190px;
+}
+
+app-review .product-thumb {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  object-fit: cover;
+  background: #f4efe8;
+  flex-shrink: 0;
+}
+
+app-review .product-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+app-review .product-name {
+  font-weight: 600;
+  color: #2c2828;
+  line-height: 1.35;
+}
+
+app-review .product-sku {
+  font-size: 10.5px;
+  color: #9a8d80;
+  letter-spacing: 0.03em;
+}
+
+app-review .stars {
+  display: inline-flex;
+  gap: 2px;
+}
+
+app-review .star-filled {
+  color: #a9793b;
+}
+
+app-review .star-empty {
+  color: #ded7cb;
+}
+
+app-review .rating-value {
+  display: block;
+  margin-top: 4px;
+  font-size: 11px;
+  color: #796e65;
+}
+
+app-review .review-table .col-date {
+  color: #6a6057;
+  white-space: nowrap;
+}
+
+app-review .review-table .col-actions {
+  text-align: right;
+}
+
+app-review .review-table .row-actions {
+  justify-content: flex-end;
+}
+
+app-review .review-detail-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid #f2ede6;
+  margin-bottom: 14px;
+}
+
+app-review .review-detail-head .product-thumb {
+  width: 56px;
+  height: 56px;
+}
+
+app-review .detail-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #2c2828;
+  margin: 0 0 3px;
+}
+
+app-review .detail-sub {
+  font-size: 12px;
+  color: #8c8278;
+}
+
+app-review .review-detail-meta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px 18px;
+  margin-bottom: 14px;
+}
+
+app-review .review-detail-meta dt {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #8c8278;
+  margin-bottom: 4px;
+}
+
+app-review .review-detail-meta dd {
+  font-size: 13.5px;
+  color: #2e2626;
+  font-weight: 500;
+}
+
+app-review .review-detail-comment {
+  background: #faf7f3;
+  border: 1px solid #f0e9e0;
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-size: 13.5px;
+  color: #4a4340;
+  line-height: 1.6;
+  white-space: pre-line;
+}
+
+app-review .review-images {
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+
+app-review .review-images img {
+  width: 72px;
+  height: 72px;
+  border-radius: 8px;
+  object-fit: cover;
+  border: 1px solid #ece5db;
+}
+
+app-review .hidden-reason-box {
+  margin-top: 14px;
+  background: #fdf1ef;
+  border: 1px solid #f4d9d3;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 12.5px;
+  color: #a44a38;
+  line-height: 1.5;
+}
+
+app-review .form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+app-review .field-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #5a4a44;
+}
+
+app-review .field-label .required {
+  color: #b4432f;
+}
+
+app-review .field-textarea {
+  width: 100%;
+  min-height: 96px;
+  border: 1px solid #ded7cb;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-family: inherit;
+  font-size: 13px;
+  color: #2c2828;
+  resize: vertical;
+  outline: none;
+}
+
+app-review .field-textarea:focus {
+  border-color: #593c3b;
+  box-shadow: 0 0 0 2px rgba(89, 60, 59, 0.08);
+}
+
+app-review .field-help {
+  font-size: 11.5px;
+  color: #9a8d80;
+  line-height: 1.5;
+}
+
+app-review .detail-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 18px;
+}
