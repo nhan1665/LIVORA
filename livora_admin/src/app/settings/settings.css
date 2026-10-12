@@ -1,0 +1,803 @@
+/* ============================================================== */
+/* LIVORA Admin — Settings module styles                          */
+/* (Voucher + Shipping screens). Imported globally from           */
+/* styles.css and host-scoped under app-voucher / app-shipping.   */
+/* Shared page-shell rules live in the module stylesheet          */
+/* interaction_management/interaction.css.                        */
+/* ============================================================== */
+
+app-voucher,
+app-shipping {
+  display: block;
+  width: 100%;
+  color: #2c2828;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+app-voucher .voucher-page,
+app-shipping .shipping-page {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+}
+
+app-voucher .page-head,
+app-shipping .page-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+app-voucher .btn-primary-create,
+app-shipping .btn-primary-create {
+  height: 44px;
+  padding: 0 20px;
+  background: #593c3b;
+  border: none;
+  border-radius: 10px;
+  color: #ffffff;
+  font-size: 13.5px;
+  font-weight: 600;
+  font-family: inherit;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(89, 60, 59, 0.18);
+  transition: background 0.15s ease;
+}
+
+app-voucher .btn-primary-create:hover,
+app-shipping .btn-primary-create:hover {
+  background: #472f2e;
+}
+
+app-shipping .plus-mark {
+  font-size: 15px;
+  line-height: 1;
+}
+
+/* -------------------------------------------------------------- */
+/* Toggle switch                                                  */
+/* -------------------------------------------------------------- */
+app-voucher .toggle-switch,
+app-shipping .toggle-switch {
+  width: 40px;
+  height: 22px;
+  border-radius: 11px;
+  border: none;
+  background: #d9d2c8;
+  position: relative;
+  cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
+  transition: background 0.18s ease;
+}
+
+app-voucher .toggle-switch .toggle-knob,
+app-shipping .toggle-switch .toggle-knob {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
+  transition: transform 0.18s ease;
+}
+
+app-voucher .toggle-switch.on,
+app-shipping .toggle-switch.on {
+  background: #593c3b;
+}
+
+app-voucher .toggle-switch.on .toggle-knob,
+app-shipping .toggle-switch.on .toggle-knob {
+  transform: translateX(18px);
+}
+
+app-shipping .toggle-switch.small {
+  width: 34px;
+  height: 19px;
+  border-radius: 10px;
+}
+
+app-shipping .toggle-switch.small .toggle-knob {
+  width: 13px;
+  height: 13px;
+}
+
+app-shipping .toggle-switch.small.on .toggle-knob {
+  transform: translateX(15px);
+}
+
+/* -------------------------------------------------------------- */
+/* Voucher table                                                  */
+/* -------------------------------------------------------------- */
+app-voucher .voucher-table .col-actions,
+app-shipping .shipping-table .col-actions {
+  text-align: right;
+}
+
+app-voucher .voucher-table .row-actions,
+app-shipping .shipping-table .row-actions {
+  justify-content: flex-end;
+}
+
+app-voucher .voucher-code {
+  white-space: normal;
+  text-align: center;
+  line-height: 1.35;
+  word-break: break-word;
+  max-width: 110px;
+  display: inline-block;
+}
+
+app-voucher .voucher-title-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  max-width: 250px;
+}
+
+app-voucher .voucher-title-main {
+  font-weight: 600;
+  color: #2c2828;
+  line-height: 1.4;
+}
+
+app-voucher .voucher-title-sub {
+  font-size: 11.5px;
+  color: #8c8278;
+  line-height: 1.45;
+}
+
+app-voucher .discount-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 14px;
+  font-size: 11.5px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+app-voucher .pill-percent {
+  background: #f9e8e6;
+  color: #a3503f;
+}
+
+app-voucher .pill-fixed {
+  background: #f4ead9;
+  color: #8a6a3b;
+}
+
+app-voucher .discount-value {
+  display: block;
+  font-weight: 600;
+  color: #2c2828;
+  white-space: nowrap;
+}
+
+app-voucher .discount-sub {
+  display: block;
+  margin-top: 3px;
+  font-size: 11px;
+  color: #9a8d80;
+  white-space: nowrap;
+}
+
+app-voucher .col-min {
+  color: #554d46;
+  white-space: nowrap;
+}
+
+app-voucher .usage-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+app-voucher .usage-count {
+  font-weight: 600;
+  color: #2c2828;
+  min-width: 26px;
+}
+
+app-voucher .usage-bar {
+  width: 74px;
+  height: 6px;
+  border-radius: 3px;
+  background: #efe9e0;
+  overflow: hidden;
+  display: inline-block;
+}
+
+app-voucher .usage-fill {
+  display: block;
+  height: 100%;
+  border-radius: 3px;
+  background: #593c3b;
+}
+
+app-voucher .usage-total {
+  color: #8c8278;
+  font-size: 12px;
+}
+
+app-voucher .date-range {
+  font-size: 12.5px;
+  color: #6a6057;
+  white-space: nowrap;
+}
+
+/* Voucher detail dialog */
+app-voucher .voucher-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px 18px;
+}
+
+app-voucher .voucher-detail-item dt {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #8c8278;
+  margin-bottom: 4px;
+}
+
+app-voucher .voucher-detail-item dd {
+  font-size: 13.5px;
+  color: #2e2626;
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+app-voucher .detail-full {
+  grid-column: 1 / -1;
+}
+
+app-voucher .detail-actions,
+app-shipping .detail-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+/* -------------------------------------------------------------- */
+/* Shipping table                                                 */
+/* -------------------------------------------------------------- */
+app-shipping .method-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 14px;
+  font-size: 11.5px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+app-shipping .method-standard {
+  background: #f1ece3;
+  color: #6b5a44;
+}
+
+app-shipping .method-express {
+  background: #f9e8e6;
+  color: #a3503f;
+}
+
+app-shipping .province-hub {
+  font-size: 11.5px;
+  color: #8c8278;
+}
+
+app-shipping .fee-value {
+  display: block;
+  font-weight: 600;
+  color: #2c2828;
+  white-space: nowrap;
+}
+
+app-shipping .fee-note {
+  display: block;
+  margin-top: 3px;
+  font-size: 11px;
+  color: #9a8d80;
+}
+
+app-shipping .eta-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #5d534b;
+  white-space: nowrap;
+}
+
+app-shipping .col-updated {
+  color: #6a6057;
+  white-space: nowrap;
+}
+
+/* -------------------------------------------------------------- */
+/* Shared form styles (voucher + shipping dialogs)                */
+/* -------------------------------------------------------------- */
+app-voucher .form-error-banner,
+app-shipping .form-error-banner {
+  background: #fdf1ef;
+  border: 1px solid #f4d9d3;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 12.5px;
+  color: #a44a38;
+  margin-bottom: 14px;
+}
+
+app-voucher .form-grid,
+app-shipping .form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px 18px;
+  margin-bottom: 14px;
+}
+
+app-voucher .form-field,
+app-shipping .form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+app-voucher .field-label,
+app-shipping .field-label {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #4a3f3b;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+app-voucher .required,
+app-shipping .required {
+  color: #b4432f;
+}
+
+app-voucher .mini-label,
+app-shipping .mini-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: #8c8278;
+}
+
+app-voucher .field-input,
+app-shipping .field-input {
+  width: 100%;
+  height: 42px;
+  border: 1px solid #ded7cb;
+  border-radius: 10px;
+  padding: 0 12px;
+  font-family: inherit;
+  font-size: 13px;
+  color: #2c2828;
+  background: #ffffff;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+app-voucher .field-input:focus,
+app-shipping .field-input:focus {
+  border-color: #593c3b;
+  box-shadow: 0 0 0 2px rgba(89, 60, 59, 0.08);
+}
+
+app-voucher .field-input:disabled,
+app-shipping .field-input:disabled {
+  background: #f5f1ea;
+  color: #9a8d80;
+  cursor: not-allowed;
+}
+
+app-shipping .field-select {
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%238c8278' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 36px;
+  cursor: pointer;
+}
+
+app-voucher .input-affix,
+app-shipping .input-affix {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+app-voucher .field-input.has-prefix,
+app-shipping .field-input.has-prefix {
+  padding-left: 36px;
+}
+
+app-voucher .input-prefix,
+app-shipping .input-prefix {
+  position: absolute;
+  left: 13px;
+  color: #8c8278;
+  font-size: 14px;
+  pointer-events: none;
+}
+
+app-voucher .field-input.has-suffix,
+app-shipping .field-input.has-suffix {
+  padding-right: 84px;
+}
+
+app-voucher .input-suffix,
+app-shipping .input-suffix {
+  position: absolute;
+  right: 12px;
+  color: #9a8d80;
+  font-size: 12px;
+  pointer-events: none;
+  font-weight: 600;
+}
+
+app-shipping .field-input.has-leading {
+  padding-left: 36px;
+}
+
+app-shipping .input-leading-icon {
+  position: absolute;
+  left: 13px;
+  color: #8c8278;
+  pointer-events: none;
+}
+
+app-voucher .field-help,
+app-shipping .field-help {
+  font-size: 11.5px;
+  color: #9a8d80;
+  line-height: 1.5;
+}
+
+app-shipping .label-hint {
+  font-weight: 500;
+  color: #9a8d80;
+  font-size: 11px;
+}
+
+app-shipping .inline-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+app-shipping .field-help-inline {
+  font-size: 11.5px;
+  color: #796e65;
+  font-weight: 500;
+}
+
+/* Section card (validity period) */
+app-voucher .form-section-card {
+  background: #faf6ef;
+  border: 1px solid #f0e7d9;
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+app-voucher .form-section-card .form-grid {
+  margin-bottom: 0;
+}
+
+app-voucher .section-card-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #4a3f3b;
+}
+
+/* Radio cards */
+app-voucher .radio-card-grid,
+app-shipping .radio-card-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+app-voucher .radio-card,
+app-shipping .radio-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  border: 1px solid #e5ded3;
+  border-radius: 12px;
+  padding: 12px 14px;
+  cursor: pointer;
+  background: #ffffff;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+app-voucher .radio-card.selected,
+app-shipping .radio-card.selected {
+  border-color: #593c3b;
+  background: #fdfaf6;
+}
+
+app-voucher .radio-card input[type='radio'],
+app-shipping .radio-card input[type='radio'],
+app-shipping .method-card input[type='radio'] {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+app-voucher .radio-mark,
+app-shipping .radio-mark {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1.6px solid #c9beb1;
+  flex-shrink: 0;
+  margin-top: 2px;
+  position: relative;
+  transition: border-color 0.15s ease;
+}
+
+app-voucher .radio-card.selected .radio-mark,
+app-shipping .radio-card.selected .radio-mark {
+  border-color: #593c3b;
+}
+
+app-voucher .radio-card.selected .radio-mark::after,
+app-shipping .radio-card.selected .radio-mark::after {
+  content: '';
+  position: absolute;
+  inset: 3px;
+  border-radius: 50%;
+  background: #593c3b;
+}
+
+app-voucher .radio-content,
+app-shipping .radio-content {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+app-voucher .radio-content strong,
+app-shipping .radio-content strong {
+  font-size: 13px;
+  color: #2e2626;
+  font-weight: 600;
+}
+
+app-voucher .radio-content small,
+app-shipping .radio-content small {
+  font-size: 11.5px;
+  color: #8c8278;
+  line-height: 1.45;
+}
+
+app-voucher .status-toggle-row,
+app-shipping .status-toggle-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 42px;
+}
+
+/* Policy note in modal footer */
+app-voucher .voucher-policy-note,
+app-shipping .voucher-policy-note {
+  font-size: 11.5px;
+  color: #8c8278;
+  margin-right: auto;
+  line-height: 1.4;
+}
+
+/* -------------------------------------------------------------- */
+/* Shipping method cards (create dialog)                          */
+/* -------------------------------------------------------------- */
+app-shipping .method-card-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 8px;
+}
+
+app-shipping .method-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border: 1px solid #e5ded3;
+  border-radius: 12px;
+  padding: 14px 16px;
+  cursor: pointer;
+  background: #fbf8f3;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+app-shipping .method-card.selected {
+  border-color: #593c3b;
+  background: #fdfaf6;
+}
+
+app-shipping .method-card-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+app-shipping .method-card-head strong {
+  font-size: 13.5px;
+  color: #2e2626;
+}
+
+app-shipping .method-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: #f1e9df;
+  color: #6b5340;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+app-shipping .method-eta-badge {
+  margin-left: auto;
+  background: #f3e4c9;
+  color: #8a6a3b;
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 10px;
+  white-space: nowrap;
+}
+
+app-shipping .method-desc {
+  font-size: 12px;
+  color: #6a6057;
+  line-height: 1.55;
+}
+
+app-shipping .method-brand-note {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  color: #8c8278;
+}
+
+/* White glove box */
+app-shipping .white-glove-box {
+  background: #fbf8f3;
+  border: 1px solid #efe8dc;
+  border-radius: 12px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+app-shipping .white-glove-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+app-shipping .white-glove-badge {
+  background: #efe7da;
+  color: #8a6a3b;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 3px 9px;
+  border-radius: 10px;
+}
+
+app-shipping .white-glove-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  cursor: pointer;
+  position: relative;
+}
+
+app-shipping .white-glove-row input[type='checkbox'] {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+app-shipping .white-glove-row input[type='checkbox']:checked + .radio-mark {
+  border-color: #593c3b;
+  background: #593c3b;
+}
+
+app-shipping .white-glove-row .radio-mark {
+  border-radius: 4px;
+}
+
+app-shipping .white-glove-row input[type='checkbox']:checked + .radio-mark::after {
+  content: '';
+  position: absolute;
+  inset: auto;
+  left: 4px;
+  top: 1px;
+  width: 5px;
+  height: 9px;
+  background: none;
+  border-radius: 0;
+  border: solid #ffffff;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+app-shipping .white-glove-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+app-shipping .white-glove-text strong {
+  font-size: 13px;
+  color: #2e2626;
+}
+
+app-shipping .white-glove-text small {
+  font-size: 11.5px;
+  color: #8c8278;
+  line-height: 1.5;
+}
+
+app-shipping .white-glove-price {
+  margin-left: auto;
+  background: #efe7da;
+  color: #8a6a3b;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 10px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* Responsive fallback for narrow layouts */
+@media (max-width: 900px) {
+  app-voucher .form-grid,
+  app-shipping .form-grid,
+  app-voucher .radio-card-grid,
+  app-shipping .method-card-grid,
+  app-voucher .voucher-detail-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  app-voucher .voucher-policy-note,
+  app-shipping .voucher-policy-note {
+    display: none;
+  }
+}

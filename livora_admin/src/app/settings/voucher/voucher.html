@@ -1,1 +1,462 @@
-<p>voucher works!</p>
+<div class="voucher-page">
+  <header class="page-head">
+    <h1 class="page-title">Thiết lập Voucher</h1>
+    <button type="button" class="btn-primary-create" (click)="openCreateModal()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <line x1="12" y1="5" x2="12" y2="19" />
+        <line x1="5" y1="12" x2="19" y2="12" />
+      </svg>
+      <span>Thêm voucher</span>
+    </button>
+  </header>
+
+  <section class="im-filter-card" aria-label="Bộ lọc voucher">
+    <div class="filter-search">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="11" cy="11" r="8" />
+        <line x1="21" y1="21" x2="16.65" y2="16.65" />
+      </svg>
+      <input
+        type="text"
+        class="filter-input"
+        placeholder="Tìm theo mã voucher hoặc tên chương trình"
+        [(ngModel)]="searchDraft"
+        (keyup.enter)="applyFilter()"
+        aria-label="Tìm kiếm voucher"
+      />
+    </div>
+
+    <select class="filter-select" [(ngModel)]="discountTypeDraft" aria-label="Loại giảm giá">
+      <option value="all">Loại giảm giá: Tất cả</option>
+      <option value="percentage">Giảm theo %</option>
+      <option value="fixed_amount">Giảm cố định</option>
+    </select>
+
+    <select class="filter-select" [(ngModel)]="statusDraft" aria-label="Trạng thái">
+      <option value="all">Trạng thái: Tất cả</option>
+      <option value="active">Đang hoạt động</option>
+      <option value="off">Đã tắt</option>
+    </select>
+
+    <select class="filter-select" [(ngModel)]="timeDraft" aria-label="Thời gian áp dụng">
+      <option value="all">Thời gian: Tất cả</option>
+      <option value="running">Đang hiệu lực</option>
+      <option value="upcoming">Sắp diễn ra</option>
+      <option value="expired">Đã kết thúc</option>
+    </select>
+
+    <div class="filter-actions">
+      <button type="button" class="btn-apply" (click)="applyFilter()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
+        </svg>
+        <span>Lọc</span>
+      </button>
+      <button type="button" class="btn-reset-icon" (click)="resetFilter()" title="Đặt lại bộ lọc" aria-label="Đặt lại bộ lọc">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
+        </svg>
+      </button>
+    </div>
+  </section>
+
+  <section class="im-table-card" aria-label="Danh sách voucher">
+    <div class="table-wrap">
+      @if (loading()) {
+        <div class="state-block">
+          <div class="spinner" aria-hidden="true"></div>
+          <p>Đang tải danh sách voucher...</p>
+        </div>
+      } @else if (loadError()) {
+        <div class="state-block">
+          <p>{{ loadError() }}</p>
+          <button type="button" class="btn-apply" (click)="loadVouchers()">Thử lại</button>
+        </div>
+      } @else if (vouchers().length === 0) {
+        <div class="state-block">
+          <p>Không tìm thấy voucher nào phù hợp với bộ lọc.</p>
+          <button type="button" class="btn-reset-label" (click)="resetFilter()">Đặt lại bộ lọc</button>
+        </div>
+      } @else {
+        <table class="im-table voucher-table">
+          <thead>
+            <tr>
+              <th scope="col" class="col-code">MÃ VOUCHER</th>
+              <th scope="col" class="col-title">TÊN CHƯƠNG TRÌNH</th>
+              <th scope="col" class="col-type">LOẠI GIẢM</th>
+              <th scope="col" class="col-value">GIÁ TRỊ GIẢM</th>
+              <th scope="col" class="col-min">ĐƠN TỐI THIỂU</th>
+              <th scope="col" class="col-usage">ĐÃ SỬ DỤNG</th>
+              <th scope="col" class="col-period">THỜI GIAN ÁP DỤNG</th>
+              <th scope="col" class="col-status">TRẠNG THÁI</th>
+              <th scope="col" class="col-actions">THAO TÁC</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (item of vouchers(); track item.id) {
+              <tr class="im-row">
+                <td class="col-code">
+                  <span class="code-badge voucher-code">{{ item.code }}</span>
+                </td>
+                <td class="col-title">
+                  <div class="voucher-title-cell">
+                    <span class="voucher-title-main">{{ item.title.split('—')[0].trim() }}</span>
+                    @if (item.title.includes('—')) {
+                      <span class="voucher-title-sub">{{ item.title.split('—')[1].trim() }}</span>
+                    }
+                  </div>
+                </td>
+                <td class="col-type">
+                  <span class="discount-pill" [class.pill-percent]="item.discountType === 'percentage'" [class.pill-fixed]="item.discountType === 'fixed_amount'">
+                    {{ discountTypeLabel(item.discountType) }}
+                  </span>
+                </td>
+                <td class="col-value">
+                  <span class="discount-value">{{ formatDiscount(item) }}</span>
+                  <span class="discount-sub">
+                    {{ item.discountType === 'percentage' ? 'Tối đa ' + formatCurrency(item.maxDiscountAmount) : 'Khấu trừ trực tiếp' }}
+                  </span>
+                </td>
+                <td class="col-min">{{ formatCurrency(item.minOrderValue) }}</td>
+                <td class="col-usage">
+                  <div class="usage-cell">
+                    <span class="usage-count">{{ item.usedCount }}</span>
+                    <span class="usage-bar" aria-hidden="true">
+                      <span class="usage-fill" [style.width.%]="usagePercent(item)"></span>
+                    </span>
+                    <span class="usage-total">/ {{ item.quantity }}</span>
+                  </div>
+                </td>
+                <td class="col-period">
+                  <span class="date-range">{{ formatDate(item.startDate) }} - {{ formatDate(item.endDate) }}</span>
+                </td>
+                <td class="col-status">
+                  <span class="status-pill" [class.status-resolved]="item.isActive" [class.status-off]="!item.isActive">
+                    <span class="status-dot" aria-hidden="true"></span>
+                    {{ item.isActive ? 'Đang hoạt động' : 'Đã tắt' }}
+                  </span>
+                </td>
+                <td class="col-actions">
+                  <div class="row-actions">
+                    <button type="button" class="icon-btn" (click)="openDetailModal(item)" title="Xem chi tiết voucher" aria-label="Xem chi tiết voucher">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
+                        <circle cx="12" cy="12" r="3" />
+                      </svg>
+                    </button>
+                    <button type="button" class="icon-btn" (click)="openEditModal(item)" title="Chỉnh sửa voucher" aria-label="Chỉnh sửa voucher">
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+                        <path d="m15 5 4 4" />
+                      </svg>
+                    </button>
+                    <button
+                      type="button"
+                      class="toggle-switch"
+                      [class.on]="item.isActive"
+                      (click)="toggleVoucher(item)"
+                      [attr.aria-checked]="item.isActive"
+                      role="switch"
+                      [title]="item.isActive ? 'Tạm tắt voucher' : 'Kích hoạt voucher'"
+                    >
+                      <span class="toggle-knob"></span>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+    </div>
+
+    @if (!loading() && !loadError() && totalItems() > 0) {
+      <div class="pagination-footer">
+        <span class="pagination-info">
+          Hiển thị
+          <strong>{{ (currentPage() - 1) * pageSize + 1 }} - {{ currentPage() * pageSize > totalItems() ? totalItems() : currentPage() * pageSize }}</strong>
+          trong số <strong>{{ totalItems() }}</strong> voucher
+        </span>
+        <div class="pagination-controls">
+          <button type="button" class="page-nav" [disabled]="currentPage() === 1" (click)="changePage(currentPage() - 1)" aria-label="Trang trước">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polyline points="15 18 9 12 15 6" />
+            </svg>
+          </button>
+          @for (page of getPaginationPages(); track $index) {
+            @if (page === '...') {
+              <span class="page-ellipsis">...</span>
+            } @else {
+              <button type="button" class="page-number" [class.active]="page === currentPage()" (click)="changePage(+page)">{{ page }}</button>
+            }
+          }
+          <button type="button" class="page-nav" [disabled]="currentPage() === totalPages()" (click)="changePage(currentPage() + 1)" aria-label="Trang sau">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polyline points="9 18 15 12 9 6" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    }
+  </section>
+</div>
+
+<app-form-modal
+  [isOpen]="isDetailModalOpen()"
+  title="Chi tiết voucher"
+  [subtitle]="selectedVoucher() ? ('Mã voucher: ' + selectedVoucher()!.code) : ''"
+  size="md"
+  [showFooter]="false"
+  (close)="closeDetailModal()"
+>
+  @if (selectedVoucher(); as detail) {
+    <dl class="voucher-detail-grid">
+      <div class="voucher-detail-item">
+        <dt>Tên chương trình</dt>
+        <dd>{{ detail.title }}</dd>
+      </div>
+      <div class="voucher-detail-item">
+        <dt>Loại hình giảm giá</dt>
+        <dd>{{ discountTypeLabel(detail.discountType) }}</dd>
+      </div>
+      <div class="voucher-detail-item">
+        <dt>Giá trị giảm</dt>
+        <dd>{{ formatDiscount(detail) }}</dd>
+      </div>
+      <div class="voucher-detail-item">
+        <dt>Hạn mức giảm tối đa</dt>
+        <dd>{{ detail.maxDiscountAmount > 0 ? formatCurrency(detail.maxDiscountAmount) : 'Không giới hạn' }}</dd>
+      </div>
+      <div class="voucher-detail-item">
+        <dt>Đơn hàng tối thiểu</dt>
+        <dd>{{ formatCurrency(detail.minOrderValue) }}</dd>
+      </div>
+      <div class="voucher-detail-item">
+        <dt>Đã sử dụng</dt>
+        <dd>{{ detail.usedCount }} / {{ detail.quantity }} lượt</dd>
+      </div>
+      <div class="voucher-detail-item">
+        <dt>Thời gian áp dụng</dt>
+        <dd>{{ formatDate(detail.startDate) }} - {{ formatDate(detail.endDate) }}</dd>
+      </div>
+      <div class="voucher-detail-item">
+        <dt>Giới hạn mỗi khách hàng</dt>
+        <dd>{{ detail.perCustomerLimit || 1 }} lượt / khách hàng</dd>
+      </div>
+      <div class="voucher-detail-item detail-full">
+        <dt>Trạng thái</dt>
+        <dd>
+          <span class="status-pill" [class.status-resolved]="detail.isActive" [class.status-off]="!detail.isActive">
+            <span class="status-dot" aria-hidden="true"></span>
+            {{ detail.isActive ? 'Đang hoạt động' : 'Đã tắt' }}
+          </span>
+        </dd>
+      </div>
+    </dl>
+
+    <div class="detail-actions">
+      <button type="button" class="btn-detail" (click)="closeDetailModal()">Đóng</button>
+      <button type="button" class="btn-resolve" (click)="closeDetailModal(); openEditModal(detail)">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+          <path d="m15 5 4 4" />
+        </svg>
+        <span>Chỉnh sửa</span>
+      </button>
+    </div>
+  }
+</app-form-modal>
+
+<app-form-modal
+  [isOpen]="isFormModalOpen()"
+  [title]="isEditMode() ? 'Chỉnh sửa Voucher' : 'Thêm mới Voucher khuyến mãi'"
+  size="lg"
+  [submitText]="isEditMode() ? 'Lưu thay đổi' : 'Tạo mới voucher'"
+  cancelText="Hủy bỏ"
+  [isSubmitting]="isSubmitting()"
+  (close)="closeFormModal()"
+  (submit)="saveVoucher()"
+>
+  <div class="voucher-form">
+    @if (formError()) {
+      <div class="form-error-banner" role="alert">{{ formError() }}</div>
+    }
+
+    <div class="form-grid">
+      <div class="form-field">
+        <label class="field-label" for="voucherCodeInput">Mã Voucher <span class="required">*</span></label>
+        <div class="input-affix">
+          <span class="input-prefix">#</span>
+          <input
+            id="voucherCodeInput"
+            type="text"
+            class="field-input has-prefix"
+            placeholder="LIVORA-SUMMER25"
+            [(ngModel)]="formDraft.code"
+          />
+        </div>
+        <span class="field-help">Mã viết hoa, không dấu, không trùng lặp trong hệ thống.</span>
+      </div>
+
+      <div class="form-field">
+        <label class="field-label" for="voucherTitleInput">Tên chương trình ưu đãi <span class="required">*</span></label>
+        <input
+          id="voucherTitleInput"
+          type="text"
+          class="field-input"
+          placeholder="Ưu đãi Mùa Thu — BST Sưu tập Phòng Khách"
+          [(ngModel)]="formDraft.title"
+        />
+        <span class="field-help">Hiển thị trong giỏ hàng và hóa đơn bán lẻ của khách.</span>
+      </div>
+    </div>
+
+    <div class="form-field">
+      <span class="field-label">Loại hình chiết khấu &amp; giảm giá <span class="required">*</span></span>
+      <div class="radio-card-grid">
+        <label class="radio-card" [class.selected]="formDraft.discountType === 'percentage'">
+          <input type="radio" name="discountType" value="percentage" [(ngModel)]="formDraft.discountType" />
+          <span class="radio-mark" aria-hidden="true"></span>
+          <span class="radio-content">
+            <strong>Giảm theo phần trăm (%)</strong>
+            <small>Chiết khấu theo tỷ lệ % tổng đơn hàng</small>
+          </span>
+        </label>
+        <label class="radio-card" [class.selected]="formDraft.discountType === 'fixed_amount'">
+          <input type="radio" name="discountType" value="fixed_amount" [(ngModel)]="formDraft.discountType" />
+          <span class="radio-mark" aria-hidden="true"></span>
+          <span class="radio-content">
+            <strong>Giảm số tiền cố định (VNĐ)</strong>
+            <small>Trừ trực tiếp số tiền cố định vào thanh toán</small>
+          </span>
+        </label>
+      </div>
+    </div>
+
+    <div class="form-grid">
+      <div class="form-field">
+        <label class="field-label" for="discountValueInput">Giá trị giảm <span class="required">*</span></label>
+        <div class="input-affix">
+          <input
+            id="discountValueInput"
+            type="number"
+            min="0"
+            class="field-input has-suffix"
+            [(ngModel)]="formDraft.discountValue"
+          />
+          <span class="input-suffix">{{ formDraft.discountType === 'percentage' ? '%' : 'VNĐ' }}</span>
+        </div>
+        <span class="field-help">
+          {{ formDraft.discountType === 'percentage' ? 'Mức giảm: tổng giá trị nội thất đủ điều kiện.' : 'Số tiền trừ trực tiếp trên giá trị đơn hàng.' }}
+        </span>
+      </div>
+
+      <div class="form-field">
+        <label class="field-label" for="maxDiscountInput">Hạn mức giảm tối đa (VNĐ)</label>
+        <div class="input-affix">
+          <input
+            id="maxDiscountInput"
+            type="number"
+            min="0"
+            class="field-input has-suffix"
+            [(ngModel)]="formDraft.maxDiscountAmount"
+          />
+          <span class="input-suffix">VNĐ</span>
+        </div>
+        <span class="field-help">Áp dụng cho hình thức giảm theo %. Để trống nếu không giới hạn.</span>
+      </div>
+
+      <div class="form-field">
+        <label class="field-label" for="minOrderInput">Giá trị đơn hàng tối thiểu <span class="required">*</span></label>
+        <div class="input-affix">
+          <input
+            id="minOrderInput"
+            type="number"
+            min="0"
+            class="field-input has-suffix"
+            [(ngModel)]="formDraft.minOrderValue"
+          />
+          <span class="input-suffix">VNĐ</span>
+        </div>
+        <span class="field-help">Khách hàng cần đạt giá trị đơn hàng trên để mở khóa mã.</span>
+      </div>
+
+      <div class="form-field">
+        <label class="field-label" for="quantityInput">Số lượng voucher phát hành <span class="required">*</span></label>
+        <div class="input-affix">
+          <input
+            id="quantityInput"
+            type="number"
+            min="1"
+            class="field-input has-suffix"
+            [(ngModel)]="formDraft.quantity"
+          />
+          <span class="input-suffix">Mã</span>
+        </div>
+        <span class="field-help">Giới hạn tổng lượt sử dụng trên toàn hệ thống Atelier.</span>
+      </div>
+    </div>
+
+    <div class="form-section-card">
+      <span class="section-card-title">Thời gian hiệu lực chiết khấu <span class="required">*</span></span>
+      <div class="form-grid">
+        <div class="form-field">
+          <label class="mini-label" for="startDateInput">NGÀY &amp; GIỜ BẮT ĐẦU</label>
+          <input id="startDateInput" type="datetime-local" class="field-input" [(ngModel)]="formStart" />
+        </div>
+        <div class="form-field">
+          <label class="mini-label" for="endDateInput">NGÀY &amp; GIỜ KẾT THÚC</label>
+          <input id="endDateInput" type="datetime-local" class="field-input" [(ngModel)]="formEnd" />
+        </div>
+      </div>
+      <span class="field-help">Thời gian kết thúc phải sau thời điểm kích hoạt.</span>
+    </div>
+
+    <div class="form-grid">
+      <div class="form-field">
+        <label class="field-label" for="perCustomerInput">Giới hạn lượt dùng / Mỗi khách hàng</label>
+        <div class="input-affix">
+          <input
+            id="perCustomerInput"
+            type="number"
+            min="1"
+            class="field-input has-suffix"
+            [(ngModel)]="formDraft.perCustomerLimit"
+          />
+          <span class="input-suffix">lượt / khách hàng</span>
+        </div>
+        <span class="field-help">Hạn chế số lượt một tài khoản có thể hưởng ưu đãi.</span>
+      </div>
+
+      <div class="form-field">
+        <span class="field-label">Trạng thái phát hành</span>
+        <div class="status-toggle-row">
+          <span class="status-pill" [class.status-resolved]="formDraft.isActive" [class.status-off]="!formDraft.isActive">
+            <span class="status-dot" aria-hidden="true"></span>
+            {{ formDraft.isActive ? 'Đang hoạt động' : 'Tạm tắt' }}
+          </span>
+          <button
+            type="button"
+            class="toggle-switch"
+            [class.on]="formDraft.isActive"
+            (click)="formDraft.isActive = !formDraft.isActive"
+            [attr.aria-checked]="formDraft.isActive"
+            role="switch"
+            aria-label="Trạng thái phát hành"
+          >
+            <span class="toggle-knob"></span>
+          </button>
+        </div>
+        <span class="field-help">Kích hoạt ngay khi tạo</span>
+      </div>
+    </div>
+  </div>
+
+  <span modal-footer-extra class="voucher-policy-note">
+    Quy định: Giá trị giảm &gt; 0, Số lượng &gt; 0, Hạn mức tối thiểu &gt; 0
+  </span>
+</app-form-modal>
+
+@if (toastMessage()) {
+  <div class="im-toast" [class.toast-error]="toastType() === 'error'" role="status">{{ toastMessage() }}</div>
+}
