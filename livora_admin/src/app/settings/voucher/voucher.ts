@@ -150,8 +150,11 @@ export class Voucher implements OnInit {
     this.editingVoucherId.set(null);
     this.formError.set('');
     this.formDraft = this.emptyDraft();
-    this.formStart = '2025-11-01T00:00';
-    this.formEnd = '2025-11-30T23:59';
+    // Default: start now, end 30 days later
+    const now = new Date();
+    const end = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+    this.formStart = this.toLocalInput(now.toISOString());
+    this.formEnd = this.toLocalInput(end.toISOString());
     this.isFormModalOpen.set(true);
   }
 
