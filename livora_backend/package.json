@@ -1,0 +1,29 @@
+{
+  "name": "livora-backend",
+  "version": "1.0.0",
+  "description": "Backend REST API for LIVORA E-commerce Platform",
+  "main": "server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "test-db": "node test-connection.js"
+  },
+  "keywords": [
+    "livora",
+    "express",
+    "mongoose",
+    "ecommerce"
+  ],
+  "author": "LIVORA Team",
+  "license": "ISC",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.9.5",
+    "morgan": "^1.10.0"
+  }
+}
