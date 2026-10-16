@@ -111,41 +111,45 @@ export class Payment implements OnInit {
     if (this.isLoggedIn) {
       // Lấy thông tin user thật
       const userProfile = this.authService.currentUser();
-      this.email = userProfile.email || '';
-      
-      // Khởi tạo sổ địa chỉ dựa trên thông tin User
-      this.savedAddresses = [
-        {
-          id: 'addr1',
-          fullName: userProfile.fullName,
-          phone: userProfile.phone,
-          province: userProfile.province,
-          district: 'Thu Duc City', // Mock cho khớp với map
-          ward: 'Linh Xuan Ward',
-          addressLine: userProfile.address,
-          isDefault: true
-        },
-        {
-          id: 'addr2',
-          fullName: userProfile.fullName,
-          phone: '0988777666',
-          province: 'Dong Thap Province',
-          district: 'Chau Thanh District',
-          ward: 'Vinh Binh Commune',
-          addressLine: 'Tan Thanh Hamlet, Vinh Binh Commune',
-          isDefault: false
-        }
-      ];
+      if (userProfile) {
+        this.email = userProfile.email || '';
+        
+        // Khởi tạo sổ địa chỉ dựa trên thông tin User
+        this.savedAddresses = [
+          {
+            id: 'addr1',
+            fullName: userProfile.fullName,
+            phone: userProfile.phone,
+            province: userProfile.province || '',
+            district: 'Thu Duc City', // Mock cho khớp với map
+            ward: 'Linh Xuan Ward',
+            addressLine: userProfile.address || '',
+            isDefault: true
+          },
+          {
+            id: 'addr2',
+            fullName: userProfile.fullName,
+            phone: '0988777666',
+            province: 'Dong Thap Province',
+            district: 'Chau Thanh District',
+            ward: 'Vinh Binh Commune',
+            addressLine: 'Tan Thanh Hamlet, Vinh Binh Commune',
+            isDefault: false
+          }
+        ];
 
-      // LOGIC AUTOFILL UX TỐI ƯU: Chỉ tự động điền nếu form đang trống
-      if (!info.fullName) {
-        const defaultAddr = this.savedAddresses.find(a => a.isDefault);
-        if (defaultAddr) {
-          this.selectedSavedAddressId = defaultAddr.id;
-          this.applySavedAddress(defaultAddr);
+        // LOGIC AUTOFILL UX TỐI ƯU: Chỉ tự động điền nếu form đang trống
+        if (!info.fullName) {
+          const defaultAddr = this.savedAddresses.find(a => a.isDefault);
+          if (defaultAddr) {
+            this.selectedSavedAddressId = defaultAddr.id;
+            this.applySavedAddress(defaultAddr);
+          }
+        } else {
+          // Tải lại những gì user đã gõ dở
+          this.loadExistingInfo(info);
         }
       } else {
-        // Tải lại những gì user đã gõ dở
         this.loadExistingInfo(info);
       }
     } else {
@@ -276,6 +280,45 @@ export class Payment implements OnInit {
 
     const randomNum = Math.floor(100000 + Math.random() * 900000);
     this.orderNumber = `LIV-${randomNum}`;
+
+    // Gửi đơn hàng thực tế lên Backend MongoDB Atlas
+    if (typeof fetch !== 'undefined') {
+      const orderPayload = {
+        customerInfo: {
+          name: this.fullName.trim(),
+          phone: this.phone.trim(),
+          email: this.email.trim(),
+          address: this.address.trim(),
+        },
+        items: this.cartService.items().map(it => ({
+          productId: it.productId || it.id,
+          name: it.name,
+          price: it.price,
+          quantity: it.quantity,
+          thumbnail: it.image,
+        })),
+        voucherCode: this.cartService.discountCode(),
+        shippingFee: this.cartService.shippingFee(),
+        paymentMethod: this.cartService.paymentMethod() === 'bank' ? 'BANK_TRANSFER' : 'COD',
+        note: this.cartService.orderNote() || '',
+      };
+
+      fetch('http://localhost:5000/api/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(orderPayload),
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success && data.data?.orderCode) {
+            this.orderNumber = data.data.orderCode;
+            this.cdr.detectChanges();
+          }
+        })
+        .catch(err => {
+          console.warn('Không thể gửi đơn hàng lên server:', err);
+        });
+    }
 
     if (this.cartService.paymentMethod() === 'bank') {
       this.showQRModal = true;

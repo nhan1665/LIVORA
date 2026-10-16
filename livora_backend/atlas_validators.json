@@ -1,0 +1,1176 @@
+{
+  "Carts": {
+    "$jsonSchema": {
+      "bsonType": "object",
+      "required": [
+        "customerId",
+        "items",
+        "updatedAt"
+      ],
+      "properties": {
+        "customerId": {
+          "bsonType": "objectId"
+        },
+        "items": {
+          "bsonType": "array",
+          "items": {
+            "bsonType": "object",
+            "required": [
+              "productId",
+              "quantity",
+              "priceAtAdd"
+            ],
+            "properties": {
+              "productId": {
+                "bsonType": "objectId"
+              },
+              "selectedColor": {
+                "bsonType": [
+                  "string",
+                  "null"
+                ]
+              },
+              "quantity": {
+                "bsonType": "int",
+                "minimum": 1
+              },
+              "priceAtAdd": {
+                "bsonType": [
+                  "double",
+                  "int",
+                  "long",
+                  "decimal"
+                ],
+                "minimum": 0
+              }
+            }
+          }
+        },
+        "updatedAt": {
+          "bsonType": "date"
+        }
+      }
+    }
+  },
+  "Refunds": {
+    "$jsonSchema": {
+      "bsonType": "object",
+      "required": [
+        "refundCode",
+        "orderId",
+        "contactPhone",
+        "refundType",
+        "refundAmount",
+        "reason",
+        "refundMethod",
+        "status",
+        "createdAt"
+      ],
+      "properties": {
+        "refundCode": {
+          "bsonType": "string"
+        },
+        "orderId": {
+          "bsonType": "objectId"
+        },
+        "customerId": {
+          "bsonType": [
+            "objectId",
+            "null"
+          ]
+        },
+        "contactPhone": {
+          "bsonType": "string"
+        },
+        "otpVerification": {
+          "bsonType": [
+            "object",
+            "null"
+          ],
+          "properties": {
+            "codeHash": {
+              "bsonType": "string"
+            },
+            "expiresAt": {
+              "bsonType": "date"
+            },
+            "isVerified": {
+              "bsonType": "bool"
+            }
+          }
+        },
+        "refundType": {
+          "bsonType": "string",
+          "enum": [
+            "full",
+            "partial"
+          ]
+        },
+        "refundAmount": {
+          "bsonType": [
+            "double",
+            "int",
+            "long",
+            "decimal"
+          ],
+          "minimum": 0
+        },
+        "reason": {
+          "bsonType": "string"
+        },
+        "refundMethod": {
+          "bsonType": "string",
+          "enum": [
+            "original_payment",
+            "bank_transfer"
+          ]
+        },
+        "status": {
+          "bsonType": "string",
+          "enum": [
+            "pending",
+            "processing",
+            "approved",
+            "rejected",
+            "completed"
+          ]
+        },
+        "rejectReason": {
+          "bsonType": [
+            "string",
+            "null"
+          ]
+        },
+        "transactionInfo": {
+          "bsonType": [
+            "object",
+            "string",
+            "null"
+          ]
+        },
+        "processedBy": {
+          "bsonType": [
+            "objectId",
+            "null"
+          ]
+        },
+        "createdAt": {
+          "bsonType": "date"
+        },
+        "completedAt": {
+          "bsonType": [
+            "date",
+            "null"
+          ]
+        }
+      }
+    }
+  },
+  "Staffs": {
+    "$jsonSchema": {
+      "bsonType": "object",
+      "required": [
+        "username",
+        "email",
+        "fullName",
+        "passwordHash",
+        "role",
+        "permissions",
+        "status"
+      ],
+      "properties": {
+        "_id": {
+          "bsonType": "objectId"
+        },
+        "username": {
+          "bsonType": "string",
+          "description": "Tên đăng nhập quản trị"
+        },
+        "email": {
+          "bsonType": "string",
+          "description": "Email nhân viên"
+        },
+        "fullName": {
+          "bsonType": "string"
+        },
+        "passwordHash": {
+          "bsonType": "string"
+        },
+        "role": {
+          "bsonType": "string",
+          "enum": [
+            "super_admin",
+            "content_staff",
+            "ops_staff",
+            "cskh",
+            "accountant"
+          ]
+        },
+        "permissions": {
+          "bsonType": "array",
+          "items": {
+            "bsonType": "string"
+          }
+        },
+        "status": {
+          "bsonType": "string",
+          "enum": [
+            "active",
+            "disabled"
+          ]
+        },
+        "lastLogin": {
+          "bsonType": [
+            "date",
+            "null"
+          ]
+        }
+      }
+    }
+  },
+  "Contacts": {
+    "$jsonSchema": {
+      "bsonType": "object",
+      "required": [
+        "fullName",
+        "email",
+        "subject",
+        "message",
+        "status",
+        "createdAt"
+      ],
+      "properties": {
+        "fullName": {
+          "bsonType": "string"
+        },
+        "email": {
+          "bsonType": "string"
+        },
+        "phone": {
+          "bsonType": [
+            "string",
+            "null"
+          ]
+        },
+        "subject": {
+          "bsonType": "string"
+        },
+        "message": {
+          "bsonType": "string"
+        },
+        "status": {
+          "bsonType": "string",
+          "enum": [
+            "new",
+            "processing",
+            "resolved"
+          ]
+        },
+        "respondedBy": {
+          "bsonType": [
+            "objectId",
+            "null"
+          ]
+        },
+        "createdAt": {
+          "bsonType": "date"
+        },
+        "resolvedAt": {
+          "bsonType": [
+            "date",
+            "null"
+          ]
+        }
+      }
+    }
+  },
+  "Customers": {
+    "$jsonSchema": {
+      "bsonType": "object",
+      "properties": {
+        "fullName": {
+          "bsonType": "string",
+          "description": "Họ và tên khách hàng"
+        },
+        "email": {
+          "bsonType": [
+            "string",
+            "null"
+          ],
+          "description": "Email khách hàng"
+        },
+        "phone": {
+          "bsonType": "string",
+          "description": "Số điện thoại liên hệ"
+        },
+        "passwordHash": {
+          "bsonType": "string",
+          "description": "Mật khẩu đã băm bằng bcrypt"
+        },
+        "avatar": {
+          "bsonType": "string"
+        },
+        "addresses": {
+          "bsonType": "array",
+          "items": {
+            "bsonType": "object",
+            "properties": {
+              "addressId": {
+                "bsonType": "string"
+              },
+              "recipientName": {
+                "bsonType": "string"
+              },
+              "recipientPhone": {
+                "bsonType": "string"
+              },
+              "street": {
+                "bsonType": "string"
+              },
+              "ward": {
+                "bsonType": "string"
+              },
+              "district": {
+                "bsonType": "string"
+              },
+              "province": {
+                "bsonType": "string"
+              },
+              "isDefault": {
+                "bsonType": "bool"
+              }
+            }
+          }
+        },
+        "status": {
+          "enum": [
+            "active",
+            "locked"
+          ]
+        },
+        "createdAt": {
+          "bsonType": "date"
+        },
+        "updatedAt": {
+          "bsonType": "date"
+        }
+      }
+    }
+  },
+  "Categories": {
+    "$jsonSchema": {
+      "bsonType": "object",
+      "required": [
+        "name",
+        "slug",
+        "isActive"
+      ],
+      "properties": {
+        "_id": {
+          "bsonType": "objectId"
+        },
+        "name": {
+          "bsonType": "string",
+          "description": "Tên danh mục sản phẩm"
+        },
+        "slug": {
+          "bsonType": "string",
+          "description": "Đường dẫn thân thiện SEO"
+        },
+        "parentId": {
+          "bsonType": [
+            "objectId",
+            "null"
+          ],
+          "description": "ID danh mục cha nếu có"
+        },
+        "description": {
+          "bsonType": "string"
+        },
+        "thumbnail": {
+          "bsonType": "string"
+        },
+        "displayOrder": {
+          "bsonType": "int",
+          "minimum": 0
+        },
+        "isActive": {
+          "bsonType": "bool"
+        }
+      }
+    }
+  },
+  "Orders": {
+    "$jsonSchema": {
+      "bsonType": "object",
+      "required": [
+        "orderCode",
+        "customerInfo",
+        "items",
+        "subtotalAmount",
+        "discountAmount",
+        "shippingFee",
+        "totalAmount",
+        "paymentMethod",
+        "paymentStatus",
+        "orderStatus",
+        "createdAt",
+        "updatedAt"
+      ],
+      "properties": {
+        "orderCode": {
+          "bsonType": "string"
+        },
+        "customerId": {
+          "bsonType": [
+            "objectId",
+            "null"
+          ]
+        },
+        "customerInfo": {
+          "bsonType": "object",
+          "required": [
+            "fullName",
+            "phone",
+            "address"
+          ],
+          "properties": {
+            "fullName": {
+              "bsonType": "string"
+            },
+            "phone": {
+              "bsonType": "string"
+            },
+            "email": {
+              "bsonType": [
+                "string",
+                "null"
+              ]
+            },
+            "address": {
+              "bsonType": "string"
+            },
+            "province": {
+              "bsonType": [
+                "string",
+                "null"
+              ]
+            },
+            "district": {
+              "bsonType": [
+                "string",
+                "null"
+              ]
+            },
+            "ward": {
+              "bsonType": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        },
+        "items": {
+          "bsonType": "array",
+          "minItems": 1,
+          "items": {
+            "bsonType": "object",
+            "required": [
+              "productId",
+              "productName",
+              "quantity",
+              "unitPrice",
+              "subtotal"
+            ],
+            "properties": {
+              "productId": {
+                "bsonType": "objectId"
+              },
+              "productName": {
+                "bsonType": "string"
+              },
+              "sku": {
+                "bsonType": [
+                  "string",
+                  "null"
+                ]
+              },
+              "selectedColor": {
+                "bsonType": [
+                  "string",
+                  "null"
+                ]
+              },
+              "quantity": {
+                "bsonType": "int",
+                "minimum": 1
+              },
+              "unitPrice": {
+                "bsonType": [
+                  "double",
+                  "int",
+                  "long",
+                  "decimal"
+                ],
+                "minimum": 0
+              },
+              "subtotal": {
+                "bsonType": [
+                  "double",
+                  "int",
+                  "long",
+                  "decimal"
+                ],
+                "minimum": 0
+              }
+            }
+          }
+        },
+        "voucherCode": {
+          "bsonType": [
+            "string",
+            "null"
+          ]
+        },
+        "subtotalAmount": {
+          "bsonType": [
+            "double",
+            "int",
+            "long",
+            "decimal"
+          ],
+          "minimum": 0
+        },
+        "discountAmount": {
+          "bsonType": [
+            "double",
+            "int",
+            "long",
+            "decimal"
+          ],
+          "minimum": 0
+        },
+        "shippingFee": {
+          "bsonType": [
+            "double",
+            "int",
+            "long",
+            "decimal"
+          ],
+          "minimum": 0
+        },
+        "totalAmount": {
+          "bsonType": [
+            "double",
+            "int",
+            "long",
+            "decimal"
+          ],
+          "minimum": 0
+        },
+        "paymentMethod": {
+          "bsonType": "string",
+          "enum": [
+            "cod",
+            "bank_transfer",
+            "online"
+          ]
+        },
+        "paymentStatus": {
+          "bsonType": "string",
+          "enum": [
+            "pending",
+            "paid",
+            "failed",
+            "refunded"
+          ]
+        },
+        "orderStatus": {
+          "bsonType": "string",
+          "enum": [
+            "pending",
+            "confirmed",
+            "processing",
+            "shipping",
+            "delivered",
+            "cancelled"
+          ]
+        },
+        "cancelReason": {
+          "bsonType": [
+            "string",
+            "null"
+          ]
+        },
+        "notes": {
+          "bsonType": [
+            "string",
+            "null"
+          ]
+        },
+        "createdAt": {
+          "bsonType": "date"
+        },
+        "updatedAt": {
+          "bsonType": "date"
+        }
+      }
+    }
+  },
+  "Rooms": {
+    "$jsonSchema": {
+      "bsonType": "object",
+      "required": [
+        "name",
+        "slug",
+        "isActive"
+      ],
+      "properties": {
+        "_id": {
+          "bsonType": "objectId"
+        },
+        "name": {
+          "bsonType": "string",
+          "description": "Tên không gian phòng"
+        },
+        "slug": {
+          "bsonType": "string",
+          "description": "Đường dẫn thân thiện SEO"
+        },
+        "description": {
+          "bsonType": "string",
+          "description": "Mô tả công năng và phong cách phòng"
+        },
+        "thumbnail": {
+          "bsonType": "string",
+          "description": "Đường dẫn ảnh đại diện"
+        },
+        "displayOrder": {
+          "bsonType": "int",
+          "minimum": 0
+        },
+        "isActive": {
+          "bsonType": "bool"
+        }
+      }
+    }
+  },
+  "Reviews": {
+    "$jsonSchema": {
+      "bsonType": "object",
+      "required": [
+        "productId",
+        "orderId",
+        "customerId",
+        "rating",
+        "status",
+        "createdAt"
+      ],
+      "properties": {
+        "productId": {
+          "bsonType": "objectId"
+        },
+        "orderId": {
+          "bsonType": "objectId"
+        },
+        "customerId": {
+          "bsonType": "objectId"
+        },
+        "rating": {
+          "bsonType": "int",
+          "minimum": 1,
+          "maximum": 5
+        },
+        "comment": {
+          "bsonType": [
+            "string",
+            "null"
+          ]
+        },
+        "images": {
+          "bsonType": "array",
+          "items": {
+            "bsonType": "string"
+          }
+        },
+        "status": {
+          "bsonType": "string",
+          "enum": [
+            "visible",
+            "hidden"
+          ]
+        },
+        "hiddenReason": {
+          "bsonType": [
+            "string",
+            "null"
+          ]
+        },
+        "moderatedBy": {
+          "bsonType": [
+            "objectId",
+            "null"
+          ]
+        },
+        "moderatedAt": {
+          "bsonType": [
+            "date",
+            "null"
+          ]
+        },
+        "createdAt": {
+          "bsonType": "date"
+        },
+        "updatedAt": {
+          "bsonType": "date"
+        }
+      }
+    }
+  },
+  "RoomDesigns": {
+    "$jsonSchema": {
+      "bsonType": "object",
+      "required": [
+        "roomId",
+        "name",
+        "file3DUrl",
+        "previewImage",
+        "suggestedProducts",
+        "isTemplate",
+        "createdAt"
+      ],
+      "properties": {
+        "customerId": {
+          "bsonType": [
+            "objectId",
+            "null"
+          ]
+        },
+        "roomId": {
+          "bsonType": "objectId"
+        },
+        "name": {
+          "bsonType": "string"
+        },
+        "file3DUrl": {
+          "bsonType": "string"
+        },
+        "previewImage": {
+          "bsonType": "string"
+        },
+        "layoutData": {
+          "bsonType": [
+            "object",
+            "array",
+            "string",
+            "null"
+          ]
+        },
+        "suggestedProducts": {
+          "bsonType": "array",
+          "items": {
+            "bsonType": "objectId"
+          }
+        },
+        "isTemplate": {
+          "bsonType": "bool"
+        },
+        "createdAt": {
+          "bsonType": "date"
+        },
+        "updatedAt": {
+          "bsonType": "date"
+        }
+      }
+    }
+  },
+  "Inspirations": {
+    "$jsonSchema": {
+      "bsonType": "object",
+      "required": [
+        "title",
+        "slug",
+        "roomId",
+        "thumbnail",
+        "taggedProducts",
+        "viewsCount",
+        "status"
+      ],
+      "properties": {
+        "title": {
+          "bsonType": "string"
+        },
+        "slug": {
+          "bsonType": "string"
+        },
+        "roomId": {
+          "bsonType": "objectId"
+        },
+        "style": {
+          "bsonType": [
+            "string",
+            "null"
+          ]
+        },
+        "thumbnail": {
+          "bsonType": "string"
+        },
+        "content": {
+          "bsonType": [
+            "string",
+            "null"
+          ]
+        },
+        "taggedProducts": {
+          "bsonType": "array",
+          "items": {
+            "bsonType": "object",
+            "required": [
+              "productId",
+              "xPercent",
+              "yPercent"
+            ],
+            "properties": {
+              "productId": {
+                "bsonType": "objectId"
+              },
+              "xPercent": {
+                "bsonType": [
+                  "double",
+                  "int",
+                  "decimal"
+                ],
+                "minimum": 0,
+                "maximum": 100
+              },
+              "yPercent": {
+                "bsonType": [
+                  "double",
+                  "int",
+                  "decimal"
+                ],
+                "minimum": 0,
+                "maximum": 100
+              }
+            }
+          }
+        },
+        "viewsCount": {
+          "bsonType": "int",
+          "minimum": 0
+        },
+        "status": {
+          "bsonType": "string",
+          "enum": [
+            "published",
+            "hidden"
+          ]
+        },
+        "createdAt": {
+          "bsonType": "date"
+        },
+        "updatedAt": {
+          "bsonType": "date"
+        }
+      }
+    }
+  },
+  "Products": {
+    "$jsonSchema": {
+      "bsonType": "object",
+      "required": [
+        "sku",
+        "name",
+        "slug",
+        "categoryId",
+        "roomIds",
+        "price",
+        "stockQuantity",
+        "thumbnail",
+        "images",
+        "status",
+        "stockStatus"
+      ],
+      "properties": {
+        "_id": {
+          "bsonType": "objectId"
+        },
+        "sku": {
+          "bsonType": "string"
+        },
+        "name": {
+          "bsonType": "string"
+        },
+        "slug": {
+          "bsonType": "string"
+        },
+        "categoryId": {
+          "bsonType": "objectId"
+        },
+        "roomIds": {
+          "bsonType": "array",
+          "items": {
+            "bsonType": "objectId"
+          }
+        },
+        "price": {
+          "bsonType": [
+            "double",
+            "int",
+            "long",
+            "decimal"
+          ],
+          "minimum": 0
+        },
+        "salePrice": {
+          "bsonType": [
+            "double",
+            "int",
+            "long",
+            "decimal",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "stockQuantity": {
+          "bsonType": "int",
+          "minimum": 0
+        },
+        "stockStatus": {
+          "bsonType": "string",
+          "enum": [
+            "in_stock",
+            "out_of_stock"
+          ]
+        },
+        "thumbnail": {
+          "bsonType": "string"
+        },
+        "images": {
+          "bsonType": "array",
+          "items": {
+            "bsonType": "string"
+          }
+        },
+        "model3DUrl": {
+          "bsonType": [
+            "string",
+            "null"
+          ],
+          "description": "URL file mo hinh 3D GLB"
+        },
+        "description": {
+          "bsonType": "string"
+        },
+        "dimensions": {
+          "bsonType": "object",
+          "properties": {
+            "length": {
+              "bsonType": [
+                "double",
+                "int",
+                "long",
+                "decimal"
+              ],
+              "minimum": 0
+            },
+            "width": {
+              "bsonType": [
+                "double",
+                "int",
+                "long",
+                "decimal"
+              ],
+              "minimum": 0
+            },
+            "height": {
+              "bsonType": [
+                "double",
+                "int",
+                "long",
+                "decimal"
+              ],
+              "minimum": 0
+            },
+            "weight": {
+              "bsonType": [
+                "double",
+                "int",
+                "long",
+                "decimal"
+              ],
+              "minimum": 0
+            }
+          }
+        },
+        "materials": {
+          "bsonType": "array",
+          "items": {
+            "bsonType": "string"
+          }
+        },
+        "colors": {
+          "bsonType": "array",
+          "items": {
+            "bsonType": "string"
+          }
+        },
+        "averageRating": {
+          "bsonType": [
+            "double",
+            "int",
+            "long",
+            "decimal"
+          ],
+          "minimum": 0,
+          "maximum": 5
+        },
+        "totalReviews": {
+          "bsonType": "int",
+          "minimum": 0
+        },
+        "status": {
+          "bsonType": "string",
+          "enum": [
+            "active",
+            "inactive"
+          ]
+        },
+        "isFeatured": {
+          "bsonType": "bool"
+        },
+        "createdAt": {
+          "bsonType": "date"
+        }
+      }
+    }
+  },
+  "Vouchers": {
+    "$jsonSchema": {
+      "bsonType": "object",
+      "required": [
+        "code",
+        "title",
+        "discountType",
+        "discountValue",
+        "minOrderValue",
+        "quantity",
+        "usedCount",
+        "startDate",
+        "endDate",
+        "isActive"
+      ],
+      "properties": {
+        "code": {
+          "bsonType": "string"
+        },
+        "title": {
+          "bsonType": "string"
+        },
+        "discountType": {
+          "bsonType": "string",
+          "enum": [
+            "percentage",
+            "fixed_amount"
+          ]
+        },
+        "discountValue": {
+          "bsonType": [
+            "double",
+            "int",
+            "long",
+            "decimal"
+          ],
+          "minimum": 0
+        },
+        "maxDiscountAmount": {
+          "bsonType": [
+            "double",
+            "int",
+            "long",
+            "decimal",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "minOrderValue": {
+          "bsonType": [
+            "double",
+            "int",
+            "long",
+            "decimal"
+          ],
+          "minimum": 0
+        },
+        "quantity": {
+          "bsonType": "int",
+          "minimum": 0
+        },
+        "usedCount": {
+          "bsonType": "int",
+          "minimum": 0
+        },
+        "startDate": {
+          "bsonType": "date"
+        },
+        "endDate": {
+          "bsonType": "date"
+        },
+        "isActive": {
+          "bsonType": "bool"
+        },
+        "createdAt": {
+          "bsonType": "date"
+        },
+        "updatedAt": {
+          "bsonType": "date"
+        }
+      }
+    }
+  },
+  "Shipping": {
+    "$jsonSchema": {
+      "bsonType": "object",
+      "required": [
+        "shippingMethod",
+        "province",
+        "fee",
+        "estimatedDeliveryTime",
+        "isActive"
+      ],
+      "properties": {
+        "shippingMethod": {
+          "bsonType": "string",
+          "enum": [
+            "standard",
+            "express"
+          ]
+        },
+        "province": {
+          "bsonType": "string"
+        },
+        "fee": {
+          "bsonType": [
+            "double",
+            "int",
+            "long",
+            "decimal"
+          ],
+          "minimum": 0
+        },
+        "estimatedDeliveryTime": {
+          "bsonType": "string"
+        },
+        "isActive": {
+          "bsonType": "bool"
+        },
+        "createdAt": {
+          "bsonType": "date"
+        },
+        "updatedAt": {
+          "bsonType": "date"
+        }
+      }
+    }
+  }
+}

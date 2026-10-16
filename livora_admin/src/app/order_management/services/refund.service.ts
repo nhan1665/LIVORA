@@ -49,6 +49,47 @@ export class RefundService {
 
   constructor(private orderService: OrderService) {
     this.loadState();
+    this.syncFromBackend();
+  }
+
+  private syncFromBackend(): void {
+    if (typeof fetch !== 'undefined') {
+      fetch('http://localhost:5000/api/refunds?pageSize=50')
+        .then(res => res.json())
+        .then(json => {
+          if (json && json.success && Array.isArray(json.data) && json.data.length > 0) {
+            const backendRefunds: Refund[] = json.data.map((r: any) => ({
+              _id: r.id || r._id,
+              refundCode: r.orderCode ? `REF-${r.orderCode}` : `REF-${r.id.slice(-6)}`,
+              orderId: r.orderId,
+              orderCode: r.orderCode,
+              customerId: r.userId || 'guest',
+              customerName: r.customerName || 'Khách hàng',
+              contactPhone: r.customerPhone || '',
+              refundType: r.refundType || 'full',
+              refundAmount: r.amount || 0,
+              orderTotalAmount: r.amount || 0,
+              reason: r.reason || '',
+              refundMethod: 'Banking',
+              status: r.status || 'pending',
+              processedBy: r.processedBy || '',
+              rejectReason: r.rejectReason || '',
+              createdAt: r.createdAt,
+            }));
+
+            const map = new Map<string, Refund>();
+            backendRefunds.forEach(r => map.set(r._id, r));
+            this.refunds.forEach(r => {
+              if (!map.has(r._id)) map.set(r._id, r);
+            });
+            this.refunds = Array.from(map.values()).sort(
+              (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+            );
+            this.saveRefunds();
+          }
+        })
+        .catch(() => {});
+    }
   }
 
   private loadState(): void {
@@ -148,6 +189,15 @@ export class RefundService {
       this.orderService.updatePaymentStatus(refund.orderId, 'refunded');
 
       this.saveRefunds();
+
+      if (typeof fetch !== 'undefined') {
+        fetch(`http://localhost:5000/api/refunds/${refund._id}/status`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: 'completed', processedBy: request.staffName || 'Admin Kế toán' }),
+        }).catch(() => {});
+      }
+
       return {
         success: true,
         message: `Phê duyệt và thực hiện hoàn tiền ${refund.refundAmount.toLocaleString()}đ thành công. Đơn hàng đã được cập nhật sang trạng thái "Đã hoàn tiền".`,
@@ -163,6 +213,19 @@ export class RefundService {
       refund.processedBy = request.staffName || 'Admin Kế toán';
 
       this.saveRefunds();
+
+      if (typeof fetch !== 'undefined') {
+        fetch(`http://localhost:5000/api/refunds/${refund._id}/status`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            status: 'rejected',
+            rejectReason: request.rejectReason.trim(),
+            processedBy: request.staffName || 'Admin Kế toán',
+          }),
+        }).catch(() => {});
+      }
+
       return {
         success: true,
         message: 'Đã từ chối yêu cầu hoàn tiền thành công.',

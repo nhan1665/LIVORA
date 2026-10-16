@@ -42,32 +42,81 @@
     </div>
   </section>
 
-  <!-- ====== VALUES / FEATURES SECTION ====== -->
-  <section class="values-section">
-    <div class="values-container">
-      <div class="value-card">
-        <span class="value-number">01</span>
-        <h3 class="value-heading">Thủ công tinh tế</h3>
-        <p class="value-text">
-          Chất liệu được chọn lọc vì cách chúng trở nên đẹp hơn theo thời gian — gỗ sồi nguyên khối, đá travertine, đồng thau chải xước, len dệt tay.
+  <!-- ====== INSPIRATIONS SHOWCASE SECTION ====== -->
+  <section class="inspirations-home-section">
+    <div class="inspirations-home-container">
+      <div class="inspirations-home-header">
+        <span class="section-label">Ý TƯỞNG THIẾT KẾ</span>
+        <h2 class="inspirations-home-title">Cảm hứng không gian từ Livora</h2>
+        <p class="inspirations-home-subtitle">
+          Những cách bài trí nội thất đương đại được các chuyên gia kiến tạo, giúp bạn dễ dàng hình dung và mua sắm trọn vẹn cho ngôi nhà mơ ước.
         </p>
       </div>
-      <div class="value-card">
-        <span class="value-number">02</span>
-        <h3 class="value-heading">Phong cách Bắc Âu</h3>
-        <p class="value-text">
-          Đường nét gọn gàng và bảng màu nhẹ nhàng. Những căn phòng thoáng đãng mời gọi bạn nán lại thêm chút nữa.
-        </p>
+
+      <div class="inspirations-cards-grid">
+        <article *ngFor="let item of inspirations; let i = index" class="inspiration-card">
+          <div class="inspiration-image-wrapper">
+            <img [src]="item.thumbnail" [alt]="item.title" class="inspiration-img" loading="lazy" />
+            <div class="inspiration-badge-group">
+              <span class="inspiration-room-badge">{{ item.roomName }}</span>
+              <span class="inspiration-style-badge" *ngIf="item.style">{{ item.style }}</span>
+            </div>
+            <div class="inspiration-overlay">
+              <a routerLink="/inspiration" class="inspiration-overlay-btn">
+                <span>Khám phá không gian</span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M5 12h14M12 5l7 7-7 7"/>
+                </svg>
+              </a>
+            </div>
+          </div>
+
+          <div class="inspiration-card-body">
+            <div class="inspiration-meta">
+              <span class="inspiration-tag-count" *ngIf="item.taggedProducts.length">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+                  <line x1="3" y1="6" x2="21" y2="6"/>
+                  <path d="M16 10a4 4 0 0 1-8 0"/>
+                </svg>
+                {{ item.taggedProducts.length }} sản phẩm phối cảnh
+              </span>
+              <span class="inspiration-views" *ngIf="item.viewsCount">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                  <circle cx="12" cy="12" r="3"/>
+                </svg>
+                {{ item.viewsCount }} lượt xem
+              </span>
+
+            </div>
+
+            <h3 class="inspiration-title">
+              <a routerLink="/inspiration">{{ item.title }}</a>
+            </h3>
+
+            <p class="inspiration-excerpt">{{ item.content }}</p>
+
+            <a routerLink="/inspiration" class="inspiration-link">
+              <span>Xem chi tiết ý tưởng</span>
+              <span class="arrow">→</span>
+            </a>
+          </div>
+        </article>
       </div>
-      <div class="value-card">
-        <span class="value-number">03</span>
-        <h3 class="value-heading">Từ Cảm Hứng</h3>
-        <p class="value-text">
-          Phòng được thiết kế riêng, ý tưởng có thể mua sắm ngay, và đội ngũ dịch vụ giúp bạn biến tầm nhìn thành hiện thực.
-        </p>
+
+      <div class="inspirations-loadmore-wrap">
+        <a routerLink="/inspiration" class="btn-loadmore-inspirations">
+          <span>Xem tất cả cảm hứng không gian</span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+            <polyline points="12 5 19 12 12 19"></polyline>
+          </svg>
+        </a>
       </div>
     </div>
   </section>
+
 
   <!-- ====== PROMISE SECTION ====== -->
   <section class="promise-section">
