@@ -17,7 +17,7 @@ import { Voucher } from './settings/voucher/voucher';
 import { Shipping } from './settings/shipping/shipping';
 
 export const routes: Routes = [
-  // Auth
+  // Auth (Giữ nguyên màn đăng nhập)
   { path: 'login', component: Login, title: 'Đăng nhập - Livora Admin' },
 
   // Dashboard

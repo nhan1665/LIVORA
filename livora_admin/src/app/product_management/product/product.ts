@@ -29,15 +29,15 @@ export class Product implements OnInit {
   // State Signals
   readonly products = signal<ProductItem[]>([]);
   readonly loading = signal(true);
-  readonly totalItems = signal(348);
-  readonly totalPages = signal(35);
+  readonly totalItems = signal(0);
+  readonly totalPages = signal(1);
   readonly currentPage = signal(1);
 
   readonly metrics = signal<ProductSummaryMetrics>({
-    totalProducts: 348,
-    activeProducts: 312,
-    outOfStockProducts: 24,
-    has3DCount: 86,
+    totalProducts: 0,
+    activeProducts: 0,
+    outOfStockProducts: 0,
+    has3DCount: 0,
   });
 
   // Selected row IDs

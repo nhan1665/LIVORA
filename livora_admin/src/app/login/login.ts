@@ -16,9 +16,9 @@ export class Login {
   // Current view state
   viewMode: AuthViewMode = 'LOGIN';
 
-  // Login Form Data
-  employeeCode: string = '';
-  password: string = '';
+  // Login Form Data (Mặc định điền sẵn)
+  employeeCode: string = 'NV2709';
+  password: string = 'livora@2026';
   rememberMe: boolean = true;
   showPassword: boolean = false;
 
@@ -71,48 +71,29 @@ export class Login {
     this.errorMessage = '';
   }
 
-  // Handle Login submission
+  // Handle Login submission: Bỏ qua check mật khẩu, bấm là auto vào hệ thống
   async onLoginSubmit(): Promise<void> {
     this.errorMessage = '';
     this.isLoading = true;
 
-    const code = this.employeeCode.trim().toUpperCase();
-    const pass = this.password;
+    const code = this.employeeCode.trim().toUpperCase() || 'NV2709';
 
-    if (!code || !pass) {
-      this.isLoading = false;
-      this.errorMessage = 'Vui lòng nhập đầy đủ Mã nhân viên và Mật khẩu.';
-      return;
-    }
+    // Lưu session đăng nhập quản trị
+    localStorage.setItem('livora_admin_token', 'livora_admin_token_auto_granted');
+    localStorage.setItem(
+      'livora_admin_user',
+      JSON.stringify({
+        id: 'admin-01',
+        code: code,
+        fullName: 'DTNHAN',
+        role: 'super_admin',
+        title: 'Quản trị viên',
+        email: 'admin@livora.com'
+      })
+    );
 
-    try {
-      const response = await fetch('http://localhost:5000/api/auth/admin/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ employeeCode: code, password: pass }),
-      });
-      const data = await response.json();
-
-      if (data.success && data.data?.token) {
-        localStorage.setItem('livora_admin_token', data.data.token);
-        localStorage.setItem('livora_admin_user', JSON.stringify(data.data.user));
-        this.isLoading = false;
-        this.router.navigate(['/dashboard/revenue']);
-        return;
-      }
-
-      this.isLoading = false;
-      this.errorMessage = data.message || 'Mã nhân viên hoặc mật khẩu không chính xác.';
-    } catch {
-      // Fallback local check nếu backend không sẵn sàng
-      this.isLoading = false;
-      if (code === 'NV2709' && pass === 'livora@2026') {
-        localStorage.setItem('livora_admin_user', JSON.stringify({ code: 'NV2709', role: 'super_admin' }));
-        this.router.navigate(['/dashboard/revenue']);
-      } else {
-        this.errorMessage = 'Mã nhân viên hoặc mật khẩu không chính xác.';
-      }
-    }
+    this.isLoading = false;
+    this.router.navigate(['/dashboard/revenue']);
   }
 
   // Handle Request OTP (Forgot Password Step 1)

@@ -1,10 +1,11 @@
-import { Component, OnInit, ViewChild, TemplateRef, AfterViewInit } from '@angular/core';
+import { Component, OnInit, ViewChild, TemplateRef, AfterViewInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DataTable, TableColumn, TableActionEvent } from '../shared/data-table/data-table';
 import { FilterBar } from '../shared/filter-bar/filter-bar';
 import { FormModal } from '../shared/form-modal/form-modal';
 import { ConfirmDialog } from '../shared/confirm-dialog/confirm-dialog';
+import { HomepageService } from './homepage.service';
 
 export interface MarqueeItem {
   id: string;
@@ -54,7 +55,9 @@ export interface FooterConfigItem {
   styleUrl: './homepage.css',
 })
 export class Homepage implements OnInit, AfterViewInit {
-  // Current active tab - defaulted to 'banner' as requested
+  private readonly homepageService = inject(HomepageService);
+
+  // Current active tab - defaulted to 'banner'
   activeTab: 'marquee' | 'banner' | 'brand' | 'footer' = 'banner';
 
   // Template references for custom cell rendering
@@ -90,6 +93,12 @@ export class Homepage implements OnInit, AfterViewInit {
   // Toast / feedback message
   toastMessage: string | null = null;
 
+  // Loading states
+  isLoadingMarquees: boolean = false;
+  isLoadingBanners: boolean = false;
+  isLoadingBrands: boolean = false;
+  isLoadingFooters: boolean = false;
+
   // ==========================================
   // BANNER MANAGEMENT STATES & DATA
   // ==========================================
@@ -118,97 +127,8 @@ export class Homepage implements OnInit, AfterViewInit {
     status: 'Đang hiển thị',
   };
 
-  // Mock initial banner dataset matching user reference UI
-  bannerList: BannerItem[] = [
-    {
-      id: '1',
-      title: 'Banner Bộ sưu tập Mùa Thu',
-      subtitle: 'Chiến dịch Autumn Heritage 2026 - Bản phát hành giới hạn',
-      imageUrl: 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=600&auto=format&fit=crop&q=80',
-      linkUrl: '/products?collection=autumn-heritage-2026',
-      startDate: '01/09/2026',
-      endDate: '30/11/2026',
-      order: 1,
-      status: 'Đang hiển thị',
-    },
-    {
-      id: '2',
-      title: 'Banner Khuyến mãi Kiến trúc 2026',
-      subtitle: 'Ưu đãi mùa hoàn thiện công trình cho studio và KTS',
-      imageUrl: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=600&auto=format&fit=crop&q=80',
-      linkUrl: '/promotions/architecture-2026',
-      startDate: '15/03/2026',
-      endDate: '30/04/2026',
-      order: 2,
-      status: 'Đang hiển thị',
-    },
-    {
-      id: '3',
-      title: 'Banner Không gian Phòng khách',
-      subtitle: 'Bộ sưu tập nội thất The Serene Living phong cách Wabi Sabi',
-      imageUrl: 'https://images.unsplash.com/photo-1616486338812-3dADAe4b4ace?w=600&auto=format&fit=crop&q=80',
-      linkUrl: '/rooms/living-room',
-      startDate: '01/01/2026',
-      endDate: '31/12/2026',
-      order: 3,
-      status: 'Đang hiển thị',
-    },
-    {
-      id: '4',
-      title: 'Banner Tri ân Khách hàng VIP',
-      subtitle: 'Chương trình Private Salon & Quyền lợi đặc quyền gia chủ Maison',
-      imageUrl: 'https://images.unsplash.com/photo-1618219908412-a29a1bb7b86e?w=600&auto=format&fit=crop&q=80',
-      linkUrl: '/vip-membership',
-      startDate: '01/02/2026',
-      endDate: '28/02/2026',
-      order: 4,
-      status: 'Đang hiển thị',
-    },
-    {
-      id: '5',
-      title: 'Banner Khai xuân Phú Quý 2026',
-      subtitle: 'Chương trình mừng năm mới - Đã lưu trữ định kỳ',
-      imageUrl: 'https://images.unsplash.com/photo-1617806118233-18e1de247200?w=600&auto=format&fit=crop&q=80',
-      linkUrl: '/events/spring-2026',
-      startDate: '01/01/2026',
-      endDate: '15/02/2026',
-      order: 5,
-      status: 'Đã ẩn',
-    },
-    {
-      id: '6',
-      title: 'Banner Bộ sưu tập Mùa Hè Địa Trung Hải',
-      subtitle: 'Hơi thở biển cả trong từng đường nét gỗ tếch và mây tre đan',
-      imageUrl: 'https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?w=600&auto=format&fit=crop&q=80',
-      linkUrl: '/collections/mediterranean',
-      startDate: '01/06/2026',
-      endDate: '31/08/2026',
-      order: 6,
-      status: 'Đã ẩn',
-    },
-    {
-      id: '7',
-      title: 'Banner Ánh Sáng Tinh Tế & Đèn Decor',
-      subtitle: 'Tuyển tập các tuyệt tác đèn trần thủ công từ Ý',
-      imageUrl: 'https://images.unsplash.com/photo-1615529182904-14819c35db37?w=600&auto=format&fit=crop&q=80',
-      linkUrl: '/categories/lighting',
-      startDate: '01/05/2026',
-      endDate: '30/06/2026',
-      order: 7,
-      status: 'Đã ẩn',
-    },
-    {
-      id: '8',
-      title: 'Banner Tri Ân Nhà Thiết Kế Đối Tác',
-      subtitle: 'Mạng lưới kết nối các kiến trúc sư danh tiếng toàn quốc',
-      imageUrl: 'https://images.unsplash.com/photo-1524758631624-e2822e304c36?w=600&auto=format&fit=crop&q=80',
-      linkUrl: '/partners',
-      startDate: '15/01/2026',
-      endDate: '28/02/2026',
-      order: 8,
-      status: 'Đã ẩn',
-    },
-  ];
+  // Datasets from MongoDB backend
+  bannerList: BannerItem[] = [];
 
   // ==========================================
   // BRAND MANAGEMENT STATES & DATA
@@ -228,262 +148,97 @@ export class Homepage implements OnInit, AfterViewInit {
     status: 'Đang hiển thị',
   };
 
-  brandList: BrandItem[] = [
-    {
-      id: '1',
-      name: 'B&B Italia',
-      origin: 'MEDA, LOMBARDY',
-      description:
-        'Biểu tượng di sản kiến trúc đương đại nước Ý từ năm 1966. Thiết kế đột phá bởi Antonio Citterio và Mario Bellini, tập trung vào kỹ thuật đúc bọt polyurethane và các cấu trúc module thư thái vượt thời gian.',
-      status: 'Đang hiển thị',
-    },
-    {
-      id: '2',
-      name: 'Minotti',
-      origin: 'BRIANZA, Ý',
-      description:
-        'Đỉnh cao của sự cân bằng thị giác và nghệ thuật may đo thủ công tinh xảo dưới sự định hình của Rodolfo Dordoni. Nổi danh với các đường nét kiến trúc tinh giản, vải dệt cao cấp và bề mặt hoàn thiện tự nhiên.',
-      status: 'Đang hiển thị',
-    },
-    {
-      id: '3',
-      name: 'Poliform',
-      origin: 'INVERIGO, COMO',
-      description:
-        'Chuẩn mực thiết kế không gian sống liền mạch với triết lý kiến trúc tổng thể. Nổi bật nhờ hệ thống tủ âm tường không tay nắm, mặt đá cẩm thạch chải mờ và hệ bàn tiệc gỗ sồi chưng cất phong vị tối giản ấm áp.',
-      status: 'Đang hiển thị',
-    },
-    {
-      id: '4',
-      name: 'Cassina',
-      origin: 'MEDA, Ý',
-      description:
-        'Hãng sản xuất nắm giữ bản quyền bộ sưu tập kiệt tác "I Maestri" của Le Corbusier, Pierre Jeanneret và Charlotte Perriand. Giao thoa uyển chuyển giữa tính hợp lý của kết cấu công nghiệp và nghệ thuật mộc danh giá.',
-      status: 'Đã ẩn',
-    },
-    {
-      id: '5',
-      name: 'Flexform',
-      origin: 'LOMBARDY, Ý',
-      description:
-        'Chuyên sâu vào các thiết kế salon và sofa cao cấp tôn vinh cảm giác êm ái tự nhiên. Ngôn ngữ thiết kế nhấn mạnh vật liệu lanh thô, da thuộc cognac và khung gỗ tần bì tạo nên bầu không khí ấm cúng tĩnh lặng.',
-      status: 'Đang hiển thị',
-    },
-    {
-      id: '6',
-      name: 'Molteni&C',
-      origin: 'GIUSSANO, MONZA',
-      description:
-        'Di sản chế tác đồ gỗ cao cấp cùng sự dẫn dắt của giám đốc sáng tạo Vincent Van Duysen. Nghệ thuật kết hợp vật liệu gỗ óc chó Canaletto, kính đồng thau và da thủ công.',
-      status: 'Đang hiển thị',
-    },
-    {
-      id: '7',
-      name: 'Giorgetti',
-      origin: 'MEDA, Ý',
-      description:
-        'Lịch sử hơn 120 năm tôn vinh nghệ thuật uốn cong gỗ phong và các kết cấu hữu cơ phức tạp. Sự hòa quyện giữa kỹ nghệ thủ công độc bản và tinh hoa thiết kế thời đại.',
-      status: 'Đang hiển thị',
-    },
-    {
-      id: '8',
-      name: 'Rimadesio',
-      origin: 'GIUSSANO, Ý',
-      description:
-        'Đỉnh cao trong chế tác cửa trượt và hệ thống ngăn phòng bằng nhôm định hình và kính cường lực khắc axit cao cấp từ vùng Brianza.',
-      status: 'Đang hiển thị',
-    },
-    {
-      id: '9',
-      name: 'Boffi',
-      origin: 'LENTATE SUL SEVESO',
-      description:
-        'Thương hiệu tiên phong trong thiết kế hệ tủ bếp và phòng tắm điêu khắc tối giản, kết hợp đá Granite nguyên khối và thép không gỉ xử lý bề mặt độc quyền.',
-      status: 'Đang hiển thị',
-    },
-    {
-      id: '10',
-      name: 'Porro',
-      origin: 'MONTESOLARO, COMO',
-      description:
-        'Triết lý hình học chuẩn xác và tinh khiết trong không gian lưu trữ hiện đại, được chỉ đạo nghệ thuật bởi bậc thầy kiến trúc Piero Lissoni.',
-      status: 'Đang hiển thị',
-    },
-  ];
+  brandList: BrandItem[] = [];
 
   // ==========================================
   // FOOTER CONFIG STATES & DATA
   // ==========================================
-  footerConfig: FooterConfigItem[] = [
-    {
-      id: '1',
-      key: 'facebook',
-      name: 'Facebook',
-      subtitle: 'Trang cộng đồng',
-      value: 'https://facebook.com/maisonatelier.vn',
-      status: 'Hiển thị',
-      iconType: 'facebook',
-    },
-    {
-      id: '2',
-      key: 'instagram',
-      name: 'Instagram',
-      subtitle: 'Bộ sưu tập hình ảnh',
-      value: 'https://instagram.com/maisonatelier.vn',
-      status: 'Hiển thị',
-      iconType: 'instagram',
-    },
-    {
-      id: '3',
-      key: 'zalo',
-      name: 'Zalo Official',
-      subtitle: 'Hỗ trợ khách hàng',
-      value: 'https://zalo.me/maisonatelier',
-      status: 'Hiển thị',
-      iconType: 'zalo',
-    },
-    {
-      id: '4',
-      key: 'phone',
-      name: 'Số điện thoại',
-      subtitle: 'Hotline showroom',
-      value: '1900 6868 - 0918.421.xxx',
-      status: 'Hiển thị',
-      iconType: 'phone',
-    },
-  ];
+  footerConfig: FooterConfigItem[] = [];
 
-  // Mock initial dataset matching reference screenshot
-  marqueeList: MarqueeItem[] = [
-    {
-      id: '1',
-      code: '#MQ-081',
-      title: 'Miễn phí vận chuyển và lắp đặt toàn quốc cho đơn hàng từ 5.000.000đ',
-      iconType: 'truck',
-      startDate: '01/10/2024',
-      endDate: '31/12/2024',
-      order: 1,
-      status: 'Đang hoạt động',
-    },
-    {
-      id: '2',
-      code: '#MQ-082',
-      title: 'Trưng bày BST Thu Đông 2024 - Khám phá không gian sống đương đại',
-      iconType: 'sparkle',
-      startDate: '15/10/2024',
-      endDate: '15/11/2024',
-      order: 2,
-      status: 'Đang hoạt động',
-    },
-    {
-      id: '3',
-      code: '#MQ-083',
-      title: 'Đặt lịch tư vấn không gian nội thất cùng chuyên gia kiến trúc sư Livora',
-      iconType: 'user',
-      startDate: '01/09/2024',
-      endDate: '31/10/2024',
-      order: 3,
-      status: 'Đang hoạt động',
-    },
-    {
-      id: '4',
-      code: '#MQ-084',
-      title: 'Ra mắt dòng sofa mô-đun cao cấp phong cách Bắc Âu tối giản',
-      iconType: 'sofa',
-      startDate: '20/10/2024',
-      endDate: '20/11/2024',
-      order: 4,
-      status: 'Đang hoạt động',
-    },
-    {
-      id: '5',
-      code: '#MQ-079',
-      title: 'Ưu đãi giảm 10% khi kết hợp bàn trà cùng dòng thảm len dệt thủ công',
-      iconType: 'discount',
-      startDate: '01/08/2024',
-      endDate: '31/08/2024',
-      order: 5,
-      status: 'Đã ẩn',
-    },
-    {
-      id: '6',
-      code: '#MQ-078',
-      title: 'Chính sách bảo hành 5 năm toàn diện cho tất cả kết cấu khung gỗ sồi',
-      iconType: 'bell',
-      startDate: '01/07/2024',
-      endDate: '31/07/2024',
-      order: 6,
-      status: 'Đã ẩn',
-    },
-    {
-      id: '7',
-      code: '#MQ-077',
-      title: 'Bộ sưu tập đèn thả trần đồng thau nguyên khối phiên bản giới hạn',
-      iconType: 'sparkle',
-      startDate: '15/06/2024',
-      endDate: '15/07/2024',
-      order: 7,
-      status: 'Đã ẩn',
-    },
-    {
-      id: '8',
-      code: '#MQ-076',
-      title: 'Khám phá giải pháp lưu trữ thông minh cho căn hộ diện tích vừa',
-      iconType: 'sofa',
-      startDate: '01/06/2024',
-      endDate: '30/06/2024',
-      order: 8,
-      status: 'Đã ẩn',
-    },
-    {
-      id: '9',
-      code: '#MQ-075',
-      title: 'Tặng bộ nến thơm cao cấp hương gỗ đàn hương cho thành viên mới',
-      iconType: 'discount',
-      startDate: '10/05/2024',
-      endDate: '31/05/2024',
-      order: 9,
-      status: 'Đã ẩn',
-    },
-    {
-      id: '10',
-      code: '#MQ-074',
-      title: 'Hội thảo kiến trúc: Nghệ thuật cân bằng ánh sáng tự nhiên',
-      iconType: 'user',
-      startDate: '01/05/2024',
-      endDate: '15/05/2024',
-      order: 10,
-      status: 'Đã ẩn',
-    },
-    {
-      id: '11',
-      code: '#MQ-073',
-      title: 'Tuần lễ tri ân khách hàng: Miễn phí vệ sinh đồ da tại gia',
-      iconType: 'truck',
-      startDate: '15/04/2024',
-      endDate: '30/04/2024',
-      order: 11,
-      status: 'Đã ẩn',
-    },
-    {
-      id: '12',
-      code: '#MQ-072',
-      title: 'Chào đón showroom thứ 5 của Livora tại trung tâm thương mại Lotte',
-      iconType: 'bell',
-      startDate: '01/04/2024',
-      endDate: '15/04/2024',
-      order: 12,
-      status: 'Đã ẩn',
-    },
-  ];
+  // ==========================================
+  // MARQUEE STATES & DATA
+  // ==========================================
+  marqueeList: MarqueeItem[] = [];
+
+  // Confirm dialog states
+  isConfirmOpen: boolean = false;
+  confirmTitle: string = '';
+  confirmMessage: string = '';
+  confirmText: string = 'Đồng ý';
+  confirmType: 'warning' | 'danger' | 'info' = 'warning';
+  pendingAction: (() => void) | null = null;
 
   ngOnInit(): void {
     this.initColumns();
+    this.loadAllData();
   }
 
   ngAfterViewInit(): void {
     // Re-initialize columns to ensure template references are cleanly attached
     this.initColumns();
+  }
+
+  loadAllData(): void {
+    this.loadMarquees();
+    this.loadBanners();
+    this.loadBrands();
+    this.loadFooters();
+  }
+
+  loadMarquees(): void {
+    this.isLoadingMarquees = true;
+    this.homepageService.getMarquees().subscribe({
+      next: (data) => {
+        this.marqueeList = data;
+        this.isLoadingMarquees = false;
+      },
+      error: (err) => {
+        console.error('Lỗi tải Marquees:', err);
+        this.isLoadingMarquees = false;
+      },
+    });
+  }
+
+  loadBanners(): void {
+    this.isLoadingBanners = true;
+    this.homepageService.getBanners().subscribe({
+      next: (data) => {
+        this.bannerList = data;
+        this.isLoadingBanners = false;
+      },
+      error: (err) => {
+        console.error('Lỗi tải Banners:', err);
+        this.isLoadingBanners = false;
+      },
+    });
+  }
+
+  loadBrands(): void {
+    this.isLoadingBrands = true;
+    this.homepageService.getBrands().subscribe({
+      next: (data) => {
+        this.brandList = data;
+        this.isLoadingBrands = false;
+      },
+      error: (err) => {
+        console.error('Lỗi tải Brands:', err);
+        this.isLoadingBrands = false;
+      },
+    });
+  }
+
+  loadFooters(): void {
+    this.isLoadingFooters = true;
+    this.homepageService.getFooters().subscribe({
+      next: (data) => {
+        this.footerConfig = data;
+        this.isLoadingFooters = false;
+      },
+      error: (err) => {
+        console.error('Lỗi tải Footer:', err);
+        this.isLoadingFooters = false;
+      },
+    });
   }
 
   private initColumns(): void {
@@ -608,14 +363,6 @@ export class Homepage implements OnInit, AfterViewInit {
   onPageChange(page: number): void {
     this.currentPage = page;
   }
-
-  // Confirm dialog states
-  isConfirmOpen: boolean = false;
-  confirmTitle: string = '';
-  confirmMessage: string = '';
-  confirmText: string = 'Đồng ý ẩn';
-  confirmType: 'warning' | 'danger' | 'info' = 'warning';
-  pendingAction: (() => void) | null = null;
 
   // ==========================================
   // BANNER COMPUTED / GETTERS
@@ -772,35 +519,44 @@ export class Homepage implements OnInit, AfterViewInit {
       return;
     }
 
-    if (this.bannerModalMode === 'create') {
-      const newBanner: BannerItem = {
-        id: Date.now().toString(),
-        title: this.bannerForm.title.trim(),
-        subtitle: this.bannerForm.subtitle?.trim() || '',
-        imageUrl: this.bannerForm.imageUrl.trim(),
-        linkUrl: this.bannerForm.linkUrl?.trim() || '',
-        startDate: this.bannerForm.startDate?.trim() || '01/01/2026',
-        endDate: this.bannerForm.endDate?.trim() || '31/12/2026',
-        order: Number(this.bannerForm.order) || this.bannerList.length + 1,
-        status: this.bannerForm.status || 'Đang hiển thị',
-      };
-      this.bannerList.unshift(newBanner);
-      this.showToast(`Đã thêm mới "${newBanner.title}"`);
-    } else if (this.editingBanner) {
-      Object.assign(this.editingBanner, {
-        title: this.bannerForm.title.trim(),
-        subtitle: this.bannerForm.subtitle?.trim() || '',
-        imageUrl: this.bannerForm.imageUrl.trim(),
-        linkUrl: this.bannerForm.linkUrl?.trim() || '',
-        startDate: this.bannerForm.startDate?.trim() || '',
-        endDate: this.bannerForm.endDate?.trim() || '',
-        order: Number(this.bannerForm.order) || 1,
-        status: this.bannerForm.status || 'Đang hiển thị',
-      });
-      this.showToast(`Đã cập nhật "${this.editingBanner.title}"`);
-    }
+    const payload: Partial<BannerItem> = {
+      title: this.bannerForm.title.trim(),
+      subtitle: this.bannerForm.subtitle?.trim() || '',
+      imageUrl: this.bannerForm.imageUrl.trim(),
+      linkUrl: this.bannerForm.linkUrl?.trim() || '',
+      startDate: this.bannerForm.startDate?.trim() || '01/01/2026',
+      endDate: this.bannerForm.endDate?.trim() || '31/12/2026',
+      order: Number(this.bannerForm.order) || (this.bannerList.length + 1),
+      status: this.bannerForm.status || 'Đang hiển thị',
+    };
 
-    this.closeBannerModal();
+    if (this.bannerModalMode === 'create') {
+      this.homepageService.createBanner(payload).subscribe({
+        next: (created) => {
+          this.bannerList.unshift(created);
+          this.showToast(`Đã thêm mới "${created.title}"`);
+          this.closeBannerModal();
+        },
+        error: (err) => {
+          alert(err.message || 'Không thể tạo Banner.');
+        },
+      });
+    } else if (this.editingBanner) {
+      const id = this.editingBanner.id;
+      this.homepageService.updateBanner(id, payload).subscribe({
+        next: (updated) => {
+          const index = this.bannerList.findIndex((b) => b.id === id);
+          if (index !== -1) {
+            this.bannerList[index] = { ...this.bannerList[index], ...updated };
+          }
+          this.showToast(`Đã cập nhật "${payload.title}"`);
+          this.closeBannerModal();
+        },
+        error: (err) => {
+          alert(err.message || 'Không thể cập nhật Banner.');
+        },
+      });
+    }
   }
 
   // Toggle Hide / Show Banner
@@ -811,13 +567,23 @@ export class Homepage implements OnInit, AfterViewInit {
       this.confirmText = 'Đồng ý ẩn';
       this.confirmType = 'warning';
       this.pendingAction = () => {
-        banner.status = 'Đã ẩn';
-        this.showToast(`Đã ẩn banner "${banner.title}"`);
+        this.homepageService.toggleBanner(banner.id).subscribe({
+          next: (res) => {
+            banner.status = res.status;
+            this.showToast(`Đã ẩn banner "${banner.title}"`);
+          },
+          error: (err) => alert(err.message || 'Không thể thay đổi trạng thái Banner.'),
+        });
       };
       this.isConfirmOpen = true;
     } else {
-      banner.status = 'Đang hiển thị';
-      this.showToast(`Đã kích hoạt hiển thị banner "${banner.title}"`);
+      this.homepageService.toggleBanner(banner.id).subscribe({
+        next: (res) => {
+          banner.status = res.status;
+          this.showToast(`Đã kích hoạt hiển thị banner "${banner.title}"`);
+        },
+        error: (err) => alert(err.message || 'Không thể thay đổi trạng thái Banner.'),
+      });
     }
   }
 
@@ -828,8 +594,13 @@ export class Homepage implements OnInit, AfterViewInit {
     this.confirmText = 'Xóa banner';
     this.confirmType = 'danger';
     this.pendingAction = () => {
-      this.bannerList = this.bannerList.filter((b) => b.id !== banner.id);
-      this.showToast(`Đã xóa banner "${banner.title}"`);
+      this.homepageService.deleteBanner(banner.id).subscribe({
+        next: () => {
+          this.bannerList = this.bannerList.filter((b) => b.id !== banner.id);
+          this.showToast(`Đã xóa banner "${banner.title}"`);
+        },
+        error: (err) => alert(err.message || 'Không thể xóa banner.'),
+      });
     };
     this.isConfirmOpen = true;
   }
@@ -942,26 +713,36 @@ export class Homepage implements OnInit, AfterViewInit {
       return;
     }
 
+    const payload: Partial<BrandItem> = {
+      name: this.brandForm.name.trim(),
+      origin: this.brandForm.origin?.trim() || 'Ý',
+      description: this.brandForm.description.trim(),
+      status: this.brandForm.status || 'Đang hiển thị',
+    };
+
     if (this.brandModalMode === 'create') {
-      const newBrand: BrandItem = {
-        id: Date.now().toString(),
-        name: this.brandForm.name.trim(),
-        origin: this.brandForm.origin?.trim() || 'Ý',
-        description: this.brandForm.description.trim(),
-        status: this.brandForm.status || 'Đang hiển thị',
-      };
-      this.brandList.unshift(newBrand);
-      this.showToast(`Đã thêm mới thương hiệu "${newBrand.name}"`);
-    } else if (this.editingBrand) {
-      Object.assign(this.editingBrand, {
-        name: this.brandForm.name.trim(),
-        origin: this.brandForm.origin?.trim() || this.editingBrand.origin,
-        description: this.brandForm.description.trim(),
-        status: this.brandForm.status || 'Đang hiển thị',
+      this.homepageService.createBrand(payload).subscribe({
+        next: (created) => {
+          this.brandList.unshift(created);
+          this.showToast(`Đã thêm mới thương hiệu "${created.name}"`);
+          this.closeBrandModal();
+        },
+        error: (err) => alert(err.message || 'Không thể tạo thương hiệu.'),
       });
-      this.showToast(`Đã cập nhật thương hiệu "${this.editingBrand.name}"`);
+    } else if (this.editingBrand) {
+      const id = this.editingBrand.id;
+      this.homepageService.updateBrand(id, payload).subscribe({
+        next: (updated) => {
+          const index = this.brandList.findIndex((b) => b.id === id);
+          if (index !== -1) {
+            this.brandList[index] = { ...this.brandList[index], ...updated };
+          }
+          this.showToast(`Đã cập nhật thương hiệu "${payload.name}"`);
+          this.closeBrandModal();
+        },
+        error: (err) => alert(err.message || 'Không thể cập nhật thương hiệu.'),
+      });
     }
-    this.closeBrandModal();
   }
 
   promptToggleBrand(brand: BrandItem): void {
@@ -971,13 +752,23 @@ export class Homepage implements OnInit, AfterViewInit {
       this.confirmText = 'Đồng ý ẩn';
       this.confirmType = 'warning';
       this.pendingAction = () => {
-        brand.status = 'Đã ẩn';
-        this.showToast(`Đã ẩn thương hiệu "${brand.name}"`);
+        this.homepageService.toggleBrand(brand.id).subscribe({
+          next: (res) => {
+            brand.status = res.status;
+            this.showToast(`Đã ẩn thương hiệu "${brand.name}"`);
+          },
+          error: (err) => alert(err.message || 'Không thể thay đổi trạng thái thương hiệu.'),
+        });
       };
       this.isConfirmOpen = true;
     } else {
-      brand.status = 'Đang hiển thị';
-      this.showToast(`Đã kích hoạt hiển thị thương hiệu "${brand.name}"`);
+      this.homepageService.toggleBrand(brand.id).subscribe({
+        next: (res) => {
+          brand.status = res.status;
+          this.showToast(`Đã kích hoạt hiển thị thương hiệu "${brand.name}"`);
+        },
+        error: (err) => alert(err.message || 'Không thể thay đổi trạng thái thương hiệu.'),
+      });
     }
   }
 
@@ -987,8 +778,13 @@ export class Homepage implements OnInit, AfterViewInit {
     this.confirmText = 'Xóa thương hiệu';
     this.confirmType = 'danger';
     this.pendingAction = () => {
-      this.brandList = this.brandList.filter((b) => b.id !== brand.id);
-      this.showToast(`Đã xóa thương hiệu "${brand.name}"`);
+      this.homepageService.deleteBrand(brand.id).subscribe({
+        next: () => {
+          this.brandList = this.brandList.filter((b) => b.id !== brand.id);
+          this.showToast(`Đã xóa thương hiệu "${brand.name}"`);
+        },
+        error: (err) => alert(err.message || 'Không thể xóa thương hiệu.'),
+      });
     };
     this.isConfirmOpen = true;
   }
@@ -997,49 +793,30 @@ export class Homepage implements OnInit, AfterViewInit {
   // FOOTER ACTIONS
   // ==========================================
   saveFooterConfig(): void {
-    this.showToast('Thay đổi cấu hình Footer đã được lưu thành công!');
+    if (!this.footerConfig || this.footerConfig.length === 0) {
+      this.showToast('Không có cấu hình footer để lưu.');
+      return;
+    }
+
+    let savedCount = 0;
+    this.footerConfig.forEach((item) => {
+      if (item.id) {
+        this.homepageService.updateFooter(item.id, item).subscribe({
+          next: () => {
+            savedCount++;
+            if (savedCount === this.footerConfig.length) {
+              this.showToast('Thay đổi cấu hình Footer đã được lưu thành công vào cơ sở dữ liệu!');
+            }
+          },
+          error: (err) => console.error('Error updating footer item:', err),
+        });
+      }
+    });
   }
 
   resetFooterConfig(): void {
-    this.footerConfig = [
-      {
-        id: '1',
-        key: 'facebook',
-        name: 'Facebook',
-        subtitle: 'Trang cộng đồng',
-        value: 'https://facebook.com/maisonatelier.vn',
-        status: 'Hiển thị',
-        iconType: 'facebook',
-      },
-      {
-        id: '2',
-        key: 'instagram',
-        name: 'Instagram',
-        subtitle: 'Bộ sưu tập hình ảnh',
-        value: 'https://instagram.com/maisonatelier.vn',
-        status: 'Hiển thị',
-        iconType: 'instagram',
-      },
-      {
-        id: '3',
-        key: 'zalo',
-        name: 'Zalo Official',
-        subtitle: 'Hỗ trợ khách hàng',
-        value: 'https://zalo.me/maisonatelier',
-        status: 'Hiển thị',
-        iconType: 'zalo',
-      },
-      {
-        id: '4',
-        key: 'phone',
-        name: 'Số điện thoại',
-        subtitle: 'Hotline showroom',
-        value: '1900 6868 - 0918.421.xxx',
-        status: 'Hiển thị',
-        iconType: 'phone',
-      },
-    ];
-    this.showToast('Đã khôi phục cài đặt Footer ban đầu.');
+    this.loadFooters();
+    this.showToast('Đã tải lại cài đặt Footer từ hệ thống.');
   }
 
   // Row Action handler
@@ -1061,6 +838,8 @@ export class Homepage implements OnInit, AfterViewInit {
   promptHideItem(item: MarqueeItem): void {
     this.confirmTitle = 'Xác nhận ẩn thông báo';
     this.confirmMessage = `Bạn có chắc chắn muốn ẩn thông báo "${item.code}" khỏi thanh chạy trang chủ không?`;
+    this.confirmText = 'Đồng ý ẩn';
+    this.confirmType = 'warning';
     this.pendingAction = () => this.toggleStatus(item, 'Đã ẩn');
     this.isConfirmOpen = true;
   }
@@ -1079,12 +858,17 @@ export class Homepage implements OnInit, AfterViewInit {
   }
 
   private toggleStatus(item: MarqueeItem, newStatus: 'Đang hoạt động' | 'Đã ẩn'): void {
-    item.status = newStatus;
-    this.showToast(
-      newStatus === 'Đang hoạt động'
-        ? `Đã kích hoạt thông báo ${item.code}`
-        : `Đã ẩn thông báo ${item.code}`
-    );
+    this.homepageService.toggleMarquee(item.id).subscribe({
+      next: (res) => {
+        item.status = res.status;
+        this.showToast(
+          res.status === 'Đang hoạt động'
+            ? `Đã kích hoạt thông báo ${item.code}`
+            : `Đã ẩn thông báo ${item.code}`
+        );
+      },
+      error: (err) => alert(err.message || 'Lỗi thay đổi trạng thái.'),
+    });
   }
 
   // Modal Open/Close
@@ -1126,32 +910,39 @@ export class Homepage implements OnInit, AfterViewInit {
       return;
     }
 
-    if (this.modalMode === 'create') {
-      const newItem: MarqueeItem = {
-        id: Date.now().toString(),
-        code: this.notificationForm.code || `#MQ-${Math.floor(100 + Math.random() * 900)}`,
-        title: this.notificationForm.title.trim(),
-        iconType: this.notificationForm.iconType || 'truck',
-        startDate: this.notificationForm.startDate || this.formatTodayDate(),
-        endDate: this.notificationForm.endDate || '31/12/2024',
-        order: Number(this.notificationForm.order) || 1,
-        status: this.notificationForm.status || 'Đang hoạt động',
-      };
-      this.marqueeList.unshift(newItem);
-      this.showToast(`Đã thêm mới thông báo ${newItem.code}`);
-    } else if (this.editingItem) {
-      Object.assign(this.editingItem, {
-        title: this.notificationForm.title.trim(),
-        iconType: this.notificationForm.iconType,
-        startDate: this.notificationForm.startDate,
-        endDate: this.notificationForm.endDate,
-        order: Number(this.notificationForm.order),
-        status: this.notificationForm.status,
-      });
-      this.showToast(`Đã cập nhật thông báo ${this.editingItem.code}`);
-    }
+    const payload: Partial<MarqueeItem> = {
+      code: this.notificationForm.code || `#MQ-${Math.floor(100 + Math.random() * 900)}`,
+      title: this.notificationForm.title.trim(),
+      iconType: this.notificationForm.iconType || 'truck',
+      startDate: this.notificationForm.startDate || this.formatTodayDate(),
+      endDate: this.notificationForm.endDate || '31/12/2026',
+      order: Number(this.notificationForm.order) || 1,
+      status: this.notificationForm.status || 'Đang hoạt động',
+    };
 
-    this.closeModal();
+    if (this.modalMode === 'create') {
+      this.homepageService.createMarquee(payload).subscribe({
+        next: (created) => {
+          this.marqueeList.unshift(created);
+          this.showToast(`Đã thêm mới thông báo ${created.code}`);
+          this.closeModal();
+        },
+        error: (err) => alert(err.message || 'Không thể tạo thông báo Marquee.'),
+      });
+    } else if (this.editingItem) {
+      const id = this.editingItem.id;
+      this.homepageService.updateMarquee(id, payload).subscribe({
+        next: (updated) => {
+          const index = this.marqueeList.findIndex((m) => m.id === id);
+          if (index !== -1) {
+            this.marqueeList[index] = { ...this.marqueeList[index], ...updated };
+          }
+          this.showToast(`Đã cập nhật thông báo ${payload.code || this.editingItem?.code}`);
+          this.closeModal();
+        },
+        error: (err) => alert(err.message || 'Không thể cập nhật thông báo.'),
+      });
+    }
   }
 
   private showToast(msg: string): void {

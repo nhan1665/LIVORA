@@ -19,6 +19,7 @@ export class Space {
   private readonly destroyRef = inject(DestroyRef);
   private readonly cdr = inject(ChangeDetectorRef);
   readonly rooms = signal<RoomRecord[]>([]);
+  readonly allSpaces = signal<SpaceRecord[]>([]);
   readonly spaces = signal<SpaceRecord[]>([]);
   readonly designs = signal<DesignRecord[]>([]);
   readonly loading = signal(true);
@@ -49,7 +50,7 @@ export class Space {
 
   constructor() {
     this.roomsService.listRooms({search: '', status: 'all', page: 1, pageSize: 100}).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({next: (result) => this.rooms.set(result.items), error: () => this.error.set('Không tải được danh sách phòng.')});
-    this.service.list('', '', 'all', 1, 100).pipe(takeUntilDestroyed(this.destroyRef)).subscribe((result) => this.spaceCount.set(result.total));
+    this.service.list('', '', 'all', 1, 100).pipe(takeUntilDestroyed(this.destroyRef)).subscribe((result) => { this.spaceCount.set(result.total); this.allSpaces.set(result.items); });
     this.designsService.list('', '', '', 1, 100).pipe(takeUntilDestroyed(this.destroyRef)).subscribe((result) => this.designCount.set(result.total));
     this.load();
   }
@@ -67,10 +68,10 @@ export class Space {
   changePage(page: number): void { if (page >= 1 && page <= this.pages()) { this.page.set(page); this.load(); } }
   roomName(id: string): string { return this.rooms().find((room) => room.id === id)?.name ?? (this.rooms().length ? 'Phòng không còn tồn tại' : 'Đang tải phòng…'); }
   roomImage(id: string): string { return this.rooms().find((room) => room.id === id)?.thumbnail ?? ''; }
-  spaceName(id: string): string { return this.service.get(id)?.name ?? 'Không gian không còn tồn tại'; }
-  spaceCode(id: string): string { return this.service.get(id)?.code ?? '—'; }
-  spacesForFilter(): SpaceRecord[] { return this.spaceFilter ? [this.service.get(this.spaceFilter)].filter((item): item is SpaceRecord => !!item) : this.allSpaceOptions(); }
-  allSpaceOptions(): SpaceRecord[] { return ['space-liv-1','space-liv-2','space-bed-1','space-din-1','space-wrk-1','space-out-1','space-liv-3'].map((id) => this.service.get(id)).filter((item): item is SpaceRecord => !!item); }
+  spaceName(id: string): string { return this.allSpaces().find((s) => s.id === id)?.name ?? this.spaces().find((s) => s.id === id)?.name ?? 'Không gian không còn tồn tại'; }
+  spaceCode(id: string): string { return this.allSpaces().find((s) => s.id === id)?.code ?? this.spaces().find((s) => s.id === id)?.code ?? '—'; }
+  spacesForFilter(): SpaceRecord[] { return this.spaceFilter ? this.allSpaces().filter((item) => item.id === this.spaceFilter) : this.allSpaces(); }
+  allSpaceOptions(): SpaceRecord[] { return this.allSpaces().length ? this.allSpaces() : this.spaces(); }
   customers() { return this.designsService.customers(); }
   area(item: SpaceRecord | SpaceDraft): string { return (item.lengthM * item.widthM).toFixed(1); }
   volume(): string { return (this.form.lengthM * this.form.widthM * this.form.heightM).toFixed(1); }
