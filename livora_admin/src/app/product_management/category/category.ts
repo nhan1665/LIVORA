@@ -26,11 +26,11 @@ export class Category implements OnInit {
   // State Signals
   readonly categories = signal<ProductCategory[]>([]);
   readonly loading = signal(true);
-  readonly totalItems = signal(14);
-  readonly totalPages = signal(2);
+  readonly totalItems = signal(0);
+  readonly totalPages = signal(1);
   readonly currentPage = signal(1);
-  readonly activeCount = signal(12);
-  readonly inactiveCount = signal(2);
+  readonly activeCount = signal(0);
+  readonly inactiveCount = signal(0);
 
   // Selected Row IDs
   readonly selectedIds = signal<Set<string>>(new Set<string>());

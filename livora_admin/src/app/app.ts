@@ -13,7 +13,7 @@ import { Sidebar } from './sidebar/sidebar';
 export class App {
   private router = inject(Router);
   protected readonly title = signal('livora_admin');
-  isLoginPage = signal<boolean>(true);
+  isLoginPage = signal<boolean>(false);
   currentPageTitle = signal<string>('Báo cáo doanh thu');
 
   private readonly routeTitles: Record<string, string> = {

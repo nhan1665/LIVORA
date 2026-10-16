@@ -28,15 +28,15 @@ export class Customer implements OnInit {
   readonly customers = signal<CustomerRecord[]>([]);
   readonly loading = signal(true);
   readonly loadError = signal('');
-  readonly totalItems = signal(125);
-  readonly totalPages = signal(13);
+  readonly totalItems = signal(0);
+  readonly totalPages = signal(1);
   readonly currentPage = signal(1);
 
   readonly summary = signal<CustomerListSummary>({
-    totalCustomers: 125,
-    registeredCustomers: 94,
-    guestCustomers: 31,
-    activeThisMonth: 118,
+    totalCustomers: 0,
+    registeredCustomers: 0,
+    guestCustomers: 0,
+    activeThisMonth: 0,
   });
 
   // Filter drafts and active filters

@@ -1,7 +1,9 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { HttpClient } from '@angular/common/http';
 import { InspirationService, InspirationItem } from '../../services/inspiration.service';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-home',
@@ -12,6 +14,7 @@ import { InspirationService, InspirationItem } from '../../services/inspiration.
 })
 export class Home implements OnInit {
   private readonly inspirationService = inject(InspirationService);
+  private readonly http = inject(HttpClient);
 
   banners = [
     'intro.1.jpg',
@@ -27,7 +30,24 @@ export class Home implements OnInit {
   isLoadingInspirations = true;
 
   ngOnInit(): void {
+    this.loadBanners();
     this.loadInspirations();
+  }
+
+  loadBanners(): void {
+    this.http.get<any>(`${environment.apiBaseUrl}/homepage/banners`).subscribe({
+      next: (res) => {
+        const active = (res.data || [])
+          .filter((b: any) => b.status === 'Đang hiển thị' && b.imageUrl)
+          .map((b: any) => b.imageUrl);
+        if (active.length > 0) {
+          this.banners = active;
+        }
+      },
+      error: (err) => {
+        console.log('Using default banners:', err);
+      },
+    });
   }
 
   loadInspirations(): void {
@@ -92,4 +112,3 @@ export class Home implements OnInit {
     this.activeBannerIndex = index;
   }
 }
-

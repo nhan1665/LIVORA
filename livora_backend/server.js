@@ -1,5 +1,6 @@
 require('dotenv').config();
 const express = require('express');
+const mongoose = require('mongoose');
 const morgan = require('morgan');
 const connectDB = require('./src/config/db');
 const configureCors = require('./src/config/cors');
@@ -31,6 +32,7 @@ const shippingRoutes = require('./src/routes/shippingRoutes');
 const refundRoutes = require('./src/routes/refundRoutes');
 const voucherRoutes = require('./src/routes/voucherRoutes');
 const dashboardRoutes = require('./src/routes/dashboardRoutes');
+const homepageRoutes = require('./src/routes/homepageRoutes');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/categories', categoryRoutes);
@@ -46,21 +48,25 @@ app.use('/api/shipping', shippingRoutes);
 app.use('/api/refunds', refundRoutes);
 app.use('/api/vouchers', voucherRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/homepage', homepageRoutes);
 
-// Inspect Atlas Collection Validators
+// Inspect Atlas Collection Names and Validators
 app.get('/api/inspect-schema', async (req, res) => {
-
-
   try {
     const db = mongoose.connection.db;
     const collections = await db.listCollections().toArray();
-    const validators = {};
+    const result = [];
     for (const c of collections) {
-      if (c.options && c.options.validator) {
-        validators[c.name] = c.options.validator;
-      }
+      const count = await db.collection(c.name).countDocuments();
+      const sample = await db.collection(c.name).findOne({});
+      result.push({
+        name: c.name,
+        count,
+        sample,
+        validator: c.options?.validator || null,
+      });
     }
-    res.json({ success: true, validators });
+    res.json({ success: true, count: result.length, collections: result });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
@@ -96,9 +102,6 @@ app.get('/api/seed', async (req, res) => {
     res.status(500).json({ success: false, message: err.message, stack: err.stack });
   }
 });
-
-
-const mongoose = require('mongoose');
 
 // Health Check API with MongoDB connection status
 app.get('/api/health', (req, res) => {
@@ -140,36 +143,18 @@ app.use((err, req, res, next) => {
 const fs = require('fs');
 const seedInitialData = require('./src/config/seed');
 
-// Start Server & Connect Database
 const startServer = async () => {
   try {
-    // Connect to MongoDB Atlas
-    const conn = await connectDB();
-    if (conn) {
-      try {
-        const collections = await mongoose.connection.db.listCollections().toArray();
-        const validators = {};
-        for (const c of collections) {
-          if (c.options && c.options.validator) {
-            validators[c.name] = c.options.validator;
-          }
-        }
-        fs.writeFileSync('./atlas_validators.json', JSON.stringify(validators, null, 2));
-      } catch (e) {
-        console.warn('Không thể đọc collection validator:', e.message);
-      }
-
-      try {
-        await seedInitialData();
-      } catch (err) {
-        console.warn('⚠️ Bỏ qua seed data tự động do validator:', err.message);
-      }
-    }
-
     app.listen(PORT, () => {
       console.log(`\n🚀 LIVORA Backend Server đang chạy tại: http://localhost:${PORT}`);
       console.log(`🏥 Health Check: http://localhost:${PORT}/api/health\n`);
     });
+
+    // Connect to MongoDB Atlas
+    const conn = await connectDB();
+    if (conn) {
+      console.log('MongoDB connected successfully');
+    }
   } catch (err) {
     console.error('Lỗi khi khởi động server:', err);
   }
