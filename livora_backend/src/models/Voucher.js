@@ -68,9 +68,8 @@ const voucherSchema = new mongoose.Schema(
   }
 );
 
-// Index for fast code lookups
-voucherSchema.index({ code: 1 }, { unique: true });
 // Index for filtering by status + time range
 voucherSchema.index({ isActive: 1, startDate: 1, endDate: 1 });
 
 module.exports = mongoose.model('Voucher', voucherSchema, 'Vouchers');
+

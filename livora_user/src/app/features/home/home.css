@@ -198,65 +198,316 @@
 }
 
 /* =============================================
-   VALUES / FEATURES SECTION
+   INSPIRATIONS SHOWCASE SECTION
    ============================================= */
-.values-section {
+.inspirations-home-section {
   background-color: #f7f4f0;
-  padding: 80px 20px;
+  padding: 90px 20px 100px;
 }
 
-.values-container {
-  max-width: 1100px;
+.inspirations-home-container {
+  max-width: 1200px;
   margin: 0 auto;
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 50px 70px;
 }
 
-.value-card {
+.inspirations-home-header {
+  text-align: center;
+  max-width: 680px;
+  margin: 0 auto 50px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  padding: 20px 0 10px;
-  position: relative;
+  align-items: center;
+  gap: 14px;
 }
 
-.value-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 36px;
-  height: 1px;
-  background-color: #c9a84c;
-}
-
-.value-number {
-  font-family: 'Inter', sans-serif;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 2px;
-  color: #c9a84c;
-  margin-top: 6px;
-}
-
-.value-heading {
+.inspirations-home-title {
   font-family: 'Playfair Display', serif;
-  font-size: 1.25rem;
+  font-size: clamp(2rem, 3.6vw, 2.75rem);
   font-weight: 400;
   color: #1a1510;
   margin: 0;
-  line-height: 1.3;
+  line-height: 1.25;
 }
 
-.value-text {
+.inspirations-home-subtitle {
   font-family: 'Inter', sans-serif;
-  font-size: 14px;
-  line-height: 1.8;
+  font-size: 15px;
+  line-height: 1.75;
   color: #666;
   margin: 0;
   font-weight: 300;
 }
+
+/* 3-card Grid */
+.inspirations-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 32px;
+  margin-bottom: 50px;
+}
+
+.inspiration-card {
+  background: #ffffff;
+  border-radius: 6px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 4px 16px rgba(26, 21, 16, 0.04);
+  border: 1px solid rgba(201, 168, 76, 0.12);
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.inspiration-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 16px 36px rgba(26, 21, 16, 0.1);
+  border-color: rgba(201, 168, 76, 0.35);
+}
+
+/* Image wrapper */
+.inspiration-image-wrapper {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 10.5;
+  overflow: hidden;
+  background-color: #eae5de;
+}
+
+.inspiration-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.inspiration-card:hover .inspiration-img {
+  transform: scale(1.06);
+}
+
+/* Badges */
+.inspiration-badge-group {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  display: flex;
+  gap: 8px;
+  z-index: 2;
+  flex-wrap: wrap;
+}
+
+.inspiration-room-badge {
+  background: rgba(26, 21, 16, 0.75);
+  backdrop-filter: blur(6px);
+  color: #ffffff;
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  padding: 5px 12px;
+  border-radius: 30px;
+}
+
+.inspiration-style-badge {
+  background: rgba(201, 168, 76, 0.9);
+  color: #1a1510;
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  padding: 5px 12px;
+  border-radius: 30px;
+}
+
+/* Hover overlay */
+.inspiration-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(26, 21, 16, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 3;
+}
+
+.inspiration-card:hover .inspiration-overlay {
+  opacity: 1;
+}
+
+.inspiration-overlay-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #ffffff;
+  color: #1a1510;
+  font-family: 'Inter', sans-serif;
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  padding: 10px 18px;
+  border-radius: 4px;
+  text-decoration: none;
+  transform: translateY(10px);
+  transition: all 0.3s ease;
+}
+
+.inspiration-card:hover .inspiration-overlay-btn {
+  transform: translateY(0);
+}
+
+.inspiration-overlay-btn:hover {
+  background: #c9a84c;
+  color: #1a1510;
+}
+
+/* Card Body */
+.inspiration-card-body {
+  padding: 24px 24px 22px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.inspiration-meta {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  color: #8c827a;
+  margin-bottom: 12px;
+}
+
+.inspiration-meta svg {
+  vertical-align: -2px;
+  margin-right: 4px;
+  stroke: #c9a84c;
+}
+
+.inspiration-tag-count,
+.inspiration-views {
+  display: inline-flex;
+  align-items: center;
+}
+
+.inspiration-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.25rem;
+  font-weight: 500;
+  line-height: 1.4;
+  margin: 0 0 10px;
+}
+
+.inspiration-title a {
+  color: #1a1510;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.inspiration-title a:hover {
+  color: #c9a84c;
+}
+
+.inspiration-excerpt {
+  font-family: 'Inter', sans-serif;
+  font-size: 13.5px;
+  line-height: 1.7;
+  color: #666;
+  margin: 0 0 20px;
+  font-weight: 300;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  flex: 1;
+}
+
+.inspiration-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: #c9a84c;
+  text-decoration: none;
+  letter-spacing: 0.3px;
+  transition: gap 0.25s ease;
+  margin-top: auto;
+}
+
+.inspiration-link .arrow {
+  transition: transform 0.25s ease;
+}
+
+.inspiration-link:hover {
+  color: #1a1510;
+}
+
+.inspiration-link:hover .arrow {
+  transform: translateX(4px);
+}
+
+/* Load More Button Wrapper */
+.inspirations-loadmore-wrap {
+  text-align: center;
+  margin-top: 10px;
+}
+
+.btn-loadmore-inspirations {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 15px 36px;
+  background-color: #1a1510;
+  color: #ffffff;
+  font-family: 'Inter', sans-serif;
+  font-size: 13.5px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  text-decoration: none;
+  border-radius: 3px;
+  border: 1px solid #1a1510;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 6px 18px rgba(26, 21, 16, 0.15);
+}
+
+.btn-loadmore-inspirations svg {
+  transition: transform 0.3s ease;
+}
+
+.btn-loadmore-inspirations:hover {
+  background-color: #c9a84c;
+  border-color: #c9a84c;
+  color: #1a1510;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px rgba(201, 168, 76, 0.3);
+}
+
+.btn-loadmore-inspirations:hover svg {
+  transform: translateX(4px);
+  stroke: #1a1510;
+}
+
+@media (max-width: 992px) {
+  .inspirations-cards-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+  }
+}
+
+@media (max-width: 640px) {
+  .inspirations-cards-grid {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+  .inspirations-home-section {
+    padding: 60px 16px 70px;
+  }
+}
+
 
 /* =============================================
    PROMISE SECTION

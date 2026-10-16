@@ -285,6 +285,66 @@ export class OrderService {
 
   constructor() {
     this.loadState();
+    this.syncFromBackend();
+  }
+
+  private syncFromBackend(): void {
+    if (typeof fetch !== 'undefined') {
+      fetch('http://localhost:5000/api/orders?pageSize=50')
+        .then(res => res.json())
+        .then(json => {
+          if (json && json.success && Array.isArray(json.data) && json.data.length > 0) {
+            const backendOrders: Order[] = json.data.map((o: any) => ({
+              _id: o.id || o._id,
+              orderCode: o.orderCode,
+              customerId: o.userId || 'guest',
+              customerInfo: o.customerInfo || { name: '', phone: '', address: '' },
+              items: (o.items || []).map((it: any) => ({
+                productId: it.productId,
+                productName: it.productName || it.name,
+                sku: it.sku || '',
+                thumbnail: it.thumbnail || '',
+                color: it.color || '',
+                price: it.price || 0,
+                quantity: it.quantity || 1,
+                subtotal: it.subtotal || ((it.price || 0) * (it.quantity || 1)),
+              })),
+              voucherCode: o.voucherCode || '',
+              subtotalAmount: o.subtotalAmount || 0,
+              discountAmount: o.discountAmount || 0,
+              shippingFee: o.shippingFee || 0,
+              totalAmount: o.finalAmount || 0,
+              paymentMethod: o.paymentMethod || 'COD',
+              paymentStatus: o.paymentStatus || 'unpaid',
+              orderStatus: o.orderStatus || 'pending',
+              notes: o.note || '',
+              cancelReason: o.cancelReason || '',
+              history: (o.statusHistory || []).map((h: any) => ({
+                status: h.status,
+                timestamp: h.timestamp,
+                note: h.note,
+                updatedBy: h.actor || 'Hệ thống',
+              })),
+              createdAt: o.createdAt,
+              updatedAt: o.updatedAt,
+            }));
+
+            // Merge with local orders, prioritizing backend
+            const map = new Map<string, Order>();
+            backendOrders.forEach(o => map.set(o.orderCode, o));
+            this.orders.forEach(o => {
+              if (!map.has(o.orderCode)) map.set(o.orderCode, o);
+            });
+            this.orders = Array.from(map.values()).sort(
+              (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+            );
+            this.saveOrders();
+          }
+        })
+        .catch(() => {
+          // Fallback to local storage if backend not reachable
+        });
+    }
   }
 
   private loadState(): void {
@@ -441,6 +501,16 @@ export class OrderService {
     }
 
     this.saveOrders();
+
+    // Sync status change to backend
+    if (typeof fetch !== 'undefined') {
+      fetch(`http://localhost:5000/api/orders/${order._id}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: targetStatus, note, actor: 'Admin Operator' }),
+      }).catch(() => {});
+    }
+
     return { success: true, message: 'Cập nhật trạng thái đơn hàng thành công.', order };
   }
 
@@ -482,6 +552,16 @@ export class OrderService {
     });
 
     this.saveOrders();
+
+    // Sync cancellation to backend
+    if (typeof fetch !== 'undefined') {
+      fetch(`http://localhost:5000/api/orders/${order._id}/cancel`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reason: reason.trim(), actor: 'Admin Operator' }),
+      }).catch(() => {});
+    }
+
     return { success: true, message: 'Hủy đơn hàng thành công. Tồn kho đã được hoàn trả.', order };
   }
 

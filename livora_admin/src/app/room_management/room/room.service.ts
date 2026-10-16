@@ -1,169 +1,69 @@
 import { Injectable, inject } from '@angular/core';
-import { BehaviorSubject, defer, delay, map, Observable, of } from 'rxjs';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { Observable, throwError } from 'rxjs';
+import { map, catchError } from 'rxjs/operators';
 import {
   Room,
-  RoomConflictError,
   RoomDraft,
-  RoomInUseError,
   RoomListQuery,
   RoomListResponse,
 } from './room.model';
-import { RoomUsageService } from './room-usage.service';
+import { environment } from '../../../environments/environment';
 
-interface RoomFixture extends Room {
-  /** Demo-only relationship snapshot. It is not part of the Room API/schema. */
-  references: string[];
-}
-
-/**
- * Session-only mock implementation. Replace this provider with an API-backed
- * implementation after the Room code/slug and endpoint contracts are approved.
- */
 @Injectable({ providedIn: 'root' })
 export class RoomService {
-  private readonly usage = inject(RoomUsageService);
-  private readonly fixtures = new BehaviorSubject<RoomFixture[]>([
-    {
-      id: 'room-liv-01', code: 'RM-LIV-01', name: 'Phòng khách Master',
-      description: 'Không gian tiếp khách chủ đạo', thumbnail: '/images/rooms/living-room.png',
-      isActive: true, displayOrder: 1, references: ['Products', 'Inspirations'],
-    },
-    {
-      id: 'room-bed-02', code: 'RM-BED-02', name: 'Phòng ngủ Suite',
-      description: 'Phòng nghỉ thư giãn', thumbnail: '/images/rooms/bedroom.png',
-      isActive: true, displayOrder: 2, references: ['Products'],
-    },
-    {
-      id: 'room-din-03', code: 'RM-DIN-03', name: 'Phòng ăn & Bếp đảo',
-      description: 'Không gian ẩm thực ấm cúng', thumbnail: '/images/rooms/dining-room.png',
-      isActive: true, displayOrder: 3, references: ['Products'],
-    },
-    {
-      id: 'room-wrk-04', code: 'RM-WRK-04', name: 'Phòng làm việc & Thư viện',
-      description: 'Không gian làm việc yên tĩnh', thumbnail: '/images/rooms/living-room.png',
-      isActive: true, displayOrder: 4, references: [],
-    },
-    {
-      id: 'room-out-05', code: 'RM-OUT-05', name: 'Ban công & Sky Lounge',
-      description: 'Không gian thư giãn ngoài trời', thumbnail: '/images/rooms/kitchen.png',
-      isActive: true, displayOrder: 5, references: [],
-    },
-    {
-      id: 'room-bth-06', code: 'RM-BTH-06', name: 'Phòng tắm Spa Sanctuary',
-      description: 'Phòng chăm sóc cá nhân', thumbnail: '/images/rooms/bathroom.jpg',
-      isActive: false, displayOrder: 6, references: ['Products'],
-    },
-    {
-      id: 'room-ent-07', code: 'RM-ENT-07', name: 'Sảnh đón & Tiền sảnh',
-      description: 'Khu vực sảnh đón tiếp', thumbnail: '/images/rooms/living-room.png',
-      isActive: true, displayOrder: 7, references: ['Inspirations'],
-    },
-    {
-      id: 'room-kit-08', code: 'RM-KIT-08', name: 'Phòng bếp hiện đại',
-      description: 'Khu vực chuẩn bị và dùng bữa', thumbnail: '/images/rooms/kitchen.png',
-      isActive: true, displayOrder: 8, references: ['Products'],
-    },
-  ]);
-  private nextId = 9;
-  private readonly responseDelayMs = 180;
+  private readonly http = inject(HttpClient);
+  private readonly apiUrl = `${environment.apiBaseUrl}/rooms`;
 
   listRooms(query: RoomListQuery): Observable<RoomListResponse> {
-    return this.fixtures.pipe(
-      map((fixtures) => {
-        const normalizedSearch = query.search.trim().toLocaleLowerCase();
-        const filtered = fixtures
-          .filter((room) => query.status === 'all'
-            || (query.status === 'active' ? room.isActive : !room.isActive))
-          .filter((room) => !normalizedSearch
-            || room.code.toLocaleLowerCase().includes(normalizedSearch)
-            || room.name.toLocaleLowerCase().includes(normalizedSearch));
-        const pageSize = Math.max(1, query.pageSize);
-        const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
-        const page = Math.min(Math.max(1, query.page), totalPages);
-        const offset = (page - 1) * pageSize;
+    let params = new HttpParams()
+      .set('page', query.page.toString())
+      .set('pageSize', query.pageSize.toString());
 
-        return {
-          items: filtered.slice(offset, offset + pageSize).map(({ references: _references, ...room }) => room),
-          page,
-          pageSize,
-          totalItems: filtered.length,
-          totalPages,
-        };
-      }),
-      delay(this.responseDelayMs),
+    if (query.search) {
+      params = params.set('search', query.search);
+    }
+    if (query.status && query.status !== 'all') {
+      params = params.set('status', query.status);
+    }
+
+    return this.http.get<any>(this.apiUrl, { params }).pipe(
+      map((res) => ({
+        items: res.data as Room[],
+        page: res.pagination.page,
+        pageSize: res.pagination.pageSize,
+        totalItems: res.pagination.totalItems,
+        totalPages: res.pagination.totalPages,
+      })),
+      catchError((err) => throwError(() => new Error(err.error?.message || 'Không thể tải danh sách phòng.')))
     );
   }
 
   getRoom(id: string): Observable<Room> {
-    return defer(() => {
-      const room = this.fixtures.value.find((candidate) => candidate.id === id);
-      if (!room) throw new Error('Không tìm thấy phòng.');
-      const { references: _references, ...result } = room;
-      return of(result);
-    }).pipe(delay(this.responseDelayMs));
+    return this.http.get<any>(`${this.apiUrl}/${id}`).pipe(
+      map((res) => res.data as Room),
+      catchError((err) => throwError(() => new Error(err.error?.message || 'Không tìm thấy phòng.')))
+    );
   }
 
   createRoom(draft: RoomDraft): Observable<Room> {
-    return defer(() => {
-      this.assertUniqueCode(draft.code);
-      const sequence = this.nextId++;
-      const room: RoomFixture = {
-        ...draft,
-        id: `room-${sequence}`,
-        code: draft.code.trim().toUpperCase(),
-        name: draft.name.trim(),
-        description: draft.description.trim(),
-        displayOrder: sequence,
-        references: [],
-      };
-      this.fixtures.next([...this.fixtures.value, room]);
-      const { references: _references, ...result } = room;
-      return of(result);
-    }).pipe(delay(this.responseDelayMs));
+    return this.http.post<any>(this.apiUrl, draft).pipe(
+      map((res) => res.data as Room),
+      catchError((err) => throwError(() => new Error(err.error?.message || 'Không thể tạo phòng.')))
+    );
   }
 
   updateRoom(id: string, draft: RoomDraft): Observable<Room> {
-    return defer(() => {
-      this.assertUniqueCode(draft.code, id);
-      const existing = this.fixtures.value.find((room) => room.id === id);
-      if (!existing) throw new Error('Không tìm thấy phòng.');
-      const references = [...existing.references, ...this.usage.forRoom(id)];
-      if (existing.isActive && !draft.isActive && references.length > 0) {
-        throw new RoomInUseError(references);
-      }
-      const updated: RoomFixture = {
-        ...existing,
-        ...draft,
-        code: draft.code.trim().toUpperCase(),
-        name: draft.name.trim(),
-        description: draft.description.trim(),
-      };
-      this.fixtures.next(this.fixtures.value.map((room) => room.id === id ? updated : room));
-      const { references: _references, ...result } = updated;
-      return of(result);
-    }).pipe(delay(this.responseDelayMs));
+    return this.http.put<any>(`${this.apiUrl}/${id}`, draft).pipe(
+      map((res) => res.data as Room),
+      catchError((err) => throwError(() => new Error(err.error?.message || 'Không thể cập nhật phòng.')))
+    );
   }
 
   setRoomActive(id: string, isActive: boolean): Observable<Room> {
-    return defer(() => {
-      const existing = this.fixtures.value.find((room) => room.id === id);
-      if (!existing) throw new Error('Không tìm thấy phòng.');
-      const references = [...existing.references, ...this.usage.forRoom(id)];
-      if (!isActive && references.length > 0) {
-        throw new RoomInUseError(references);
-      }
-      const updated = { ...existing, isActive };
-      this.fixtures.next(this.fixtures.value.map((room) => room.id === id ? updated : room));
-      const { references: _references, ...result } = updated;
-      return of(result);
-    }).pipe(delay(this.responseDelayMs));
-  }
-
-  private assertUniqueCode(code: string, exceptId?: string): void {
-    const normalizedCode = code.trim().toLocaleUpperCase();
-    const duplicate = this.fixtures.value.some((room) =>
-      room.id !== exceptId && room.code.toLocaleUpperCase() === normalizedCode,
+    return this.http.patch<any>(`${this.apiUrl}/${id}/toggle`, { isActive }).pipe(
+      map((res) => res.data as Room),
+      catchError((err) => throwError(() => new Error(err.error?.message || 'Không thể thay đổi trạng thái phòng.')))
     );
-    if (duplicate) throw new RoomConflictError('Mã phòng này đã tồn tại.');
   }
 }

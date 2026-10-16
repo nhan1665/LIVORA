@@ -1,0 +1,89 @@
+const mongoose = require('mongoose');
+
+const addressSchema = new mongoose.Schema({
+  isDefault: { type: Boolean, default: false },
+  label: { type: String, default: 'Nhà riêng' },
+  fullName: { type: String, required: true },
+  phone: { type: String, required: true },
+  addressLine: { type: String, required: true },
+  ward: { type: String, default: '' },
+  district: { type: String, default: '' },
+  province: { type: String, default: '' },
+  notes: { type: String, default: '' },
+});
+
+const customerSchema = new mongoose.Schema(
+  {
+    code: {
+      type: String,
+      trim: true,
+      uppercase: true,
+    },
+    fullName: {
+      type: String,
+      required: [true, 'Họ và tên là bắt buộc.'],
+      trim: true,
+    },
+    email: {
+      type: String,
+      required: [true, 'Email là bắt buộc.'],
+      trim: true,
+      lowercase: true,
+    },
+    phone: {
+      type: String,
+      required: [true, 'Số điện thoại là bắt buộc.'],
+      trim: true,
+    },
+    passwordHash: {
+      type: String,
+      default: null, // Null đối với đơn hàng vãng lai (guest)
+    },
+    customerType: {
+      type: String,
+      enum: ['registered', 'guest'],
+      default: 'registered',
+    },
+    status: {
+      type: String,
+      enum: ['active', 'locked', 'inactive'],
+      default: 'active',
+    },
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
+    birthDate: {
+      type: Date,
+      default: null,
+    },
+    gender: {
+      type: String,
+      enum: ['Nam', 'Nữ', 'Khác', 'male', 'female', 'other', ''],
+      default: '',
+    },
+    addresses: [addressSchema],
+    accumulatedSpent: {
+      type: Number,
+      default: 0,
+    },
+    totalOrders: {
+      type: Number,
+      default: 0,
+    },
+    lastActiveAt: {
+      type: Date,
+      default: Date.now,
+    },
+  },
+  {
+    timestamps: true,
+    collection: 'Customers',
+  }
+);
+
+customerSchema.index({ email: 1 });
+customerSchema.index({ phone: 1 });
+customerSchema.index({ code: 1 });
+
+module.exports = mongoose.model('Customer', customerSchema, 'Customers');

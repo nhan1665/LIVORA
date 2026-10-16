@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { ProductService } from '../../../services/product.service';
 
 @Component({
   selector: 'app-room-product-list',
@@ -18,7 +19,10 @@ export class RoomProductList implements OnInit {
   isBestSellerOnly: boolean = false;
   sortOption: string = '';
 
-  constructor(private route: ActivatedRoute) {}
+  constructor(
+    private route: ActivatedRoute,
+    private productService: ProductService
+  ) {}
   roomNamesMap: Record<string, string> = {
     'bedroom': 'Phòng ngủ',
     'living-room': 'Phòng khách',
@@ -108,7 +112,31 @@ export class RoomProductList implements OnInit {
 
       if (category) {
         this.currentCategory = category;
+        // Gán dữ liệu mẫu làm fallback nhanh
         this.products = this.mockDatabase[category] || [];
+
+        // Gọi Backend API để lấy danh sách sản phẩm thật từ MongoDB Atlas
+        this.productService.getProducts({ room: this.currentRoom, category: this.currentCategory }).subscribe({
+          next: (realProducts) => {
+            if (realProducts && realProducts.length > 0) {
+              this.products = realProducts.map(p => ({
+                id: p.id || p.slug,
+                name: p.name,
+                dimensions: p.dimensions ? `${p.dimensions.length}x${p.dimensions.width} cm` : '',
+                price: p.salePrice || p.price,
+                originalPrice: p.salePrice ? p.price : undefined,
+                images: p.images && p.images.length > 0 ? p.images : [p.thumbnail],
+                badge: p.badge || (p.stockQuantity > 0 ? 'Còn hàng' : 'Hết hàng'),
+                rating: p.averageRating || 5.0,
+                reviews: p.totalReviews || 0,
+                colors: p.colors || [],
+              }));
+            }
+          },
+          error: () => {
+            // Giữ fallback mockDatabase nếu backend tạm thời không kết nối được
+          }
+        });
       }
     });
   }
