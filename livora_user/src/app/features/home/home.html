@@ -1,29 +1,51 @@
 <main class="intro-main">
 
   <!-- ====== HERO SECTION ====== -->
-  <section class="hero-section">
-    <div class="hero-image-wrapper" style="position: relative; overflow: hidden;">
-      <img [src]="banners[activeBannerIndex]" alt="Từ Cảm Hứng Đến Hiện Thực" class="hero-image" style="transition: opacity 0.5s ease-in-out; width: 100%; height: 100%; object-fit: cover;" />
+  <section class="hero-section" (mouseenter)="onHeroMouseEnter()" (mouseleave)="onHeroMouseLeave()">
+    <div class="hero-image-wrapper">
+      <div class="hero-slides-wrapper">
+        @for (banner of banners; track $index; let idx = $index) {
+          <div class="hero-slide-item" [class.active]="activeBannerIndex === idx">
+            <img [src]="banner.imageUrl" [alt]="banner.title" class="hero-image" />
+          </div>
+        }
+      </div>
       <div class="hero-overlay"></div>
-      
+
+      <!-- Arrow navigation -->
+      @if (banners.length > 1) {
+        <button type="button" class="hero-nav-arrow arrow-prev" (click)="prevBanner($event)" aria-label="Banner trước">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 18 9 12 15 6"></polyline>
+          </svg>
+        </button>
+        <button type="button" class="hero-nav-arrow arrow-next" (click)="nextBanner($event)" aria-label="Banner kế tiếp">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="9 18 15 12 9 6"></polyline>
+          </svg>
+        </button>
+      }
+
       <!-- Banner hover indicators -->
-      <div class="banner-indicators" style="position: absolute; bottom: 24px; left: 50%; transform: translateX(-50%); display: flex; gap: 12px; z-index: 10;">
-        <span *ngFor="let banner of banners; let idx = index" 
-              (mouseenter)="selectBanner(idx)" 
-              [style.background-color]="activeBannerIndex === idx ? '#FFDB00' : 'rgba(255, 255, 255, 0.4)'"
-              [style.transform]="activeBannerIndex === idx ? 'scale(1.2)' : 'scale(1)'"
-              style="width: 12px; height: 12px; border-radius: 50%; cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); border: 1px solid rgba(0, 0, 0, 0.1);">
-        </span>
+      <div class="banner-indicators">
+        @for (banner of banners; track $index; let idx = $index) {
+          <button type="button" 
+                  class="indicator-dot"
+                  [class.active]="activeBannerIndex === idx"
+                  (mouseenter)="selectBanner(idx)" 
+                  (click)="selectBanner(idx)"
+                  [attr.aria-label]="'Chuyển sang banner ' + (idx + 1)">
+          </button>
+        }
       </div>
     </div>
     <div class="hero-content">
-      <h1 class="hero-title">Từ Cảm Hứng<br>Đến Hiện Thực.</h1>
+      <h1 class="hero-title">{{ currentBanner?.title || 'Từ Cảm Hứng Đến Hiện Thực' }}</h1>
       <p class="hero-subtitle">
-        Ngôi nhà trở nên ấm cúng nhờ những món đồ được chọn lựa có chủ đích.<br>
-        LIVORA kiến tạo những không gian kết nối.
+        {{ currentBanner?.subtitle || 'Ngôi nhà trở nên ấm cúng nhờ những món đồ được chọn lựa có chủ đích. LIVORA kiến tạo những không gian kết nối.' }}
       </p>
       <div class="hero-actions">
-        <a routerLink="/rooms" class="btn btn-primary">Mua theo phòng →</a>
+        <a [routerLink]="currentBanner?.linkUrl || '/rooms'" class="btn btn-primary">Khám phá ngay →</a>
         <a routerLink="/inspiration" class="btn btn-outline">Khám phá cảm hứng</a>
       </div>
     </div>

@@ -43,7 +43,7 @@ const testAtlasConnection = async () => {
     console.log(`\n📦 Số lượng collections hiện có trong database [${conn.connection.name}]: ${collectionNames.length}`);
 
     const expectedCollections = [
-      'Customers', 'Staffs', 'Categories', 'Rooms', 'Products',
+      'Customers', 'Employees', 'Categories', 'Rooms', 'Products',
       'Inspirations', 'RoomDesigns', 'Carts', 'Orders', 'Refunds',
       'Reviews', 'Vouchers', 'Contacts', 'Shipping'
     ];

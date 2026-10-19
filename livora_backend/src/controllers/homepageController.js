@@ -50,6 +50,15 @@ const syncCollections = async () => {
     const collections = await db.listCollections().toArray();
     const names = collections.map((c) => c.name);
 
+    // 0. Drop extra Staffs collection
+    if (names.includes('Staffs')) {
+      await db.collection('Staffs').drop().catch(() => {});
+      console.log('🗑️ Đã xóa collection Staffs thành công!');
+    }
+    if (names.includes('staffs')) {
+      await db.collection('staffs').drop().catch(() => {});
+    }
+
     // 1. Sync Marquees
     if (names.includes('MarqueeNotifications')) {
       const oldCol = db.collection('MarqueeNotifications');
@@ -196,13 +205,35 @@ const defaultMarquees = [
   },
 ];
 
+const isActiveStatus = (st) => st === 'Đang hoạt động' || st === 'active';
+
+const countActiveMarquees = async (excludeId = null) => {
+  const col = mongoose.connection.db.collection('Marquees');
+  const query = {
+    status: { $in: ['active', 'Đang hoạt động'] },
+  };
+  if (excludeId) {
+    if (ObjectId.isValid(excludeId)) {
+      query._id = { $nin: [new ObjectId(excludeId), excludeId] };
+    } else {
+      query._id = { $ne: excludeId };
+    }
+  }
+  return await col.countDocuments(query);
+};
+
 const getMarquees = async (req, res) => {
   try {
     await syncCollections();
     const col = mongoose.connection.db.collection('Marquees');
-    let docs = await col.find({}).sort({ order: 1, displayOrder: 1, createdAt: -1 }).toArray();
+    const filter = {};
+    if (req.query.activeOnly === 'true') {
+      filter.status = { $in: ['active', 'Đang hoạt động'] };
+    }
 
-    if (docs.length === 0) {
+    let docs = await col.find(filter).sort({ order: 1, displayOrder: 1, createdAt: -1 }).toArray();
+
+    if (docs.length === 0 && Object.keys(filter).length === 0) {
       await col.insertMany(defaultMarquees);
       docs = await col.find({}).sort({ order: 1, displayOrder: 1, createdAt: -1 }).toArray();
     }
@@ -228,8 +259,20 @@ const getMarquees = async (req, res) => {
 const createMarquee = async (req, res) => {
   try {
     const { code, title, iconType, startDate, endDate, order, status } = req.body;
-    if (!title) {
+    if (!title || !title.trim()) {
       return sendError(res, 'Vui lòng nhập thông điệp thông báo.', 400);
+    }
+
+    const itemStatus = status || 'Đang hoạt động';
+    if (isActiveStatus(itemStatus)) {
+      const activeCount = await countActiveMarquees();
+      if (activeCount >= 5) {
+        return sendError(
+          res,
+          'Chỉ được phép kích hoạt tối đa 5 thông báo Marquee cùng lúc. Vui lòng tắt/ẩn bớt thông báo đang hoạt động trước khi thêm mới hoặc chọn trạng thái "Đã ẩn".',
+          400
+        );
+      }
     }
 
     const col = mongoose.connection.db.collection('Marquees');
@@ -240,7 +283,7 @@ const createMarquee = async (req, res) => {
       startDate: startDate || '',
       endDate: endDate || '',
       order: Math.max(1, Number(order) || 1),
-      status: status || 'Đang hoạt động',
+      status: isActiveStatus(itemStatus) ? 'Đang hoạt động' : 'Đã ẩn',
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -264,6 +307,25 @@ const updateMarquee = async (req, res) => {
     const { code, title, iconType, startDate, endDate, order, status } = req.body;
 
     const col = mongoose.connection.db.collection('Marquees');
+    const current = await col.findOne(buildIdQuery(id));
+    if (!current) {
+      return sendError(res, 'Không tìm thấy thông báo Marquee.', 404);
+    }
+
+    if (status !== undefined && isActiveStatus(status)) {
+      const wasActive = isActiveStatus(current.status);
+      if (!wasActive) {
+        const activeCount = await countActiveMarquees(id);
+        if (activeCount >= 5) {
+          return sendError(
+            res,
+            'Chỉ được phép kích hoạt tối đa 5 thông báo Marquee cùng lúc. Vui lòng tắt/ẩn bớt thông báo khác trước khi bật thông báo này.',
+            400
+          );
+        }
+      }
+    }
+
     const updateFields = { updatedAt: new Date() };
     if (code !== undefined) updateFields.code = code.trim().toUpperCase();
     if (title !== undefined) updateFields.title = title.trim();
@@ -271,7 +333,9 @@ const updateMarquee = async (req, res) => {
     if (startDate !== undefined) updateFields.startDate = startDate;
     if (endDate !== undefined) updateFields.endDate = endDate;
     if (order !== undefined) updateFields.order = Math.max(1, Number(order));
-    if (status !== undefined) updateFields.status = status;
+    if (status !== undefined) {
+      updateFields.status = isActiveStatus(status) ? 'Đang hoạt động' : 'Đã ẩn';
+    }
 
     await col.updateOne(buildIdQuery(id), { $set: updateFields });
     const updated = await col.findOne(buildIdQuery(id));
@@ -308,8 +372,19 @@ const toggleMarquee = async (req, res) => {
       return sendError(res, 'Không tìm thấy thông báo Marquee.', 404);
     }
 
-    const currentStatus = current.status === 'active' || current.status === 'Đang hoạt động' ? 'Đang hoạt động' : 'Đã ẩn';
+    const currentStatus = isActiveStatus(current.status) ? 'Đang hoạt động' : 'Đã ẩn';
     const nextStatus = currentStatus === 'Đang hoạt động' ? 'Đã ẩn' : 'Đang hoạt động';
+
+    if (nextStatus === 'Đang hoạt động') {
+      const activeCount = await countActiveMarquees(id);
+      if (activeCount >= 5) {
+        return sendError(
+          res,
+          'Chỉ được phép kích hoạt tối đa 5 thông báo Marquee cùng lúc. Vui lòng tắt/ẩn bớt thông báo khác trước khi bật thông báo này.',
+          400
+        );
+      }
+    }
 
     await col.updateOne(buildIdQuery(id), { $set: { status: nextStatus, updatedAt: new Date() } });
 
@@ -339,7 +414,7 @@ const defaultBanners = [
   {
     title: 'Banner Bộ sưu tập Mùa Thu',
     description: 'Chiến dịch Autumn Heritage 2026 - Bản phát hành giới hạn',
-    imageUrl: 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=600&auto=format&fit=crop&q=80',
+    imageUrl: 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=1920&auto=format&fit=crop&q=85',
     linkUrl: '/products?collection=autumn-heritage-2026',
     startDate: new Date('2026-09-01T00:00:00.000Z'),
     endDate: new Date('2026-11-30T23:59:59.000Z'),
@@ -351,7 +426,7 @@ const defaultBanners = [
   {
     title: 'Banner Khuyến mãi Kiến trúc 2026',
     description: 'Ưu đãi mùa hoàn thiện công trình cho studio và KTS',
-    imageUrl: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=600&auto=format&fit=crop&q=80',
+    imageUrl: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1920&auto=format&fit=crop&q=85',
     linkUrl: '/promotions/architecture-2026',
     startDate: new Date('2026-03-15T00:00:00.000Z'),
     endDate: new Date('2026-04-30T23:59:59.000Z'),
@@ -363,7 +438,7 @@ const defaultBanners = [
   {
     title: 'Banner Không gian Phòng khách',
     description: 'Bộ sưu tập nội thất The Serene Living phong cách Wabi Sabi',
-    imageUrl: 'https://images.unsplash.com/photo-1616486338812-3dADAe4b4ace?w=600&auto=format&fit=crop&q=80',
+    imageUrl: 'https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?w=1920&auto=format&fit=crop&q=85',
     linkUrl: '/rooms/living-room',
     startDate: new Date('2026-01-01T00:00:00.000Z'),
     endDate: new Date('2026-12-31T23:59:59.000Z'),
@@ -375,7 +450,7 @@ const defaultBanners = [
   {
     title: 'Banner Tri ân Khách hàng VIP',
     description: 'Chương trình Private Salon & Quyền lợi đặc quyền gia chủ Maison',
-    imageUrl: 'https://images.unsplash.com/photo-1618219908412-a29a1bb7b86e?w=600&auto=format&fit=crop&q=80',
+    imageUrl: 'https://images.unsplash.com/photo-1618219908412-a29a1bb7b86e?w=1920&auto=format&fit=crop&q=85',
     linkUrl: '/vip-membership',
     startDate: new Date('2026-02-01T00:00:00.000Z'),
     endDate: new Date('2026-02-28T23:59:59.000Z'),
@@ -387,7 +462,7 @@ const defaultBanners = [
   {
     title: 'Banner Khai xuân Phú Quý 2026',
     description: 'Chương trình mừng năm mới - Đã lưu trữ định kỳ',
-    imageUrl: 'https://images.unsplash.com/photo-1617806118233-18e1de247200?w=600&auto=format&fit=crop&q=80',
+    imageUrl: 'https://images.unsplash.com/photo-1617806118233-18e1de247200?w=1920&auto=format&fit=crop&q=85',
     linkUrl: '/events/spring-2026',
     startDate: new Date('2026-01-01T00:00:00.000Z'),
     endDate: new Date('2026-02-15T23:59:59.000Z'),
@@ -398,12 +473,29 @@ const defaultBanners = [
   },
 ];
 
+const countActiveBanners = async (excludeId = null) => {
+  const col = mongoose.connection.db.collection('Banners');
+  const query = { status: 'active' };
+  if (excludeId) {
+    if (ObjectId.isValid(excludeId)) {
+      query._id = { $nin: [new ObjectId(excludeId), excludeId] };
+    } else {
+      query._id = { $ne: excludeId };
+    }
+  }
+  return await col.countDocuments(query);
+};
+
 const getBanners = async (req, res) => {
   try {
     const col = mongoose.connection.db.collection('Banners');
-    let docs = await col.find({}).sort({ displayOrder: 1, createdAt: -1 }).toArray();
+    const filter = {};
+    if (req.query.activeOnly === 'true') {
+      filter.status = 'active';
+    }
+    let docs = await col.find(filter).sort({ displayOrder: 1, createdAt: -1 }).toArray();
 
-    if (docs.length === 0) {
+    if (docs.length === 0 && Object.keys(filter).length === 0) {
       await col.insertMany(defaultBanners);
       docs = await col.find({}).sort({ displayOrder: 1, createdAt: -1 }).toArray();
     }
@@ -412,7 +504,7 @@ const getBanners = async (req, res) => {
       id: d._id.toString(),
       title: d.title || '',
       subtitle: d.description || '',
-      imageUrl: d.imageUrl || '',
+      imageUrl: (d.imageUrl || '').replace('w=600', 'w=1920&q=85'),
       linkUrl: d.linkUrl || '',
       startDate: formatDate(d.startDate),
       endDate: formatDate(d.endDate),
@@ -477,6 +569,25 @@ const updateBanner = async (req, res) => {
     const { title, subtitle, imageUrl, linkUrl, startDate, endDate, order, status } = req.body;
 
     const col = mongoose.connection.db.collection('Banners');
+    const current = await col.findOne(buildIdQuery(id));
+    if (!current) {
+      return sendError(res, 'Không tìm thấy Banner cần cập nhật.', 404);
+    }
+
+    if (status !== undefined && (status === 'Đã ẩn' || status === 'hidden')) {
+      const wasActive = current.status === 'active';
+      if (wasActive) {
+        const activeCount = await countActiveBanners();
+        if (activeCount <= 3) {
+          return sendError(
+            res,
+            'Hệ thống yêu cầu duy trì tối thiểu 3 banner đang hiển thị trên trang chủ! Không thể chuyển sang trạng thái ẩn.',
+            400
+          );
+        }
+      }
+    }
+
     const updateFields = { updatedAt: new Date() };
     if (title !== undefined) updateFields.title = title.trim();
     if (subtitle !== undefined) updateFields.description = subtitle.trim();
@@ -524,6 +635,17 @@ const toggleBanner = async (req, res) => {
     }
 
     const nextStatus = current.status === 'active' ? 'hidden' : 'active';
+    if (nextStatus === 'hidden') {
+      const activeCount = await countActiveBanners();
+      if (activeCount <= 3) {
+        return sendError(
+          res,
+          'Hệ thống yêu cầu duy trì tối thiểu 3 banner đang hiển thị trên trang chủ! Không thể ẩn banner này.',
+          400
+        );
+      }
+    }
+
     await col.updateOne(buildIdQuery(id), { $set: { status: nextStatus, updatedAt: new Date() } });
 
     const uiStatus = nextStatus === 'active' ? 'Đang hiển thị' : 'Đã ẩn';
@@ -538,6 +660,19 @@ const deleteBanner = async (req, res) => {
   try {
     const { id } = req.params;
     const col = mongoose.connection.db.collection('Banners');
+    const current = await col.findOne(buildIdQuery(id));
+
+    if (current && current.status === 'active') {
+      const activeCount = await countActiveBanners();
+      if (activeCount <= 3) {
+        return sendError(
+          res,
+          'Hệ thống yêu cầu duy trì tối thiểu 3 banner đang hiển thị trên trang chủ! Không thể xóa banner đang hiển thị này.',
+          400
+        );
+      }
+    }
+
     await col.deleteOne(buildIdQuery(id));
     return sendSuccess(res, { id }, 'Xóa Banner thành công.');
   } catch (err) {

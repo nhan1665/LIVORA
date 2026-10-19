@@ -4,7 +4,7 @@ const Room = require('../models/Room');
 const Product = require('../models/Product');
 const Shipping = require('../models/Shipping');
 const Voucher = require('../models/Voucher');
-const Staff = require('../models/Staff');
+const Employee = require('../models/Employee');
 const Customer = require('../models/Customer');
 
 const seedInitialData = async () => {
@@ -316,22 +316,41 @@ const seedInitialData = async () => {
       console.log(`✅ [Shipping] Đã tạo ${shippingData.length} cấu hình vận chuyển.`);
     }
 
-    // 5. Staff
-    if ((await Staff.countDocuments()) === 0) {
+    // 5. Employees (Bảng Nhân viên phục vụ đăng nhập Admin)
+    if ((await Employee.countDocuments()) === 0) {
       const salt = await bcrypt.genSalt(10);
-      const staffPasswordHash = await bcrypt.hash('livora@2026', salt);
-      await Staff.create({
-        username: 'NV2709',
-        code: 'NV2709',
-        fullName: 'Trần Đỗ Nhật Nhân (Super Admin)',
-        email: 'nhan.tdn@livora.com',
-        phone: '0901234567',
-        passwordHash: staffPasswordHash,
-        role: 'super_admin',
-        permissions: ['all'],
-        status: 'active',
-      });
-      console.log('✅ [Staffs] Đã tạo tài khoản quản trị viên: NV2709 / livora@2026');
+      const defaultPasswordHash = await bcrypt.hash('livora@2026', salt);
+      const sampleEmployees = [
+        {
+          code: 'NV2709',
+          username: 'NV2709',
+          fullName: 'Trần Đỗ Nhật Nhân',
+          email: 'nhan.tdn@livora.com',
+          phone: '0901234567',
+          passwordHash: defaultPasswordHash,
+          role: 'Quản trị viên',
+        },
+        {
+          code: 'AD001',
+          username: 'admin01',
+          fullName: 'Nguyễn Quản Trị',
+          email: 'admin@livora.com',
+          phone: '0909888999',
+          passwordHash: defaultPasswordHash,
+          role: 'Quản trị viên',
+        },
+        {
+          code: 'NV002',
+          username: 'nhanvien02',
+          fullName: 'Lê Văn Vận Hành',
+          email: 'vanhanh@livora.com',
+          phone: '0912345678',
+          passwordHash: defaultPasswordHash,
+          role: 'Nhân viên',
+        },
+      ];
+      await Employee.insertMany(sampleEmployees);
+      console.log(`✅ [Employees] Đã tạo ${sampleEmployees.length} tài khoản nhân viên phục vụ đăng nhập.`);
     }
 
     // 6. Customer

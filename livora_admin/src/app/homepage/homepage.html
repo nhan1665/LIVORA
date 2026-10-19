@@ -122,9 +122,12 @@
   <div class="content-card">
     <!-- Card Header -->
     <div class="card-header">
-      <div class="header-left-col">
+      <div class="header-left">
         <h2 class="card-title">Quản lý Banner</h2>
-        <p class="card-subtitle">Danh sách các banner hero slider trình chiếu ở trang chủ</p>
+        <span class="active-pill-badge" [style.background-color]="activeBannerCount < 3 ? '#ffebe6' : ''" [style.color]="activeBannerCount < 3 ? '#cf1322' : ''">
+          <span class="pill-dot" [style.background-color]="activeBannerCount < 3 ? '#cf1322' : ''"></span>
+          <span>Đang hiển thị: {{ activeBannerCount }} banner (Tối thiểu 3)</span>
+        </span>
       </div>
       <div class="header-right">
         <button type="button" class="btn-primary" (click)="openCreateBannerModal()">
@@ -138,66 +141,85 @@
       </div>
     </div>
 
-    <!-- Banner Filter Box matching exact screenshot -->
-    <div class="banner-filter-box">
-      <!-- TRẠNG THÁI -->
-      <div class="filter-col">
+    <!-- Quota Notice Alert Box for Banner -->
+    <div class="quota-notice-box" [style.background-color]="activeBannerCount < 3 ? '#fff2f0' : ''" [style.border-color]="activeBannerCount < 3 ? '#ffccc7' : ''">
+      <div class="notice-info-wrapper">
+        <div class="notice-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" [attr.stroke]="activeBannerCount < 3 ? '#cf1322' : '#6B5953'" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="16" x2="12" y2="12"></line>
+            <line x1="12" y1="8" x2="12.01" y2="8"></line>
+          </svg>
+        </div>
+        <p class="notice-text" [style.color]="activeBannerCount < 3 ? '#cf1322' : ''">
+          @if (activeBannerCount < 3) {
+            <strong>CẢNH BÁO HẠN NGẠCH:</strong> Hiện tại chỉ có <strong>{{ activeBannerCount }}</strong> banner đang hiển thị. Hệ thống yêu cầu <strong>tối thiểu 3 banner</strong> để đảm bảo bố cục slider trang chủ! Vui lòng kích hoạt thêm banner.
+          } @else {
+            Hệ thống yêu cầu duy trì tối thiểu 3 banner đang hiển thị trên trang chủ để đảm bảo trải nghiệm khách hàng và hiệu ứng chuyển slide mượt mà.
+          }
+        </p>
+      </div>
+
+      <div class="quota-progress-container">
+        <span class="quota-label">TỐI THIỂU 3</span>
+        <div class="quota-progress-bar">
+          <div class="quota-progress-fill" [style.width.%]="activeBannerPercentage" [style.background-color]="activeBannerCount < 3 ? '#cf1322' : '#6B5953'"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Banner Filter Controls Card -->
+    <div class="filter-controls-card">
+      <!-- 1. TỪ KHÓA (Tìm kiếm tiêu đề, mô tả banner) -->
+      <div class="filter-group keyword-group">
+        <label class="filter-label">TỪ KHÓA</label>
+        <div class="search-input-wrapper">
+          <span class="search-icon">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#776962" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+          </span>
+          <input type="text" class="filter-input" placeholder="Tìm kiếm tiêu đề, mô tả banner..."
+            [(ngModel)]="bannerFilterKeyword" (input)="onBannerFilter()" (keyup.enter)="onBannerFilter()" />
+        </div>
+      </div>
+
+      <!-- 2. TRẠNG THÁI -->
+      <div class="filter-group status-group">
         <label class="filter-label">TRẠNG THÁI</label>
-        <div class="custom-select-wrapper">
-          <select class="filter-input-control filter-select" [(ngModel)]="bannerFilterStatus"
-            (change)="onBannerFilter()">
-            <option value="all">Tất cả</option>
+        <div class="select-wrapper">
+          <select class="filter-select" [(ngModel)]="bannerFilterStatus" (change)="onBannerFilter()">
+            <option value="all">Tất cả trạng thái</option>
             <option value="Đang hiển thị">Đang hiển thị</option>
             <option value="Đã ẩn">Đã ẩn</option>
           </select>
-          <span class="select-arrow">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
-              stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="6 9 12 15 18 9"></polyline>
-            </svg>
-          </span>
         </div>
       </div>
 
-      <!-- TỪ NGÀY -->
-      <div class="filter-col">
+      <!-- 3. TỪ NGÀY -->
+      <div class="filter-group" style="width: 140px;">
         <label class="filter-label">TỪ NGÀY</label>
-        <div class="date-input-wrapper">
-          <input type="text" class="filter-input-control date-input" placeholder="01/01/2026"
-            [(ngModel)]="bannerFilterStartDate" (keyup.enter)="onBannerFilter()" />
-          <span class="calendar-icon">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
-              stroke-linecap="round" stroke-linejoin="round">
-              <rect width="18" height="18" x="3" y="4" rx="2" ry="2" />
-              <line x1="16" x2="16" y1="2" y2="6" />
-              <line x1="8" x2="8" y1="2" y2="6" />
-              <line x1="3" x2="21" y1="10" y2="10" />
-            </svg>
-          </span>
+        <div class="search-input-wrapper">
+          <input type="text" class="filter-input" placeholder="DD/MM/YYYY"
+            [(ngModel)]="bannerFilterStartDate" (input)="onBannerFilter()" (keyup.enter)="onBannerFilter()" />
         </div>
       </div>
 
-      <!-- ĐẾN NGÀY -->
-      <div class="filter-col">
+      <!-- 4. ĐẾN NGÀY -->
+      <div class="filter-group" style="width: 140px;">
         <label class="filter-label">ĐẾN NGÀY</label>
-        <div class="date-input-wrapper">
-          <input type="text" class="filter-input-control date-input" placeholder="31/12/2026"
-            [(ngModel)]="bannerFilterEndDate" (keyup.enter)="onBannerFilter()" />
-          <span class="calendar-icon">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
-              stroke-linecap="round" stroke-linejoin="round">
-              <rect width="18" height="18" x="3" y="4" rx="2" ry="2" />
-              <line x1="16" x2="16" y1="2" y2="6" />
-              <line x1="8" x2="8" y1="2" y2="6" />
-              <line x1="3" x2="21" y1="10" y2="10" />
-            </svg>
-          </span>
+        <div class="search-input-wrapper">
+          <input type="text" class="filter-input" placeholder="DD/MM/YYYY"
+            [(ngModel)]="bannerFilterEndDate" (input)="onBannerFilter()" (keyup.enter)="onBannerFilter()" />
         </div>
       </div>
 
-      <!-- NÚT LỌC -->
-      <div class="filter-action-col">
-        <button type="button" class="btn-filter-apply" (click)="onBannerFilter()">
+      <!-- 5. HÀNH ĐỘNG (LỌC & ĐẶT LẠI) -->
+      <div class="filter-actions-group">
+        <button type="button" class="btn-filter" (click)="onBannerFilter()" title="Áp dụng bộ lọc">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
             stroke-linecap="round" stroke-linejoin="round">
             <line x1="4" y1="21" x2="4" y2="14"></line>
@@ -211,6 +233,14 @@
             <line x1="17" y1="16" x2="23" y2="16"></line>
           </svg>
           <span>Lọc</span>
+        </button>
+
+        <button type="button" class="btn-reset" (click)="onBannerResetFilter()" title="Đặt lại bộ lọc">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+            <path d="M3 3v5h5" />
+          </svg>
         </button>
       </div>
     </div>
