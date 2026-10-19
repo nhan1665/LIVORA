@@ -15,6 +15,7 @@ export class App {
   protected readonly title = signal('livora_admin');
   isLoginPage = signal<boolean>(false);
   currentPageTitle = signal<string>('Báo cáo doanh thu');
+  currentUser = signal<any>(null);
 
   private readonly routeTitles: Record<string, string> = {
     '/dashboard': 'Báo cáo doanh thu',
@@ -50,6 +51,24 @@ export class App {
     const isLogin = url.includes('/login') || url === '/' || url === '';
     this.isLoginPage.set(isLogin);
 
+    const token = localStorage.getItem('livora_admin_token');
+    const rawUser = localStorage.getItem('livora_admin_user');
+
+    if (!isLogin && !token) {
+      this.router.navigate(['/login']);
+      return;
+    }
+
+    if (rawUser) {
+      try {
+        this.currentUser.set(JSON.parse(rawUser));
+      } catch {
+        this.currentUser.set(null);
+      }
+    } else {
+      this.currentUser.set(null);
+    }
+
     const cleanUrl = url.split('?')[0].split('#')[0];
     if (this.routeTitles[cleanUrl]) {
       this.currentPageTitle.set(this.routeTitles[cleanUrl]);
@@ -57,6 +76,9 @@ export class App {
   }
 
   logout(): void {
+    localStorage.removeItem('livora_admin_token');
+    localStorage.removeItem('livora_admin_user');
+    this.currentUser.set(null);
     this.router.navigate(['/login']);
   }
 }

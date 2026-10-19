@@ -1,8 +1,24 @@
+@if (marquees().length > 0) {
 <div class="header-marquee-bar">
   <div class="marquee-content">
-    <span>🎉 Chào mừng đến LIVORA KREATIV! Miễn phí vận chuyển cho đơn hàng trên $500! &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 🌟 Miễn phí Thiết kế Không gian 3D AI! &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ⚡ Dùng mã LIVORA10 giảm 10% cho đơn hàng đầu tiên!</span>
+    @for (item of marquees(); track item.id) {
+      <span class="marquee-item">
+        <span class="marquee-icon-symbol">{{ getMarqueeIcon(item.iconType) }}</span>
+        <span class="marquee-item-title">{{ item.title }}</span>
+      </span>
+      <span class="marquee-separator">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;✦&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+    }
+    <!-- Duplicate loop to ensure continuous marquee scroll -->
+    @for (item of marquees(); track 'loop-' + item.id) {
+      <span class="marquee-item">
+        <span class="marquee-icon-symbol">{{ getMarqueeIcon(item.iconType) }}</span>
+        <span class="marquee-item-title">{{ item.title }}</span>
+      </span>
+      <span class="marquee-separator">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;✦&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+    }
   </div>
 </div>
+}
 
 <header class="header">
   <div class="header-container">

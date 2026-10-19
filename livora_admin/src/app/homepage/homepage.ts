@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, TemplateRef, AfterViewInit, inject } from '@angular/core';
+import { Component, OnInit, ViewChild, TemplateRef, AfterViewInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DataTable, TableColumn, TableActionEvent } from '../shared/data-table/data-table';
@@ -56,6 +56,7 @@ export interface FooterConfigItem {
 })
 export class Homepage implements OnInit, AfterViewInit {
   private readonly homepageService = inject(HomepageService);
+  private readonly cdr = inject(ChangeDetectorRef);
 
   // Current active tab - defaulted to 'banner'
   activeTab: 'marquee' | 'banner' | 'brand' | 'footer' = 'banner';
@@ -102,9 +103,10 @@ export class Homepage implements OnInit, AfterViewInit {
   // ==========================================
   // BANNER MANAGEMENT STATES & DATA
   // ==========================================
+  bannerFilterKeyword: string = '';
   bannerFilterStatus: string = 'all';
-  bannerFilterStartDate: string = '01/01/2026';
-  bannerFilterEndDate: string = '31/12/2026';
+  bannerFilterStartDate: string = '';
+  bannerFilterEndDate: string = '';
   bannerCurrentPage: number = 1;
   bannerItemsPerPage: number = 5;
 
@@ -191,10 +193,12 @@ export class Homepage implements OnInit, AfterViewInit {
       next: (data) => {
         this.marqueeList = data;
         this.isLoadingMarquees = false;
+        this.cdr.detectChanges();
       },
       error: (err) => {
         console.error('Lỗi tải Marquees:', err);
         this.isLoadingMarquees = false;
+        this.cdr.detectChanges();
       },
     });
   }
@@ -205,10 +209,12 @@ export class Homepage implements OnInit, AfterViewInit {
       next: (data) => {
         this.bannerList = data;
         this.isLoadingBanners = false;
+        this.cdr.detectChanges();
       },
       error: (err) => {
         console.error('Lỗi tải Banners:', err);
         this.isLoadingBanners = false;
+        this.cdr.detectChanges();
       },
     });
   }
@@ -219,10 +225,12 @@ export class Homepage implements OnInit, AfterViewInit {
       next: (data) => {
         this.brandList = data;
         this.isLoadingBrands = false;
+        this.cdr.detectChanges();
       },
       error: (err) => {
         console.error('Lỗi tải Brands:', err);
         this.isLoadingBrands = false;
+        this.cdr.detectChanges();
       },
     });
   }
@@ -233,10 +241,12 @@ export class Homepage implements OnInit, AfterViewInit {
       next: (data) => {
         this.footerConfig = data;
         this.isLoadingFooters = false;
+        this.cdr.detectChanges();
       },
       error: (err) => {
         console.error('Lỗi tải Footer:', err);
         this.isLoadingFooters = false;
+        this.cdr.detectChanges();
       },
     });
   }
@@ -346,6 +356,7 @@ export class Homepage implements OnInit, AfterViewInit {
   // Tab switching
   setTab(tab: 'marquee' | 'banner' | 'brand' | 'footer'): void {
     this.activeTab = tab;
+    this.cdr.detectChanges();
   }
 
   // Filter handlers
@@ -364,20 +375,71 @@ export class Homepage implements OnInit, AfterViewInit {
     this.currentPage = page;
   }
 
-  // ==========================================
-  // BANNER COMPUTED / GETTERS
-  // ==========================================
+  get activeBannerCount(): number {
+    return this.bannerList.filter((item) => item.status === 'Đang hiển thị').length;
+  }
+
+  get activeBannerPercentage(): number {
+    return Math.min(100, Math.round((this.activeBannerCount / 3) * 100));
+  }
+
   get filteredBannerList(): BannerItem[] {
     return this.bannerList.filter((item) => {
+      // 1. Keyword search (title / subtitle / linkUrl)
+      const keyword = (this.bannerFilterKeyword || '').trim().toLowerCase();
+      const matchKeyword =
+        !keyword ||
+        (item.title && item.title.toLowerCase().includes(keyword)) ||
+        (item.subtitle && item.subtitle.toLowerCase().includes(keyword)) ||
+        (item.linkUrl && item.linkUrl.toLowerCase().includes(keyword));
+
+      // 2. Status filter
       const matchStatus =
         this.bannerFilterStatus === 'all' || item.status === this.bannerFilterStatus;
-      return matchStatus;
+
+      // 3. Date range filter
+      let matchDate = true;
+      if (this.bannerFilterStartDate || this.bannerFilterEndDate) {
+        const itemStart = this.parseDateToTimestamp(item.startDate);
+        const itemEnd = this.parseDateToTimestamp(item.endDate);
+
+        if (this.bannerFilterStartDate) {
+          const filterStart = this.parseDateToTimestamp(this.bannerFilterStartDate);
+          if (filterStart > 0 && itemEnd > 0 && itemEnd < filterStart) {
+            matchDate = false;
+          }
+        }
+        if (this.bannerFilterEndDate) {
+          const filterEnd = this.parseDateToTimestamp(this.bannerFilterEndDate);
+          if (filterEnd > 0 && itemStart > 0 && itemStart > filterEnd) {
+            matchDate = false;
+          }
+        }
+      }
+
+      return matchKeyword && matchStatus && matchDate;
     });
   }
 
+  private parseDateToTimestamp(dateStr?: string): number {
+    if (!dateStr) return 0;
+    const parts = dateStr.trim().split('/');
+    if (parts.length === 3) {
+      const day = parseInt(parts[0], 10);
+      const month = parseInt(parts[1], 10) - 1;
+      const year = parseInt(parts[2], 10);
+      return new Date(year, month, day).getTime();
+    }
+    const t = new Date(dateStr).getTime();
+    return isNaN(t) ? 0 : t;
+  }
+
   get paginatedBannerList(): BannerItem[] {
-    const start = (this.bannerCurrentPage - 1) * this.bannerItemsPerPage;
-    return this.filteredBannerList.slice(start, start + this.bannerItemsPerPage);
+    const list = this.filteredBannerList;
+    const maxPages = Math.ceil(list.length / this.bannerItemsPerPage) || 1;
+    const safePage = Math.min(Math.max(1, this.bannerCurrentPage), maxPages);
+    const start = (safePage - 1) * this.bannerItemsPerPage;
+    return list.slice(start, start + this.bannerItemsPerPage);
   }
 
   get bannerTotalPages(): number {
@@ -409,13 +471,16 @@ export class Homepage implements OnInit, AfterViewInit {
   // ==========================================
   onBannerFilter(): void {
     this.bannerCurrentPage = 1;
+    this.cdr.detectChanges();
   }
 
   onBannerResetFilter(): void {
+    this.bannerFilterKeyword = '';
     this.bannerFilterStatus = 'all';
-    this.bannerFilterStartDate = '01/01/2026';
-    this.bannerFilterEndDate = '31/12/2026';
+    this.bannerFilterStartDate = '';
+    this.bannerFilterEndDate = '';
     this.bannerCurrentPage = 1;
+    this.cdr.detectChanges();
   }
 
   onBannerPageChange(page: number): void {
@@ -519,6 +584,12 @@ export class Homepage implements OnInit, AfterViewInit {
       return;
     }
 
+    const nextStatus = this.bannerForm.status || 'Đang hiển thị';
+    if (this.editingBanner?.status === 'Đang hiển thị' && nextStatus === 'Đã ẩn' && this.activeBannerCount <= 3) {
+      alert('Lỗi: Hệ thống yêu cầu duy trì tối thiểu 3 banner đang hiển thị trên trang chủ! Không thể chuyển sang trạng thái ẩn.');
+      return;
+    }
+
     const payload: Partial<BannerItem> = {
       title: this.bannerForm.title.trim(),
       subtitle: this.bannerForm.subtitle?.trim() || '',
@@ -527,7 +598,7 @@ export class Homepage implements OnInit, AfterViewInit {
       startDate: this.bannerForm.startDate?.trim() || '01/01/2026',
       endDate: this.bannerForm.endDate?.trim() || '31/12/2026',
       order: Number(this.bannerForm.order) || (this.bannerList.length + 1),
-      status: this.bannerForm.status || 'Đang hiển thị',
+      status: nextStatus,
     };
 
     if (this.bannerModalMode === 'create') {
@@ -536,9 +607,11 @@ export class Homepage implements OnInit, AfterViewInit {
           this.bannerList.unshift(created);
           this.showToast(`Đã thêm mới "${created.title}"`);
           this.closeBannerModal();
+          this.cdr.detectChanges();
         },
         error: (err) => {
           alert(err.message || 'Không thể tạo Banner.');
+          this.cdr.detectChanges();
         },
       });
     } else if (this.editingBanner) {
@@ -551,9 +624,11 @@ export class Homepage implements OnInit, AfterViewInit {
           }
           this.showToast(`Đã cập nhật "${payload.title}"`);
           this.closeBannerModal();
+          this.cdr.detectChanges();
         },
         error: (err) => {
           alert(err.message || 'Không thể cập nhật Banner.');
+          this.cdr.detectChanges();
         },
       });
     }
@@ -562,6 +637,10 @@ export class Homepage implements OnInit, AfterViewInit {
   // Toggle Hide / Show Banner
   promptToggleBanner(banner: BannerItem): void {
     if (banner.status === 'Đang hiển thị') {
+      if (this.activeBannerCount <= 3) {
+        alert('Lỗi: Hệ thống yêu cầu duy trì tối thiểu 3 banner đang hiển thị trên trang chủ! Không thể ẩn banner này.');
+        return;
+      }
       this.confirmTitle = 'Ẩn banner trang chủ';
       this.confirmMessage = `Bạn có chắc muốn ẩn "${banner.title}" khỏi slider trang chủ không?`;
       this.confirmText = 'Đồng ý ẩn';
@@ -571,8 +650,13 @@ export class Homepage implements OnInit, AfterViewInit {
           next: (res) => {
             banner.status = res.status;
             this.showToast(`Đã ẩn banner "${banner.title}"`);
+            this.cdr.detectChanges();
           },
-          error: (err) => alert(err.message || 'Không thể thay đổi trạng thái Banner.'),
+          error: (err) => {
+            alert(err.message || 'Không thể thay đổi trạng thái Banner.');
+            this.loadBanners();
+            this.cdr.detectChanges();
+          },
         });
       };
       this.isConfirmOpen = true;
@@ -581,14 +665,23 @@ export class Homepage implements OnInit, AfterViewInit {
         next: (res) => {
           banner.status = res.status;
           this.showToast(`Đã kích hoạt hiển thị banner "${banner.title}"`);
+          this.cdr.detectChanges();
         },
-        error: (err) => alert(err.message || 'Không thể thay đổi trạng thái Banner.'),
+        error: (err) => {
+          alert(err.message || 'Không thể thay đổi trạng thái Banner.');
+          this.loadBanners();
+          this.cdr.detectChanges();
+        },
       });
     }
   }
 
   // Delete Banner
   promptDeleteBanner(banner: BannerItem): void {
+    if (banner.status === 'Đang hiển thị' && this.activeBannerCount <= 3) {
+      alert('Lỗi: Hệ thống yêu cầu duy trì tối thiểu 3 banner đang hiển thị trên trang chủ! Không thể xóa banner đang hiển thị này.');
+      return;
+    }
     this.confirmTitle = 'Xác nhận xóa banner';
     this.confirmMessage = `Bạn có chắc muốn xóa vĩnh viễn "${banner.title}"? Thao tác này không thể hoàn tác.`;
     this.confirmText = 'Xóa banner';
@@ -598,8 +691,13 @@ export class Homepage implements OnInit, AfterViewInit {
         next: () => {
           this.bannerList = this.bannerList.filter((b) => b.id !== banner.id);
           this.showToast(`Đã xóa banner "${banner.title}"`);
+          this.cdr.detectChanges();
         },
-        error: (err) => alert(err.message || 'Không thể xóa banner.'),
+        error: (err) => {
+          alert(err.message || 'Không thể xóa banner.');
+          this.loadBanners();
+          this.cdr.detectChanges();
+        },
       });
     };
     this.isConfirmOpen = true;
@@ -828,6 +926,7 @@ export class Homepage implements OnInit, AfterViewInit {
       this.promptHideItem(item);
     } else if (event.action === 'show') {
       if (this.activeCount >= 5) {
+        alert('Lỗi: Hệ thống chỉ cho phép tối đa 5 thông báo Marquee hoạt động cùng lúc! Vui lòng tắt/ẩn bớt thông báo khác trước.');
         this.showToast('Hạn ngạch đã đạt tối đa 5 thông báo đang hoạt động!');
         return;
       }
@@ -858,6 +957,11 @@ export class Homepage implements OnInit, AfterViewInit {
   }
 
   private toggleStatus(item: MarqueeItem, newStatus: 'Đang hoạt động' | 'Đã ẩn'): void {
+    if (newStatus === 'Đang hoạt động' && this.activeCount >= 5) {
+      alert('Lỗi: Hệ thống chỉ cho phép tối đa 5 thông báo Marquee hoạt động cùng lúc! Vui lòng tắt/ẩn bớt thông báo khác trước.');
+      return;
+    }
+
     this.homepageService.toggleMarquee(item.id).subscribe({
       next: (res) => {
         item.status = res.status;
@@ -866,8 +970,13 @@ export class Homepage implements OnInit, AfterViewInit {
             ? `Đã kích hoạt thông báo ${item.code}`
             : `Đã ẩn thông báo ${item.code}`
         );
+        this.cdr.detectChanges();
       },
-      error: (err) => alert(err.message || 'Lỗi thay đổi trạng thái.'),
+      error: (err) => {
+        alert(err.message || 'Lỗi thay đổi trạng thái.');
+        this.loadMarquees();
+        this.cdr.detectChanges();
+      },
     });
   }
 
@@ -910,6 +1019,18 @@ export class Homepage implements OnInit, AfterViewInit {
       return;
     }
 
+    const nextStatus = this.notificationForm.status || 'Đang hoạt động';
+    if (nextStatus === 'Đang hoạt động') {
+      if (this.modalMode === 'create' && this.activeCount >= 5) {
+        alert('Lỗi: Hệ thống chỉ cho phép tối đa 5 thông báo Marquee hoạt động cùng lúc! Vui lòng chọn trạng thái "Đã ẩn" hoặc tắt bớt thông báo đang hoạt động khác.');
+        return;
+      }
+      if (this.modalMode === 'edit' && this.editingItem?.status !== 'Đang hoạt động' && this.activeCount >= 5) {
+        alert('Lỗi: Hệ thống chỉ cho phép tối đa 5 thông báo Marquee hoạt động cùng lúc! Vui lòng tắt bớt thông báo khác trước khi kích hoạt thông báo này.');
+        return;
+      }
+    }
+
     const payload: Partial<MarqueeItem> = {
       code: this.notificationForm.code || `#MQ-${Math.floor(100 + Math.random() * 900)}`,
       title: this.notificationForm.title.trim(),
@@ -917,7 +1038,7 @@ export class Homepage implements OnInit, AfterViewInit {
       startDate: this.notificationForm.startDate || this.formatTodayDate(),
       endDate: this.notificationForm.endDate || '31/12/2026',
       order: Number(this.notificationForm.order) || 1,
-      status: this.notificationForm.status || 'Đang hoạt động',
+      status: nextStatus,
     };
 
     if (this.modalMode === 'create') {
@@ -926,8 +1047,12 @@ export class Homepage implements OnInit, AfterViewInit {
           this.marqueeList.unshift(created);
           this.showToast(`Đã thêm mới thông báo ${created.code}`);
           this.closeModal();
+          this.cdr.detectChanges();
         },
-        error: (err) => alert(err.message || 'Không thể tạo thông báo Marquee.'),
+        error: (err) => {
+          alert(err.message || 'Không thể tạo thông báo Marquee.');
+          this.cdr.detectChanges();
+        },
       });
     } else if (this.editingItem) {
       const id = this.editingItem.id;
@@ -939,8 +1064,12 @@ export class Homepage implements OnInit, AfterViewInit {
           }
           this.showToast(`Đã cập nhật thông báo ${payload.code || this.editingItem?.code}`);
           this.closeModal();
+          this.cdr.detectChanges();
         },
-        error: (err) => alert(err.message || 'Không thể cập nhật thông báo.'),
+        error: (err) => {
+          alert(err.message || 'Không thể cập nhật thông báo.');
+          this.cdr.detectChanges();
+        },
       });
     }
   }

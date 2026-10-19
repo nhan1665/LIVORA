@@ -33,8 +33,10 @@ const refundRoutes = require('./src/routes/refundRoutes');
 const voucherRoutes = require('./src/routes/voucherRoutes');
 const dashboardRoutes = require('./src/routes/dashboardRoutes');
 const homepageRoutes = require('./src/routes/homepageRoutes');
+const employeeRoutes = require('./src/routes/employeeRoutes');
 
 app.use('/api/auth', authRoutes);
+app.use('/api/employees', employeeRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/rooms', roomRoutes);
 app.use('/api/products', productRoutes);
@@ -49,6 +51,31 @@ app.use('/api/refunds', refundRoutes);
 app.use('/api/vouchers', voucherRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/homepage', homepageRoutes);
+
+// Endpoint xóa collection Staffs/staffs dư thừa
+app.all('/api/drop-staffs', async (req, res) => {
+  try {
+    const db = mongoose.connection.db;
+    const collections = await db.listCollections().toArray();
+    const names = collections.map(c => c.name);
+    let dropResult = null;
+    let dropErr = null;
+    try {
+      dropResult = await db.dropCollection('Staffs');
+    } catch (e) {
+      dropErr = e.message;
+    }
+    return res.json({
+      success: true,
+      dbName: db.databaseName,
+      allCollections: names,
+      dropResult,
+      dropErr
+    });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: err.message });
+  }
+});
 
 // Inspect Atlas Collection Names and Validators
 app.get('/api/inspect-schema', async (req, res) => {
@@ -79,7 +106,7 @@ app.get('/api/seed', async (req, res) => {
     const Room = require('./src/models/Room');
     const Product = require('./src/models/Product');
     const Customer = require('./src/models/Customer');
-    const Staff = require('./src/models/Staff');
+    const Employee = require('./src/models/Employee');
     const Voucher = require('./src/models/Voucher');
     const Shipping = require('./src/models/Shipping');
     const Inspiration = require('./src/models/Inspiration');
@@ -91,7 +118,7 @@ app.get('/api/seed', async (req, res) => {
       rooms: await Room.countDocuments(),
       products: await Product.countDocuments(),
       customers: await Customer.countDocuments(),
-      staffs: await Staff.countDocuments(),
+      employees: await Employee.countDocuments(),
       vouchers: await Voucher.countDocuments(),
       shipping: await Shipping.countDocuments(),
       inspirations: await Inspiration.countDocuments(),
@@ -154,6 +181,43 @@ const startServer = async () => {
     const conn = await connectDB();
     if (conn) {
       console.log('MongoDB connected successfully');
+      // Tự động xóa collection Staffs/staffs dư thừa theo yêu cầu người dùng
+      try {
+        const db = mongoose.connection.db;
+        const allCols = await db.listCollections().toArray();
+        for (const col of allCols) {
+          if (col.name.toLowerCase() === 'staffs' || col.name === 'Staff') {
+            await db.collection(col.name).drop().catch(() => {});
+            console.log(`🗑️ Đã xóa collection '${col.name}' khỏi database.`);
+          }
+        }
+      } catch (colErr) {
+        console.error('Lỗi khi xóa collection Staffs:', colErr.message);
+      }
+
+      try {
+        const Employee = require('./src/models/Employee');
+        const bcrypt = require('bcryptjs');
+        const exists = await Employee.findOne({
+          $or: [{ username: 'ADMIN_LIVORA' }, { code: 'ADMIN_LIVORA' }, { email: 'admin.livora@livora.com' }],
+        });
+        if (!exists) {
+          const salt = await bcrypt.genSalt(10);
+          const passwordHash = await bcrypt.hash('livora@2026', salt);
+          await Employee.create({
+            code: 'ADMIN_LIVORA',
+            username: 'ADMIN_LIVORA',
+            fullName: 'Quản Trị Viên LIVORA',
+            email: 'admin.livora@livora.com',
+            phone: '0901234567',
+            passwordHash,
+            role: 'Quản trị viên',
+          });
+          console.log('✅ Đã tạo tài khoản ADMIN_LIVORA vào database Employees!');
+        }
+      } catch (e) {
+        console.error('Lỗi khi kiểm tra tài khoản ADMIN_LIVORA:', e.message);
+      }
     }
   } catch (err) {
     console.error('Lỗi khi khởi động server:', err);
@@ -163,4 +227,6 @@ const startServer = async () => {
 startServer().catch(err => {
   console.error('Unhandled server error:', err);
 });
+
+// Trigger reload: 2026-10-19 21:46
 

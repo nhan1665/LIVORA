@@ -30,9 +30,9 @@
 
           <div class="topbar-user">
             <div class="user-meta">
-              <span class="user-name">DTNHAN</span>
+              <span class="user-name">{{ currentUser()?.fullName || currentUser()?.code || 'DTNHAN' }}</span>
               <span class="user-role">
-                <span>Quản trị viên</span>
+                <span>{{ currentUser()?.roleName || currentUser()?.role || 'Quản trị viên' }}</span>
                 <svg
                   width="11"
                   height="11"

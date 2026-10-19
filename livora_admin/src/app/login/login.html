@@ -27,22 +27,6 @@
           Nền tảng quản trị tập trung toàn diện: Theo dõi đơn hàng thời gian thực, quản lý không gian 3D, điều phối sản
           phẩm và dữ liệu khách hàng.
         </p>
-
-        <!-- Feature List -->
-        <div class="hero-features">
-          <div class="feature-item">
-            <i class="bi bi-shield-check"></i>
-            <span>Bảo mật dữ liệu định danh 2 lớp (2FA)</span>
-          </div>
-          <div class="feature-item">
-            <i class="bi bi-box-seam"></i>
-            <span>Đồng bộ kho hàng & sản phẩm đa kênh</span>
-          </div>
-          <div class="feature-item">
-            <i class="bi bi-graph-up-arrow"></i>
-            <span>Báo cáo doanh thu & tăng trưởng tức thì</span>
-          </div>
-        </div>
       </div>
 
       <!-- Hero Footer -->
@@ -65,12 +49,6 @@
         <p class="card-subtitle">Vui lòng nhập Mã nhân viên và Mật khẩu để tiếp tục.</p>
       </div>
 
-      <!-- Quick Demo Pill -->
-      <div class="demo-credential-pill" (click)="fillDemoCredentials()">
-        <i class="bi bi-lightning-charge-fill"></i>
-        <span>Tài khoản mẫu: <strong>NV2709</strong> / <strong>livora&#64;2026</strong> (Click để điền)</span>
-      </div>
-
       <!-- Alerts -->
       @if (errorMessage) {
       <div class="alert alert-error">
@@ -87,18 +65,17 @@
 
       <!-- Form Fields -->
       <form (ngSubmit)="onLoginSubmit()" class="auth-form">
-        <!-- Mã nhân viên -->
+        <!-- Mã nhân viên hoặc Tên đăng nhập -->
         <div class="form-group">
           <label class="form-label" for="employeeCode">
-            <span>Mã Nhân Viên</span>
+            <span>Mã Nhân Viên / Tên Đăng Nhập</span>
           </label>
           <div class="input-wrapper">
             <i class="bi bi-person-vcard input-icon"></i>
-            <input id="employeeCode" name="employeeCode" type="text" class="form-input text-uppercase"
-              placeholder="VD: NV2709, AD001" [value]="employeeCode" (input)="onEmployeeCodeInput($event, 'login')"
-              autocomplete="username" />
+            <input id="employeeCode" name="employeeCode" type="text" class="form-input"
+              placeholder="VD: ADMIN_LIVORA, NV01" [(ngModel)]="employeeCode" autocomplete="username" />
           </div>
-          <span class="input-hint">Nhập mã định danh nhân sự do Livora cấp</span>
+          <span class="input-hint">Nhập mã nhân viên hoặc tên đăng nhập của bạn</span>
         </div>
 
         <!-- Mật khẩu -->
