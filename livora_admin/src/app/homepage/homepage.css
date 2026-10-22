@@ -1736,6 +1736,8 @@
   line-height: 1.55;
   margin: 0;
   max-width: 680px;
+  white-space: pre-line;
+  word-break: break-word;
 }
 
 /* Brand Modal Specifics */
@@ -1743,7 +1745,7 @@
   background-color: #ffffff !important;
   border-radius: 16px;
   width: 100%;
-  max-width: 520px;
+  max-width: 620px;
   box-shadow: 0 20px 50px rgba(45, 30, 25, 0.25);
   display: flex;
   flex-direction: column;
@@ -1753,10 +1755,12 @@
 }
 
 .brand-modal-body {
-  padding: 22px 24px;
+  padding: 22px 26px;
   display: flex;
   flex-direction: column;
   gap: 18px;
+  max-height: calc(88vh - 120px);
+  overflow-y: auto;
 }
 
 .brand-form-group {
@@ -1779,10 +1783,37 @@
   justify-content: space-between;
 }
 
-.brand-hint-text {
-  font-size: 12px;
-  color: #8c7d75;
-  font-style: normal;
+/* Word Counter */
+.brand-word-counter {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #6b5c54;
+  background-color: #f5efe6;
+  padding: 4px 10px;
+  border-radius: 20px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border: 1px solid #e8ded2;
+  transition: all 0.2s ease;
+}
+
+.brand-word-counter.counter-warning {
+  background-color: #fef3c7;
+  color: #b45309;
+  border-color: #fde68a;
+}
+
+.brand-word-counter.counter-danger {
+  background-color: #fee2e2;
+  color: #b91c1c;
+  border-color: #fca5a5;
+  animation: pulseDanger 1.2s infinite ease-in-out;
+}
+
+@keyframes pulseDanger {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.04); }
 }
 
 .brand-modal-input {
@@ -1812,31 +1843,13 @@
 }
 
 .brand-modal-textarea {
-  min-height: 100px;
+  height: auto;
+  min-height: 150px;
   padding: 12px 14px;
-  background-color: #faf7f2;
-  border: 1px solid #ede4d8;
-  border-radius: 8px;
-  font-size: 13.5px;
-  color: #2e2322;
-  font-family: inherit;
-  line-height: 1.5;
-  outline: none;
+  line-height: 1.6;
   resize: vertical;
-  transition: all 0.2s ease;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.brand-modal-textarea:focus {
-  background-color: #ffffff;
-  border-color: #593c3b;
-  box-shadow: 0 0 0 3px rgba(89, 60, 59, 0.08);
-}
-
-.brand-modal-textarea::placeholder {
-  color: #9c8e87;
-  font-size: 13px;
+  white-space: pre-line;
+  word-break: break-word;
 }
 
 .brand-modal-select {

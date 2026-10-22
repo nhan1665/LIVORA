@@ -139,6 +139,34 @@ const syncCollections = async () => {
       }
       await oldCol.drop().catch(() => {});
     }
+
+    // 3. Relax Brands validator to allow rich content up to 100,000 characters (1000+ words HTML)
+    try {
+      await db.command({
+        collMod: 'Brands',
+        validator: {
+          $jsonSchema: {
+            bsonType: 'object',
+            required: ['title', 'content', 'status'],
+            properties: {
+              _id: { bsonType: 'objectId' },
+              title: { bsonType: 'string', minLength: 1, maxLength: 500 },
+              content: { bsonType: 'string', maxLength: 100000 },
+              origin: { bsonType: 'string', maxLength: 1000 },
+              logoUrl: { bsonType: 'string' },
+              websiteUrl: { bsonType: 'string' },
+              status: { enum: ['active', 'hidden', 'Đang hiển thị', 'Đã ẩn'] },
+              displayOrder: { bsonType: ['int', 'long', 'double'] },
+              createdAt: { bsonType: 'date' },
+              updatedAt: { bsonType: 'date' },
+            },
+          },
+        },
+        validationLevel: 'moderate',
+      });
+    } catch (vErr) {
+      console.warn('collMod Brands warning:', vErr.message);
+    }
   } catch (err) {
     console.error('syncCollections error:', err);
   }
@@ -749,10 +777,72 @@ const defaultBrands = [
 
 const getBrands = async (req, res) => {
   try {
+    await syncCollections();
     const col = mongoose.connection.db.collection('Brands');
-    let docs = await col.find({}).sort({ displayOrder: 1, createdAt: -1 }).toArray();
 
-    if (docs.length === 0) {
+    // Clean up any legacy 'CÁI TÊN' origin in DB
+    await col.updateMany({ origin: 'CÁI TÊN' }, { $set: { origin: '' } }).catch(() => {});
+
+    // Ensure initial brand story for Livora exists
+    const livoraExists = await col.findOne({ title: 'Một từ mới cho cuộc sống hiện đại' });
+    if (!livoraExists) {
+      const brandCount = await col.countDocuments();
+      if (brandCount === 0) {
+        await col.insertOne({
+          title: 'Một từ mới cho cuộc sống hiện đại',
+          origin: '',
+          content:
+            'Livora — ra đời từ living, sự ấm áp thường nhật của gia đình, kết hợp với hậu tố sang trọng -ora, gợi lên ánh hoàng hôn vàng rực. Cùng nhau tạo nên: một cái tên dành cho những không gian vừa mang đậm dấu ấn cá nhân vừa tinh tế nhẹ nhàng.',
+          logoUrl: '',
+          websiteUrl: '',
+          status: 'active',
+          displayOrder: 1,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        });
+      } else {
+        // Insert Livora and set as active, deactivate other older brands so user sees it right away
+        await col.insertOne({
+          title: 'Một từ mới cho cuộc sống hiện đại',
+          origin: '',
+          content:
+            'Livora — ra đời từ living, sự ấm áp thường nhật của gia đình, kết hợp với hậu tố sang trọng -ora, gợi lên ánh hoàng hôn vàng rực. Cùng nhau tạo nên: một cái tên dành cho những không gian vừa mang đậm dấu ấn cá nhân vừa tinh tế nhẹ nhàng.',
+          logoUrl: '',
+          websiteUrl: '',
+          status: 'active',
+          displayOrder: 1,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        });
+        await col.updateMany(
+          { title: { $ne: 'Một từ mới cho cuộc sống hiện đại' } },
+          { $set: { status: 'hidden', updatedAt: new Date() } }
+        );
+      }
+    } else {
+      // Enforce rule: only 1 brand is active at any time
+      const activeDocs = await col
+        .find({ status: { $in: ['active', 'Đang hiển thị'] } })
+        .sort({ updatedAt: -1, createdAt: -1 })
+        .toArray();
+
+      if (activeDocs.length > 1) {
+        const keepId = activeDocs[0]._id;
+        await col.updateMany(
+          { _id: { $ne: keepId }, status: { $in: ['active', 'Đang hiển thị'] } },
+          { $set: { status: 'hidden', updatedAt: new Date() } }
+        );
+      }
+    }
+
+    const filter = {};
+    if (req.query.activeOnly === 'true') {
+      filter.status = { $in: ['active', 'Đang hiển thị'] };
+    }
+
+    let docs = await col.find(filter).sort({ displayOrder: 1, createdAt: -1 }).toArray();
+
+    if (docs.length === 0 && Object.keys(filter).length === 0) {
       await col.insertMany(defaultBrands);
       docs = await col.find({}).sort({ displayOrder: 1, createdAt: -1 }).toArray();
     }
@@ -762,7 +852,7 @@ const getBrands = async (req, res) => {
       name: d.title || '',
       origin: d.origin || '',
       description: d.content || '',
-      status: d.status === 'active' ? 'Đang hiển thị' : 'Đã ẩn',
+      status: d.status === 'active' || d.status === 'Đang hiển thị' ? 'Đang hiển thị' : 'Đã ẩn',
     }));
 
     return sendSuccess(res, items, 'Lấy danh sách thương hiệu thành công.');
@@ -774,19 +864,27 @@ const getBrands = async (req, res) => {
 
 const createBrand = async (req, res) => {
   try {
+    await syncCollections();
     const { name, origin, description, status } = req.body;
-    if (!name) {
+    if (!name || !name.trim()) {
       return sendError(res, 'Vui lòng nhập tên thương hiệu.', 400);
     }
 
     const col = mongoose.connection.db.collection('Brands');
+    const isNewActive = status !== 'Đã ẩn' && status !== 'hidden';
+
+    // Enforce single active brand: if new brand is active, deactivate all existing brands!
+    if (isNewActive) {
+      await col.updateMany({}, { $set: { status: 'hidden', updatedAt: new Date() } });
+    }
+
     const newDoc = {
       title: name.trim(),
       content: description ? description.trim() : name.trim(),
-      origin: origin ? origin.trim() : 'Ý',
+      origin: origin ? origin.trim() : '',
       logoUrl: '',
       websiteUrl: '',
-      status: status === 'Đã ẩn' ? 'hidden' : 'active',
+      status: isNewActive ? 'active' : 'hidden',
       displayOrder: 1,
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -807,24 +905,46 @@ const createBrand = async (req, res) => {
     );
   } catch (err) {
     console.error('createBrand error:', err);
-    return sendError(res, 'Không thể tạo thương hiệu.', 500);
+    if (err.errInfo) {
+      console.error('createBrand error details:', JSON.stringify(err.errInfo, null, 2));
+    }
+    return sendError(res, err.message || 'Không thể tạo thương hiệu.', 500);
   }
 };
 
 const updateBrand = async (req, res) => {
   try {
+    await syncCollections();
     const { id } = req.params;
     const { name, origin, description, status } = req.body;
 
     const col = mongoose.connection.db.collection('Brands');
+    const query = buildIdQuery(id);
+    const current = await col.findOne(query);
+    if (!current) {
+      return sendError(res, 'Không tìm thấy thương hiệu cần cập nhật.', 404);
+    }
+
     const updateFields = { updatedAt: new Date() };
     if (name !== undefined) updateFields.title = name.trim();
     if (origin !== undefined) updateFields.origin = origin.trim();
     if (description !== undefined) updateFields.content = description.trim();
-    if (status !== undefined) updateFields.status = status === 'Đã ẩn' ? 'hidden' : 'active';
+    
+    if (status !== undefined) {
+      const willBeActive = status === 'Đang hiển thị' || status === 'active';
+      updateFields.status = willBeActive ? 'active' : 'hidden';
 
-    await col.updateOne(buildIdQuery(id), { $set: updateFields });
-    const updated = await col.findOne(buildIdQuery(id));
+      // Enforce single active brand: if this brand becomes active, deactivate all others!
+      if (willBeActive) {
+        await col.updateMany(
+          { _id: { $ne: current._id } },
+          { $set: { status: 'hidden', updatedAt: new Date() } }
+        );
+      }
+    }
+
+    await col.updateOne(query, { $set: updateFields });
+    const updated = await col.findOne(query);
 
     return sendSuccess(
       res,
@@ -834,29 +954,44 @@ const updateBrand = async (req, res) => {
             name: updated.title,
             origin: updated.origin,
             description: updated.content,
-            status: updated.status === 'active' ? 'Đang hiển thị' : 'Đã ẩn',
+            status: updated.status === 'active' || updated.status === 'Đang hiển thị' ? 'Đang hiển thị' : 'Đã ẩn',
           }
         : { id },
       'Cập nhật thương hiệu thành công.'
     );
   } catch (err) {
     console.error('updateBrand error:', err);
-    return sendError(res, 'Không thể cập nhật thương hiệu.', 500);
+    if (err.errInfo) {
+      console.error('updateBrand error details:', JSON.stringify(err.errInfo, null, 2));
+    }
+    return sendError(res, err.message || 'Không thể cập nhật thương hiệu.', 500);
   }
 };
 
 const toggleBrand = async (req, res) => {
   try {
+    await syncCollections();
     const { id } = req.params;
     const col = mongoose.connection.db.collection('Brands');
-    const current = await col.findOne(buildIdQuery(id));
+    const query = buildIdQuery(id);
+    const current = await col.findOne(query);
 
     if (!current) {
       return sendError(res, 'Không tìm thấy thương hiệu.', 404);
     }
 
-    const nextStatus = current.status === 'active' ? 'hidden' : 'active';
-    await col.updateOne(buildIdQuery(id), { $set: { status: nextStatus, updatedAt: new Date() } });
+    const isCurrentlyActive = current.status === 'active' || current.status === 'Đang hiển thị';
+    const nextStatus = isCurrentlyActive ? 'hidden' : 'active';
+
+    // Enforce single active brand: if activating, deactivate all others!
+    if (nextStatus === 'active') {
+      await col.updateMany(
+        { _id: { $ne: current._id } },
+        { $set: { status: 'hidden', updatedAt: new Date() } }
+      );
+    }
+
+    await col.updateOne(query, { $set: { status: nextStatus, updatedAt: new Date() } });
 
     const uiStatus = nextStatus === 'active' ? 'Đang hiển thị' : 'Đã ẩn';
     return sendSuccess(res, { id, status: uiStatus }, `Đã chuyển trạng thái sang "${uiStatus}".`);

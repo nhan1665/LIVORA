@@ -502,17 +502,16 @@
           } @else {
           @for (brand of paginatedBrandList; track brand.id) {
           <tr class="banner-row-item">
-            <!-- Tiêu đề + Origin -->
+            <!-- Tiêu đề thương hiệu -->
             <td class="td-brand-title">
               <div class="brand-title-wrap">
                 <div class="brand-name-main">{{ brand.name }}</div>
-                <div class="brand-origin-sub">{{ brand.origin }}</div>
               </div>
             </td>
 
             <!-- Nội dung mô tả -->
             <td class="td-brand-desc">
-              <p class="brand-desc-text">{{ brand.description }}</p>
+              <div class="brand-desc-text">{{ brand.description }}</div>
             </td>
 
             <!-- Trạng thái -->
@@ -1118,23 +1117,31 @@
             TIÊU ĐỀ THƯƠNG HIỆU <span class="required-star">*</span>
           </label>
           <input type="text" class="brand-modal-input"
-            placeholder="Nhập tên thương hiệu đối tác (Ví dụ: Minotti, Poliform, Cassina..)"
+            placeholder="Nhập tiêu đề (Ví dụ: Một từ mới cho cuộc sống hiện đại, Minotti, B&B Italia...)"
             [(ngModel)]="brandForm.name" />
         </div>
 
 
 
-        <!-- 3. Nội dung giới thiệu thương hiệu -->
+        <!-- 3. Nội dung giới thiệu thương hiệu (Tối đa 1000 từ) -->
         <div class="brand-form-group">
           <div class="brand-label-row">
             <label class="brand-field-label">
               NỘI DUNG GIỚI THIỆU THƯƠNG HIỆU <span class="required-star">*</span>
             </label>
-            <span class="brand-hint-text">Gợi ý 50–250 từ</span>
+            <span class="brand-word-counter" [class.counter-warning]="brandWordCount > 900" [class.counter-danger]="brandWordCount > 1000">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+              </svg>
+              <span>{{ brandWordCount }} / 1000 từ</span>
+            </span>
           </div>
-          <textarea rows="4" class="brand-modal-textarea"
-            placeholder="Mô tả về di sản kiến trúc, phong cách thủ công hoặc kỹ thuật cốt lõi của thương hiệu đối tác..."
-            [(ngModel)]="brandForm.description"></textarea>
+
+          <textarea rows="7"
+                    class="brand-modal-input brand-modal-textarea"
+                    placeholder="Nhập nội dung câu chuyện thương hiệu... (Tối đa 1000 từ, tự động xuống dòng theo văn bản)"
+                    [(ngModel)]="brandForm.description"></textarea>
         </div>
 
         <!-- 4. Trạng thái hiển thị -->
@@ -1167,8 +1174,7 @@
             </svg>
           </div>
           <p class="brand-alert-text">
-            Lưu ý: Thương hiệu mới thêm sẽ được hiển thị tại danh mục đối tác tuyển chọn ở trang chủ theo đúng thứ tự
-            cập nhật.
+            <strong>Quy tắc trang chủ:</strong> Chỉ cho phép duy nhất 1 thương hiệu được hiển thị trên web người dùng. Khi thêm mới hoặc kích hoạt thương hiệu này, các thương hiệu khác sẽ tự động được chuyển sang trạng thái ẩn.
           </p>
         </div>
       </div>

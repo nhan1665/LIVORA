@@ -257,23 +257,26 @@
    BRAND STORY SECTION
    ============================================= */
 .brand-section {
-  padding: 90px 20px 80px;
+  padding: 85px 24px;
   text-align: center;
-  background-color: #fff;
+  background-color: #faf9f6;
+  border-top: 1px solid rgba(201, 168, 76, 0.12);
+  border-bottom: 1px solid rgba(201, 168, 76, 0.12);
 }
 
 .brand-container {
-  max-width: 680px;
+  max-width: 760px;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 20px;
+  gap: 18px;
+  text-align: center;
 }
 
 .section-label {
   font-family: 'Inter', sans-serif;
-  font-size: 10.5px;
+  font-size: 11px;
   font-weight: 700;
   letter-spacing: 3.5px;
   text-transform: uppercase;
@@ -283,33 +286,24 @@
 
 .brand-title {
   font-family: 'Playfair Display', serif;
-  font-size: clamp(1.9rem, 3.8vw, 2.9rem);
-  font-weight: 400;
+  font-size: clamp(2rem, 3.6vw, 2.75rem);
+  font-weight: 500;
   color: #1a1510;
   margin: 0;
   line-height: 1.25;
+  letter-spacing: -0.2px;
 }
 
 .brand-description {
   font-family: 'Inter', sans-serif;
-  font-size: 15px;
+  font-size: 15.5px;
   line-height: 1.85;
-  color: #555;
-  max-width: 560px;
+  color: #555555;
   margin: 0;
   font-weight: 300;
-}
-
-.brand-description em {
-  font-style: italic;
-  font-family: 'Playfair Display', serif;
-  font-size: 16px;
-  color: #2a2a2a;
-}
-
-.brand-description strong {
-  font-weight: 700;
-  color: #2a2a2a;
+  white-space: pre-line;
+  word-break: break-word;
+  text-align: center;
 }
 
 /* =============================================

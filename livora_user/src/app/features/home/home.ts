@@ -14,6 +14,13 @@ export interface HomeBannerItem {
   order?: number;
 }
 
+export interface BrandStoryItem {
+  id?: string;
+  name: string;
+  origin?: string;
+  description: string;
+}
+
 @Component({
   selector: 'app-home',
   standalone: true,
@@ -60,12 +67,21 @@ export class Home implements OnInit, OnDestroy {
     return this.banners[this.activeBannerIndex] || this.banners[0];
   }
 
+  // Brand Story state
+  brandStory: BrandStoryItem = {
+    name: 'Một từ mới cho cuộc sống hiện đại',
+    origin: '',
+    description:
+      'Livora — ra đời từ living, sự ấm áp thường nhật của gia đình, kết hợp với hậu tố sang trọng -ora, gợi lên ánh hoàng hôn vàng rực. Cùng nhau tạo nên: một cái tên dành cho những không gian vừa mang đậm dấu ấn cá nhân vừa tinh tế nhẹ nhàng.',
+  };
+
   // Inspirations data (top 3 newest)
   inspirations: InspirationItem[] = [];
   isLoadingInspirations = true;
 
   ngOnInit(): void {
     this.loadBanners();
+    this.loadBrandStory();
     this.loadInspirations();
   }
 
@@ -104,6 +120,31 @@ export class Home implements OnInit, OnDestroy {
       },
     });
   }
+
+  loadBrandStory(): void {
+    this.http.get<any>(`${environment.apiBaseUrl}/homepage/brands?activeOnly=true`).subscribe({
+      next: (res) => {
+        const rawList = res.data || [];
+        const active = rawList.find(
+          (b: any) => b.status === 'Đang hiển thị' || b.status === 'active'
+        );
+        if (active) {
+          this.brandStory = {
+            id: active.id,
+            name: active.name || 'Một từ mới cho cuộc sống hiện đại',
+            origin: '',
+            description: active.description || '',
+          };
+          this.cdr.detectChanges();
+        }
+      },
+      error: (err) => {
+        console.log('Using default brand story:', err);
+      },
+    });
+  }
+
+
 
   onHeroMouseEnter(): void {
     if (this.banners.length > 1) {
