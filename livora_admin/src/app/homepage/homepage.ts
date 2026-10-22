@@ -771,6 +771,12 @@ export class Homepage implements OnInit, AfterViewInit {
   }
 
   // Brand Modal & CRUD
+  get brandWordCount(): number {
+    const text = (this.brandForm.description || '').trim();
+    if (!text) return 0;
+    return text.split(/\s+/).filter(Boolean).length;
+  }
+
   openCreateBrandModal(): void {
     this.brandModalMode = 'create';
     this.editingBrand = null;
@@ -803,7 +809,7 @@ export class Homepage implements OnInit, AfterViewInit {
 
   saveBrand(): void {
     if (!this.brandForm.name?.trim()) {
-      alert('Vui lòng nhập tiêu đề thương hiệu đối tác!');
+      alert('Vui lòng nhập tiêu đề thương hiệu!');
       return;
     }
     if (!this.brandForm.description?.trim()) {
@@ -811,9 +817,14 @@ export class Homepage implements OnInit, AfterViewInit {
       return;
     }
 
+    if (this.brandWordCount > 1000) {
+      alert(`Nội dung giới thiệu thương hiệu đã vượt quá giới hạn 1000 từ (hiện tại có ${this.brandWordCount} từ). Vui lòng rút gọn trước khi lưu!`);
+      return;
+    }
+
     const payload: Partial<BrandItem> = {
       name: this.brandForm.name.trim(),
-      origin: this.brandForm.origin?.trim() || 'Ý',
+      origin: '',
       description: this.brandForm.description.trim(),
       status: this.brandForm.status || 'Đang hiển thị',
     };
@@ -821,24 +832,50 @@ export class Homepage implements OnInit, AfterViewInit {
     if (this.brandModalMode === 'create') {
       this.homepageService.createBrand(payload).subscribe({
         next: (created) => {
+          if (created.status === 'Đang hiển thị') {
+            this.brandList.forEach((b) => (b.status = 'Đã ẩn'));
+          }
           this.brandList.unshift(created);
-          this.showToast(`Đã thêm mới thương hiệu "${created.name}"`);
+          this.showToast(
+            created.status === 'Đang hiển thị'
+              ? `Đã thêm mới và kích hoạt thương hiệu "${created.name}". Các thương hiệu khác đã tự động chuyển sang ẩn.`
+              : `Đã thêm mới thương hiệu "${created.name}"`
+          );
           this.closeBrandModal();
+          this.loadBrands();
+          this.cdr.detectChanges();
         },
-        error: (err) => alert(err.message || 'Không thể tạo thương hiệu.'),
+        error: (err) => {
+          alert(err.message || 'Không thể tạo thương hiệu.');
+          this.cdr.detectChanges();
+        },
       });
     } else if (this.editingBrand) {
       const id = this.editingBrand.id;
       this.homepageService.updateBrand(id, payload).subscribe({
         next: (updated) => {
+          if (updated.status === 'Đang hiển thị') {
+            this.brandList.forEach((b) => {
+              if (b.id !== id) b.status = 'Đã ẩn';
+            });
+          }
           const index = this.brandList.findIndex((b) => b.id === id);
           if (index !== -1) {
             this.brandList[index] = { ...this.brandList[index], ...updated };
           }
-          this.showToast(`Đã cập nhật thương hiệu "${payload.name}"`);
+          this.showToast(
+            updated.status === 'Đang hiển thị'
+              ? `Đã kích hoạt hiển thị thương hiệu "${payload.name}". Các thương hiệu khác đã tự động chuyển sang ẩn.`
+              : `Đã cập nhật thương hiệu "${payload.name}"`
+          );
           this.closeBrandModal();
+          this.loadBrands();
+          this.cdr.detectChanges();
         },
-        error: (err) => alert(err.message || 'Không thể cập nhật thương hiệu.'),
+        error: (err) => {
+          alert(err.message || 'Không thể cập nhật thương hiệu.');
+          this.cdr.detectChanges();
+        },
       });
     }
   }
@@ -846,7 +883,7 @@ export class Homepage implements OnInit, AfterViewInit {
   promptToggleBrand(brand: BrandItem): void {
     if (brand.status === 'Đang hiển thị') {
       this.confirmTitle = 'Ẩn thương hiệu';
-      this.confirmMessage = `Bạn có chắc muốn ẩn thương hiệu "${brand.name}" khỏi danh mục trang chủ không?`;
+      this.confirmMessage = `Bạn có chắc muốn ẩn thương hiệu "${brand.name}" khỏi danh mục trang chủ không? (Nếu ẩn, web người dùng sẽ trở về thương hiệu mặc định)`;
       this.confirmText = 'Đồng ý ẩn';
       this.confirmType = 'warning';
       this.pendingAction = () => {
@@ -854,18 +891,33 @@ export class Homepage implements OnInit, AfterViewInit {
           next: (res) => {
             brand.status = res.status;
             this.showToast(`Đã ẩn thương hiệu "${brand.name}"`);
+            this.loadBrands();
+            this.cdr.detectChanges();
           },
-          error: (err) => alert(err.message || 'Không thể thay đổi trạng thái thương hiệu.'),
+          error: (err) => {
+            alert(err.message || 'Không thể thay đổi trạng thái thương hiệu.');
+            this.cdr.detectChanges();
+          },
         });
       };
       this.isConfirmOpen = true;
     } else {
       this.homepageService.toggleBrand(brand.id).subscribe({
         next: (res) => {
+          this.brandList.forEach((b) => {
+            if (b.id !== brand.id) b.status = 'Đã ẩn';
+          });
           brand.status = res.status;
-          this.showToast(`Đã kích hoạt hiển thị thương hiệu "${brand.name}"`);
+          this.showToast(
+            `Đã kích hoạt hiển thị thương hiệu "${brand.name}". Các thương hiệu khác đã tự động chuyển sang ẩn.`
+          );
+          this.loadBrands();
+          this.cdr.detectChanges();
         },
-        error: (err) => alert(err.message || 'Không thể thay đổi trạng thái thương hiệu.'),
+        error: (err) => {
+          alert(err.message || 'Không thể thay đổi trạng thái thương hiệu.');
+          this.cdr.detectChanges();
+        },
       });
     }
   }
@@ -880,8 +932,13 @@ export class Homepage implements OnInit, AfterViewInit {
         next: () => {
           this.brandList = this.brandList.filter((b) => b.id !== brand.id);
           this.showToast(`Đã xóa thương hiệu "${brand.name}"`);
+          this.loadBrands();
+          this.cdr.detectChanges();
         },
-        error: (err) => alert(err.message || 'Không thể xóa thương hiệu.'),
+        error: (err) => {
+          alert(err.message || 'Không thể xóa thương hiệu.');
+          this.cdr.detectChanges();
+        },
       });
     };
     this.isConfirmOpen = true;
