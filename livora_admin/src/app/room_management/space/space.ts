@@ -81,16 +81,9 @@ export class Space {
   close(): void { if (!this.saving()) this.modalOpen.set(false); }
   async selectFile(event: Event): Promise<void> {
     const file = (event.target as HTMLInputElement).files?.[0]; if (!file) return;
-    if (!file.name.toLocaleLowerCase().endsWith('.glb') || file.size < 20 || file.size > 50 * 1024 * 1024) { this.fileError.set('Chọn file .glb từ 20 byte đến 50 MB.'); this.form.modelFile = null; return; }
-    try {
-      const header = new DataView(await file.slice(0, 12).arrayBuffer());
-      if (header.getUint32(0, true) !== 0x46546c67 || header.getUint32(4, true) !== 2 || header.getUint32(8, true) !== file.size) throw new Error('invalid header');
-      this.form.modelFile = { name: file.name, size: file.size };
-      this.fileError.set(''); this.formError.set('');
-    } catch {
-      this.form.modelFile = null;
-      this.fileError.set('File phải có header GLB phiên bản 2 hợp lệ.');
-    }
+    if (file.size > 50 * 1024 * 1024) { this.fileError.set('Chọn file dung lượng dưới 50 MB.'); this.form.modelFile = null; return; }
+    this.form.modelFile = { name: file.name, size: file.size };
+    this.fileError.set(''); this.formError.set('');
     this.cdr.markForCheck();
   }
   save(form: NgForm): void {

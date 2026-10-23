@@ -178,23 +178,13 @@ export class Room {
       return;
     }
 
-    const objectUrl = URL.createObjectURL(file);
     try {
-      const dimensions = await this.readImageDimensions(objectUrl);
-      const ratio = dimensions.width / dimensions.height;
-      if (dimensions.width < 1920 || dimensions.height < 1080 || Math.abs(ratio - 16 / 9) > 0.03) {
-        this.imageError.set('Ảnh cần tối thiểu 1920×1080 px và có tỷ lệ 16:9.');
-        input.value = '';
-        return;
-      }
       this.form.thumbnail = await this.readFileAsDataUrl(file);
       this.hasUnsavedChanges = true;
       this.changeDetectorRef.markForCheck();
     } catch {
       this.imageError.set('Không thể đọc ảnh này. Vui lòng chọn tệp khác.');
       input.value = '';
-    } finally {
-      URL.revokeObjectURL(objectUrl);
     }
   }
 

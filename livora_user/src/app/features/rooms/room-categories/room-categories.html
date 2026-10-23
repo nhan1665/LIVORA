@@ -12,12 +12,13 @@
   <div class="mt-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-12">
     
     @for (room of rooms; track room.id) {
-      <a [routerLink]="['/rooms', room.slug]" class="group cursor-pointer block">
-        <div class="overflow-hidden mb-4 rounded-sm aspect-[4/3] relative bg-gray-100">
+      <a [routerLink]="['/rooms', room.slug]" class="group cursor-pointer block room-card-item">
+        <div class="room-frame-wrapper mb-4 rounded-sm overflow-hidden bg-gray-100">
           <img 
             [src]="room.image" 
             [alt]="room.name"
-            class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+            class="room-frame-image"
+            loading="lazy"
           >
         </div>
 

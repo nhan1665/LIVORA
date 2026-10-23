@@ -104,6 +104,18 @@ export class RoomProductList implements OnInit {
   }
 
   ngOnInit() {
+    this.productService.getRooms().subscribe({
+      next: (rooms) => {
+        if (Array.isArray(rooms)) {
+          rooms.forEach((r: any) => {
+            if (r.slug && r.name) {
+              this.roomNamesMap[r.slug] = r.name;
+            }
+          });
+        }
+      }
+    });
+
     this.route.paramMap.subscribe(params => {
       const room = params.get('roomName');
       const category = params.get('categoryName');
