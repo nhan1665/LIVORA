@@ -37,6 +37,38 @@ export class InspirationService {
   private readonly apiUrl = `${environment.apiBaseUrl}/inspirations`;
 
   /**
+   * Lấy tất cả danh sách cảm hứng (được publish) từ backend
+   */
+  getInspirations(params?: { status?: string; roomId?: string; all?: boolean; pageSize?: number }): Observable<InspirationItem[]> {
+    const queryParams: any = {
+      status: params?.status || 'published',
+    };
+    if (params?.all !== false) {
+      queryParams.all = 'true';
+    } else if (params?.pageSize) {
+      queryParams.pageSize = params.pageSize.toString();
+    }
+    if (params?.roomId) {
+      queryParams.roomId = params.roomId;
+    }
+
+    return this.http
+      .get<any>(this.apiUrl, { params: queryParams })
+      .pipe(
+        map((res) => {
+          if (res && res.data && Array.isArray(res.data)) {
+            return res.data as InspirationItem[];
+          }
+          return [];
+        }),
+        catchError((err) => {
+          console.warn('Lỗi khi tải cảm hứng từ backend:', err);
+          return of([]);
+        })
+      );
+  }
+
+  /**
    * Lấy danh sách cảm hứng mới nhất từ backend
    */
   getLatestInspirations(limit = 3): Observable<InspirationItem[]> {

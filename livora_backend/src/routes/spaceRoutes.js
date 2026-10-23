@@ -6,8 +6,10 @@ const {
   updateRoomDesign,
   toggleRoomDesign,
   deleteRoomDesign,
+  seedDefaultSpaces,
 } = require('../controllers/spaceController');
 
+router.get('/seed-defaults', seedDefaultSpaces);
 router.get('/', getRoomDesigns);
 router.post('/', createRoomDesign);
 router.put('/:id', updateRoomDesign);

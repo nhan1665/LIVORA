@@ -633,3 +633,82 @@
     padding: 20px 24px 24px 24px;
   }
 }
+
+/* Extra meta tags, style badges and concept descriptions */
+.room-meta-tags, .sidebar-tags {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+
+.room-style-badge, .sidebar-style-tag {
+  display: inline-block;
+  background-color: #f5f0ea;
+  color: #8c734b;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 12px;
+  letter-spacing: 0.5px;
+}
+
+.room-excerpt {
+  font-size: 13px;
+  color: #666;
+  line-height: 1.5;
+  margin: 6px 0 10px 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.sidebar-concept-desc {
+  font-size: 13.5px;
+  color: #666;
+  line-height: 1.6;
+  margin-top: 10px;
+  margin-bottom: 0;
+}
+
+.product-actions-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.btn-add-cart-icon {
+  background-color: #faf9f8;
+  color: #1a1510;
+  border: 1px solid #dcd8d3;
+  border-radius: 4px;
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-add-cart-icon:hover {
+  background-color: #c9a84c;
+  color: #fff;
+  border-color: #c9a84c;
+}
+
+.empty-hotspots-msg {
+  padding: 24px 16px;
+  text-align: center;
+  color: #777;
+  font-size: 13px;
+  line-height: 1.6;
+  background-color: #faf9f7;
+  border-radius: 6px;
+  margin-top: 12px;
+}
+

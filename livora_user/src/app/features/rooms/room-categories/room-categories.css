@@ -1,0 +1,28 @@
+.room-card-item {
+  display: block;
+}
+
+.room-frame-wrapper {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  background-color: #f3f4f6;
+  border-radius: 4px;
+}
+
+.room-frame-image {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+  transition: transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.room-card-item:hover .room-frame-image {
+  transform: scale(1.05);
+}

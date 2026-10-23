@@ -21,7 +21,7 @@
     <div *ngFor="let room of filteredRooms" class="room-card" (click)="openRoomModal(room)">
       <!-- Room Image Wrapper -->
       <div class="room-image-wrapper">
-        <img [src]="room.image" [alt]="room.name" class="room-image" />
+        <img [src]="room.image" [alt]="room.name" class="room-image" loading="lazy" />
 
         <!-- Hotspots/Dots superimposed over coordinates -->
         <div
@@ -57,8 +57,12 @@
 
       <!-- Room Label and Metadata -->
       <div class="room-info">
-        <span class="room-category">{{ room.category }}</span>
+        <div class="room-meta-tags">
+          <span class="room-category">{{ room.category }}</span>
+          <span *ngIf="room.style" class="room-style-badge">{{ room.style }}</span>
+        </div>
         <h3 class="room-name">{{ room.name }}</h3>
+        <p *ngIf="room.content" class="room-excerpt">{{ room.content }}</p>
         <span class="room-view-link">Xem chi tiết không gian →</span>
       </div>
     </div>
@@ -83,12 +87,16 @@
       <!-- Right side: Vertically Scrollable list of featured products -->
       <div class="modal-right-pane">
         <div class="sidebar-header">
-          <span class="sidebar-category-tag">{{ selectedRoom.category }}</span>
+          <div class="sidebar-tags">
+            <span class="sidebar-category-tag">{{ selectedRoom.category }}</span>
+            <span *ngIf="selectedRoom.style" class="sidebar-style-tag">{{ selectedRoom.style }}</span>
+          </div>
           <h2 class="sidebar-title">{{ selectedRoom.name }}</h2>
+          <p *ngIf="selectedRoom.content" class="sidebar-concept-desc">{{ selectedRoom.content }}</p>
         </div>
 
         <div class="sidebar-scroll-content">
-          <h3 class="list-heading">Sản phẩm nổi bật trong phòng này</h3>
+          <h3 class="list-heading">Sản phẩm nổi bật trong không gian này</h3>
 
           <div class="featured-products-list">
             <div *ngFor="let hs of selectedRoom.hotspots" class="featured-product-row">
@@ -104,10 +112,19 @@
                 <span class="product-row-price">${{ hs.product.price }}</span>
               </div>
 
-              <!-- View Product Detail Action -->
-              <button class="btn-view-detail" (click)="redirectToProduct(hs.product.id, $event)">
-                Xem chi tiết sản phẩm
-              </button>
+              <!-- Actions -->
+              <div class="product-actions-group">
+                <button class="btn-view-detail" (click)="redirectToProduct(hs.product.id, $event)">
+                  Chi tiết
+                </button>
+                <button class="btn-add-cart-icon" (click)="addToCart(hs.product, $event)" title="Thêm vào giỏ hàng">
+                  <i class="bi bi-cart-plus"></i>
+                </button>
+              </div>
+            </div>
+
+            <div *ngIf="!selectedRoom.hotspots || !selectedRoom.hotspots.length" class="empty-hotspots-msg">
+              <p>Không gian cảm hứng này giới thiệu tổng thể phong cách và cách bài trí của LIVORA. Hãy khám phá danh mục để chọn các sản phẩm yêu thích.</p>
             </div>
           </div>
         </div>
@@ -115,14 +132,11 @@
     </div>
   </div>
 </div>
+
 <div *ngIf="showToast" class="fixed bottom-8 right-8 z-[9999] flex items-center bg-gray-900 text-white px-6 py-4 rounded-lg shadow-2xl transition-all duration-300 animate-bounce">
-
   <i class="bi bi-check-circle-fill text-green-400 text-xl mr-3"></i>
-
   <span class="font-medium text-sm tracking-wide">{{ toastMessage }}</span>
-
   <a routerLink="/cart" class="ml-6 text-xs text-gray-300 underline hover:text-white transition-colors cursor-pointer border-l border-gray-600 pl-4">
     Xem giỏ hàng
   </a>
-
 </div>

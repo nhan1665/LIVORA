@@ -7,7 +7,7 @@ import { AuthService } from '../../services/auth.service';
 @Component({
   selector: 'app-module-5',
   standalone: true,
-  imports: [Header, CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule],
   templateUrl: './module-5.html',
   styleUrl: './module-5.css',
 })

@@ -24,19 +24,33 @@ const getInspirations = async (req, res) => {
     }
 
     if (all === 'true') {
-      const items = await Inspiration.find(filter).populate('roomId').populate('taggedProducts').lean();
+      const items = await Inspiration.find(filter)
+        .populate('roomId', 'name slug')
+        .populate('taggedProducts.productId', 'name sku price thumbnail')
+        .sort({ createdAt: -1 })
+        .lean();
       return sendSuccess(res, items.map((i) => ({
         id: i._id.toString(),
         code: i.code || `INS-${i._id.toString().slice(-4).toUpperCase()}`,
         title: i.title,
         slug: i.slug,
+        roomId: i.roomId?._id ? i.roomId._id.toString() : i.roomId,
         roomName: i.roomId?.name || 'Không gian chung',
         style: i.style,
         thumbnail: i.thumbnail,
         content: i.content,
-        taggedProducts: i.taggedProducts,
+        taggedProducts: (i.taggedProducts || []).map((tp) => ({
+          productId: tp.productId?._id ? tp.productId._id.toString() : tp.productId,
+          name: tp.productId?.name || '',
+          sku: tp.productId?.sku || '',
+          price: tp.productId?.price || 0,
+          thumbnail: tp.productId?.thumbnail || '',
+          xPercent: tp.xPercent,
+          yPercent: tp.yPercent,
+        })),
         status: i.status,
         viewsCount: i.viewsCount,
+        createdAt: i.createdAt,
       })));
     }
 

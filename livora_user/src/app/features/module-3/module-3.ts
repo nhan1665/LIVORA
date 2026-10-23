@@ -1,7 +1,8 @@
-import { Component, inject, ChangeDetectorRef, OnDestroy } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { CartService } from '../../services/cart.service';
+import { InspirationService } from '../../services/inspiration.service';
 
 export interface Product {
   id: string;
@@ -24,6 +25,8 @@ export interface Room {
   category: 'Phòng ngủ' | 'Phòng khách' | 'Phòng bếp' | 'Phòng tắm' | 'Phòng ăn' | 'Bedroom' | 'Living Room' | 'Kitchen' | 'Bathroom' | 'Dining room' | string;
   image: string;
   hotspots: Hotspot[];
+  style?: string;
+  content?: string;
 }
 
 @Component({
@@ -33,27 +36,30 @@ export interface Room {
   templateUrl: './module-3.html',
   styleUrl: './module-3.css',
 })
-export class Module3 implements OnDestroy {
+export class Module3 implements OnInit, OnDestroy {
   ngOnDestroy() {
     document.body.style.overflow = '';
   }
 
   private readonly cartService = inject(CartService);
+  private readonly inspirationService = inject(InspirationService);
   private readonly router = inject(Router);
   private readonly cdr = inject(ChangeDetectorRef);
 
   // Active filter category
   selectedCategory: string = 'Tất cả';
 
-  // Filter options matching the screenshot exactly
-  readonly categories: string[] = ['Tất cả', 'Phòng ngủ', 'Phòng khách', 'Phòng bếp', 'Phòng tắm', 'Phòng ăn'];
+  // Filter options
+  categories: string[] = ['Tất cả', 'Phòng ngủ', 'Phòng khách', 'Phòng bếp', 'Phòng tắm', 'Phòng ăn'];
 
-  // Shop the Look Rooms database
-  readonly rooms: Room[] = [
+  // Default fallback rooms
+  readonly defaultRooms: Room[] = [
     {
       id: 'bedroom-scandic',
       name: 'Phòng ngủ phong cách Bắc Âu thanh bình',
       category: 'Phòng ngủ',
+      style: 'Bắc Âu',
+      content: 'Không gian phòng ngủ thư thái với chất liệu gỗ tự nhiên và màu sắc trang nhã.',
       image: 'https://images.unsplash.com/photo-1616594039964-ae9021a400a0?auto=format&fit=crop&w=1200&q=80',
       hotspots: [
         {
@@ -98,6 +104,8 @@ export class Module3 implements OnDestroy {
       id: 'living-cosy',
       name: 'Phòng khách tối giản ấm cúng',
       category: 'Phòng khách',
+      style: 'Tối giản',
+      content: 'Tối ưu công năng sử dụng với những đường nét hình khối tinh gọn, hiện đại.',
       image: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=1200&q=80',
       hotspots: [
         {
@@ -142,7 +150,9 @@ export class Module3 implements OnDestroy {
       id: 'kitchen-modern',
       name: 'Phòng bếp hiện đại và tinh tế',
       category: 'Phòng bếp',
-      image: 'https://images.unsplash.com/photo-1617228069096-4638a7ffc906?q=80&w=1742&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+      style: 'Hiện đại',
+      content: 'Khu vực nấu nướng sang trọng và tiện nghi với các giải pháp thông minh.',
+      image: 'https://images.unsplash.com/photo-1617228069096-4638a7ffc906?q=80&w=1742&auto=format&fit=crop',
       hotspots: [
         {
           top: 65,
@@ -174,6 +184,8 @@ export class Module3 implements OnDestroy {
       id: 'bathroom-spa',
       name: 'Phòng tắm phong cách spa thư giãn',
       category: 'Phòng tắm',
+      style: 'Spa Zen',
+      content: 'Không gian phòng tắm đậm chất nghỉ dưỡng, tái tạo năng lượng mỗi ngày.',
       image: 'https://images.unsplash.com/photo-1618220179428-22790b461013?auto=format&fit=crop&w=1200&q=80',
       hotspots: [
         {
@@ -194,7 +206,9 @@ export class Module3 implements OnDestroy {
       id: 'dining-room-warm',
       name: 'Phòng ăn gia đình sum họp ấm áp',
       category: 'Phòng ăn',
-      image: 'https://images.unsplash.com/photo-1616486886892-ff366aa67ba4?q=80&w=1160&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+      style: 'Ấm cúng',
+      content: 'Nơi gắn kết gia đình qua những bữa cơm ngon với bàn ghế gỗ sồi ấm áp.',
+      image: 'https://images.unsplash.com/photo-1616486886892-ff366aa67ba4?q=80&w=1160&auto=format&fit=crop',
       hotspots: [
         {
           top: 55,
@@ -224,12 +238,57 @@ export class Module3 implements OnDestroy {
     }
   ];
 
+  rooms: Room[] = [...this.defaultRooms];
+
   // Active room for full screen modal view
   selectedRoom: Room | null = null;
 
   showToast: boolean = false;
   toastMessage: string = '';
   toastTimeout: any;
+
+  ngOnInit(): void {
+    this.loadInspirations();
+  }
+
+  loadInspirations(): void {
+    this.inspirationService.getInspirations({ status: 'published', all: true }).subscribe({
+      next: (items) => {
+        if (Array.isArray(items) && items.length > 0) {
+          this.rooms = items.map((item) => ({
+            id: item.id || item.code || item.slug,
+            name: item.title,
+            category: item.roomName || 'Không gian chung',
+            image: item.thumbnail,
+            style: item.style,
+            content: item.content,
+            hotspots: (item.taggedProducts || []).map((tp, idx) => ({
+              top: typeof tp.yPercent === 'number' ? tp.yPercent : 50,
+              left: typeof tp.xPercent === 'number' ? tp.xPercent : 50,
+              product: {
+                id: tp.productId ? String(tp.productId) : `prod-${idx}`,
+                name: tp.name || tp.sku || 'Sản phẩm nội thất',
+                category: item.roomName || 'Nội thất',
+                price: tp.price || 0,
+                description: tp.sku ? `Mã SKU: ${tp.sku}` : (item.style ? `Phong cách ${item.style}` : (item.content || 'Sản phẩm cao cấp LIVORA')),
+                image: tp.thumbnail || item.thumbnail
+              }
+            }))
+          }));
+
+          // Compute dynamic category filter pills
+          const distinctCategories = Array.from(
+            new Set(this.rooms.map((r) => r.category).filter(Boolean))
+          );
+          this.categories = ['Tất cả', ...distinctCategories];
+          this.cdr.detectChanges();
+        }
+      },
+      error: (err) => {
+        console.warn('Lỗi khi nạp cảm hứng từ server, sử dụng danh sách mẫu:', err);
+      }
+    });
+  }
 
   showToastNotification(message: string) {
     this.toastMessage = message;
@@ -239,7 +298,7 @@ export class Module3 implements OnDestroy {
 
     this.toastTimeout = setTimeout(() => {
       this.showToast = false;
-      this.cdr.detectChanges(); // Force Angular to update the UI immediately
+      this.cdr.detectChanges();
     }, 3000);
   }
 
@@ -289,6 +348,16 @@ export class Module3 implements OnDestroy {
     } else if (prodId === 'lamp-fado' || prodId === '16') {
       productId = '16';
       roomName = 'living-room'; categoryName = 'lighting';
+    } else {
+      productId = prodId;
+      const catLower = (this.selectedRoom?.category || '').toLowerCase();
+      if (catLower.includes('khách') || catLower.includes('living')) roomName = 'living-room';
+      else if (catLower.includes('bếp') || catLower.includes('kitchen')) roomName = 'kitchen';
+      else if (catLower.includes('tắm') || catLower.includes('bathroom')) roomName = 'bathroom';
+      else if (catLower.includes('ăn') || catLower.includes('dining')) roomName = 'dining-room';
+      else roomName = 'bedroom';
+
+      categoryName = 'beds';
     }
 
     this.router.navigate(['/rooms', roomName, categoryName, productId]);
