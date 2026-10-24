@@ -283,7 +283,9 @@ export class Payment implements OnInit {
 
     // Gửi đơn hàng thực tế lên Backend MongoDB Atlas
     if (typeof fetch !== 'undefined') {
+      const currentU = this.authService.currentUser();
       const orderPayload = {
+        userId: currentU ? (currentU.id || (currentU as any)._id) : undefined,
         customerInfo: {
           name: this.fullName.trim(),
           phone: this.phone.trim(),
@@ -312,6 +314,39 @@ export class Payment implements OnInit {
         .then(data => {
           if (data.success && data.data?.orderCode) {
             this.orderNumber = data.data.orderCode;
+
+            // Ghi log vào web user (Console và LocalStorage)
+            const logEntry = {
+              timestamp: new Date().toISOString(),
+              action: 'USER_ORDER_CREATED',
+              orderCode: data.data.orderCode,
+              customerName: this.fullName.trim(),
+              phone: this.phone.trim(),
+              paymentMethod: this.cartService.paymentMethod(),
+              totalAmount: data.data.finalAmount || this.cartService.total(),
+              items: this.cartService.items().map(i => ({ name: i.name, quantity: i.quantity, price: i.price })),
+            };
+            console.log('📝 [LIVORA USER LOG] Đơn hàng đã được tạo thành công:', logEntry);
+
+            try {
+              const logs = JSON.parse(localStorage.getItem('livora_user_order_logs') || '[]');
+              logs.unshift(logEntry);
+              localStorage.setItem('livora_user_order_logs', JSON.stringify(logs));
+
+              const userOrders = JSON.parse(localStorage.getItem('livora_user_orders') || '[]');
+              userOrders.unshift({
+                ...orderPayload,
+                orderCode: data.data.orderCode,
+                finalAmount: data.data.finalAmount || this.cartService.total(),
+                orderStatus: data.data.orderStatus || 'pending',
+                paymentStatus: data.data.paymentStatus || (this.cartService.paymentMethod() === 'bank' ? 'paid' : 'unpaid'),
+                createdAt: new Date().toISOString(),
+              });
+              localStorage.setItem('livora_user_orders', JSON.stringify(userOrders));
+            } catch (storageErr) {
+              console.warn('[LIVORA USER] Lỗi lưu trữ log đơn hàng:', storageErr);
+            }
+
             this.cdr.detectChanges();
           }
         })
