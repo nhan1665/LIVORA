@@ -68,6 +68,7 @@ export interface CreateOrderRequest {
   shippingFee?: number;
   paymentMethod: PaymentMethod;
   notes?: string;
+  customerId?: string | null;
 }
 
 export interface OrderFilterParams {
