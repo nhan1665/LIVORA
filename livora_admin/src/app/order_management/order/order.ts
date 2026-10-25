@@ -215,6 +215,10 @@ export class OrderComponent implements OnInit {
   paymentMethodInput: PaymentMethod = 'COD';
   orderNotesInput: string = '';
   phoneLookupFound: boolean = false;
+  matchedCustomerId: string | null = null;
+  isNewCustomer: boolean = false;
+  isSearchingCustomer: boolean = false;
+  isSubmitting: boolean = false;
   createFormError: string = '';
 
   constructor(private orderService: OrderService) {}
@@ -224,19 +228,38 @@ export class OrderComponent implements OnInit {
     this.loadProducts();
   }
 
-  loadOrders(): void {
-    this.loading = true;
-    const res = this.orderService.listOrders({
+  async loadOrders(silent: boolean = false): Promise<void> {
+    if (!silent) this.loading = true;
+    const localRes = this.orderService.listOrders({
       keyword: this.keyword,
       orderStatus: this.orderStatusFilter,
       paymentStatus: this.paymentStatusFilter,
       page: this.currentPage,
       pageSize: this.pageSize,
     });
-    this.orders = res.orders;
-    this.totalItems = res.total;
+    this.orders = localRes.orders;
+    this.totalItems = localRes.total;
     this.stats = this.orderService.getOrderStats();
+
+    try {
+      const res = await this.orderService.fetchOrders({
+        keyword: this.keyword,
+        orderStatus: this.orderStatusFilter,
+        paymentStatus: this.paymentStatusFilter,
+        page: this.currentPage,
+        pageSize: this.pageSize,
+      });
+      this.orders = res.orders;
+      this.totalItems = res.total;
+      this.stats = this.orderService.getOrderStats();
+    } catch (_) {}
+
     this.loading = false;
+  }
+
+  async refreshOrders(): Promise<void> {
+    this.showNotice('Đang làm mới danh sách đơn hàng từ hệ thống...', 'success');
+    await this.loadOrders(false);
   }
 
   loadProducts(): void {
@@ -387,6 +410,10 @@ export class OrderComponent implements OnInit {
     this.paymentMethodInput = 'COD';
     this.orderNotesInput = '';
     this.phoneLookupFound = false;
+    this.matchedCustomerId = null;
+    this.isNewCustomer = false;
+    this.isSearchingCustomer = false;
+    this.isSubmitting = false;
     this.createFormError = '';
     this.loadProducts();
 
@@ -402,16 +429,36 @@ export class OrderComponent implements OnInit {
     this.isCreateOpen = false;
   }
 
-  onPhoneBlur(): void {
-    if (!this.customerPhone.trim()) return;
-    const existing = this.orderService.findCustomerByPhone(this.customerPhone.trim());
-    if (existing) {
-      this.customerName = existing.name;
-      this.customerEmail = existing.email || '';
-      this.customerAddress = existing.address;
-      this.phoneLookupFound = true;
-    } else {
+  async onPhoneBlur(): Promise<void> {
+    const phone = this.customerPhone.trim();
+    if (!phone) {
       this.phoneLookupFound = false;
+      this.matchedCustomerId = null;
+      this.isNewCustomer = false;
+      return;
+    }
+
+    this.isSearchingCustomer = true;
+    try {
+      const customer = await this.orderService.findCustomerByPhoneAsync(phone);
+      if (customer) {
+        this.customerName = customer.name;
+        this.customerEmail = customer.email || '';
+        this.customerAddress = customer.address || '';
+        this.phoneLookupFound = true;
+        this.matchedCustomerId = customer.id || null;
+        this.isNewCustomer = false;
+      } else {
+        this.phoneLookupFound = false;
+        this.matchedCustomerId = null;
+        this.isNewCustomer = true;
+      }
+    } catch (_) {
+      this.phoneLookupFound = false;
+      this.matchedCustomerId = null;
+      this.isNewCustomer = true;
+    } finally {
+      this.isSearchingCustomer = false;
     }
   }
 
@@ -493,36 +540,62 @@ export class OrderComponent implements OnInit {
     return Math.max(0, this.createSubtotal - this.createDiscount + this.createShipping);
   }
 
-  submitCreateOrder(): void {
+  async submitCreateOrder(): Promise<void> {
     this.createFormError = '';
     if (this.orderItemsToCreate.length === 0) {
       this.createFormError = 'Đơn hàng phải có ít nhất một sản phẩm.';
       return;
     }
 
-    const res = this.orderService.createOrder({
-      customerInfo: {
-        name: this.customerName,
-        phone: this.customerPhone,
-        email: this.customerEmail,
-        address: this.customerAddress,
-      },
-      items: this.orderItemsToCreate.map(i => ({
-        productId: i.productId,
-        quantity: i.quantity,
-        color: i.color,
-      })),
-      voucherCode: this.voucherCodeInput,
-      paymentMethod: this.paymentMethodInput,
-      notes: this.orderNotesInput,
-    });
+    if (!this.customerName.trim()) {
+      this.createFormError = 'Vui lòng nhập họ tên khách hàng.';
+      return;
+    }
 
-    if (res.success) {
-      this.showNotice(res.message, 'success');
-      this.closeCreateOrderModal();
-      this.loadOrders();
-    } else {
-      this.createFormError = res.message;
+    if (!this.customerPhone.trim()) {
+      this.createFormError = 'Vui lòng nhập số điện thoại khách hàng.';
+      return;
+    }
+
+    if (!this.customerAddress.trim()) {
+      this.createFormError = 'Vui lòng nhập địa chỉ nhận hàng chi tiết.';
+      return;
+    }
+
+    this.isSubmitting = true;
+    try {
+      const res = await this.orderService.createOrderAsync(
+        {
+          customerInfo: {
+            name: this.customerName,
+            phone: this.customerPhone,
+            email: this.customerEmail,
+            address: this.customerAddress,
+          },
+          items: this.orderItemsToCreate.map(i => ({
+            productId: i.productId,
+            quantity: i.quantity,
+            color: i.color,
+          })),
+          voucherCode: this.voucherCodeInput,
+          paymentMethod: this.paymentMethodInput,
+          notes: this.orderNotesInput,
+        },
+        this.isNewCustomer,
+        this.matchedCustomerId
+      );
+
+      if (res.success) {
+        this.showNotice(res.message, 'success');
+        this.closeCreateOrderModal();
+        await this.loadOrders(true);
+      } else {
+        this.createFormError = res.message;
+      }
+    } catch (err: any) {
+      this.createFormError = err.message || 'Lỗi khi tạo đơn hàng.';
+    } finally {
+      this.isSubmitting = false;
     }
   }
 

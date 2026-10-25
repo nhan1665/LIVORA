@@ -14,6 +14,10 @@
       <h1>Danh sách đơn hàng</h1>
     </div>
     <div class="order-actions">
+      <button type="button" class="btn-refresh" (click)="refreshOrders()" title="Cập nhật đơn hàng mới nhất từ hệ thống">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 4px;"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+        Làm mới
+      </button>
       <button type="button" class="btn-create" (click)="openCreateOrderModal()">
         + Tạo đơn hàng mới
       </button>
@@ -329,16 +333,33 @@
       <div class="form-grid-2">
         <div class="form-group">
           <label>Số điện thoại khách hàng <span class="req">*</span></label>
-          <input
-            type="text"
-            placeholder="Ví dụ: 0912345678"
-            [(ngModel)]="customerPhone"
-            (blur)="onPhoneBlur()"
-          />
+          <div style="display: flex; gap: 8px;">
+            <input
+              type="text"
+              placeholder="Ví dụ: 0912345678"
+              [(ngModel)]="customerPhone"
+              (blur)="onPhoneBlur()"
+              (keyup.enter)="onPhoneBlur()"
+              style="flex: 1;"
+            />
+            <button
+              type="button"
+              class="btn-lookup"
+              (click)="onPhoneBlur()"
+              [disabled]="isSearchingCustomer"
+              style="padding: 0 14px; background: #e2e8f0; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; color: #334155;"
+            >
+              {{ isSearchingCustomer ? 'Đang tìm...' : 'Tra cứu' }}
+            </button>
+          </div>
           @if (phoneLookupFound) {
-            <small class="lookup-badge">&check; Đã tìm thấy khách hàng cũ. Thông tin đã được tự động điền!</small>
+            <small class="lookup-badge">&check; Đã tìm thấy khách hàng. Thông tin đã được tự động điền!</small>
+          } @else if (isNewCustomer && customerPhone.trim().length >= 10) {
+            <small class="lookup-hint" style="color: #2563eb; font-weight: 600;">
+              &plus; Khách hàng mới — Hệ thống sẽ tự động tạo hồ sơ khách hàng mới khi hoàn tất đơn!
+            </small>
           } @else {
-            <small class="lookup-hint">Nhập SĐT để tự tra cứu hoặc tạo mới nếu là khách vãng lai.</small>
+            <small class="lookup-hint">Nhập SĐT để tự tra cứu hoặc hệ thống sẽ tạo mới nếu là khách hàng mới.</small>
           }
         </div>
         <div class="form-group">

@@ -288,63 +288,73 @@ export class OrderService {
     this.syncFromBackend();
   }
 
-  private syncFromBackend(): void {
-    if (typeof fetch !== 'undefined') {
-      fetch('http://localhost:5000/api/orders?pageSize=50')
-        .then(res => res.json())
-        .then(json => {
-          if (json && json.success && Array.isArray(json.data) && json.data.length > 0) {
-            const backendOrders: Order[] = json.data.map((o: any) => ({
-              _id: o.id || o._id,
-              orderCode: o.orderCode,
-              customerId: o.userId || 'guest',
-              customerInfo: o.customerInfo || { name: '', phone: '', address: '' },
-              items: (o.items || []).map((it: any) => ({
-                productId: it.productId,
-                productName: it.productName || it.name,
-                sku: it.sku || '',
-                thumbnail: it.thumbnail || '',
-                color: it.color || '',
-                price: it.price || 0,
-                quantity: it.quantity || 1,
-                subtotal: it.subtotal || ((it.price || 0) * (it.quantity || 1)),
-              })),
-              voucherCode: o.voucherCode || '',
-              subtotalAmount: o.subtotalAmount || 0,
-              discountAmount: o.discountAmount || 0,
-              shippingFee: o.shippingFee || 0,
-              totalAmount: o.finalAmount || 0,
-              paymentMethod: o.paymentMethod || 'COD',
-              paymentStatus: o.paymentStatus || 'unpaid',
-              orderStatus: o.orderStatus || 'pending',
-              notes: o.note || '',
-              cancelReason: o.cancelReason || '',
-              history: (o.statusHistory || []).map((h: any) => ({
-                status: h.status,
-                timestamp: h.timestamp,
-                note: h.note,
-                updatedBy: h.actor || 'Hệ thống',
-              })),
-              createdAt: o.createdAt,
-              updatedAt: o.updatedAt,
-            }));
-
-            // Merge with local orders, prioritizing backend
-            const map = new Map<string, Order>();
-            backendOrders.forEach(o => map.set(o.orderCode, o));
-            this.orders.forEach(o => {
-              if (!map.has(o.orderCode)) map.set(o.orderCode, o);
-            });
-            this.orders = Array.from(map.values()).sort(
-              (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-            );
-            this.saveOrders();
-          }
-        })
-        .catch(() => {
-          // Fallback to local storage if backend not reachable
+  public async syncFromBackend(): Promise<void> {
+    if (typeof fetch === 'undefined') return;
+    try {
+      const res = await fetch('http://localhost:5000/api/orders?pageSize=100');
+      const json = await res.json();
+      if (json && json.success && Array.isArray(json.data)) {
+        const backendOrders: Order[] = json.data.map((o: any) => this.mapBackendOrderToModel(o));
+        const map = new Map<string, Order>();
+        backendOrders.forEach(o => map.set(o.orderCode, o));
+        this.orders.forEach(o => {
+          if (!map.has(o.orderCode)) map.set(o.orderCode, o);
         });
+        this.orders = Array.from(map.values()).sort(
+          (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+        this.saveOrders();
+      }
+    } catch (_) {
+      // Fallback to local storage if backend not reachable
     }
+  }
+
+  public async fetchOrders(params: OrderFilterParams = {}): Promise<{
+    orders: Order[];
+    total: number;
+    page: number;
+    pageSize: number;
+  }> {
+    await this.syncFromBackend();
+    return this.listOrders(params);
+  }
+
+  private mapBackendOrderToModel(o: any): Order {
+    return {
+      _id: o.id || o._id,
+      orderCode: o.orderCode,
+      customerId: o.userId || 'guest',
+      customerInfo: o.customerInfo || { name: '', phone: '', address: '' },
+      items: (o.items || []).map((it: any) => ({
+        productId: it.productId || 'prod-custom',
+        productName: it.productName || it.name || 'Sản phẩm nội thất',
+        sku: it.sku || '',
+        thumbnail: it.thumbnail || 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=500',
+        color: it.color || '',
+        price: it.price || 0,
+        quantity: it.quantity || 1,
+        subtotal: it.subtotal || ((it.price || 0) * (it.quantity || 1)),
+      })),
+      voucherCode: o.voucherCode || '',
+      subtotalAmount: o.subtotalAmount || 0,
+      discountAmount: o.discountAmount || 0,
+      shippingFee: o.shippingFee || 0,
+      totalAmount: o.finalAmount || 0,
+      paymentMethod: (o.paymentMethod === 'BANK_TRANSFER' ? 'Banking' : (o.paymentMethod || 'COD')) as any,
+      paymentStatus: o.paymentStatus || 'unpaid',
+      orderStatus: o.orderStatus || 'pending',
+      notes: o.note || '',
+      cancelReason: o.cancelReason || '',
+      history: (o.statusHistory || []).map((h: any) => ({
+        status: h.status,
+        timestamp: h.timestamp,
+        note: h.note,
+        updatedBy: h.actor || 'Hệ thống',
+      })),
+      createdAt: o.createdAt || new Date().toISOString(),
+      updatedAt: o.updatedAt || new Date().toISOString(),
+    };
   }
 
   private loadState(): void {
@@ -395,6 +405,53 @@ export class OrderService {
     if (!cleanPhone) return null;
     const match = this.orders.find(o => o.customerInfo.phone === cleanPhone);
     return match ? { ...match.customerInfo } : null;
+  }
+
+  async findCustomerByPhoneAsync(phone: string): Promise<{
+    id?: string;
+    name: string;
+    phone: string;
+    email?: string;
+    address: string;
+    customerType?: string;
+  } | null> {
+    const cleanPhone = phone.trim();
+    if (!cleanPhone) return null;
+
+    // Check MongoDB Atlas backend customers
+    if (typeof fetch !== 'undefined') {
+      try {
+        const res = await fetch(`http://localhost:5000/api/customers?search=${encodeURIComponent(cleanPhone)}`);
+        const json = await res.json();
+        if (json && json.success && Array.isArray(json.data) && json.data.length > 0) {
+          const match = json.data.find((c: any) => c.phone === cleanPhone || (c.phone && c.phone.includes(cleanPhone)));
+          if (match) {
+            return {
+              id: match.id || match._id,
+              name: match.fullName || match.name,
+              phone: match.phone,
+              email: match.email || '',
+              address: match.address || '',
+              customerType: match.customerType || 'registered',
+            };
+          }
+        }
+      } catch (_) {}
+    }
+
+    // Fallback to local cache in orders
+    const local = this.findCustomerByPhone(cleanPhone);
+    if (local) {
+      return {
+        name: local.name,
+        phone: local.phone,
+        email: local.email || '',
+        address: local.address || '',
+        customerType: 'guest',
+      };
+    }
+
+    return null;
   }
 
   listOrders(params: OrderFilterParams = {}): {
@@ -688,6 +745,104 @@ export class OrderService {
       success: true,
       message: `Tạo đơn hàng ${orderCode} thành công.`,
       order: newOrder,
+    };
+  }
+
+  async createOrderAsync(
+    request: CreateOrderRequest,
+    isNewCustomer: boolean = false,
+    customerId?: string | null
+  ): Promise<{ success: boolean; message: string; order?: Order; newCustomerCreated?: boolean }> {
+    let resolvedCustomerId = customerId || request.customerId || null;
+    let newCustomerCreated = false;
+
+    // 1. Tạo mới khách hàng trên backend nếu là người dùng mới
+    if (isNewCustomer && typeof fetch !== 'undefined') {
+      try {
+        const custRes = await fetch('http://localhost:5000/api/customers', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            fullName: request.customerInfo.name.trim(),
+            phone: request.customerInfo.phone.trim(),
+            email: request.customerInfo.email?.trim() || '',
+            address: request.customerInfo.address.trim(),
+            customerType: 'registered',
+          }),
+        });
+        const custJson = await custRes.json();
+        if (custJson && custJson.success && custJson.data) {
+          resolvedCustomerId = custJson.data.id || custJson.data._id;
+          newCustomerCreated = true;
+          console.log('[LIVORA ADMIN] Đã tạo mới khách hàng vào CSDL:', custJson.data);
+        }
+      } catch (err) {
+        console.warn('[LIVORA ADMIN] Không thể tạo khách hàng trên server:', err);
+      }
+    }
+
+    // 2. Tạo đơn hàng cục bộ để trừ tồn kho và cập nhật state
+    const localRes = this.createOrder({
+      ...request,
+      customerId: resolvedCustomerId,
+    });
+
+    if (!localRes.success || !localRes.order) {
+      return localRes;
+    }
+
+    // 3. Gửi đơn hàng lên backend MongoDB Atlas
+    if (typeof fetch !== 'undefined') {
+      try {
+        const orderPayload = {
+          userId: resolvedCustomerId || undefined,
+          customerInfo: {
+            name: request.customerInfo.name.trim(),
+            phone: request.customerInfo.phone.trim(),
+            email: request.customerInfo.email?.trim() || '',
+            address: request.customerInfo.address.trim(),
+          },
+          items: localRes.order.items.map(it => ({
+            productId: it.productId,
+            name: it.productName,
+            sku: it.sku,
+            price: it.price,
+            quantity: it.quantity,
+            color: it.color,
+            thumbnail: it.thumbnail,
+          })),
+          voucherCode: request.voucherCode?.trim() || '',
+          shippingFee: localRes.order.shippingFee,
+          paymentMethod: request.paymentMethod === 'Banking' ? 'BANK_TRANSFER' : 'COD',
+          note: request.notes?.trim() || '',
+        };
+
+        const orderRes = await fetch('http://localhost:5000/api/orders', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(orderPayload),
+        });
+        const orderJson = await orderRes.json();
+        if (orderJson && orderJson.success && orderJson.data?.orderCode) {
+          localRes.order.orderCode = orderJson.data.orderCode;
+          localRes.order._id = orderJson.data.id || localRes.order._id;
+          this.saveOrders();
+          console.log('[LIVORA ADMIN] Đơn hàng đã được lưu vào MongoDB Atlas:', orderJson.data);
+        }
+      } catch (orderErr) {
+        console.warn('[LIVORA ADMIN] Không thể gửi đơn hàng lên server:', orderErr);
+      }
+    }
+
+    const message = newCustomerCreated
+      ? `Tạo đơn hàng ${localRes.order.orderCode} thành công. Đã tạo mới 1 khách hàng vào hệ thống!`
+      : `Tạo đơn hàng ${localRes.order.orderCode} thành công.`;
+
+    return {
+      success: true,
+      message,
+      order: localRes.order,
+      newCustomerCreated,
     };
   }
 

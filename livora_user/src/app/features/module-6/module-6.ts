@@ -22,6 +22,37 @@ export class Module6 {
     this.hasSearched = true;
     const phone = this.phoneNumber.trim();
     
+    // Check localStorage user orders first
+    try {
+      const storedOrders = JSON.parse(localStorage.getItem('livora_user_orders') || '[]');
+      const matched = storedOrders.find((o: any) => o.customerInfo?.phone === phone || o.phone === phone);
+      if (matched) {
+        this.orderFound = true;
+        this.orderInfo = {
+          code: matched.orderCode || 'ORD-NEW',
+          status: matched.orderStatus === 'pending' ? 'Pending' : (matched.orderStatus === 'shipping' ? 'Shipping' : 'Delivered'),
+          statusDisplay: matched.orderStatus === 'pending' ? 'Chờ xử lý' : (matched.orderStatus === 'shipping' ? 'Đang giao' : 'Đã giao'),
+          date: new Date(matched.createdAt || Date.now()).toLocaleDateString('vi-VN'),
+          customer: {
+            name: matched.customerInfo?.name || 'Khách hàng',
+            phone: phone,
+            address: matched.customerInfo?.address || matched.shippingAddress || 'Địa chỉ giao hàng',
+          },
+          items: (matched.items || []).map((it: any) => ({
+            name: it.name || it.productName || 'Sản phẩm nội thất',
+            image: it.thumbnail || 'item.png',
+            color: it.color || 'Tiêu chuẩn',
+            quantity: it.quantity || 1,
+            price: it.price || 0,
+          })),
+          subtotal: matched.subtotalAmount || (matched.finalAmount - (matched.shippingFee || 0)),
+          shipping: matched.shippingFee || 0,
+          total: matched.finalAmount || 0,
+        };
+        return;
+      }
+    } catch (_) {}
+
     // Check if phone matches 0901234567 or any 10-digit number
     if (phone === '0901234567' || /^[0-9]{10}$/.test(phone)) {
       this.orderFound = true;
