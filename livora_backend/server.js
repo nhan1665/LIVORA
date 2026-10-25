@@ -36,6 +36,8 @@ const voucherRoutes = require('./src/routes/voucherRoutes');
 const dashboardRoutes = require('./src/routes/dashboardRoutes');
 const homepageRoutes = require('./src/routes/homepageRoutes');
 const employeeRoutes = require('./src/routes/employeeRoutes');
+const checkoutRoutes = require('./src/routes/checkoutRoutes');
+const requireAdmin = require('./src/middleware/requireAdmin');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/employees', employeeRoutes);
@@ -53,6 +55,13 @@ app.use('/api/refunds', refundRoutes);
 app.use('/api/vouchers', voucherRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/homepage', homepageRoutes);
+app.use('/api/checkout', checkoutRoutes);
+
+// Historical database maintenance endpoints are unavailable during normal operation.
+app.use(['/api/drop-staffs', '/api/inspect-schema', '/api/seed'], (req, res, next) => {
+  if (process.env.ENABLE_UNSAFE_DB_TOOLS !== 'true') return res.sendStatus(404);
+  return requireAdmin(req, res, next);
+});
 
 // Endpoint xóa collection Staffs/staffs dư thừa
 app.all('/api/drop-staffs', async (req, res) => {
@@ -173,57 +182,11 @@ const fs = require('fs');
 const seedInitialData = require('./src/config/seed');
 
 const startServer = async () => {
-  try {
-    app.listen(PORT, () => {
-      console.log(`\n🚀 LIVORA Backend Server đang chạy tại: http://localhost:${PORT}`);
-      console.log(`🏥 Health Check: http://localhost:${PORT}/api/health\n`);
-    });
-
-    // Connect to MongoDB Atlas
-    const conn = await connectDB();
-    if (conn) {
-      console.log('MongoDB connected successfully');
-      // Tự động xóa collection Staffs/staffs dư thừa theo yêu cầu người dùng
-      try {
-        const db = mongoose.connection.db;
-        const allCols = await db.listCollections().toArray();
-        for (const col of allCols) {
-          if (col.name.toLowerCase() === 'staffs' || col.name === 'Staff') {
-            await db.collection(col.name).drop().catch(() => {});
-            console.log(`🗑️ Đã xóa collection '${col.name}' khỏi database.`);
-          }
-        }
-      } catch (colErr) {
-        console.error('Lỗi khi xóa collection Staffs:', colErr.message);
-      }
-
-      try {
-        const Employee = require('./src/models/Employee');
-        const bcrypt = require('bcryptjs');
-        const exists = await Employee.findOne({
-          $or: [{ username: 'ADMIN_LIVORA' }, { code: 'ADMIN_LIVORA' }, { email: 'admin.livora@livora.com' }],
-        });
-        if (!exists) {
-          const salt = await bcrypt.genSalt(10);
-          const passwordHash = await bcrypt.hash('livora@2026', salt);
-          await Employee.create({
-            code: 'ADMIN_LIVORA',
-            username: 'ADMIN_LIVORA',
-            fullName: 'Quản Trị Viên LIVORA',
-            email: 'admin.livora@livora.com',
-            phone: '0901234567',
-            passwordHash,
-            role: 'Quản trị viên',
-          });
-          console.log('✅ Đã tạo tài khoản ADMIN_LIVORA vào database Employees!');
-        }
-      } catch (e) {
-        console.error('Lỗi khi kiểm tra tài khoản ADMIN_LIVORA:', e.message);
-      }
-    }
-  } catch (err) {
-    console.error('Lỗi khi khởi động server:', err);
-  }
+  const conn = await connectDB();
+  if (!conn) throw new Error('MongoDB connection is required before starting the API.');
+  app.listen(PORT, () => {
+    console.log(`LIVORA Backend API listening on http://localhost:${PORT}`);
+  });
 };
 
 startServer().catch(err => {

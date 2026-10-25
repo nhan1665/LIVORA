@@ -46,6 +46,9 @@
         <div *ngIf="activeTab === 'personal'" class="personal-content-wrapper"
             style="display: flex; flex-direction: column; gap: 40px;">
             <!-- Section: Personal Info -->
+            <p *ngIf="profileLoading" role="status">Đang tải hồ sơ...</p>
+            <p *ngIf="profileError" role="alert">{{ profileError }}</p>
+            <p *ngIf="profileSuccess" role="status">{{ profileSuccess }}</p>
             <fieldset class="form-container">
                 <legend class="section-title">THÔNG TIN CÁ NHÂN</legend>
 
@@ -55,7 +58,7 @@
                         Họ và tên
                     </div>
                     <div class="form-input">
-                        <input type="text" [value]="authService.currentUser()?.fullName || ''" [readonly]="!isEditingPersonal">
+                        <input type="text" name="profileFullName" [(ngModel)]="profileForm.fullName" [readonly]="!isEditingPersonal" maxlength="120" required>
                     </div>
                 </div>
 
@@ -65,7 +68,7 @@
                         Số điện thoại
                     </div>
                     <div class="form-input">
-                        <input type="text" [value]="authService.currentUser()?.phone || ''" [readonly]="!isEditingPersonal">
+                        <input type="tel" name="profilePhone" [(ngModel)]="profileForm.phone" [readonly]="!isEditingPersonal" required>
                     </div>
                 </div>
 
@@ -75,7 +78,7 @@
                         Email
                     </div>
                     <div class="form-input">
-                        <input type="text" [value]="authService.currentUser()?.email || ''" [readonly]="!isEditingPersonal">
+                        <input type="email" [value]="authService.currentUser()?.email || ''" readonly>
                     </div>
                 </div>
 
@@ -85,7 +88,7 @@
                         Ngày sinh
                     </div>
                     <div class="form-input">
-                        <input type="date" value="2005-06-16" [readonly]="!isEditingPersonal">
+                        <input type="date" name="profileBirthDate" [(ngModel)]="profileForm.birthDate" [readonly]="!isEditingPersonal">
                     </div>
                 </div>
 
@@ -96,12 +99,12 @@
                     </div>
                     <div class="form-input radio-group">
                         <label class="radio-label">
-                            <input type="radio" name="gender" checked [disabled]="!isEditingPersonal">
+                            <input type="radio" name="profileGender" value="Nam" [(ngModel)]="profileForm.gender" [disabled]="!isEditingPersonal">
                             <span class="radio-custom"></span>
                             Nam
                         </label>
                         <label class="radio-label">
-                            <input type="radio" name="gender" [disabled]="!isEditingPersonal">
+                            <input type="radio" name="profileGender" value="Nữ" [(ngModel)]="profileForm.gender" [disabled]="!isEditingPersonal">
                             <span class="radio-custom"></span>
                             Nữ
                         </label>
@@ -109,11 +112,11 @@
                 </div>
 
                 <div class="form-actions" *ngIf="isEditingPersonal">
-                    <button class="btn-cancel" (click)="isEditingPersonal = false">Hủy</button>
-                    <button class="btn-save" (click)="isEditingPersonal = false">Lưu</button>
+                    <button class="btn-cancel" (click)="cancelProfileEdit()" [disabled]="profileSaving">Hủy</button>
+                    <button class="btn-save" (click)="saveProfile()" [disabled]="profileSaving">{{ profileSaving ? 'Đang lưu...' : 'Lưu' }}</button>
                 </div>
                 <div class="form-actions" *ngIf="!isEditingPersonal">
-                    <button class="btn-save" (click)="isEditingPersonal = true">
+                    <button class="btn-save" (click)="startProfileEdit()" [disabled]="profileLoading">
                         <i class="bi bi-pencil-square" style="margin-right: 5px;"></i> Chỉnh sửa
                     </button>
                 </div>

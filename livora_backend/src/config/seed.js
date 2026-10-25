@@ -317,9 +317,9 @@ const seedInitialData = async () => {
     }
 
     // 5. Employees (Bảng Nhân viên phục vụ đăng nhập Admin)
-    if ((await Employee.countDocuments()) === 0) {
+    if ((await Employee.countDocuments()) === 0 && process.env.SEED_ADMIN_PASSWORD?.length >= 12) {
       const salt = await bcrypt.genSalt(10);
-      const defaultPasswordHash = await bcrypt.hash('livora@2026', salt);
+      const defaultPasswordHash = await bcrypt.hash(process.env.SEED_ADMIN_PASSWORD, salt);
       const sampleEmployees = [
         {
           code: 'NV2709',
@@ -354,9 +354,9 @@ const seedInitialData = async () => {
     }
 
     // 6. Customer
-    if ((await Customer.countDocuments()) === 0) {
+    if ((await Customer.countDocuments()) === 0 && process.env.SEED_CUSTOMER_PASSWORD?.length >= 12) {
       const salt = await bcrypt.genSalt(10);
-      const customerPasswordHash = await bcrypt.hash('password123', salt);
+      const customerPasswordHash = await bcrypt.hash(process.env.SEED_CUSTOMER_PASSWORD, salt);
       await Customer.create({
         code: 'KH-0001',
         fullName: 'Nguyễn Văn An',
@@ -377,7 +377,7 @@ const seedInitialData = async () => {
           },
         ],
       });
-      console.log('✅ [Customers] Đã tạo tài khoản khách hàng mẫu: admin@livora.com / password123');
+      console.log('Seeded a sample Customer account using an environment-provided password.');
     }
 
     // 7. Vouchers

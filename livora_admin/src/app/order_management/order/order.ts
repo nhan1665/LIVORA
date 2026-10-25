@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
@@ -221,7 +221,7 @@ export class OrderComponent implements OnInit {
   isSubmitting: boolean = false;
   createFormError: string = '';
 
-  constructor(private orderService: OrderService) {}
+  constructor(private orderService: OrderService, private cdr: ChangeDetectorRef) {}
 
   ngOnInit(): void {
     this.loadOrders();
@@ -255,6 +255,7 @@ export class OrderComponent implements OnInit {
     } catch (_) {}
 
     this.loading = false;
+    this.cdr.detectChanges();
   }
 
   async refreshOrders(): Promise<void> {

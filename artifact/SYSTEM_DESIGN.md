@@ -1,6 +1,7 @@
 ﻿# LIVORA — System Design and Engineering Standards
 
 > **Status:** Team-approved architecture; implementation authorized by the current `APPROVED IMPLEMENTATION` brief.  
+> **2026-10-25 current-state note:** Sections 1–22 below record the earlier frontend-only audit and Room implementation baseline. Sprint 2 verified that the current repository now also contains `livora_backend` (Express/Mongoose), Admin REST services, and MongoDB models. The verified Sprint 2 architecture is summarized in Section 24 and its dedicated design documents; older “no backend” statements are historical, not current-state claims.
 > **Audit scope:** Source code in `livora_admin/`, `livora_user/`, `artifact/REPORT.docx`, and the seven images in `artifact/design-reference/room-management/`.  
 > **Reading guide:** “Current state” describes evidence in the repository or specification; “Proposal” describes recommendations requiring team approval. No backend or running API has been verified in this repository.
 
@@ -334,4 +335,29 @@ Build/test evidence after the scope correction: development build passed; 28 foc
 ### Translation summary
 
 Both approved Markdown documents were translated in place into technical English. The original 21 system-design sections and 13 Room-design sections, tables, checklists, code examples, traceability rows, and Mermaid diagrams were retained; the implementation snapshot and change-log sections above were added afterward. Exact Vietnamese Figma labels remain quoted with English explanations where useful. The documents now state the team approval recorded in the current brief. `REPORT.docx` was not modified.
+
+## 24. Verified Sprint 2 Architecture (2026-10-25)
+
+The current system has independent Angular Admin and Customer applications that call the Express API in `livora_backend`. Mongoose models map to MongoDB `Customers`, `Products`, `Vouchers`, `Shipping`, `Orders`, and `Employees`. Customer profiles have one canonical `Customers` record; authenticated Customer self-service and Admin Customer reads access it through separate guarded APIs. Admin Voucher and Shipping records feed server-calculated Customer checkout quotes. Order creation revalidates all references inside a MongoDB transaction and persists VND price, discount and shipping snapshots. Additive nullable Order fields preserve historical document compatibility. A unique order code derived from a request key provides retry idempotency.
+
+```mermaid
+flowchart LR
+  Customer[Customer Angular] --> API[Express API]
+  Admin[Admin Angular] --> API
+  API --> Mongo[(MongoDB)]
+  Mongo --> CustomerRecord[Customers]
+  Mongo --> Config[Products / Vouchers / Shipping]
+  Mongo --> Orders[Orders]
+```
+
+Customer JWTs are resolved to active `Customers` records. Admin Customer, Voucher, Shipping and Order endpoints require an Employee JWT plus a persisted Employee. The legacy Admin POS endpoint remains authenticated but has a separate pricing contract. Existing Room, Inspiration, Space and RoomDesign code was not changed. Verification used an isolated local MongoDB replica set; Atlas inspection was read-only and did not authorize shared-database writes. See `CUSTOMER_PROFILE_INTEGRATION_DESIGN.md`, `SETTINGS_CHECKOUT_INTEGRATION_DESIGN.md`, and `SPRINT_2_IMPLEMENTATION_REPORT.md` for contracts and evidence.
+
+### Sprint 2 architecture change log
+
+| Date | Verified change | Compatibility and decision |
+|---|---|---|
+| 2026-10-25 | Added authenticated Customer `me` and order-history endpoints and Admin detail revalidation. | Shared Customer ID and collection remain canonical; email change awaits a verified security flow. |
+| 2026-10-25 | Added checkout regions/options/quote/order endpoints with integer VND totals, voucher usage and shipping snapshots. | Additive nullable Order fields; historical orders are not rewritten. |
+| 2026-10-25 | Removed demo/master authentication and guarded Admin Customer/Voucher/Shipping/Order routes. | Requires real persisted accounts; fine-grained role matrix remains a team decision. |
+| 2026-10-25 | Isolated checkout and cancellation transactions restore inventory, voucher usage and customer counters. | Requires a transaction-capable MongoDB deployment. |
 

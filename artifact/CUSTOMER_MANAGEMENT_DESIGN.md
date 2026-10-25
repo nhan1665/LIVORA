@@ -100,3 +100,8 @@ The `Customer` component manages state using Angular Signals and RxJS:
 1. **Role Access:** According to `REPORT.docx` Section 3.2.2.8, Customer Management is authorized for `Super Admin` and `Operations Staff` (`ops_staff`). Because Admin routing does not currently enforce route guards, UI functionality is made accessible while preserving structural readiness for role-based directives.
 2. **Data Confidentiality:** Phone numbers in the table and modal are formatted/masked in accordance with the design references (`0918.421.xxx`) while retaining verifiable internal matching.
 3. **Immutability of Orders:** Order records are strictly read-only within the customer modal, reflecting the immutable snapshot nature of purchase history.
+
+
+## Sprint 2 integration note (2026-10-25)
+
+The earlier session-level mock design above is retained as historical module documentation. The current persisted Customer profile flow, Admin revalidation, API contract and verification are documented in `CUSTOMER_PROFILE_INTEGRATION_DESIGN.md` and `SPRINT_2_IMPLEMENTATION_REPORT.md`.

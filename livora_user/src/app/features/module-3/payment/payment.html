@@ -18,6 +18,7 @@
         <i class="bi bi-exclamation-circle-fill"></i>
         <span>Vui lòng điền đầy đủ thông tin giao hàng để tiếp tục.</span>
       </div>
+      <div *ngIf="checkoutError" class="validation-alert" role="alert">{{ checkoutError }}</div>
 
       <!-- Shipping Info Form -->
       <form class="shipping-form" (submit)="$event.preventDefault()">
@@ -62,11 +63,9 @@
         <div class="form-row-3">
           <!-- Province -->
           <div class="form-group" [class.has-error]="showValidationErrors && !selectedProvince">
-            <select class="form-control select-control" [(ngModel)]="selectedProvince" name="province"
-              (change)="onProvinceChange()" required>
-              <option value="" disabled selected>Tỉnh / Thành phố</option>
-              <option *ngFor="let prov of provinces" [value]="prov">{{ prov }}</option>
-            </select>
+            <input class="form-control" [(ngModel)]="selectedProvince" name="province"
+              (change)="onProvinceChange()" list="shippingProvinces" placeholder="Tỉnh / Thành phố" required>
+            <datalist id="shippingProvinces"><option *ngFor="let prov of provinces" [value]="prov"></option></datalist>
           </div>
 
           <!-- District -->
@@ -101,25 +100,17 @@
       <section class="options-section">
         <h2 class="section-subtitle">Phương thức vận chuyển</h2>
 
-        <div class="options-list">
-          <!-- Fast Shipping -->
-          <label class="option-card" [class.selected]="cartService.shippingMethod() === 'nhanh'">
-            <input type="radio" name="shippingMethod" class="option-radio"
-              [checked]="cartService.shippingMethod() === 'nhanh'" (change)="setShippingMethod('nhanh')" />
-            <span class="option-label-wrapper">
-              <span class="option-main-text">Tiêu chuẩn</span>
-            </span>
-            <span class="option-price-text">Miễn phí</span>
-          </label>
+        <p *ngIf="loadingOptions" role="status">Đang tải phương thức vận chuyển...</p>
+        <p *ngIf="!loadingOptions && selectedProvince && !shippingOptions.length" role="status">Không có phương thức vận chuyển khả dụng.</p>
 
-          <!-- Express Shipping -->
-          <label class="option-card" [class.selected]="cartService.shippingMethod() === 'hoa-toc'">
+        <div class="options-list">
+          <label *ngFor="let option of shippingOptions" class="option-card" [class.selected]="selectedShippingId === option.id">
             <input type="radio" name="shippingMethod" class="option-radio"
-              [checked]="cartService.shippingMethod() === 'hoa-toc'" (change)="setShippingMethod('hoa-toc')" />
+              [checked]="selectedShippingId === option.id" (change)="setShippingMethod(option.id)" />
             <span class="option-label-wrapper">
-              <span class="option-main-text">Hỏa tốc</span>
+              <span class="option-main-text">{{ option.shippingMethod === 'express' ? 'Hỏa tốc' : 'Tiêu chuẩn' }} · {{ option.estimatedDeliveryTime }}</span>
             </span>
-            <span class="option-price-text">$15</span>
+            <span class="option-price-text">{{ option.fee === 0 ? 'Miễn phí' : ((option.fee | number:'1.0-0') + ' ₫') }}</span>
           </label>
         </div>
       </section>
@@ -156,8 +147,8 @@
           <i class="bi bi-chevron-left"></i> Giỏ hàng
         </a>
 
-        <button (click)="completeOrder()" class="btn-complete-order">
-          HOÀN TẤT ĐƠN HÀNG
+        <button (click)="completeOrder()" class="btn-complete-order" [disabled]="placingOrder || loadingQuote || !selectedShippingId">
+          {{ placingOrder ? 'ĐANG ĐẶT HÀNG...' : 'HOÀN TẤT ĐƠN HÀNG' }}
         </button>
       </div>
 
@@ -180,7 +171,7 @@
             <span class="summary-item-name">{{ item.name }}</span>
 
             <!-- Item Price -->
-            <span class="summary-item-price">${{ item.price * item.quantity }}</span>
+            <span class="summary-item-price">{{ item.price * item.quantity | number:'1.0-0' }} ₫</span>
           </div>
         </div>
 
@@ -202,18 +193,18 @@
         <div class="calc-rows-container">
           <div class="calc-row">
             <span>Tạm tính</span>
-            <span class="calc-val">${{ cartService.subtotal() }}</span>
+            <span class="calc-val">{{ (cartService.serverQuote()?.subtotal ?? cartService.subtotal()) | number:'1.0-0' }} ₫</span>
           </div>
 
           <div *ngIf="cartService.discountAmount() > 0" class="calc-row discount-text">
             <span>Giảm giá</span>
-            <span class="calc-val">-${{ cartService.discountAmount() }}</span>
+            <span class="calc-val">-{{ cartService.discountAmount() | number:'1.0-0' }} ₫</span>
           </div>
 
           <div class="calc-row">
             <span>Phí vận chuyển</span>
             <span class="calc-val">
-              {{ cartService.shippingFee() > 0 ? ('$' + cartService.shippingFee()) : 'Miễn phí' }}
+              {{ cartService.shippingFee() > 0 ? ((cartService.shippingFee() | number:'1.0-0') + ' ₫') : 'Miễn phí' }}
             </span>
           </div>
         </div>
@@ -224,8 +215,8 @@
         <div class="total-grand-row">
           <span class="grand-label">Tổng cộng</span>
           <div class="grand-price-container">
-            <span class="currency-label">USD</span>
-            <span class="grand-price-val">${{ cartService.total() }}</span>
+            <span class="currency-label">VND</span>
+            <span class="grand-price-val">{{ cartService.total() | number:'1.0-0' }} ₫</span>
           </div>
         </div>
 
@@ -234,34 +225,6 @@
 
   </div>
 </main>
-
-<!-- ====== QR PAYMENT POPUP MODAL ====== -->
-<div *ngIf="showQRModal" class="modal-backdrop">
-  <div class="modal-card qr-modal" style="text-align: center; max-width: 400px;">
-    <h2 class="modal-title" style="margin-bottom: 10px;">Thanh toán chuyển khoản</h2>
-    <p class="modal-subtitle" style="margin-bottom: 20px;">Vui lòng quét mã QR để thanh toán <strong>${{
-        cartService.total() }}</strong></p>
-
-    <div class="qr-timer-box" style="margin-bottom: 20px; font-size: 18px; font-weight: bold; color: #d9534f;">
-      <i class="bi bi-clock"></i> Thời gian còn lại: {{ formattedQRTime }}
-    </div>
-
-    <img [src]="qrDataString" alt="Mã QR"
-      style="border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin: 0 auto; display: block; max-width: 100%;" />
-
-    <p style="margin-top: 15px; font-size: 13px; color: #666; padding: 0 10px;">
-      Mã QR sẽ tự động đặt lại sau 5 phút.
-    </p>
-
-    <div style="display: flex; gap: 10px; margin-top: 25px;">
-      <button (click)="cancelQRPayment()"
-        style="flex: 1; padding: 12px; background-color: #f1f1f1; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; color: #333;">Hủy</button>
-      <button (click)="confirmQRPayment()"
-        style="flex: 1; padding: 12px; background-color: #c99c75; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; color: white;">Tôi
-        đã thanh toán</button>
-    </div>
-  </div>
-</div>
 
 <!-- ====== ORDER SUCCESS POPUP MODAL ====== -->
 <div *ngIf="showSuccessModal" class="modal-backdrop">
@@ -293,7 +256,7 @@
       </div>
       <div class="detail-line">
         <span class="detail-label">Tổng thanh toán:</span>
-        <span class="detail-value text-red">${{ cartService.total() }}</span>
+        <span class="detail-value text-red">{{ confirmedTotal | number:'1.0-0' }} ₫</span>
       </div>
       <div class="detail-line">
         <span class="detail-label">Thanh toán:</span>
@@ -304,8 +267,8 @@
     </div>
 
     <p class="modal-info-text">
-      Email xác nhận đơn hàng chi tiết đã được gửi đến <strong>{{ email }}</strong>. LIVORA sẽ liên hệ với bạn để
-      xác nhận giao hàng sớm nhất có thể.
+      Đơn hàng đã được ghi nhận. LIVORA sẽ liên hệ để xác nhận giao hàng.
+      <span *ngIf="cartService.paymentMethod() === 'bank'">Thanh toán chuyển khoản đang chờ xác nhận; thông tin chuyển khoản sẽ được cung cấp qua kênh chính thức.</span>
     </p>
 
     <button (click)="closeSuccessModal()" class="btn-close-modal">

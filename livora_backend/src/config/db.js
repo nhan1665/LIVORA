@@ -21,12 +21,12 @@ const connectDB = async () => {
 
   try {
     const conn = await mongoose.connect(uri, {
-      dbName: 'LIVORA',
+      dbName: process.env.MONGODB_DB_NAME || 'LIVORA',
       autoIndex: true,
       serverSelectionTimeoutMS: 5000,
     });
 
-    console.log(`✅ Kết nối MongoDB Atlas thành công!`);
+    console.log(`MongoDB connection established.`);
     console.log(`📡 Host: ${conn.connection.host}`);
     console.log(`🗄️ Database: ${conn.connection.name}`);
 

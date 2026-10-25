@@ -1,0 +1,3 @@
+1: Shipping method
+2: Voucher
+3: Server total

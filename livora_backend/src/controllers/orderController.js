@@ -40,6 +40,8 @@ const formatOrderForResponse = (o) => ({
   subtotalAmount: o.subtotalAmount || 0,
   discountAmount: o.discountAmount || 0,
   voucherCode: o.voucherCode || '',
+  shippingMethod: o.shippingMethod || '',
+  shippingProvince: o.shippingProvince || '',
   shippingFee: o.shippingFee || 0,
   finalAmount: o.totalAmount || 0,
   totalAmount: o.totalAmount || 0,
@@ -401,6 +403,7 @@ const updateOrderStatus = async (req, res) => {
  * @route   PATCH /api/orders/:id/cancel
  */
 const cancelOrder = async (req, res) => {
+  let session;
   try {
     const { reason = '' } = req.body;
     if (!reason || !reason.trim()) {
@@ -413,15 +416,49 @@ const cancelOrder = async (req, res) => {
     if (order.orderStatus === 'delivered') {
       return sendError(res, 'Đơn hàng đã giao thành công, không thể hủy.', 400);
     }
+    if (order.orderStatus === 'cancelled') {
+      return sendError(res, 'Đơn hàng đã được hủy trước đó.', 409);
+    }
 
-    order.orderStatus = 'cancelled';
-    order.cancelReason = reason.trim();
-    await order.save();
+    if (order.checkoutRequestHash) {
+      session = await mongoose.startSession();
+      await session.withTransaction(async () => {
+        const current = await Order.findOneAndUpdate(
+          { _id: order._id, orderStatus: { $nin: ['cancelled', 'delivered'] } },
+          { $set: { orderStatus: 'cancelled', cancelReason: reason.trim() } },
+          { new: true, session }
+        );
+        if (!current) throw new Error('Order changed while cancelling.');
+        for (const item of current.items) {
+          const restored = await Product.updateOne({ _id: item.productId },
+            { $inc: { stockQuantity: item.quantity }, $set: { stockStatus: 'in_stock' } }, { session });
+          if (restored.matchedCount !== 1) throw new Error('Checkout product is missing; cancellation requires reconciliation.');
+        }
+        if (current.voucherId) {
+          const restored = await Voucher.updateOne({ _id: current.voucherId, usedCount: { $gt: 0 } },
+            { $inc: { usedCount: -1 } }, { session });
+          if (restored.matchedCount !== 1) throw new Error('Checkout voucher cannot be restored; cancellation requires reconciliation.');
+        }
+        if (current.customerId) {
+          const restored = await Customer.updateOne({ _id: current.customerId },
+            { $inc: { totalOrders: -1, accumulatedSpent: -current.totalAmount } }, { session });
+          if (restored.matchedCount !== 1) throw new Error('Checkout customer is missing; cancellation requires reconciliation.');
+        }
+      });
+      order.orderStatus = 'cancelled';
+      order.cancelReason = reason.trim();
+    } else {
+      order.orderStatus = 'cancelled';
+      order.cancelReason = reason.trim();
+      await order.save();
+    }
 
     return sendSuccess(res, formatOrderForResponse(order), 'Hủy đơn hàng thành công.');
   } catch (error) {
     console.error('cancelOrder error:', error);
     return sendError(res, 'Không thể hủy đơn hàng.', 500);
+  } finally {
+    if (session) await session.endSession();
   }
 };
 
