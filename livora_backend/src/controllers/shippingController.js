@@ -1,6 +1,10 @@
 const Shipping = require('../models/Shipping');
 const { sendSuccess, sendPaginated, sendError } = require('../utils/responseHelper');
 
+const validVnd = (value) =>
+  (typeof value === 'number' || (typeof value === 'string' && /^\d+$/.test(value.trim()))) &&
+  Number.isSafeInteger(Number(value)) && Number(value) >= 0;
+
 /**
  * @desc    Get shipping configurations
  * @route   GET /api/shipping
@@ -120,6 +124,9 @@ const createShippingConfig = async (req, res) => {
     if (!shippingMethod || !province || fee === undefined || !estimatedDeliveryTime) {
       return sendError(res, 'Phương thức, tỉnh thành, phí và thời gian giao hàng là bắt buộc.', 400);
     }
+    if (!validVnd(fee) || (freeShipThreshold !== undefined && !validVnd(freeShipThreshold))) {
+      return sendError(res, 'Phí và ngưỡng miễn phí vận chuyển phải là số nguyên VND không âm.', 400);
+    }
 
     const shipping = new Shipping({
       shippingMethod,
@@ -160,6 +167,10 @@ const updateShippingConfig = async (req, res) => {
     if (!shipping) return sendError(res, 'Không tìm thấy cấu hình vận chuyển.', 404);
 
     const b = req.body;
+    if ((b.fee !== undefined && !validVnd(b.fee)) ||
+      (b.freeShipThreshold !== undefined && !validVnd(b.freeShipThreshold))) {
+      return sendError(res, 'Phí và ngưỡng miễn phí vận chuyển phải là số nguyên VND không âm.', 400);
+    }
     if (b.shippingMethod) shipping.shippingMethod = b.shippingMethod;
     if (b.province) shipping.province = b.province.trim();
     if (b.fee !== undefined) shipping.fee = Number(b.fee);

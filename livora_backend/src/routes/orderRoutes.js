@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const requireAdmin = require('../middleware/requireAdmin');
 const {
   getOrders,
   getOrderById,
@@ -8,6 +9,7 @@ const {
   cancelOrder,
 } = require('../controllers/orderController');
 
+router.use(requireAdmin);
 router.get('/', getOrders);
 router.post('/', createOrder);
 router.get('/:id', getOrderById);

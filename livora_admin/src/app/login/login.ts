@@ -24,8 +24,8 @@ export class Login {
   viewMode: AuthViewMode = 'LOGIN';
 
   // Login Form Data (Mặc định điền sẵn)
-  employeeCode: string = 'ADMIN_LIVORA';
-  password: string = 'livora@2026';
+  employeeCode: string = '';
+  password: string = '';
   rememberMe: boolean = true;
   showPassword: boolean = false;
 
@@ -73,13 +73,6 @@ export class Login {
   }
 
   // Quick fill demo credentials
-  fillDemoCredentials(): void {
-    this.employeeCode = 'ADMIN_LIVORA';
-    this.password = 'livora@2026';
-    this.errorMessage = '';
-    this.cdr.detectChanges();
-  }
-
   // Handle Login submission: Gửi request xác thực nhân viên với Backend
   onLoginSubmit(): void {
     this.errorMessage = '';
@@ -180,9 +173,6 @@ export class Login {
     ).subscribe({
       next: (res) => {
         this.successMessage = res.message || `Mã xác thực 6 chữ số đã được gửi đến ${contact}.`;
-        if (res.data?.otpSimulated) {
-          this.otpCode = res.data.otpSimulated;
-        }
         this.viewMode = 'FORGOT_STEP_2';
         this.cdr.detectChanges();
       },

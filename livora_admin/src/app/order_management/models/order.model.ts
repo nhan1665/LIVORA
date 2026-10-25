@@ -46,6 +46,8 @@ export interface Order {
   subtotalAmount: number;
   discountAmount: number;
   shippingFee: number;
+  shippingMethod?: string;
+  shippingProvince?: string;
   totalAmount: number;
   paymentMethod: PaymentMethod;
   paymentStatus: PaymentStatus;

@@ -291,14 +291,18 @@ export class OrderService {
   public async syncFromBackend(): Promise<void> {
     if (typeof fetch === 'undefined') return;
     try {
-      const res = await fetch('http://localhost:5000/api/orders?pageSize=100');
+      const res = await fetch('http://localhost:5000/api/orders?pageSize=100', {
+        headers: { Authorization: `Bearer ${localStorage.getItem('livora_admin_token') || ''}` },
+      });
       const json = await res.json();
       if (json && json.success && Array.isArray(json.data)) {
         const backendOrders: Order[] = json.data.map((o: any) => this.mapBackendOrderToModel(o));
         const map = new Map<string, Order>();
-        backendOrders.forEach(o => map.set(o.orderCode, o));
-        this.orders.forEach(o => {
-          if (!map.has(o.orderCode)) map.set(o.orderCode, o);
+        backendOrders.forEach(order => map.set(order.orderCode, order));
+        // Only locally created POS orders can be pending a backend write. Do not
+        // reintroduce the bundled demo orders when the backend responds.
+        this.orders.filter(order => /^ord-\d{13,}$/.test(order._id)).forEach(order => {
+          if (!map.has(order.orderCode)) map.set(order.orderCode, order);
         });
         this.orders = Array.from(map.values()).sort(
           (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
@@ -340,6 +344,8 @@ export class OrderService {
       subtotalAmount: o.subtotalAmount || 0,
       discountAmount: o.discountAmount || 0,
       shippingFee: o.shippingFee || 0,
+      shippingMethod: o.shippingMethod || '',
+      shippingProvince: o.shippingProvince || '',
       totalAmount: o.finalAmount || 0,
       paymentMethod: (o.paymentMethod === 'BANK_TRANSFER' ? 'Banking' : (o.paymentMethod || 'COD')) as any,
       paymentStatus: o.paymentStatus || 'unpaid',
@@ -563,7 +569,7 @@ export class OrderService {
     if (typeof fetch !== 'undefined') {
       fetch(`http://localhost:5000/api/orders/${order._id}/status`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('livora_admin_token') || ''}` },
         body: JSON.stringify({ status: targetStatus, note, actor: 'Admin Operator' }),
       }).catch(() => {});
     }
@@ -614,7 +620,7 @@ export class OrderService {
     if (typeof fetch !== 'undefined') {
       fetch(`http://localhost:5000/api/orders/${order._id}/cancel`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('livora_admin_token') || ''}` },
         body: JSON.stringify({ reason: reason.trim(), actor: 'Admin Operator' }),
       }).catch(() => {});
     }
@@ -755,13 +761,14 @@ export class OrderService {
   ): Promise<{ success: boolean; message: string; order?: Order; newCustomerCreated?: boolean }> {
     let resolvedCustomerId = customerId || request.customerId || null;
     let newCustomerCreated = false;
+    let persistedOrder = false;
 
     // 1. Tạo mới khách hàng trên backend nếu là người dùng mới
     if (isNewCustomer && typeof fetch !== 'undefined') {
       try {
         const custRes = await fetch('http://localhost:5000/api/customers', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('livora_admin_token') || ''}` },
           body: JSON.stringify({
             fullName: request.customerInfo.name.trim(),
             phone: request.customerInfo.phone.trim(),
@@ -819,7 +826,7 @@ export class OrderService {
 
         const orderRes = await fetch('http://localhost:5000/api/orders', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('livora_admin_token') || ''}` },
           body: JSON.stringify(orderPayload),
         });
         const orderJson = await orderRes.json();
@@ -827,16 +834,16 @@ export class OrderService {
           localRes.order.orderCode = orderJson.data.orderCode;
           localRes.order._id = orderJson.data.id || localRes.order._id;
           this.saveOrders();
-          console.log('[LIVORA ADMIN] Đơn hàng đã được lưu vào MongoDB Atlas:', orderJson.data);
+          persistedOrder = true;
         }
       } catch (orderErr) {
         console.warn('[LIVORA ADMIN] Không thể gửi đơn hàng lên server:', orderErr);
       }
     }
 
-    const message = newCustomerCreated
-      ? `Tạo đơn hàng ${localRes.order.orderCode} thành công. Đã tạo mới 1 khách hàng vào hệ thống!`
-      : `Tạo đơn hàng ${localRes.order.orderCode} thành công.`;
+    const message = persistedOrder
+      ? `Đơn hàng ${localRes.order.orderCode} đã được máy chủ ghi nhận.${newCustomerCreated ? ' Đã tạo khách hàng trên máy chủ.' : ''}`
+      : `Đơn hàng ${localRes.order.orderCode} chỉ được lưu trên trình duyệt; máy chủ chưa xác nhận. Vui lòng kiểm tra trước khi tạo lại để tránh trùng đơn.`;
 
     return {
       success: true,

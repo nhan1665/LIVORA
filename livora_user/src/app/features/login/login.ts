@@ -19,6 +19,7 @@ export class Login {
 
   username = '';
   password = '';
+  submitting = false;
   errorMessage = '';
   returnUrl = '/home';
 
@@ -61,7 +62,7 @@ export class Login {
       return;
     }
     this.errorMessage = '';
-    this.resetSuccessMessage = 'Liên kết đặt lại mật khẩu đã được gửi thành công!';
+    this.errorMessage = 'Khôi phục mật khẩu hiện chưa khả dụng. Vui lòng liên hệ quản trị viên.';
   }
 
   private readonly authService = inject(AuthService);
@@ -89,23 +90,24 @@ export class Login {
     this.errorMessage = '';
   }
 
-  doLogin(event: Event) {
+  async doLogin(event: Event) {
     event.preventDefault();
-    const loginResult = this.authService.login(this.username, this.password);
-
-    if (loginResult === 'SUCCESS') {
+    if (this.submitting) return;
+    this.submitting = true;
+    this.errorMessage = '';
+    try {
+      await this.authService.login(this.username, this.password);
       this.errorMessage = '';
-      this.router.navigateByUrl(this.returnUrl);
-    } else if (loginResult === 'INVALID_USERNAME') {
-      this.errorMessage = 'Số điện thoại/email này chưa được đăng ký trong hệ thống.';
-    } else if (loginResult === 'INVALID_PASSWORD') {
-      this.errorMessage = 'Mật khẩu không chính xác. Vui lòng kiểm tra lại.';
+      await this.router.navigateByUrl(this.returnUrl);
+    } catch (error) {
+      this.errorMessage = error instanceof Error ? error.message : 'Không thể đăng nhập. Vui lòng thử lại.';
+    } finally {
+      this.submitting = false;
     }
   }
 
   goToHome(event: Event) {
     event.preventDefault();
-    this.authService.login('admin@livora.com', 'password123');
     this.router.navigate(['/home']);
   }
 

@@ -152,6 +152,16 @@ export class Customer implements OnInit {
     this.isEditMode.set(false);
     this.initEditForm(customer);
     this.isDetailModalOpen.set(true);
+    this.customerService.getCustomerById(customer.id).subscribe({
+      next: (fresh) => {
+        if (fresh && this.isDetailModalOpen() && this.selectedCustomer()?.id === customer.id) {
+          this.selectedCustomer.set(fresh);
+          this.initEditForm(fresh);
+          this.cdr.markForCheck();
+        }
+      },
+      error: () => this.showToast('Không thể tải thông tin khách hàng mới nhất.', 'error'),
+    });
   }
 
   openEditModal(customer: CustomerRecord): void {
