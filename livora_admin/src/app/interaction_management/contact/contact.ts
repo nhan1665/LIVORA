@@ -157,7 +157,7 @@ export class Contact implements OnInit {
     if (!contact) {
       return '';
     }
-    return `Đánh dấu liên hệ ${contact.code} của ${contact.fullName} là "Đã xử lý"? Thao tác không thể hoàn tác.`;
+    return `Xác nhận bạn đã liên hệ (qua Zalo hoặc Điện thoại) với khách hàng ${contact.fullName} (SĐT: ${contact.phone})?`;
   }
 
   confirmResolve(): void {
@@ -174,7 +174,7 @@ export class Contact implements OnInit {
         if (this.isDetailModalOpen()) {
           this.selectedContact.set(updated);
         }
-        this.showToast(`Đã cập nhật liên hệ ${updated.code} sang trạng thái Đã xử lý.`, 'success');
+        this.showToast(`Đã cập nhật liên hệ ${updated.code} sang trạng thái "Đã liên hệ".`, 'success');
         this.loadContacts();
       },
       error: (err: Error) => {
@@ -186,7 +186,7 @@ export class Contact implements OnInit {
   }
 
   statusLabel(status: ContactStatus): string {
-    return status === 'resolved' ? 'Đã xử lý' : 'Chưa xử lý';
+    return status === 'resolved' ? 'Đã liên hệ' : 'Chưa liên hệ';
   }
 
   formatDateTime(iso: string): string {

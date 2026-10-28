@@ -28,6 +28,10 @@ export class Module5 implements OnInit {
   profileLoading = false;
   profileSaving = false;
 
+  get addresses() {
+    return this.authService.currentUser()?.addresses || [];
+  }
+
   async ngOnInit(): Promise<void> {
     this.profileLoading = true;
     try {
@@ -65,10 +69,17 @@ export class Module5 implements OnInit {
   async saveProfile(): Promise<void> {
     const fullName = this.profileForm.fullName.trim();
     const phone = this.profileForm.phone.trim();
-    if (!fullName || fullName.length > 120 || !/^0\d{9,10}$/.test(phone)) {
-      this.profileError = 'Vui lòng nhập họ tên và số điện thoại hợp lệ.';
+
+    if (fullName.length > 120) {
+      this.profileError = 'Họ tên không được vượt quá 120 ký tự.';
       return;
     }
+
+    if (phone && !/^0\d{9,10}$/.test(phone)) {
+      this.profileError = 'Số điện thoại không hợp lệ (10 số, bắt đầu bằng 0).';
+      return;
+    }
+
     this.profileSaving = true;
     this.profileError = '';
     this.profileSuccess = '';
@@ -81,12 +92,133 @@ export class Module5 implements OnInit {
       });
       this.setProfileForm(user);
       this.isEditingPersonal = false;
-      this.profileSuccess = 'Đã lưu thông tin cá nhân.';
+      this.profileSuccess = 'Đã lưu thông tin cá nhân vào cơ sở dữ liệu thành công.';
     } catch (error) {
       this.profileError = error instanceof Error ? error.message : 'Không thể lưu hồ sơ.';
     } finally {
       this.profileSaving = false;
     }
+  }
+
+  // Quản lý địa chỉ giao hàng
+  addressForm = {
+    recipientName: '',
+    recipientPhone: '',
+    province: '',
+    district: '',
+    ward: '',
+    addressLine: '',
+    isDefault: false,
+  };
+  addressSaving = false;
+  addressError = '';
+
+  resetAddressForm(): void {
+    const user = this.authService.currentUser();
+    this.addressForm = {
+      recipientName: user?.fullName || '',
+      recipientPhone: user?.phone || '',
+      province: '',
+      district: '',
+      ward: '',
+      addressLine: '',
+      isDefault: !user?.addresses || user.addresses.length === 0,
+    };
+    this.addressError = '';
+  }
+
+  openAddAddress(): void {
+    this.resetAddressForm();
+    this.isAddingAddress = true;
+  }
+
+  async saveNewAddress(): Promise<void> {
+    const { recipientName, recipientPhone, addressLine, province } = this.addressForm;
+    if (!recipientName.trim()) {
+      this.addressError = 'Vui lòng nhập tên người nhận.';
+      return;
+    }
+    if (recipientPhone && !/^0\d{9,10}$/.test(recipientPhone.trim())) {
+      this.addressError = 'Số điện thoại người nhận không hợp lệ.';
+      return;
+    }
+    if (!addressLine.trim()) {
+      this.addressError = 'Vui lòng nhập địa chỉ cụ thể (số nhà, tên đường...).';
+      return;
+    }
+
+    this.addressSaving = true;
+    this.addressError = '';
+    try {
+      await this.authService.updateProfile({
+        newAddress: {
+          ...this.addressForm,
+          recipientName: recipientName.trim(),
+          recipientPhone: recipientPhone.trim(),
+          addressLine: addressLine.trim(),
+          province: province.trim(),
+        },
+      });
+      this.isAddingAddress = false;
+      this.profileSuccess = 'Thêm địa chỉ giao hàng thành công.';
+    } catch (error) {
+      this.addressError = error instanceof Error ? error.message : 'Không thể thêm địa chỉ.';
+    } finally {
+      this.addressSaving = false;
+    }
+  }
+
+  async setDefaultAddress(index: number): Promise<void> {
+    const current = this.authService.currentUser();
+    if (!current?.addresses || !current.addresses[index]) return;
+    const updated = current.addresses.map((a, i) => ({
+      ...a,
+      isDefault: i === index,
+    }));
+    try {
+      await this.authService.updateProfile({ addresses: updated });
+      this.profileSuccess = 'Đã đặt làm địa chỉ mặc định.';
+    } catch (error) {
+      this.profileError = 'Không thể đặt địa chỉ mặc định.';
+    }
+  }
+
+  async deleteAddress(index: number): Promise<void> {
+    if (!confirm('Bạn có chắc chắn muốn xóa địa chỉ này?')) return;
+    const current = this.authService.currentUser();
+    if (!current?.addresses) return;
+    const updated = current.addresses.filter((_, i) => i !== index);
+    if (updated.length > 0 && !updated.some((a) => a.isDefault)) {
+      updated[0].isDefault = true;
+    }
+    try {
+      await this.authService.updateProfile({ addresses: updated });
+      this.profileSuccess = 'Đã xóa địa chỉ thành công.';
+    } catch (error) {
+      this.profileError = 'Không thể xóa địa chỉ.';
+    }
+  }
+
+  // Upload Avatar
+  async onAvatarSelected(event: Event): Promise<void> {
+    const input = event.target as HTMLInputElement;
+    if (!input.files || input.files.length === 0) return;
+    const file = input.files[0];
+    if (file.size > 2 * 1024 * 1024) {
+      this.profileError = 'Ảnh đại diện không được vượt quá 2MB.';
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = async () => {
+      const base64 = reader.result as string;
+      try {
+        await this.authService.updateProfile({ avatar: base64 });
+        this.profileSuccess = 'Đã cập nhật ảnh đại diện.';
+      } catch (e) {
+        this.profileError = 'Không thể cập nhật ảnh đại diện.';
+      }
+    };
+    reader.readAsDataURL(file);
   }
 
   setActiveTab(tab: 'personal' | 'history' | 'reviews') {

@@ -28,7 +28,7 @@ const customerSchema = new mongoose.Schema(
     },
     fullName: {
       type: String,
-      required: [true, 'Họ và tên là bắt buộc.'],
+      default: '',
       trim: true,
     },
     email: {
@@ -39,8 +39,12 @@ const customerSchema = new mongoose.Schema(
     },
     phone: {
       type: String,
-      required: [true, 'Số điện thoại là bắt buộc.'],
+      default: '',
       trim: true,
+    },
+    avatar: {
+      type: String,
+      default: '',
     },
     passwordHash: {
       type: String,

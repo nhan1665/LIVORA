@@ -21,8 +21,8 @@
 
     <select class="filter-select" [(ngModel)]="statusDraft" aria-label="Trạng thái xử lý">
       <option value="all">Tất cả trạng thái</option>
-      <option value="new">Chưa xử lý</option>
-      <option value="resolved">Đã xử lý</option>
+      <option value="new">Chưa liên hệ</option>
+      <option value="resolved">Đã liên hệ</option>
     </select>
 
     <select class="filter-select filter-time" [(ngModel)]="timeDraft" aria-label="Thời gian gửi">
@@ -116,18 +116,18 @@
                   <div class="row-actions">
                     <button type="button" class="btn-detail" (click)="openDetailModal(item)">Chi tiết</button>
                     @if (item.status === 'new') {
-                      <button type="button" class="btn-resolve" (click)="openResolveConfirm(item)">
+                      <button type="button" class="btn-resolve" (click)="openResolveConfirm(item)" title="Đã liên hệ qua Zalo / Điện thoại">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                           <polyline points="20 6 9 17 4 12" />
                         </svg>
-                        <span>Xử lý</span>
+                        <span>Đã liên hệ</span>
                       </button>
                     } @else {
                       <button type="button" class="btn-done" disabled>
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                           <polyline points="20 6 9 17 4 12" />
                         </svg>
-                        <span>Hoàn tất</span>
+                        <span>Đã liên hệ</span>
                       </button>
                     }
                   </div>
@@ -237,7 +237,7 @@
 
       <p class="detail-note">
         Hỗ trợ khách hàng được thực hiện ngoài hệ thống (Zalo / điện thoại); sau khi hoàn tất, nhân viên cập nhật
-        trạng thái bằng thao tác "Duyệt xử lý".
+        trạng thái bằng thao tác "Đã liên hệ".
       </p>
 
       <div class="detail-actions">
@@ -247,7 +247,7 @@
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <polyline points="20 6 9 17 4 12" />
             </svg>
-            <span>Duyệt xử lý</span>
+            <span>Đã liên hệ</span>
           </button>
         }
       </div>
@@ -257,9 +257,9 @@
 
 <app-confirm-dialog
   [isOpen]="isResolveConfirmOpen()"
-  title="Duyệt xử lý liên hệ"
+  title="Xác nhận đã liên hệ khách hàng"
   [message]="resolveMessage()"
-  confirmText="Duyệt xử lý"
+  confirmText="Đã liên hệ"
   cancelText="Hủy bỏ"
   type="warning"
   [isConfirming]="isSubmitting()"
