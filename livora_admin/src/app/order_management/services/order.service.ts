@@ -288,10 +288,11 @@ export class OrderService {
     this.syncFromBackend();
   }
 
-  public async syncFromBackend(): Promise<void> {
+  public async syncFromBackend(force: boolean = false): Promise<void> {
     if (typeof fetch === 'undefined') return;
     try {
-      const res = await fetch('http://localhost:5000/api/orders?pageSize=100');
+      const cacheBuster = force ? `&_t=${Date.now()}` : '';
+      const res = await fetch(`http://localhost:5000/api/orders?pageSize=100${cacheBuster}`, { cache: 'no-store' });
       const json = await res.json();
       if (json && json.success && Array.isArray(json.data)) {
         const backendOrders: Order[] = json.data.map((o: any) => this.mapBackendOrderToModel(o));
@@ -304,6 +305,22 @@ export class OrderService {
           (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
         );
         this.saveOrders();
+      }
+
+      // Tải danh sách sản phẩm thật từ MongoDB Atlas
+      const prodRes = await fetch(`http://localhost:5000/api/products?pageSize=100${cacheBuster}`, { cache: 'no-store' });
+      const prodJson = await prodRes.json();
+      if (prodJson && prodJson.success && Array.isArray(prodJson.data) && prodJson.data.length > 0) {
+        this.catalogProducts = prodJson.data.map((p: any) => ({
+          productId: p._id || p.id,
+          name: p.name,
+          sku: p.sku || 'SKU-FURNITURE',
+          price: p.salePrice || p.price || 1000000,
+          stockQuantity: p.stockQuantity !== undefined ? p.stockQuantity : 10,
+          thumbnail: p.thumbnail || (p.images && p.images[0]) || 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=500',
+          availableColors: Array.isArray(p.colors) && p.colors.length > 0 ? p.colors : ['Tiêu chuẩn'],
+        }));
+        this.saveStock();
       }
     } catch (_) {
       // Fallback to local storage if backend not reachable
@@ -401,9 +418,12 @@ export class OrderService {
   }
 
   findCustomerByPhone(phone: string): CustomerSnapshot | null {
-    const cleanPhone = phone.trim();
+    const cleanPhone = phone.trim().replace(/[\s\-\.]/g, '');
     if (!cleanPhone) return null;
-    const match = this.orders.find(o => o.customerInfo.phone === cleanPhone);
+    const match = this.orders.find(o => {
+      const op = (o.customerInfo?.phone || '').trim().replace(/[\s\-\.]/g, '');
+      return op === cleanPhone || op.includes(cleanPhone) || cleanPhone.includes(op);
+    });
     return match ? { ...match.customerInfo } : null;
   }
 
@@ -415,31 +435,56 @@ export class OrderService {
     address: string;
     customerType?: string;
   } | null> {
-    const cleanPhone = phone.trim();
+    const cleanPhone = phone.trim().replace(/[\s\-\.]/g, '');
     if (!cleanPhone) return null;
 
-    // Check MongoDB Atlas backend customers
+    // 1. Kiểm tra Customers từ MongoDB Atlas
     if (typeof fetch !== 'undefined') {
       try {
         const res = await fetch(`http://localhost:5000/api/customers?search=${encodeURIComponent(cleanPhone)}`);
         const json = await res.json();
         if (json && json.success && Array.isArray(json.data) && json.data.length > 0) {
-          const match = json.data.find((c: any) => c.phone === cleanPhone || (c.phone && c.phone.includes(cleanPhone)));
+          const match = json.data.find((c: any) => {
+            const cp = (c.phone || '').trim().replace(/[\s\-\.]/g, '');
+            return cp === cleanPhone || cp.includes(cleanPhone) || cleanPhone.includes(cp);
+          });
           if (match) {
             return {
               id: match.id || match._id,
               name: match.fullName || match.name,
               phone: match.phone,
               email: match.email || '',
-              address: match.address || '',
+              address: match.address === 'Chưa có địa chỉ' ? '' : (match.address || ''),
               customerType: match.customerType || 'registered',
+            };
+          }
+        }
+      } catch (_) {}
+
+      // 2. Kiểm tra đơn hàng cũ từ MongoDB Atlas
+      try {
+        const orderRes = await fetch(`http://localhost:5000/api/orders?search=${encodeURIComponent(cleanPhone)}`);
+        const orderJson = await orderRes.json();
+        if (orderJson && orderJson.success && Array.isArray(orderJson.data) && orderJson.data.length > 0) {
+          const matchOrder = orderJson.data.find((o: any) => {
+            const op = (o.customerInfo?.phone || '').trim().replace(/[\s\-\.]/g, '');
+            return op === cleanPhone || op.includes(cleanPhone) || cleanPhone.includes(op);
+          });
+          if (matchOrder && matchOrder.customerInfo) {
+            return {
+              id: matchOrder.userId || matchOrder.customerId || undefined,
+              name: matchOrder.customerInfo.fullName || matchOrder.customerInfo.name,
+              phone: matchOrder.customerInfo.phone,
+              email: matchOrder.customerInfo.email || '',
+              address: matchOrder.customerInfo.address || '',
+              customerType: 'guest',
             };
           }
         }
       } catch (_) {}
     }
 
-    // Fallback to local cache in orders
+    // 3. Fallback bộ nhớ đệm orders
     const local = this.findCustomerByPhone(cleanPhone);
     if (local) {
       return {
@@ -464,25 +509,39 @@ export class OrderService {
 
     if (params.keyword && params.keyword.trim()) {
       const kw = params.keyword.trim().toLowerCase();
-      result = result.filter(
-        o =>
-          o.orderCode.toLowerCase().includes(kw) ||
-          o.customerInfo.name.toLowerCase().includes(kw) ||
-          o.customerInfo.phone.toLowerCase().includes(kw) ||
-          (o.customerInfo.email && o.customerInfo.email.toLowerCase().includes(kw))
-      );
+      const cleanKwDigits = kw.replace(/[\s\-\.]/g, '');
+      result = result.filter(o => {
+        const code = (o.orderCode || '').toLowerCase();
+        const cName = (o.customerInfo?.name || (o.customerInfo as any)?.fullName || '').toLowerCase();
+        const cPhone = (o.customerInfo?.phone || '').replace(/[\s\-\.]/g, '').toLowerCase();
+        const cEmail = (o.customerInfo?.email || '').toLowerCase();
+        return (
+          code.includes(kw) ||
+          cName.includes(kw) ||
+          (cleanKwDigits.length > 0 && cPhone.includes(cleanKwDigits)) ||
+          cEmail.includes(kw)
+        );
+      });
     }
 
     if (params.orderStatus && params.orderStatus !== 'all') {
-      result = result.filter(o => o.orderStatus === params.orderStatus);
+      const targetStatus = params.orderStatus.toLowerCase();
+      result = result.filter(o => (o.orderStatus || '').toLowerCase() === targetStatus);
     }
 
     if (params.paymentStatus && params.paymentStatus !== 'all') {
-      result = result.filter(o => o.paymentStatus === params.paymentStatus);
+      const targetPay = params.paymentStatus.toLowerCase();
+      result = result.filter(o => {
+        const pStatus = (o.paymentStatus || '').toLowerCase();
+        if (targetPay === 'unpaid') {
+          return pStatus === 'unpaid' || pStatus === 'pending';
+        }
+        return pStatus === targetPay;
+      });
     }
 
     // Sort newest first
-    result.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    result.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
 
     const total = result.length;
     const page = params.page && params.page > 0 ? params.page : 1;
@@ -640,10 +699,12 @@ export class OrderService {
       return { success: false, message: 'Vui lòng nhập họ tên khách hàng.' };
     }
 
-    const phoneRegex = /(84|0[3|5|7|8|9])+([0-9]{8})\b/;
-    if (!request.customerInfo.phone || !phoneRegex.test(request.customerInfo.phone.trim())) {
-      return { success: false, message: 'Số điện thoại khách hàng không đúng định dạng.' };
+    const cleanPhone = (request.customerInfo.phone || '').trim().replace(/[\s\-\.]/g, '');
+    const phoneRegex = /^[0-9+]{9,12}$/;
+    if (!cleanPhone || !phoneRegex.test(cleanPhone)) {
+      return { success: false, message: 'Số điện thoại khách hàng phải có từ 9 đến 11 chữ số.' };
     }
+    request.customerInfo.phone = cleanPhone;
 
     if (!request.customerInfo.address || !request.customerInfo.address.trim()) {
       return { success: false, message: 'Vui lòng nhập địa chỉ nhận hàng đầy đủ.' };

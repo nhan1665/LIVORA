@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
@@ -219,9 +219,10 @@ export class OrderComponent implements OnInit {
   isNewCustomer: boolean = false;
   isSearchingCustomer: boolean = false;
   isSubmitting: boolean = false;
+  isRefreshing: boolean = false;
   createFormError: string = '';
 
-  constructor(private orderService: OrderService) {}
+  constructor(private orderService: OrderService, private cdr: ChangeDetectorRef) {}
 
   ngOnInit(): void {
     this.loadOrders();
@@ -229,7 +230,7 @@ export class OrderComponent implements OnInit {
   }
 
   async loadOrders(silent: boolean = false): Promise<void> {
-    if (!silent) this.loading = true;
+    // 1. Hiển thị dữ liệu cục bộ NGAY LẬP TỨC (Zero lag, không hiện skeleton nếu đã có data)
     const localRes = this.orderService.listOrders({
       keyword: this.keyword,
       orderStatus: this.orderStatusFilter,
@@ -241,6 +242,11 @@ export class OrderComponent implements OnInit {
     this.totalItems = localRes.total;
     this.stats = this.orderService.getOrderStats();
 
+    // Chỉ bật loading skeleton nếu hoàn toàn chưa có đơn hàng nào
+    this.loading = this.orders.length === 0 && !silent;
+    this.cdr.detectChanges();
+
+    // 2. Đồng bộ ngầm với MongoDB Atlas
     try {
       const res = await this.orderService.fetchOrders({
         keyword: this.keyword,
@@ -255,28 +261,47 @@ export class OrderComponent implements OnInit {
     } catch (_) {}
 
     this.loading = false;
+    this.cdr.detectChanges();
   }
 
   async refreshOrders(): Promise<void> {
-    this.showNotice('Đang làm mới danh sách đơn hàng từ hệ thống...', 'success');
-    await this.loadOrders(false);
+    this.isRefreshing = true;
+    this.cdr.detectChanges();
+
+    try {
+      await this.orderService.syncFromBackend(true);
+      await this.loadOrders(true);
+      this.showNotice(`✅ Đã làm mới thành công! Hiện có ${this.totalItems} đơn hàng trong hệ thống.`, 'success');
+    } catch (_) {
+      this.showNotice('Không thể đồng bộ từ máy chủ, đang dùng dữ liệu lưu trữ.', 'error');
+    } finally {
+      this.isRefreshing = false;
+      this.cdr.detectChanges();
+    }
   }
 
   loadProducts(): void {
     this.availableProducts = this.orderService.getCatalogProducts();
   }
 
+  onSearchChange(kw: string): void {
+    this.keyword = kw;
+  }
+
   onFilter(event: { search: string; status: string }): void {
-    this.keyword = event.search;
-    this.orderStatusFilter = event.status;
+    this.keyword = (event?.search !== undefined ? event.search : this.keyword).trim();
+    this.orderStatusFilter = event?.status || 'all';
     this.currentPage = 1;
-    this.loadOrders();
+    this.loadOrders(true);
+    this.showNotice(`Đã áp dụng bộ lọc (Tìm thấy ${this.totalItems} đơn hàng)`, 'success');
   }
 
   onPaymentStatusChange(status: string): void {
-    this.paymentStatusFilter = status;
+    this.paymentStatusFilter = status || 'all';
     this.currentPage = 1;
-    this.loadOrders();
+    this.loadOrders(true);
+    const label = this.paymentOptions.find(o => o.value === this.paymentStatusFilter)?.label || '';
+    this.showNotice(`Đã lọc thanh toán: ${label} (${this.totalItems} đơn hàng)`, 'success');
   }
 
   onResetFilter(): void {
@@ -284,7 +309,8 @@ export class OrderComponent implements OnInit {
     this.orderStatusFilter = 'all';
     this.paymentStatusFilter = 'all';
     this.currentPage = 1;
-    this.loadOrders();
+    this.loadOrders(true);
+    this.showNotice('Đã đặt lại tất cả bộ lọc đơn hàng.', 'success');
   }
 
   onPageChange(page: number): void {
@@ -420,9 +446,23 @@ export class OrderComponent implements OnInit {
     if (this.availableProducts.length > 0) {
       this.selectedProductId = this.availableProducts[0].productId;
       this.selectedColor = this.availableProducts[0].availableColors?.[0] || 'Tiêu chuẩn';
+      // Tự động thêm sản phẩm mặc định đầu tiên vào đơn để danh sách không bị trống
+      this.addProductToOrder();
     }
 
     this.isCreateOpen = true;
+    this.cdr.detectChanges();
+  }
+
+  onPhoneChange(): void {
+    const clean = (this.customerPhone || '').trim().replace(/[\s\-\.]/g, '');
+    if (clean.length >= 9) {
+      this.onPhoneBlur();
+    } else {
+      this.phoneLookupFound = false;
+      this.matchedCustomerId = null;
+      this.cdr.detectChanges();
+    }
   }
 
   closeCreateOrderModal(): void {
@@ -430,15 +470,17 @@ export class OrderComponent implements OnInit {
   }
 
   async onPhoneBlur(): Promise<void> {
-    const phone = this.customerPhone.trim();
+    const phone = (this.customerPhone || '').trim().replace(/[\s\-\.]/g, '');
     if (!phone) {
       this.phoneLookupFound = false;
       this.matchedCustomerId = null;
       this.isNewCustomer = false;
+      this.cdr.detectChanges();
       return;
     }
 
     this.isSearchingCustomer = true;
+    this.cdr.detectChanges();
     try {
       const customer = await this.orderService.findCustomerByPhoneAsync(phone);
       if (customer) {
@@ -459,6 +501,7 @@ export class OrderComponent implements OnInit {
       this.isNewCustomer = true;
     } finally {
       this.isSearchingCustomer = false;
+      this.cdr.detectChanges();
     }
   }
 
@@ -542,35 +585,48 @@ export class OrderComponent implements OnInit {
 
   async submitCreateOrder(): Promise<void> {
     this.createFormError = '';
+
+    // Nếu danh sách sản phẩm trống, tự động thêm sản phẩm đang chọn trong thanh chọn
     if (this.orderItemsToCreate.length === 0) {
-      this.createFormError = 'Đơn hàng phải có ít nhất một sản phẩm.';
+      if (this.selectedProductId) {
+        this.addProductToOrder();
+      }
+    }
+
+    if (this.orderItemsToCreate.length === 0) {
+      this.createFormError = 'Vui lòng chọn ít nhất một sản phẩm vào đơn hàng.';
+      this.cdr.detectChanges();
       return;
     }
 
     if (!this.customerName.trim()) {
       this.createFormError = 'Vui lòng nhập họ tên khách hàng.';
+      this.cdr.detectChanges();
       return;
     }
 
     if (!this.customerPhone.trim()) {
       this.createFormError = 'Vui lòng nhập số điện thoại khách hàng.';
+      this.cdr.detectChanges();
       return;
     }
 
     if (!this.customerAddress.trim()) {
       this.createFormError = 'Vui lòng nhập địa chỉ nhận hàng chi tiết.';
+      this.cdr.detectChanges();
       return;
     }
 
     this.isSubmitting = true;
+    this.cdr.detectChanges();
     try {
       const res = await this.orderService.createOrderAsync(
         {
           customerInfo: {
-            name: this.customerName,
-            phone: this.customerPhone,
-            email: this.customerEmail,
-            address: this.customerAddress,
+            name: this.customerName.trim(),
+            phone: this.customerPhone.trim().replace(/[\s\-\.]/g, ''),
+            email: this.customerEmail.trim(),
+            address: this.customerAddress.trim(),
           },
           items: this.orderItemsToCreate.map(i => ({
             productId: i.productId,
@@ -596,6 +652,7 @@ export class OrderComponent implements OnInit {
       this.createFormError = err.message || 'Lỗi khi tạo đơn hàng.';
     } finally {
       this.isSubmitting = false;
+      this.cdr.detectChanges();
     }
   }
 
