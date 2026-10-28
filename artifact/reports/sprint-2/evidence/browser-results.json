@@ -1,0 +1,44 @@
+{
+  "checks": [
+    {
+      "name": "Admin real login",
+      "passed": true,
+      "detail": "http://127.0.0.1:4201/login"
+    },
+    {
+      "name": "Admin creates persistent voucher",
+      "passed": true,
+      "detail": "S2QA142540"
+    },
+    {
+      "name": "Admin creates persistent shipping configuration",
+      "passed": true,
+      "detail": "Hà Nội"
+    },
+    {
+      "name": "Customer real login",
+      "passed": true,
+      "detail": "http://127.0.0.1:4200/home"
+    },
+    {
+      "name": "Customer profile persists across reload",
+      "passed": true,
+      "detail": "saved and reloaded"
+    },
+    {
+      "name": "Admin revalidates same customer profile",
+      "passed": true,
+      "detail": "Admin sees updated persisted name"
+    },
+    {
+      "name": "Combined voucher and shipping checkout",
+      "passed": true,
+      "detail": "ORD-C-06DCB1FE5CB558141A6E84E1"
+    },
+    {
+      "name": "Admin sees persisted order",
+      "passed": true,
+      "detail": "ORD-C-06DCB1FE5CB558141A6E84E1"
+    }
+  ]
+}

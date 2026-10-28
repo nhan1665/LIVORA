@@ -239,6 +239,10 @@
             <span class="info-label">Phí vận chuyển:</span>
             <span class="info-val">{{ selectedOrder.shippingFee.toLocaleString('vi-VN') }} đ</span>
           </div>
+          <div class="info-row" *ngIf="selectedOrder.shippingMethod">
+            <span class="info-label">Shipping method:</span>
+            <span class="info-val">{{ selectedOrder.shippingMethod }} · {{ selectedOrder.shippingProvince }}</span>
+          </div>
           <div class="info-row total-row">
             <span class="info-label">TỔNG THANH TOÁN:</span>
             <span class="info-val total-price">{{ selectedOrder.totalAmount.toLocaleString('vi-VN') }} đ</span>

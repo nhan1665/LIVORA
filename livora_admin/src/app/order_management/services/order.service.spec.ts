@@ -20,6 +20,59 @@ describe('OrderService', () => {
     expect(res.total).toBeGreaterThanOrEqual(5);
   });
 
+  it('keeps local-only POS orders when backend orders load without duplicating a matching code', async () => {
+    const product = service.getCatalogProducts()[0];
+    const create = () => service.createOrder({
+      customerInfo: { name: 'Local customer', phone: '0918123456', address: '123 Test Street' },
+      items: [{ productId: product.productId, quantity: 1 }],
+      paymentMethod: 'COD',
+    });
+    const synced = create().order!;
+    await new Promise(resolve => setTimeout(resolve, 2));
+    const localOnly = create().order!;
+    if (localOnly.orderCode === synced.orderCode) localOnly.orderCode = `${localOnly.orderCode}-LOCAL`;
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = async () => ({
+      ok: true,
+      json: async () => ({ success: true, data: [
+        { id: '507f1f77bcf86cd799439011', orderCode: synced.orderCode,
+          customerInfo: synced.customerInfo, items: synced.items,
+          finalAmount: synced.totalAmount, createdAt: synced.createdAt },
+      ] }),
+    }) as Response;
+    try {
+      await service.syncFromBackend();
+      const orders = service.listOrders().orders;
+      expect(orders.filter(order => order.orderCode === synced.orderCode)).toHaveLength(1);
+      expect(orders.find(order => order.orderCode === synced.orderCode)?._id)
+        .toBe('507f1f77bcf86cd799439011');
+      expect(orders.some(order => order._id === localOnly._id)).toBe(true);
+      expect(orders.some(order => order._id === 'ord-001')).toBe(false);
+      await service.syncFromBackend();
+      expect(service.listOrders().orders.filter(order => order.orderCode === synced.orderCode)).toHaveLength(1);
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+
+  it('states clearly when a POS order exists only in the browser', async () => {
+    const product = service.getCatalogProducts()[0];
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = async () => { throw new Error('Backend unavailable'); };
+    try {
+      const result = await service.createOrderAsync({
+        customerInfo: { name: 'Offline customer', phone: '0918123456', address: '123 Test Street' },
+        items: [{ productId: product.productId, quantity: 1 }],
+        paymentMethod: 'COD',
+      });
+      expect(result.success).toBe(true);
+      expect(result.message).toContain('chỉ được lưu trên trình duyệt');
+      expect(service.listOrders().orders.some(order => order._id === result.order?._id)).toBe(true);
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+
   it('should filter orders by keyword', () => {
     const res = service.listOrders({ keyword: 'Dương Trọng Nhân' });
     expect(res.orders.length).toBeGreaterThanOrEqual(1);

@@ -14,7 +14,7 @@ const contactSchema = new mongoose.Schema(
     },
     email: {
       type: String,
-      required: [true, 'Email là bắt buộc.'],
+      default: '',
       trim: true,
       lowercase: true,
     },
@@ -43,8 +43,9 @@ const contactSchema = new mongoose.Schema(
       default: 'new',
     },
     respondedBy: {
-      type: String,
-      default: '',
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Employee',
+      default: null,
     },
     resolvedAt: {
       type: Date,

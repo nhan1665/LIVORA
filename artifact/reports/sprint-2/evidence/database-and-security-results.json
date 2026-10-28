@@ -1,0 +1,107 @@
+{
+  "environment": "isolated local MongoDB",
+  "orderCode": "ORD-C-06DCB1FE5CB558141A6E84E1",
+  "totalsVND": {
+    "subtotal": 2800000,
+    "discount": 280000,
+    "shipping": 50000,
+    "final": 2570000
+  },
+  "checks": [
+    {
+      "name": "Customer profile persisted under stable ID",
+      "passed": true,
+      "detail": "6addaee49b215de8dc2fbcb9"
+    },
+    {
+      "name": "Admin voucher persisted",
+      "passed": true,
+      "detail": "S2QA142540"
+    },
+    {
+      "name": "Admin shipping persisted",
+      "passed": true,
+      "detail": "6addaef965ab391b3d6faf8a"
+    },
+    {
+      "name": "Checkout order references same customer",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "Order stores product/VND pricing snapshot",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "Voucher applies to subtotal only",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "Shipping and final amount persisted",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "Inventory and customer counters persisted",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "Real persisted account login",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "Admin API reads updated Customer record",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "Unauthorized Admin customer read rejected",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "Unauthorized Admin order read rejected",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "Unauthorized profile update rejected",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "Profile administrative field rejected",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "Quote blocks voucher after per-customer limit",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "Inactive shipping rejected",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "Unknown product rejected",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "Client-supplied shipping fee rejected",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "New shipping fee updates quotes without rewriting historical orders",
+      "passed": true,
+      "detail": ""
+    }
+  ]
+}

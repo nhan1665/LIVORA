@@ -1,4 +1,5 @@
 import { Injectable, signal, computed, effect } from '@angular/core';
+import type { CheckoutQuote } from './checkout.service';
 
 export interface CartItem {
   id: string;
@@ -21,15 +22,8 @@ export class CartService {
   readonly items = this._items.asReadonly();
   readonly orderNote = signal<string>('');
   readonly discountCode = signal<string>('');
-  readonly discountAmount = computed(() => {
-    const code = this.discountCode().trim().toUpperCase();
-    if (code === 'LIVORA10') {
-      return Math.round(this.subtotal() * 0.1);
-    } else if (code === 'GIAM20') {
-      return 20;
-    }
-    return 0;
-  });
+  readonly serverQuote = signal<CheckoutQuote | null>(null);
+  readonly discountAmount = computed(() => this.serverQuote()?.discount || 0);
   readonly shippingMethod = signal<'nhanh' | 'hoa-toc'>('nhanh');
   readonly paymentMethod = signal<'cod' | 'bank'>('cod');
 
@@ -65,12 +59,10 @@ export class CartService {
     return this._items().reduce((total, item) => total + (item.price * item.quantity), 0);
   });
 
-  readonly shippingFee = computed(() => {
-    if (this._items().length === 0) return 0;
-    return this.shippingMethod() === 'hoa-toc' ? 15 : 0; // Free for standard, $15 for express
-  });
+  readonly shippingFee = computed(() => this.serverQuote()?.shippingFee || 0);
 
   readonly total = computed(() => {
+    if (this.serverQuote()) return this.serverQuote()!.total;
     const sub = this.subtotal();
     const discount = this.discountAmount();
     const ship = this.shippingFee();
@@ -79,6 +71,7 @@ export class CartService {
   });
 
   addToCart(product: Omit<CartItem, 'quantity'>) {
+    this.serverQuote.set(null);
     const current = this._items();
     const existing = current.find(item => item.id === product.id);
     if (existing) {
@@ -89,10 +82,12 @@ export class CartService {
   }
 
   removeFromCart(id: string) {
+    this.serverQuote.set(null);
     this._items.set(this._items().filter(item => item.id !== id));
   }
 
   updateQuantity(id: string, quantity: number) {
+    this.serverQuote.set(null);
     if (quantity <= 0) {
       this.removeFromCart(id);
       return;
@@ -104,8 +99,9 @@ export class CartService {
 
   applyDiscountCode(code: string): boolean {
     const trimmed = code.trim().toUpperCase();
-    if (trimmed === 'LIVORA10' || trimmed === 'GIAM20') {
+    if (trimmed) {
       this.discountCode.set(trimmed);
+      this.serverQuote.set(null);
       return true;
     }
     return false;
@@ -113,12 +109,14 @@ export class CartService {
 
   clearDiscount() {
     this.discountCode.set('');
+    this.serverQuote.set(null);
   }
 
   clearCart() {
     this._items.set([]);
     this.orderNote.set('');
     this.clearDiscount();
+    this.serverQuote.set(null);
     this.shippingMethod.set('nhanh');
     this.paymentMethod.set('cod');
     this.shippingInfo.set({

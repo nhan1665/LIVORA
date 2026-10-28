@@ -1,6 +1,10 @@
 const Voucher = require('../models/Voucher');
 const { sendSuccess, sendPaginated, sendError } = require('../utils/responseHelper');
 
+const validVnd = (value) =>
+  (typeof value === 'number' || (typeof value === 'string' && /^\d+$/.test(value.trim()))) &&
+  Number.isSafeInteger(Number(value)) && Number(value) >= 0;
+
 /**
  * @desc    Get all vouchers with filtering, searching & pagination
  * @route   GET /api/vouchers
@@ -174,6 +178,10 @@ const createVoucher = async (req, res) => {
     if (!discountValue || discountValue <= 0) {
       return sendError(res, 'Giá trị giảm phải lớn hơn 0.', 400);
     }
+    if (!validVnd(minOrderValue) || !validVnd(maxDiscountAmount ?? 0) ||
+      (discountType === 'fixed_amount' && !validVnd(discountValue))) {
+      return sendError(res, 'Giá trị tiền của voucher phải là số nguyên VND không âm.', 400);
+    }
     if (discountType === 'percentage' && discountValue > 100) {
       return sendError(res, 'Giá trị giảm theo phần trăm không được vượt quá 100%.', 400);
     }
@@ -266,6 +274,14 @@ const updateVoucher = async (req, res) => {
       maxDiscountAmount, minOrderValue, quantity,
       perCustomerLimit, startDate, endDate, isActive,
     } = req.body;
+
+    const effectiveType = discountType ?? voucher.discountType;
+    const effectiveDiscount = discountValue ?? voucher.discountValue;
+    if ((minOrderValue !== undefined && !validVnd(minOrderValue)) ||
+      (maxDiscountAmount !== undefined && !validVnd(maxDiscountAmount)) ||
+      (effectiveType === 'fixed_amount' && !validVnd(effectiveDiscount))) {
+      return sendError(res, 'Giá trị tiền của voucher phải là số nguyên VND không âm.', 400);
+    }
 
     // Validate code
     if (code) {

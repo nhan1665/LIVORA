@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const Contact = require('../models/Contact');
 const { sendSuccess, sendPaginated, sendError } = require('../utils/responseHelper');
 
@@ -77,10 +78,21 @@ const getContacts = async (req, res) => {
  */
 const createContact = async (req, res) => {
   try {
-    const { fullName, email, phone, subject, message, customerContext } = req.body;
+    const { fullName = '', email = '', phone = '', subject = '', message = '', customerContext = '' } = req.body || {};
 
-    if (!fullName || !phone || !message) {
-      return sendError(res, 'Họ tên, số điện thoại và nội dung tin nhắn là bắt buộc.', 400);
+    const cleanName = (typeof fullName === 'string' ? fullName : '').trim();
+    const cleanPhone = (typeof phone === 'string' ? phone : '').replace(/[\s.-]/g, '').replace(/^\+84/, '0');
+    const cleanMsg = (typeof message === 'string' ? message : '').trim();
+    const cleanEmail = (typeof email === 'string' ? email : '').trim().toLowerCase();
+
+    if (!cleanName) {
+      return sendError(res, 'Vui lòng nhập họ và tên của bạn.', 400);
+    }
+    if (!cleanPhone || !/^0\d{9,10}$/.test(cleanPhone)) {
+      return sendError(res, 'Vui lòng nhập số điện thoại hợp lệ (10 số, bắt đầu bằng 0).', 400);
+    }
+    if (!cleanMsg) {
+      return sendError(res, 'Vui lòng nhập nội dung hoặc nhu cầu tư vấn.', 400);
     }
 
     const count = await Contact.countDocuments();
@@ -88,13 +100,16 @@ const createContact = async (req, res) => {
 
     const contact = new Contact({
       code,
-      fullName: fullName.trim(),
-      email: email ? email.trim().toLowerCase() : '',
-      phone: phone.trim(),
-      subject: subject || 'Tư vấn sản phẩm & dịch vụ',
-      message: message.trim(),
-      customerContext: customerContext || '',
+      fullName: cleanName,
+      email: cleanEmail || `${cleanPhone}@customer.livora.vn`,
+      phone: cleanPhone,
+      subject: (typeof subject === 'string' && subject.trim()) ? subject.trim() : 'Tư vấn không gian & sản phẩm',
+      message: cleanMsg,
+      customerContext: (typeof customerContext === 'string' ? customerContext.trim() : '') || 'Khách hàng liên hệ qua Trang chủ',
       status: 'new',
+      respondedBy: null,
+      resolvedAt: null,
+      createdAt: new Date(),
     });
 
     await contact.save();
@@ -102,26 +117,32 @@ const createContact = async (req, res) => {
     return sendSuccess(res, {
       id: contact._id.toString(),
       code: contact.code,
-    }, 'Gửi thông tin liên hệ thành công. LIVORA sẽ phản hồi sớm nhất!', 201);
+    }, 'Gửi thông tin liên hệ thành công. LIVORA sẽ liên hệ với bạn trong thời gian sớm nhất!', 201);
   } catch (error) {
+    if (error.errInfo?.details) {
+      console.error('Atlas validation details:', JSON.stringify(error.errInfo.details, null, 2));
+    }
     console.error('createContact error:', error);
-    return sendError(res, 'Không thể gửi liên hệ.', 500);
+    return sendError(res, error.message || 'Không thể gửi liên hệ. Vui lòng thử lại.', 500);
   }
 };
 
 /**
- * @desc    Resolve contact status ("Duyệt xử lý")
+ * @desc    Resolve contact status ("Đã liên hệ")
  * @route   PATCH /api/contacts/:id/resolve
  */
 const resolveContact = async (req, res) => {
   try {
-    const { respondedBy = 'CSKH Livora' } = req.body;
-
     const contact = await Contact.findById(req.params.id);
     if (!contact) return sendError(res, 'Không tìm thấy liên hệ.', 404);
 
     contact.status = 'resolved';
-    contact.respondedBy = respondedBy;
+    const adminId = req.body?.employeeId || req.user?.id;
+    if (adminId && mongoose.isValidObjectId(adminId)) {
+      contact.respondedBy = new mongoose.Types.ObjectId(adminId);
+    } else {
+      contact.respondedBy = null;
+    }
     contact.resolvedAt = new Date();
     await contact.save();
 
@@ -129,8 +150,11 @@ const resolveContact = async (req, res) => {
       id: contact._id.toString(),
       status: contact.status,
       resolvedAt: contact.resolvedAt,
-    }, 'Đã duyệt xử lý liên hệ thành công.');
+    }, 'Đã cập nhật trạng thái "Đã liên hệ" thành công.');
   } catch (error) {
+    if (error.errInfo?.details) {
+      console.error('Atlas resolve validation details:', JSON.stringify(error.errInfo.details, null, 2));
+    }
     console.error('resolveContact error:', error);
     return sendError(res, 'Không thể cập nhật liên hệ.', 500);
   }

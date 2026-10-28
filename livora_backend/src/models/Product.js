@@ -125,6 +125,11 @@ const productSchema = new mongoose.Schema(
       type: String,
       default: '',
     },
+    soldQuantity: {
+      type: Number,
+      default: 0,
+      min: [0, 'Số lượt bán không được âm.'],
+    },
   },
   {
     timestamps: true,
@@ -136,6 +141,7 @@ productSchema.index({ categoryId: 1, isActive: 1 });
 productSchema.index({ categorySlug: 1, roomSlugs: 1 });
 productSchema.index({ price: 1 });
 productSchema.index({ status: 1, stockStatus: 1 });
+productSchema.index({ soldQuantity: -1 });
 
 module.exports = mongoose.model('Product', productSchema, 'Products');
 

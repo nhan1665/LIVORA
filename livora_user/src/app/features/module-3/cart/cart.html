@@ -50,7 +50,7 @@
 
           <!-- Price -->
           <div class="item-price">
-            ${{ item.price }}
+            {{ item.price | number:'1.0-0' }} ₫
           </div>
 
           <!-- Quantity control -->
@@ -88,19 +88,19 @@
         <div class="summary-row-container">
           <div class="summary-row">
             <span>Tạm tính</span>
-            <span class="price-val">${{ cartService.subtotal() }}</span>
+            <span class="price-val">{{ cartService.subtotal() | number:'1.0-0' }} ₫</span>
           </div>
 
           <div *ngIf="cartService.discountAmount() > 0" class="summary-row discount-row">
             <span>Giảm giá ({{ cartService.discountCode() }})</span>
-            <span class="price-val discount-val">-${{ cartService.discountAmount() }}</span>
+            <span class="price-val discount-val">-{{ cartService.discountAmount() | number:'1.0-0' }} ₫</span>
           </div>
 
           <div class="summary-divider"></div>
 
           <div class="summary-row total-row">
             <span>Tổng cộng</span>
-            <span class="total-price-val">${{ cartService.total() }}</span>
+            <span class="total-price-val">{{ cartService.total() | number:'1.0-0' }} ₫</span>
           </div>
         </div>
 
@@ -119,11 +119,6 @@
           <p *ngIf="promoMessage" [class.error-msg]="promoError" class="promo-message-text">
             {{ promoMessage }}
           </p>
-          <div class="promo-presets">
-            <span class="preset-label">Mã gợi ý:</span>
-            <button (click)="selectPresetPromo('LIVORA10')" class="preset-badge">LIVORA10 (10%)</button>
-            <button (click)="selectPresetPromo('GIAM20')" class="preset-badge">GIAM20 ($20)</button>
-          </div>
         </div>
 
         <!-- Action Button -->

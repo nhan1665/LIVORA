@@ -26,6 +26,7 @@ export interface UserProduct {
   totalReviews?: number;
   stockStatus: string;
   badge?: string;
+  soldQuantity?: number;
   file3DUrl?: string;
   has3DModel?: boolean;
 }
@@ -104,6 +105,15 @@ export class ProductService {
     return this.http.get<any>(`${environment.apiBaseUrl}/rooms`, { params: { all: 'true' } }).pipe(
       map((res) => res.data || []),
       catchError(() => of([]))
+    );
+  }
+
+  /**
+   * Lấy danh sách sản phẩm bán chạy nhất
+   */
+  getBestSellers(limit = 4): Observable<UserProduct[]> {
+    return this.getProducts({ sort: 'best-seller', pageSize: limit }).pipe(
+      map((products) => products.slice(0, limit))
     );
   }
 }

@@ -5,48 +5,14 @@ const Employee = require('../models/Employee');
 const Customer = require('../models/Customer');
 const { sendSuccess, sendError } = require('../utils/responseHelper');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'livora_super_secret_jwt_key_2026';
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET || JWT_SECRET.length < 32) {
+  throw new Error('JWT_SECRET must be configured with at least 32 characters.');
+}
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d';
 
 const generateToken = (payload) => {
   return jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
-};
-
-/**
- * Đảm bảo collection Employees luôn có sẵn tài khoản mẫu nếu chưa có
- */
-const ensureDefaultEmployees = async () => {
-  try {
-    const count = await Employee.countDocuments();
-    if (count === 0) {
-      const salt = await bcrypt.genSalt(10);
-      const defaultPasswordHash = await bcrypt.hash('livora@2026', salt);
-      const sampleEmployees = [
-        {
-          code: 'NV2709',
-          username: 'NV2709',
-          fullName: 'Trần Đỗ Nhật Nhân',
-          email: 'nhan.tdn@livora.com',
-          phone: '0901234567',
-          passwordHash: defaultPasswordHash,
-          role: 'Quản trị viên',
-        },
-        {
-          code: 'AD001',
-          username: 'admin01',
-          fullName: 'Nguyễn Quản Trị',
-          email: 'admin@livora.com',
-          phone: '0909888999',
-          passwordHash: defaultPasswordHash,
-          role: 'Quản trị viên',
-        },
-      ];
-      await Employee.insertMany(sampleEmployees);
-      console.log('✅ [Employees] Đã tự động tạo các tài khoản nhân viên mặc định.');
-    }
-  } catch (err) {
-    console.error('ensureDefaultEmployees error:', err);
-  }
 };
 
 /**
@@ -61,8 +27,6 @@ const staffLogin = async (req, res) => {
     if (!inputCode || !password) {
       return sendError(res, 'Vui lòng nhập Mã nhân viên hoặc Tên đăng nhập và Mật khẩu.', 400);
     }
-
-    await ensureDefaultEmployees();
 
     const upperCode = inputCode.toUpperCase();
     const lowerEmail = inputCode.toLowerCase();
@@ -92,37 +56,11 @@ const staffLogin = async (req, res) => {
       }
     }
 
-    // Fallback tài khoản demo nếu chưa khớp DB
     if (!employee) {
-      if ((upperCode === 'NV2709' || upperCode === 'ADMIN_LIVORA' || inputCode === 'admin' || inputCode === 'ADMIN_LIVORA') && password === 'livora@2026') {
-        const token = generateToken({
-          id: 'demo-admin-id',
-          role: 'Quản trị viên',
-          code: 'ADMIN_LIVORA',
-          username: 'ADMIN_LIVORA',
-          fullName: 'Quản Trị Viên LIVORA',
-        });
-        return sendSuccess(
-          res,
-          {
-            token,
-            user: {
-              id: 'demo-admin-id',
-              code: 'ADMIN_LIVORA',
-              username: 'ADMIN_LIVORA',
-              fullName: 'Quản Trị Viên LIVORA',
-              email: 'admin.livora@livora.com',
-              phone: '0901234567',
-              role: 'Quản trị viên',
-            },
-          },
-          'Đăng nhập thành công.'
-        );
-      }
       return sendError(res, 'Mã nhân viên hoặc tên đăng nhập không tồn tại.', 404);
     }
 
-    // Kiểm tra mật khẩu (so sánh hash bcrypt hoặc master key dev)
+    // Verify only the persisted bcrypt password hash.
     let isMatch = false;
     if (employee.passwordHash) {
       try {
@@ -131,10 +69,6 @@ const staffLogin = async (req, res) => {
         isMatch = false;
       }
     }
-    if (!isMatch && password === 'livora@2026') {
-      isMatch = true;
-    }
-
     if (!isMatch) {
       return sendError(res, 'Mật khẩu không chính xác. Vui lòng kiểm tra lại.', 401);
     }
@@ -174,66 +108,13 @@ const staffLogin = async (req, res) => {
  * @desc    Quên mật khẩu nhân viên - Gửi mã xác thực
  * @route   POST /api/auth/admin/forgot-password
  */
-const staffForgotPassword = async (req, res) => {
-  try {
-    const { employeeCode, contact } = req.body;
-    if (!employeeCode || !contact) {
-      return sendError(res, 'Vui lòng nhập Mã nhân viên và Email / SĐT.', 400);
-    }
-
-    const code = employeeCode.trim().toUpperCase();
-    const cleanContact = contact.trim().toLowerCase();
-
-    const employee = await Employee.findOne({
-      code,
-      $or: [{ email: cleanContact }, { phone: contact.trim() }],
-    });
-
-    if (!employee && code !== 'NV2709') {
-      return sendError(res, 'Không tìm thấy thông tin nhân viên khớp với mã và thông tin liên hệ cung cấp.', 404);
-    }
-
-    return sendSuccess(res, {
-      code,
-      contact,
-      otpSimulated: '123456',
-    }, 'Mã xác thực 6 chữ số đã được gửi thành công.');
-  } catch (error) {
-    return sendError(res, 'Lỗi khi yêu cầu đặt lại mật khẩu.', 500);
-  }
-};
+const staffForgotPassword = async (req, res) => sendError(res, 'Password recovery requires a verified delivery channel.', 501);
 
 /**
  * @desc    Đặt lại mật khẩu nhân viên
  * @route   POST /api/auth/admin/reset-password
  */
-const staffResetPassword = async (req, res) => {
-  try {
-    const { employeeCode, otpCode, newPassword } = req.body;
-    if (!employeeCode || !otpCode || !newPassword) {
-      return sendError(res, 'Vui lòng cung cấp đầy đủ Mã nhân viên, mã OTP và Mật khẩu mới.', 400);
-    }
-
-    if (newPassword.length < 6) {
-      return sendError(res, 'Mật khẩu mới phải có tối thiểu 6 ký tự.', 400);
-    }
-
-    const code = employeeCode.trim().toUpperCase();
-    const employee = await Employee.findOne({ code });
-
-    const salt = await bcrypt.genSalt(10);
-    const passwordHash = await bcrypt.hash(newPassword, salt);
-
-    if (employee) {
-      employee.passwordHash = passwordHash;
-      await employee.save();
-    }
-
-    return sendSuccess(res, { code }, 'Đặt lại mật khẩu thành công. Vui lòng đăng nhập bằng mật khẩu mới.');
-  } catch (error) {
-    return sendError(res, 'Lỗi khi đặt lại mật khẩu.', 500);
-  }
-};
+const staffResetPassword = async (req, res) => sendError(res, 'Password recovery requires a verified delivery channel.', 501);
 
 /**
  * @desc    Customer Register
@@ -241,21 +122,35 @@ const staffResetPassword = async (req, res) => {
  */
 const customerRegister = async (req, res) => {
   try {
-    const { fullName, email, phone, password, address, province } = req.body;
+    const { fullName = '', email, phone = '', password, address, province } = req.body;
 
-    if (!fullName || !email || !phone || !password) {
-      return sendError(res, 'Vui lòng điền đầy đủ họ tên, email, số điện thoại và mật khẩu.', 400);
+    if (typeof email !== 'string' || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      return sendError(res, 'Định dạng email không hợp lệ.', 400);
+    }
+    if (typeof password !== 'string' || password.length < 6 || password.length > 128) {
+      return sendError(res, 'Mật khẩu phải có độ dài từ 6 đến 128 ký tự.', 400);
+    }
+    if (fullName && (typeof fullName !== 'string' || fullName.trim().length > 120)) {
+      return sendError(res, 'Họ và tên không hợp lệ (tối đa 120 ký tự).', 400);
     }
 
     const cleanEmail = email.trim().toLowerCase();
-    const cleanPhone = phone.trim();
+    const cleanPhone = typeof phone === 'string' ? phone.trim() : '';
 
-    const existingCustomer = await Customer.findOne({
-      $or: [{ email: cleanEmail }, { phone: cleanPhone }],
-    });
+    if (cleanPhone && !/^0\d{9,10}$/.test(cleanPhone)) {
+      return sendError(res, 'Số điện thoại không hợp lệ (gồm 10 số, bắt đầu bằng số 0).', 400);
+    }
 
-    if (existingCustomer) {
-      return sendError(res, 'Email hoặc số điện thoại đã được đăng ký tài khoản.', 400);
+    const existingEmail = await Customer.findOne({ email: cleanEmail });
+    if (existingEmail) {
+      return sendError(res, 'Email này đã được đăng ký tài khoản. Vui lòng đăng nhập.', 400);
+    }
+
+    if (cleanPhone) {
+      const existingPhone = await Customer.findOne({ phone: cleanPhone });
+      if (existingPhone) {
+        return sendError(res, 'Số điện thoại này đã được đăng ký tài khoản.', 400);
+      }
     }
 
     const salt = await bcrypt.genSalt(10);
@@ -266,16 +161,17 @@ const customerRegister = async (req, res) => {
 
     const newCustomer = new Customer({
       code,
-      fullName: fullName.trim(),
+      fullName: (fullName || '').trim(),
       email: cleanEmail,
       phone: cleanPhone,
       passwordHash,
       customerType: 'registered',
       status: 'active',
+      isActive: true,
       addresses: address ? [{
         isDefault: true,
         label: 'Mặc định',
-        fullName: fullName.trim(),
+        fullName: (fullName || '').trim(),
         phone: cleanPhone,
         addressLine: address.trim(),
         province: province || '',
@@ -294,12 +190,15 @@ const customerRegister = async (req, res) => {
         fullName: newCustomer.fullName,
         email: newCustomer.email,
         phone: newCustomer.phone,
+        birthDate: newCustomer.birthDate || null,
+        gender: newCustomer.gender || '',
+        avatar: newCustomer.avatar || '',
         addresses: newCustomer.addresses,
       },
     }, 'Đăng ký tài khoản thành công.', 201);
   } catch (error) {
     console.error('customerRegister error:', error);
-    return sendError(res, 'Lỗi hệ thống khi đăng ký.', 500);
+    return sendError(res, error.message || 'Lỗi hệ thống khi đăng ký.', 500);
   }
 };
 
@@ -309,33 +208,21 @@ const customerRegister = async (req, res) => {
  */
 const customerLogin = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const account = (req.body.email || req.body.username || req.body.account || req.body.phone || '').trim();
+    const { password } = req.body;
 
-    if (!email || !password) {
-      return sendError(res, 'Vui lòng nhập Email và Mật khẩu.', 400);
+    if (!account || !password) {
+      return sendError(res, 'Vui lòng nhập Email hoặc Số điện thoại và Mật khẩu.', 400);
     }
 
-    const cleanEmail = email.trim().toLowerCase();
-    const customer = await Customer.findOne({ email: cleanEmail });
+    const cleanAccount = account.toLowerCase();
+    const isEmail = cleanAccount.includes('@');
+    const query = isEmail ? { email: cleanAccount } : { $or: [{ phone: account }, { email: cleanAccount }] };
 
-    // Hỗ trợ demo user
+    const customer = await Customer.findOne(query);
+
     if (!customer) {
-      if (cleanEmail === 'admin@livora.com' && password === 'password123') {
-        const token = generateToken({ id: 'demo-customer-id', role: 'customer', email: cleanEmail });
-        return sendSuccess(res, {
-          token,
-          user: {
-            id: 'demo-customer-id',
-            code: 'KH-DEMO',
-            fullName: 'LIVORA Customer',
-            email: 'admin@livora.com',
-            phone: '0901234567',
-            address: '669 Đỗ Mười',
-            province: 'TP. Hồ Chí Minh',
-          },
-        }, 'Đăng nhập thành công.');
-      }
-      return sendError(res, 'Email hoặc mật khẩu không chính xác.', 401);
+      return sendError(res, 'Email / Số điện thoại hoặc mật khẩu không chính xác.', 401);
     }
 
     if (customer.status === 'locked' || !customer.isActive) {
@@ -346,12 +233,8 @@ const customerLogin = async (req, res) => {
     if (customer.passwordHash) {
       isMatch = await bcrypt.compare(password, customer.passwordHash);
     }
-    if (!isMatch && password === 'password123') {
-      isMatch = true;
-    }
-
     if (!isMatch) {
-      return sendError(res, 'Email hoặc mật khẩu không chính xác.', 401);
+      return sendError(res, 'Email / Số điện thoại hoặc mật khẩu không chính xác.', 401);
     }
 
     customer.lastActiveAt = new Date();
@@ -369,9 +252,12 @@ const customerLogin = async (req, res) => {
         fullName: customer.fullName,
         email: customer.email,
         phone: customer.phone,
-        address: defaultAddress ? defaultAddress.addressLine : '',
+        birthDate: customer.birthDate || null,
+        gender: customer.gender || '',
+        avatar: customer.avatar || '',
+        address: defaultAddress ? (defaultAddress.addressLine || defaultAddress.street) : '',
         province: defaultAddress ? defaultAddress.province : '',
-        addresses: customer.addresses,
+        addresses: customer.addresses || [],
       },
     }, 'Đăng nhập thành công.');
   } catch (error) {

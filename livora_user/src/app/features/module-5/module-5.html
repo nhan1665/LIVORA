@@ -3,14 +3,14 @@
     <aside class="profile-sidebar">
         <div class="profile-avatar-container">
             <div class="profile-avatar">
-                <img src="avt.png" alt="Ảnh đại diện" class="avatar-img">
-                <input type="file" id="avatarUpload" accept="image/*" style="display: none;">
-                <label for="avatarUpload" class="avatar-add-btn">
-                    <i class="bi bi-plus-circle"></i>
+                <img [src]="authService.currentUser()?.avatar || 'avt.png'" alt="Ảnh đại diện" class="avatar-img">
+                <input type="file" id="avatarUpload" accept="image/*" (change)="onAvatarSelected($event)" style="display: none;">
+                <label for="avatarUpload" class="avatar-add-btn" title="Đổi ảnh đại diện">
+                    <i class="bi bi-camera-fill"></i>
                 </label>
             </div>
         </div>
-        <h2 class="profile-name">{{ authService.currentUser()?.fullName || 'JOHN DOE' }}</h2>
+        <h2 class="profile-name">{{ authService.currentUser()?.fullName || authService.currentUser()?.email || 'Khách hàng' }}</h2>
         <nav class="profile-nav">
             <button class="nav-btn" [class.active]="activeTab === 'personal'" (click)="setActiveTab('personal')">
                 <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
@@ -46,6 +46,9 @@
         <div *ngIf="activeTab === 'personal'" class="personal-content-wrapper"
             style="display: flex; flex-direction: column; gap: 40px;">
             <!-- Section: Personal Info -->
+            <p *ngIf="profileLoading" role="status">Đang tải hồ sơ...</p>
+            <p *ngIf="profileError" role="alert">{{ profileError }}</p>
+            <p *ngIf="profileSuccess" role="status">{{ profileSuccess }}</p>
             <fieldset class="form-container">
                 <legend class="section-title">THÔNG TIN CÁ NHÂN</legend>
 
@@ -55,7 +58,7 @@
                         Họ và tên
                     </div>
                     <div class="form-input">
-                        <input type="text" [value]="authService.currentUser()?.fullName || ''" [readonly]="!isEditingPersonal">
+                        <input type="text" name="profileFullName" placeholder="Nhập họ và tên..." [(ngModel)]="profileForm.fullName" [readonly]="!isEditingPersonal" maxlength="120">
                     </div>
                 </div>
 
@@ -65,7 +68,7 @@
                         Số điện thoại
                     </div>
                     <div class="form-input">
-                        <input type="text" [value]="authService.currentUser()?.phone || ''" [readonly]="!isEditingPersonal">
+                        <input type="tel" name="profilePhone" [(ngModel)]="profileForm.phone" [readonly]="!isEditingPersonal" required>
                     </div>
                 </div>
 
@@ -75,7 +78,7 @@
                         Email
                     </div>
                     <div class="form-input">
-                        <input type="text" [value]="authService.currentUser()?.email || ''" [readonly]="!isEditingPersonal">
+                        <input type="email" [value]="authService.currentUser()?.email || ''" readonly>
                     </div>
                 </div>
 
@@ -85,7 +88,7 @@
                         Ngày sinh
                     </div>
                     <div class="form-input">
-                        <input type="date" value="2005-06-16" [readonly]="!isEditingPersonal">
+                        <input type="date" name="profileBirthDate" [(ngModel)]="profileForm.birthDate" [readonly]="!isEditingPersonal">
                     </div>
                 </div>
 
@@ -96,12 +99,12 @@
                     </div>
                     <div class="form-input radio-group">
                         <label class="radio-label">
-                            <input type="radio" name="gender" checked [disabled]="!isEditingPersonal">
+                            <input type="radio" name="profileGender" value="Nam" [(ngModel)]="profileForm.gender" [disabled]="!isEditingPersonal">
                             <span class="radio-custom"></span>
                             Nam
                         </label>
                         <label class="radio-label">
-                            <input type="radio" name="gender" [disabled]="!isEditingPersonal">
+                            <input type="radio" name="profileGender" value="Nữ" [(ngModel)]="profileForm.gender" [disabled]="!isEditingPersonal">
                             <span class="radio-custom"></span>
                             Nữ
                         </label>
@@ -109,11 +112,11 @@
                 </div>
 
                 <div class="form-actions" *ngIf="isEditingPersonal">
-                    <button class="btn-cancel" (click)="isEditingPersonal = false">Hủy</button>
-                    <button class="btn-save" (click)="isEditingPersonal = false">Lưu</button>
+                    <button class="btn-cancel" (click)="cancelProfileEdit()" [disabled]="profileSaving">Hủy</button>
+                    <button class="btn-save" (click)="saveProfile()" [disabled]="profileSaving">{{ profileSaving ? 'Đang lưu...' : 'Lưu' }}</button>
                 </div>
                 <div class="form-actions" *ngIf="!isEditingPersonal">
-                    <button class="btn-save" (click)="isEditingPersonal = true">
+                    <button class="btn-save" (click)="startProfileEdit()" [disabled]="profileLoading">
                         <i class="bi bi-pencil-square" style="margin-right: 5px;"></i> Chỉnh sửa
                     </button>
                 </div>
@@ -122,7 +125,7 @@
             <!-- Section: Delivery Address -->
             <fieldset class="form-container address-container">
                 <legend class="section-title">ĐỊA CHỈ GIAO HÀNG</legend>
-                <button class="btn-add-address" (click)="isAddingAddress = true" *ngIf="!isAddingAddress">
+                <button class="btn-add-address" (click)="openAddAddress()" *ngIf="!isAddingAddress">
                     <i class="bi bi-plus-circle"></i>
                     Thêm địa chỉ
                 </button>
@@ -131,114 +134,102 @@
                 <div class="new-address-form" *ngIf="isAddingAddress">
                     <h4 class="form-section-subtitle">THÊM ĐỊA CHỈ MỚI</h4>
 
+                    <div *ngIf="addressError" style="color: #d9534f; font-size: 13px; margin-bottom: 12px;">
+                        {{ addressError }}
+                    </div>
+
                     <div class="form-row">
                         <div class="form-label">Tên người nhận</div>
                         <div class="form-input">
-                            <input type="text" placeholder="Nhập tên người nhận">
+                            <input type="text" placeholder="Nhập tên người nhận" [(ngModel)]="addressForm.recipientName" name="addrRecipientName">
                         </div>
                     </div>
 
                     <div class="form-row">
                         <div class="form-label">Số điện thoại</div>
                         <div class="form-input">
-                            <input type="text" placeholder="Nhập số điện thoại">
+                            <input type="tel" placeholder="Nhập số điện thoại" [(ngModel)]="addressForm.recipientPhone" name="addrRecipientPhone">
                         </div>
                     </div>
 
                     <div class="form-row">
                         <div class="form-label">Tỉnh / Thành phố</div>
                         <div class="form-input">
-                            <select class="form-select">
-                                <option value="">Chọn Tỉnh / Thành phố</option>
-                                <option value="HCM">TP. Hồ Chí Minh</option>
-                                <option value="HN">Hà Nội</option>
-                            </select>
+                            <input type="text" placeholder="Ví dụ: TP. Hồ Chí Minh, Hà Nội, Đà Nẵng..." [(ngModel)]="addressForm.province" name="addrProvince">
                         </div>
                     </div>
 
                     <div class="form-row">
                         <div class="form-label">Quận / Huyện</div>
                         <div class="form-input">
-                            <select class="form-select">
-                                <option value="">Chọn Quận / Huyện</option>
-                            </select>
+                            <input type="text" placeholder="Ví dụ: Quận 1, Quận Bình Thạnh..." [(ngModel)]="addressForm.district" name="addrDistrict">
                         </div>
                     </div>
 
                     <div class="form-row">
                         <div class="form-label">Phường / Xã</div>
                         <div class="form-input">
-                            <select class="form-select">
-                                <option value="">Chọn Phường / Xã</option>
-                            </select>
+                            <input type="text" placeholder="Ví dụ: Phường Bến Nghé, Xã..." [(ngModel)]="addressForm.ward" name="addrWard">
                         </div>
                     </div>
 
                     <div class="form-row">
                         <div class="form-label">Địa chỉ cụ thể</div>
                         <div class="form-input">
-                            <input type="text" placeholder="Số nhà, tên đường...">
+                            <input type="text" placeholder="Số nhà, tên tòa nhà, tên đường..." [(ngModel)]="addressForm.addressLine" name="addrLine">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-label">Cài đặt</div>
+                        <div class="form-input" style="display: flex; align-items: center; gap: 8px;">
+                            <label style="display: inline-flex; align-items: center; gap: 8px; cursor: pointer; font-size: 13px;">
+                                <input type="checkbox" [(ngModel)]="addressForm.isDefault" name="addrIsDefault">
+                                Đặt làm địa chỉ mặc định
+                            </label>
                         </div>
                     </div>
 
                     <div class="form-actions" style="margin-top: 20px;">
-                        <button class="btn-cancel" (click)="isAddingAddress = false">Hủy</button>
-                        <button class="btn-save" (click)="isAddingAddress = false">Thêm địa chỉ</button>
+                        <button class="btn-cancel" (click)="isAddingAddress = false" [disabled]="addressSaving">Hủy</button>
+                        <button class="btn-save" (click)="saveNewAddress()" [disabled]="addressSaving">
+                            {{ addressSaving ? 'Đang lưu...' : 'Lưu địa chỉ' }}
+                        </button>
                     </div>
                 </div>
 
-                <!-- Address List -->
+                <!-- Dynamic Address List -->
                 <div class="address-list">
-
-                    <!-- Address 1 -->
-                    <div class="address-item">
-                        <div class="address-info-left">
-                            <div class="address-name">John Doe</div>
-                            <div class="address-phone">0562173125</div>
-                            <label class="radio-label address-radio">
-                                <input type="radio" name="default_address" checked>
-                                <span class="radio-custom"></span>
-                                Mặc định
-                            </label>
+                    <ng-container *ngIf="addresses.length > 0; else noAddresses">
+                        <div class="address-item" *ngFor="let addr of addresses; let idx = index">
+                            <div class="address-info-left">
+                                <div class="address-name">{{ addr.recipientName || addr.fullName || authService.currentUser()?.fullName }}</div>
+                                <div class="address-phone">{{ addr.recipientPhone || addr.phone || authService.currentUser()?.phone || 'Chưa có SĐT' }}</div>
+                                <label class="radio-label address-radio" (click)="setDefaultAddress(idx)" style="cursor: pointer;">
+                                    <input type="radio" [name]="'default_address'" [checked]="addr.isDefault">
+                                    <span class="radio-custom"></span>
+                                    {{ addr.isDefault ? 'Mặc định' : 'Đặt làm mặc định' }}
+                                </label>
+                            </div>
+                            <div class="address-info-right" style="display: flex; align-items: center; justify-content: space-between; gap: 15px;">
+                                <div class="address-text">
+                                    {{ addr.addressLine || addr.street }}
+                                    <span *ngIf="addr.ward">, {{ addr.ward }}</span>
+                                    <span *ngIf="addr.district">, {{ addr.district }}</span>
+                                    <span *ngIf="addr.province">, {{ addr.province }}</span>
+                                </div>
+                                <button type="button" class="btn-delete-addr" (click)="deleteAddress(idx)" title="Xóa địa chỉ"
+                                    style="background: #fdf2f2; border: 1px solid #fecaca; color: #dc2626; border-radius: 4px; padding: 6px 10px; cursor: pointer; font-size: 12px; display: inline-flex; align-items: center; gap: 4px;">
+                                    <i class="bi bi-trash"></i> Xóa
+                                </button>
+                            </div>
                         </div>
-                        <div class="address-info-right">
-                            <div class="address-text">8 Đường Linh Xuân, Phường Linh Xuân, TP. Hồ Chí Minh</div>
-                            <button class="btn-edit" aria-label="Sửa địa chỉ">
-                                <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
-                                    <path
-                                        d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" />
-                                </svg>
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Address 2 -->
-                    <div class="address-item">
-                        <div class="address-info-left">
-                            <div class="address-name">John Doe</div>
-                            <div class="address-phone">0562173125</div>
-                            <label class="radio-label address-radio">
-                                <input type="radio" name="default_address">
-                                <span class="radio-custom"></span>
-                                Mặc định
-                            </label>
-                        </div>
-                        <div class="address-info-right">
-                            <div class="address-text">Ấp Tân Thành, Xã Vĩnh Bình, Tỉnh Đồng Tháp</div>
-                            <button class="btn-edit" aria-label="Sửa địa chỉ">
-                                <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
-                                    <path
-                                        d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" />
-                                </svg>
-                            </button>
-                        </div>
-                    </div>
-
-                </div>
-
-                <div class="form-actions" *ngIf="!isAddingAddress">
-                    <button class="btn-cancel">Hủy</button>
-                    <button class="btn-save">Lưu</button>
+                    </ng-container>
+                    <ng-template #noAddresses>
+                        <p style="color: #888; font-size: 13.5px; padding: 12px 0;">
+                            Bạn chưa có địa chỉ giao hàng nào. Vui lòng nhấn <strong>"Thêm địa chỉ"</strong> ở trên để bổ sung.
+                        </p>
+                    </ng-template>
                 </div>
             </fieldset>
         </div>

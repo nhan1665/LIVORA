@@ -2,134 +2,143 @@ import { Injectable, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { environment } from '../../environments/environment';
 
+export interface CustomerAddress {
+  addressId?: string;
+  recipientName?: string;
+  recipientPhone?: string;
+  fullName?: string;
+  phone?: string;
+  addressLine?: string;
+  street?: string;
+  province?: string;
+  district?: string;
+  ward?: string;
+  isDefault?: boolean;
+  label?: string;
+  notes?: string;
+}
+
 export interface CustomerUser {
-  id?: string;
+  id: string;
   code?: string;
   fullName: string;
   email: string;
   phone: string;
+  birthDate?: string | null;
+  gender?: string;
+  avatar?: string;
+  address?: string;
+  province?: string;
+  addresses?: CustomerAddress[];
+}
+
+export interface ProfileUpdate {
+  fullName?: string;
+  phone?: string;
+  birthDate?: string | null;
+  gender?: string;
+  avatar?: string;
   address?: string;
   province?: string;
   addresses?: any[];
+  newAddress?: any;
 }
 
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly apiUrl = `${environment.apiBaseUrl}/auth/customer`;
+  readonly currentUser = signal<CustomerUser | null>(this.getStoredUser());
 
-  // TÀI KHOẢN MẪU MẶC ĐỊNH
-  private readonly DEFAULT_USER: CustomerUser = {
-    fullName: 'LIVORA Customer',
-    email: 'admin@livora.com',
-    phone: '0901234567',
-    address: '669 Đỗ Mười',
-    province: 'TP. Hồ Chí Minh'
-  };
-
-  readonly currentUser = signal<CustomerUser | null>(this.getUserFromStorage());
-
-  get isLoggedIn(): boolean {
-    return !!this.currentUser();
+  constructor(private router: Router) {
+    if (this.currentUser()) void this.refreshProfile().catch(() => this.clearSession());
   }
 
-  constructor(private router: Router) {}
+  get isLoggedIn(): boolean {
+    return !!this.currentUser() && !!this.token;
+  }
 
-  private getUserFromStorage(): CustomerUser | null {
+  get token(): string | null {
+    return localStorage.getItem('livora_customer_token');
+  }
+
+  private getStoredUser(): CustomerUser | null {
     try {
-      const saved = localStorage.getItem('livora_user');
-      return saved ? JSON.parse(saved) : null;
+      if (!localStorage.getItem('livora_customer_token')) return null;
+      const stored = localStorage.getItem('livora_user');
+      return stored ? JSON.parse(stored) as CustomerUser : null;
     } catch {
       return null;
     }
   }
 
-  /**
-   * Đăng nhập khách hàng (hỗ trợ cả API backend và tài khoản mặc định)
-   */
-  login(email: string, pass: string): string {
-    const cleanEmail = email.trim().toLowerCase();
-
-    // Async sync với Backend API
-    if (typeof fetch !== 'undefined') {
-      fetch(`${this.apiUrl}/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: cleanEmail, password: pass }),
-      })
-        .then((res) => res.json())
-        .then((data) => {
-          if (data.success && data.data?.user) {
-            this.currentUser.set(data.data.user);
-            localStorage.setItem('livora_user', JSON.stringify(data.data.user));
-            if (data.data.token) {
-              localStorage.setItem('livora_customer_token', data.data.token);
-            }
-          }
-        })
-        .catch(() => {});
-    }
-
-    // Kiểm tra tài khoản mặc định
-    if (cleanEmail === this.DEFAULT_USER.email) {
-      if (pass !== 'password123') {
-        return 'INVALID_PASSWORD';
-      }
-      this.currentUser.set(this.DEFAULT_USER);
-      localStorage.setItem('livora_user', JSON.stringify(this.DEFAULT_USER));
-      return 'SUCCESS';
-    }
-
-    // Nếu là email mới nhưng có pass, cho phép đăng nhập thành công
-    if (cleanEmail && pass && pass.length >= 6) {
-      const newUser: CustomerUser = {
-        fullName: cleanEmail.split('@')[0],
-        email: cleanEmail,
-        phone: '0901234567',
-        address: 'Hồ Chí Minh',
-      };
-      this.currentUser.set(newUser);
-      localStorage.setItem('livora_user', JSON.stringify(newUser));
-      return 'SUCCESS';
-    }
-
-    if (!cleanEmail.includes('@') && cleanEmail.length < 9) {
-      return 'INVALID_USERNAME';
-    }
-
-    return 'INVALID_PASSWORD';
+  private storeSession(user: CustomerUser, token?: string): void {
+    if (token) localStorage.setItem('livora_customer_token', token);
+    this.currentUser.set(user);
+    localStorage.setItem('livora_user', JSON.stringify(user));
   }
 
-  /**
-   * Đăng ký tài khoản khách hàng mới lên Backend
-   */
-  async register(data: { fullName: string; email: string; phone: string; password: string; address?: string }): Promise<boolean> {
-    try {
-      const res = await fetch(`${this.apiUrl}/register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
-      const json = await res.json();
-      if (json.success && json.data?.user) {
-        this.currentUser.set(json.data.user);
-        localStorage.setItem('livora_user', JSON.stringify(json.data.user));
-        if (json.data.token) {
-          localStorage.setItem('livora_customer_token', json.data.token);
-        }
-        return true;
-      }
-      return false;
-    } catch {
-      return false;
-    }
-  }
-
-  logout() {
+  private clearSession(): void {
     this.currentUser.set(null);
     localStorage.removeItem('livora_user');
     localStorage.removeItem('livora_customer_token');
+  }
+
+  private async parseResponse(response: Response): Promise<any> {
+    const result = await response.json();
+    if (!response.ok || !result.success) {
+      throw new Error(result.message || 'Không thể kết nối với máy chủ.');
+    }
+    return result.data;
+  }
+
+  async login(account: string, password: string): Promise<boolean> {
+    const response = await fetch(`${this.apiUrl}/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: account.trim(), password }),
+    });
+    const data = await this.parseResponse(response);
+    if (!data?.token || !data?.user?.id) throw new Error('Phản hồi đăng nhập không hợp lệ.');
+    this.storeSession(data.user, data.token);
+    return true;
+  }
+
+  async register(data: { email: string; password: string; fullName?: string; phone?: string }): Promise<boolean> {
+    const response = await fetch(`${this.apiUrl}/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    await this.parseResponse(response);
+    return true;
+  }
+
+  async refreshProfile(): Promise<CustomerUser> {
+    const token = this.token;
+    if (!token) throw new Error('Vui lòng đăng nhập.');
+    const response = await fetch(`${this.apiUrl}/me`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const user = await this.parseResponse(response) as CustomerUser;
+    this.storeSession(user);
+    return user;
+  }
+
+  async updateProfile(update: ProfileUpdate): Promise<CustomerUser> {
+    const token = this.token;
+    if (!token) throw new Error('Vui lòng đăng nhập.');
+    const response = await fetch(`${this.apiUrl}/me`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify(update),
+    });
+    const user = await this.parseResponse(response) as CustomerUser;
+    this.storeSession(user);
+    return user;
+  }
+
+  logout(): void {
+    this.clearSession();
     this.router.navigate(['/home']);
   }
 }

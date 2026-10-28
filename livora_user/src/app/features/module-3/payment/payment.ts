@@ -2,9 +2,8 @@ import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { CartService, CartItem } from '../../../services/cart.service';
-import { Header } from '../../../layouts/header/header';
-import { Footer } from '../../../layouts/footer/footer';
 import { FormsModule } from '@angular/forms';
+import { CheckoutService, ShippingOption } from '../../../services/checkout.service';
 
 // 1. IMPORT AUTH SERVICE
 import { AuthService } from '../../../services/auth.service';
@@ -23,7 +22,7 @@ export interface SavedAddress {
 @Component({
   selector: 'app-payment',
   standalone: true,
-  imports: [CommonModule, RouterModule, Header, Footer, FormsModule],
+  imports: [CommonModule, RouterModule, FormsModule],
   templateUrl: './payment.html',
   styleUrl: './payment.css',
 })
@@ -31,6 +30,7 @@ export class Payment implements OnInit {
   public readonly cartService = inject(CartService);
   // 2. INJECT AUTH SERVICE VÀO COMPONENT
   public readonly authService = inject(AuthService);
+  private readonly checkoutService = inject(CheckoutService);
   
   public readonly router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
@@ -38,6 +38,15 @@ export class Payment implements OnInit {
   isLoggedIn = false;
   savedAddresses: SavedAddress[] = [];
   selectedSavedAddressId = '';
+  shippingOptions: ShippingOption[] = [];
+  selectedShippingId = '';
+  checkoutError = '';
+  loadingOptions = false;
+  loadingQuote = false;
+  placingOrder = false;
+  confirmedTotal: number | null = null;
+  private requestKey = '';
+  private optionsVersion = 0;
 
   // Form Fields
   fullName = '';
@@ -49,7 +58,7 @@ export class Payment implements OnInit {
   selectedWard = '';
 
   // Options lists
-  provinces = ['Ho Chi Minh City', 'Hanoi', 'Da Nang', 'Binh Duong Province', 'Dong Thap Province'];
+  provinces: string[] = [];
 
   districtsMap: { [key: string]: string[] } = {
     'Ho Chi Minh City': ['District 1', 'District 3', 'Thu Duc City', 'Binh Thanh District'],
@@ -88,12 +97,6 @@ export class Payment implements OnInit {
   // Validation
   showValidationErrors = false;
 
-  // QR Modal
-  showQRModal = false;
-  qrTimer = 300;
-  qrInterval: any;
-  qrDataString = '';
-
   // Success Modal
   showSuccessModal = false;
   orderNumber = '';
@@ -103,6 +106,14 @@ export class Payment implements OnInit {
       this.router.navigate(['/cart']);
       return;
     }
+
+    this.checkoutService.regions().then((regions) => {
+      this.provinces = regions;
+      this.cdr.detectChanges();
+    }).catch((error) => {
+      this.checkoutError = error instanceof Error ? error.message : 'Không thể tải khu vực giao hàng.';
+      this.cdr.detectChanges();
+    });
 
     // 3. ĐỒNG BỘ TRẠNG THÁI TỪ AUTH SERVICE
     this.isLoggedIn = this.authService.isLoggedIn;
@@ -115,28 +126,16 @@ export class Payment implements OnInit {
         this.email = userProfile.email || '';
         
         // Khởi tạo sổ địa chỉ dựa trên thông tin User
-        this.savedAddresses = [
-          {
-            id: 'addr1',
-            fullName: userProfile.fullName,
-            phone: userProfile.phone,
-            province: userProfile.province || '',
-            district: 'Thu Duc City', // Mock cho khớp với map
-            ward: 'Linh Xuan Ward',
-            addressLine: userProfile.address || '',
-            isDefault: true
-          },
-          {
-            id: 'addr2',
-            fullName: userProfile.fullName,
-            phone: '0988777666',
-            province: 'Dong Thap Province',
-            district: 'Chau Thanh District',
-            ward: 'Vinh Binh Commune',
-            addressLine: 'Tan Thanh Hamlet, Vinh Binh Commune',
-            isDefault: false
-          }
-        ];
+        this.savedAddresses = (userProfile.addresses || []).map((item, index) => ({
+          id: item.addressId || `saved-${index}`,
+          fullName: item.recipientName || item.fullName || userProfile.fullName,
+          phone: item.recipientPhone || item.phone || userProfile.phone,
+          province: item.province || '',
+          district: item.district || '',
+          ward: item.ward || '',
+          addressLine: item.addressLine || '',
+          isDefault: !!item.isDefault,
+        }));
 
         // LOGIC AUTOFILL UX TỐI ƯU: Chỉ tự động điền nếu form đang trống
         if (!info.fullName) {
@@ -158,6 +157,7 @@ export class Payment implements OnInit {
     }
 
     this.promoInput = this.cartService.discountCode();
+    if (this.selectedProvince) void this.refreshShippingOptions();
   }
 
   // 4. HÀM HỖ TRỢ TẢI LẠI DỮ LIỆU ĐÃ NHẬP
@@ -204,6 +204,7 @@ export class Payment implements OnInit {
     this.selectedWard = addr.ward;
     this.address = addr.addressLine;
     this.saveShippingInfo();
+    void this.refreshShippingOptions();
   }
 
   onProvinceChange() {
@@ -213,6 +214,7 @@ export class Payment implements OnInit {
     this.availableDistricts = this.districtsMap[this.selectedProvince] || [];
     this.updateAddress();
     this.saveShippingInfo();
+    void this.refreshShippingOptions();
   }
 
   onDistrictChange() {
@@ -236,6 +238,8 @@ export class Payment implements OnInit {
   }
 
   saveShippingInfo() {
+    this.cartService.serverQuote.set(null);
+    this.requestKey = '';
     this.cartService.shippingInfo.set({
       fullName: this.fullName,
       email: this.email,
@@ -247,157 +251,124 @@ export class Payment implements OnInit {
     });
   }
 
-  setShippingMethod(method: 'nhanh' | 'hoa-toc') {
-    this.cartService.shippingMethod.set(method);
+  private checkoutItems() {
+    return this.cartService.items().map((item) => ({ productId: item.productId || item.id, quantity: item.quantity }));
+  }
+
+  async refreshShippingOptions(): Promise<void> {
+    const version = ++this.optionsVersion;
+    this.shippingOptions = [];
+    this.selectedShippingId = '';
+    this.cartService.serverQuote.set(null);
+    if (!this.selectedProvince) return;
+    this.loadingOptions = true;
+    this.checkoutError = '';
+    try {
+      const result = await this.checkoutService.shippingOptions(this.checkoutItems(), this.selectedProvince);
+      if (version !== this.optionsVersion) return;
+      this.shippingOptions = result.options;
+      if (!result.options.length) this.checkoutError = 'Không có phương thức vận chuyển cho khu vực này.';
+    } catch (error) {
+      if (version === this.optionsVersion) this.checkoutError = error instanceof Error ? error.message : 'Không thể tải phương thức vận chuyển.';
+    } finally {
+      if (version === this.optionsVersion) {
+        this.loadingOptions = false;
+        this.cdr.detectChanges();
+      }
+    }
+  }
+
+  async setShippingMethod(id: string): Promise<void> {
+    this.selectedShippingId = id;
+    this.cartService.serverQuote.set(null);
+    this.requestKey = '';
+    await this.refreshQuote();
+  }
+
+  async refreshQuote(): Promise<boolean> {
+    if (!this.selectedProvince || !this.selectedShippingId) return false;
+    this.loadingQuote = true;
+    this.checkoutError = '';
+    this.cartService.serverQuote.set(null);
+    try {
+      const quote = await this.checkoutService.quote(
+        this.checkoutItems(), this.selectedProvince, this.selectedShippingId, this.cartService.discountCode()
+      );
+      this.cartService.serverQuote.set(quote);
+      this.promoMessage = quote.voucherCode ? 'Áp dụng mã giảm giá thành công.' : '';
+      this.promoError = false;
+      return true;
+    } catch (error) {
+      this.checkoutError = error instanceof Error ? error.message : 'Không thể tính giá đơn hàng.';
+      this.promoError = !!this.cartService.discountCode();
+      if (this.promoError) this.promoMessage = this.checkoutError;
+      return false;
+    } finally {
+      this.loadingQuote = false;
+      this.cdr.detectChanges();
+    }
   }
 
   setPaymentMethod(method: 'cod' | 'bank') {
     this.cartService.paymentMethod.set(method);
   }
 
-  applyPromo() {
-    if (!this.promoInput.trim()) return;
-    const success = this.cartService.applyDiscountCode(this.promoInput);
-    if (success) {
-      this.promoMessage = 'Áp dụng mã giảm giá thành công!';
-      this.promoError = false;
-    } else {
-      this.promoMessage = 'Mã giảm giá không hợp lệ.';
+  async applyPromo(): Promise<void> {
+    this.cartService.applyDiscountCode(this.promoInput);
+    this.requestKey = '';
+    if (!this.selectedShippingId) {
+      this.promoMessage = 'Vui lòng chọn phương thức vận chuyển trước.';
       this.promoError = true;
+      return;
     }
+    await this.refreshQuote();
   }
 
-  completeOrder() {
-    this.saveShippingInfo();
-
-    if (!this.fullName || !this.email || !this.phone || !this.address || !this.selectedProvince) {
+  async completeOrder(): Promise<void> {
+    if (this.placingOrder) return;
+    if (!this.fullName.trim() || !this.email.trim() || !this.phone.trim() ||
+        !this.address.trim() || !this.selectedProvince || !this.selectedShippingId) {
       this.showValidationErrors = true;
+      this.checkoutError = 'Vui lòng điền thông tin giao hàng và chọn phương thức vận chuyển.';
       window.scrollTo({ top: 150, behavior: 'smooth' });
       return;
     }
-
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.email) || !/^0\d{9,10}$/.test(this.phone.trim())) {
+      this.checkoutError = 'Email hoặc số điện thoại không hợp lệ.';
+      return;
+    }
     this.showValidationErrors = false;
-
-    const randomNum = Math.floor(100000 + Math.random() * 900000);
-    this.orderNumber = `LIV-${randomNum}`;
-
-    // Gửi đơn hàng thực tế lên Backend MongoDB Atlas
-    if (typeof fetch !== 'undefined') {
-      const currentU = this.authService.currentUser();
-      const orderPayload = {
-        userId: currentU ? (currentU.id || (currentU as any)._id) : undefined,
+    if (!await this.refreshQuote()) return;
+    if (!this.requestKey) this.requestKey = crypto.randomUUID();
+    this.placingOrder = true;
+    this.checkoutError = '';
+    try {
+      const result = await this.checkoutService.placeOrder({
+        items: this.checkoutItems(),
         customerInfo: {
-          name: this.fullName.trim(),
+          fullName: this.fullName.trim(),
           phone: this.phone.trim(),
           email: this.email.trim(),
           address: this.address.trim(),
+          district: this.selectedDistrict,
+          ward: this.selectedWard,
         },
-        items: this.cartService.items().map(it => ({
-          productId: it.productId || it.id,
-          name: it.name,
-          price: it.price,
-          quantity: it.quantity,
-          thumbnail: it.image,
-        })),
+        province: this.selectedProvince,
+        shippingId: this.selectedShippingId,
         voucherCode: this.cartService.discountCode(),
-        shippingFee: this.cartService.shippingFee(),
-        paymentMethod: this.cartService.paymentMethod() === 'bank' ? 'BANK_TRANSFER' : 'COD',
-        note: this.cartService.orderNote() || '',
-      };
-
-      fetch('http://localhost:5000/api/orders', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(orderPayload),
-      })
-        .then(res => res.json())
-        .then(data => {
-          if (data.success && data.data?.orderCode) {
-            this.orderNumber = data.data.orderCode;
-
-            // Ghi log vào web user (Console và LocalStorage)
-            const logEntry = {
-              timestamp: new Date().toISOString(),
-              action: 'USER_ORDER_CREATED',
-              orderCode: data.data.orderCode,
-              customerName: this.fullName.trim(),
-              phone: this.phone.trim(),
-              paymentMethod: this.cartService.paymentMethod(),
-              totalAmount: data.data.finalAmount || this.cartService.total(),
-              items: this.cartService.items().map(i => ({ name: i.name, quantity: i.quantity, price: i.price })),
-            };
-            console.log('📝 [LIVORA USER LOG] Đơn hàng đã được tạo thành công:', logEntry);
-
-            try {
-              const logs = JSON.parse(localStorage.getItem('livora_user_order_logs') || '[]');
-              logs.unshift(logEntry);
-              localStorage.setItem('livora_user_order_logs', JSON.stringify(logs));
-
-              const userOrders = JSON.parse(localStorage.getItem('livora_user_orders') || '[]');
-              userOrders.unshift({
-                ...orderPayload,
-                orderCode: data.data.orderCode,
-                finalAmount: data.data.finalAmount || this.cartService.total(),
-                orderStatus: data.data.orderStatus || 'pending',
-                paymentStatus: data.data.paymentStatus || (this.cartService.paymentMethod() === 'bank' ? 'paid' : 'unpaid'),
-                createdAt: new Date().toISOString(),
-              });
-              localStorage.setItem('livora_user_orders', JSON.stringify(userOrders));
-            } catch (storageErr) {
-              console.warn('[LIVORA USER] Lỗi lưu trữ log đơn hàng:', storageErr);
-            }
-
-            this.cdr.detectChanges();
-          }
-        })
-        .catch(err => {
-          console.warn('Không thể gửi đơn hàng lên server:', err);
-        });
-    }
-
-    if (this.cartService.paymentMethod() === 'bank') {
-      this.showQRModal = true;
-      this.startQRTimer();
-    } else {
+        paymentMethod: this.cartService.paymentMethod() === 'bank' ? 'bank_transfer' : 'cod',
+        requestKey: this.requestKey,
+        note: this.cartService.orderNote(),
+      });
+      this.orderNumber = result.orderCode;
+      this.confirmedTotal = result.finalAmount;
       this.showSuccessModal = true;
-    }
-  }
-
-  startQRTimer() {
-    this.qrTimer = 300;
-    this.updateQRString();
-    if (this.qrInterval) clearInterval(this.qrInterval);
-   
-    this.qrInterval = setInterval(() => {
-      this.qrTimer--;
-      if (this.qrTimer <= 0) {
-        this.qrTimer = 300;
-        this.updateQRString();
-      }
+    } catch (error) {
+      this.checkoutError = error instanceof Error ? error.message : 'Không thể đặt hàng.';
+    } finally {
+      this.placingOrder = false;
       this.cdr.detectChanges();
-    }, 1000);
-  }
-
-  updateQRString() {
-    const timestamp = new Date().getTime();
-    this.qrDataString = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=Chuyen khoan cho LIVORA - So tien: $${this.cartService.total()} - TS: ${timestamp}`;
-  }
-
-  get formattedQRTime() {
-    const m = Math.floor(this.qrTimer / 60);
-    const s = this.qrTimer % 60;
-    return `${m < 10 ? '0' : ''}${m}:${s < 10 ? '0' : ''}${s}`;
-  }
-
-  confirmQRPayment() {
-    if (this.qrInterval) clearInterval(this.qrInterval);
-    this.showQRModal = false;
-    this.showSuccessModal = true;
-  }
-
-  cancelQRPayment() {
-    if (this.qrInterval) clearInterval(this.qrInterval);
-    this.showQRModal = false;
+    }
   }
 
   closeSuccessModal() {
