@@ -122,24 +122,35 @@ const staffResetPassword = async (req, res) => sendError(res, 'Password recovery
  */
 const customerRegister = async (req, res) => {
   try {
-    const { fullName, email, phone, password, address, province } = req.body;
+    const { fullName = '', email, phone = '', password, address, province } = req.body;
 
-    if (typeof fullName !== 'string' || !fullName.trim() || fullName.trim().length > 120 ||
-      typeof email !== 'string' || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()) ||
-      typeof phone !== 'string' || !/^0\d{9,10}$/.test(phone.trim()) ||
-      typeof password !== 'string' || password.length < 8 || password.length > 128) {
-      return sendError(res, 'Vui lòng điền đầy đủ họ tên, email, số điện thoại và mật khẩu.', 400);
+    if (typeof email !== 'string' || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      return sendError(res, 'Định dạng email không hợp lệ.', 400);
+    }
+    if (typeof password !== 'string' || password.length < 6 || password.length > 128) {
+      return sendError(res, 'Mật khẩu phải có độ dài từ 6 đến 128 ký tự.', 400);
+    }
+    if (fullName && (typeof fullName !== 'string' || fullName.trim().length > 120)) {
+      return sendError(res, 'Họ và tên không hợp lệ (tối đa 120 ký tự).', 400);
     }
 
     const cleanEmail = email.trim().toLowerCase();
-    const cleanPhone = phone.trim();
+    const cleanPhone = typeof phone === 'string' ? phone.trim() : '';
 
-    const existingCustomer = await Customer.findOne({
-      $or: [{ email: cleanEmail }, { phone: cleanPhone }],
-    });
+    if (cleanPhone && !/^0\d{9,10}$/.test(cleanPhone)) {
+      return sendError(res, 'Số điện thoại không hợp lệ (gồm 10 số, bắt đầu bằng số 0).', 400);
+    }
 
-    if (existingCustomer) {
-      return sendError(res, 'Email hoặc số điện thoại đã được đăng ký tài khoản.', 400);
+    const existingEmail = await Customer.findOne({ email: cleanEmail });
+    if (existingEmail) {
+      return sendError(res, 'Email này đã được đăng ký tài khoản. Vui lòng đăng nhập.', 400);
+    }
+
+    if (cleanPhone) {
+      const existingPhone = await Customer.findOne({ phone: cleanPhone });
+      if (existingPhone) {
+        return sendError(res, 'Số điện thoại này đã được đăng ký tài khoản.', 400);
+      }
     }
 
     const salt = await bcrypt.genSalt(10);
@@ -150,16 +161,17 @@ const customerRegister = async (req, res) => {
 
     const newCustomer = new Customer({
       code,
-      fullName: fullName.trim(),
+      fullName: (fullName || '').trim(),
       email: cleanEmail,
       phone: cleanPhone,
       passwordHash,
       customerType: 'registered',
       status: 'active',
+      isActive: true,
       addresses: address ? [{
         isDefault: true,
         label: 'Mặc định',
-        fullName: fullName.trim(),
+        fullName: (fullName || '').trim(),
         phone: cleanPhone,
         addressLine: address.trim(),
         province: province || '',
@@ -178,12 +190,15 @@ const customerRegister = async (req, res) => {
         fullName: newCustomer.fullName,
         email: newCustomer.email,
         phone: newCustomer.phone,
+        birthDate: newCustomer.birthDate || null,
+        gender: newCustomer.gender || '',
+        avatar: newCustomer.avatar || '',
         addresses: newCustomer.addresses,
       },
     }, 'Đăng ký tài khoản thành công.', 201);
   } catch (error) {
     console.error('customerRegister error:', error);
-    return sendError(res, 'Lỗi hệ thống khi đăng ký.', 500);
+    return sendError(res, error.message || 'Lỗi hệ thống khi đăng ký.', 500);
   }
 };
 
@@ -193,17 +208,21 @@ const customerRegister = async (req, res) => {
  */
 const customerLogin = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const account = (req.body.email || req.body.username || req.body.account || req.body.phone || '').trim();
+    const { password } = req.body;
 
-    if (!email || !password) {
-      return sendError(res, 'Vui lòng nhập Email và Mật khẩu.', 400);
+    if (!account || !password) {
+      return sendError(res, 'Vui lòng nhập Email hoặc Số điện thoại và Mật khẩu.', 400);
     }
 
-    const cleanEmail = email.trim().toLowerCase();
-    const customer = await Customer.findOne({ email: cleanEmail });
+    const cleanAccount = account.toLowerCase();
+    const isEmail = cleanAccount.includes('@');
+    const query = isEmail ? { email: cleanAccount } : { $or: [{ phone: account }, { email: cleanAccount }] };
+
+    const customer = await Customer.findOne(query);
 
     if (!customer) {
-      return sendError(res, 'Email hoặc mật khẩu không chính xác.', 401);
+      return sendError(res, 'Email / Số điện thoại hoặc mật khẩu không chính xác.', 401);
     }
 
     if (customer.status === 'locked' || !customer.isActive) {
@@ -215,7 +234,7 @@ const customerLogin = async (req, res) => {
       isMatch = await bcrypt.compare(password, customer.passwordHash);
     }
     if (!isMatch) {
-      return sendError(res, 'Email hoặc mật khẩu không chính xác.', 401);
+      return sendError(res, 'Email / Số điện thoại hoặc mật khẩu không chính xác.', 401);
     }
 
     customer.lastActiveAt = new Date();
@@ -233,9 +252,12 @@ const customerLogin = async (req, res) => {
         fullName: customer.fullName,
         email: customer.email,
         phone: customer.phone,
-        address: defaultAddress ? defaultAddress.addressLine : '',
+        birthDate: customer.birthDate || null,
+        gender: customer.gender || '',
+        avatar: customer.avatar || '',
+        address: defaultAddress ? (defaultAddress.addressLine || defaultAddress.street) : '',
         province: defaultAddress ? defaultAddress.province : '',
-        addresses: customer.addresses,
+        addresses: customer.addresses || [],
       },
     }, 'Đăng nhập thành công.');
   } catch (error) {

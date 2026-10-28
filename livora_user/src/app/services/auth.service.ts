@@ -2,6 +2,22 @@ import { Injectable, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { environment } from '../../environments/environment';
 
+export interface CustomerAddress {
+  addressId?: string;
+  recipientName?: string;
+  recipientPhone?: string;
+  fullName?: string;
+  phone?: string;
+  addressLine?: string;
+  street?: string;
+  province?: string;
+  district?: string;
+  ward?: string;
+  isDefault?: boolean;
+  label?: string;
+  notes?: string;
+}
+
 export interface CustomerUser {
   id: string;
   code?: string;
@@ -10,24 +26,23 @@ export interface CustomerUser {
   phone: string;
   birthDate?: string | null;
   gender?: string;
+  avatar?: string;
   address?: string;
   province?: string;
-  addresses?: {
-    addressId?: string;
-    recipientName?: string;
-    recipientPhone?: string;
-    fullName?: string;
-    phone?: string;
-    addressLine?: string;
-    province?: string;
-    district?: string;
-    ward?: string;
-    isDefault?: boolean;
-  }[];
+  addresses?: CustomerAddress[];
 }
 
-export type ProfileUpdate = Pick<CustomerUser, 'fullName' | 'phone'> &
-  Partial<Pick<CustomerUser, 'birthDate' | 'gender'>>;
+export interface ProfileUpdate {
+  fullName?: string;
+  phone?: string;
+  birthDate?: string | null;
+  gender?: string;
+  avatar?: string;
+  address?: string;
+  province?: string;
+  addresses?: any[];
+  newAddress?: any;
+}
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -76,15 +91,25 @@ export class AuthService {
     return result.data;
   }
 
-  async login(email: string, password: string): Promise<boolean> {
+  async login(account: string, password: string): Promise<boolean> {
     const response = await fetch(`${this.apiUrl}/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: email.trim().toLowerCase(), password }),
+      body: JSON.stringify({ email: account.trim(), password }),
     });
     const data = await this.parseResponse(response);
     if (!data?.token || !data?.user?.id) throw new Error('Phản hồi đăng nhập không hợp lệ.');
     this.storeSession(data.user, data.token);
+    return true;
+  }
+
+  async register(data: { email: string; password: string; fullName?: string; phone?: string }): Promise<boolean> {
+    const response = await fetch(`${this.apiUrl}/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    await this.parseResponse(response);
     return true;
   }
 

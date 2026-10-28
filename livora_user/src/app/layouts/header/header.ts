@@ -74,12 +74,12 @@ export class Header implements OnInit {
 
   onAccountIconClick(event: Event) {
     event.preventDefault();
-    const isLoggedIn = localStorage.getItem('isLoggedIn');
-    if (isLoggedIn === 'true') {
-      this.router.navigate(['/profile']);
-    } else {
-      this.showAccountDropdown = !this.showAccountDropdown;
-    }
+    this.showAccountDropdown = !this.showAccountDropdown;
+  }
+
+  goToProfile() {
+    this.showAccountDropdown = false;
+    this.router.navigate(['/profile']);
   }
 
   goToLogin(isLogin: boolean) {
@@ -89,6 +89,7 @@ export class Header implements OnInit {
 
   onLogout(event: Event) {
     event.preventDefault();
+    this.showAccountDropdown = false;
     this.authService.logout();
   }
 }

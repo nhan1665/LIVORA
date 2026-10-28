@@ -129,21 +129,278 @@
   </section>
 
 
-  <!-- ====== PROMISE SECTION ====== -->
-  <section class="promise-section">
-    <div class="promise-container">
-      <div class="promise-image-col">
-        <img src="intro.2.png" alt="Mỗi căn phòng, một bức thư tình lặng lẽ" class="promise-image" />
-      </div>
-      <div class="promise-content-col">
-        <span class="section-label">CAM KẾT CỦA CHÚNG TÔI</span>
-        <h2 class="promise-title">Mỗi căn phòng, một bức thư tình lặng lẽ.</h2>
-        <p class="promise-text">
-          Chúng tôi thiết kế cho cách bạn thực sự sống — những buổi sáng Chủ nhật trên sofa, bữa tối sum vầy, phòng ngủ
-          cuối cùng cũng mang lại cảm giác thư thái. Duyệt theo phòng, lưu cảm hứng và mua ngay những sản phẩm bạn yêu
-          thích.
+  <!-- ====== BEST SELLERS SHOWCASE SECTION ====== -->
+  <section class="bestsellers-home-section">
+    <div class="bestsellers-home-container">
+      <div class="section-header-wrap">
+        <span class="section-tag-gold">SẢN PHẨM BÁN CHẠY NHẤT</span>
+        <h2 class="section-title-serif">Những Tuyệt Tác Được Yêu Thích Nhất</h2>
+        <p class="section-subtitle-refined">
+          Được hàng ngàn gia đình tin chọn để tạo nên không gian sống thanh lịch và ấm cúng. Khám phá những thiết kế nội thất bán chạy nhất tại LIVORA.
         </p>
-        <a routerLink="/rooms" class="promise-link">Bắt đầu với một căn phòng →</a>
+      </div>
+
+      <div class="bestsellers-cards-grid">
+        <article *ngFor="let product of bestSellers; let i = index" class="bestseller-card">
+          <div class="bestseller-image-wrapper">
+            <img [src]="product.thumbnail || (product.images && product.images[0])" (error)="onImageError($event)" [alt]="product.name" class="bestseller-img" loading="lazy" />
+            
+            <div class="bestseller-badge-group">
+              <span class="bestseller-rank-badge" *ngIf="product.badge">{{ product.badge }}</span>
+              <span class="bestseller-room-badge" *ngIf="product.categoryName">{{ product.categoryName }}</span>
+            </div>
+
+            <div class="bestseller-overlay">
+              <a [routerLink]="getProductRouterLink(product)" class="bestseller-overlay-btn">
+                <span>Xem chi tiết</span>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M5 12h14M12 5l7 7-7 7" />
+                </svg>
+              </a>
+            </div>
+          </div>
+
+          <div class="bestseller-card-body">
+            <div class="bestseller-meta">
+              <!-- Số lượt mua -->
+              <span class="bestseller-sold-count" *ngIf="product.soldQuantity">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
+                  <line x1="3" y1="6" x2="21" y2="6" />
+                  <path d="M16 10a4 4 0 0 1-8 0" />
+                </svg>
+                Đã bán {{ product.soldQuantity }} lượt
+              </span>
+
+              <!-- Đánh giá sao -->
+              <span class="bestseller-rating" *ngIf="product.averageRating">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="#c9a84c" stroke="#c9a84c" stroke-width="1.5">
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                </svg>
+                {{ product.averageRating | number:'1.1-1' }}
+                <span class="bestseller-review-count" *ngIf="product.totalReviews">({{ product.totalReviews }})</span>
+              </span>
+            </div>
+
+            <h3 class="bestseller-title">
+              <a [routerLink]="getProductRouterLink(product)">{{ product.name }}</a>
+            </h3>
+
+            <p class="bestseller-excerpt">{{ product.description }}</p>
+
+            <div class="bestseller-footer">
+              <div class="bestseller-pricing">
+                <span class="current-price">{{ formatPrice(product.salePrice || product.price) }}</span>
+                <span class="original-price" *ngIf="product.salePrice">{{ formatPrice(product.price) }}</span>
+              </div>
+              <a [routerLink]="getProductRouterLink(product)" class="bestseller-link">
+                <span>Xem ngay</span>
+                <span class="arrow">→</span>
+              </a>
+            </div>
+          </div>
+        </article>
+      </div>
+
+      <div class="bestsellers-loadmore-wrap">
+        <a routerLink="/rooms" class="btn-loadmore-bestsellers">
+          <span>Xem tất cả sản phẩm bán chạy</span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+            <polyline points="12 5 19 12 12 19"></polyline>
+          </svg>
+        </a>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ====== CONTACT US SECTION ====== -->
+  <section class="contact-home-section" id="contact-section">
+    <div class="contact-home-container">
+      <!-- Left Column: Editorial Information & Trust Badges -->
+      <div class="contact-info-col">
+        <div class="contact-badge-wrap">
+          <span class="contact-badge-dot"></span>
+          <span class="contact-badge-text">KẾT NỐI VỚI CHUYÊN GIA LIVORA</span>
+        </div>
+        
+        <h2 class="contact-main-title">
+          Hiện thực hóa không gian sống độc bản của bạn.
+        </h2>
+        
+        <p class="contact-desc">
+          Bạn đang tìm kiếm mảnh ghép hoàn hảo cho căn hộ, biệt thự hay dự án cá nhân? Đội ngũ chuyên gia kiến trúc và nội thất LIVORA luôn sẵn sàng lắng nghe, tư vấn tận tâm và liên hệ trực tiếp hỗ trợ bạn qua <strong>Zalo</strong> hoặc <strong>Hotline</strong>.
+        </p>
+
+        <div class="contact-channels-list">
+          <div class="channel-card">
+            <div class="channel-icon-wrap">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+              </svg>
+            </div>
+            <div class="channel-info">
+              <span class="channel-label">Hotline &amp; Zalo tư vấn 24/7</span>
+              <a href="tel:19006868" class="channel-value">1900 6868 — 0988 123 456</a>
+            </div>
+          </div>
+
+          <div class="channel-card">
+            <div class="channel-icon-wrap">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                <circle cx="12" cy="10" r="3"></circle>
+              </svg>
+            </div>
+            <div class="channel-info">
+              <span class="channel-label">Flagship Showroom</span>
+              <span class="channel-value">280 An Dương Vương, P.4, Q.5, TP. Hồ Chí Minh</span>
+            </div>
+          </div>
+
+          <div class="channel-card">
+            <div class="channel-icon-wrap">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+              </svg>
+            </div>
+            <div class="channel-info">
+              <span class="channel-label">Thời gian phục vụ</span>
+              <span class="channel-value">08:30 – 21:30 (Thứ 2 – Chủ Nhật)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column: Interactive Consultation Request Card -->
+      <div class="contact-form-card">
+        <div class="form-header">
+          <span class="form-kicker">GỬI YÊU CẦU TƯ VẤN</span>
+          <h3 class="form-title">Để lại thông tin, chuyên viên sẽ liên hệ ngay</h3>
+          <p class="form-sub">Chúng tôi sẽ kết nối với bạn qua Zalo hoặc điện thoại trong vòng 15 – 30 phút.</p>
+        </div>
+
+        <div *ngIf="contactSuccessMessage" class="contact-alert contact-alert-success" role="status">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+          </svg>
+          <div>
+            <strong>Gửi thành công!</strong> {{ contactSuccessMessage }}
+          </div>
+        </div>
+
+        <div *ngIf="contactErrorMessage" class="contact-alert contact-alert-error" role="alert">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+          </svg>
+          <div>
+            {{ contactErrorMessage }}
+          </div>
+        </div>
+
+        <form (ngSubmit)="submitContact($event)" class="contact-native-form" novalidate>
+          <div class="contact-form-row">
+            <div class="contact-field-wrap">
+              <label for="contactFullName" class="contact-field-label">Họ và tên <span class="required-star">*</span></label>
+              <input
+                type="text"
+                id="contactFullName"
+                name="contactFullName"
+                [(ngModel)]="contactForm.fullName"
+                placeholder="Ví dụ: Nguyễn Hoàng Nam"
+                class="contact-input"
+                maxlength="120"
+                required
+              />
+            </div>
+
+            <div class="contact-field-wrap">
+              <label for="contactPhone" class="contact-field-label">Số điện thoại (Zalo) <span class="required-star">*</span></label>
+              <input
+                type="tel"
+                id="contactPhone"
+                name="contactPhone"
+                [(ngModel)]="contactForm.phone"
+                placeholder="Ví dụ: 0912 345 678"
+                class="contact-input"
+                required
+              />
+            </div>
+          </div>
+
+          <div class="contact-form-row">
+            <div class="contact-field-wrap">
+              <label for="contactEmail" class="contact-field-label">Email (tùy chọn)</label>
+              <input
+                type="email"
+                id="contactEmail"
+                name="contactEmail"
+                [(ngModel)]="contactForm.email"
+                placeholder="email@example.com"
+                class="contact-input"
+              />
+            </div>
+
+            <div class="contact-field-wrap">
+              <label for="contactSubject" class="contact-field-label">Nhu cầu tư vấn</label>
+              <select
+                id="contactSubject"
+                name="contactSubject"
+                [(ngModel)]="contactForm.subject"
+                class="contact-select"
+              >
+                <option value="Tư vấn không gian &amp; sản phẩm">Tư vấn không gian &amp; sản phẩm</option>
+                <option value="Thiết kế nội thất trọn gói">Thiết kế nội thất trọn gói</option>
+                <option value="Báo giá đơn hàng số lượng lớn">Báo giá đơn hàng số lượng lớn</option>
+                <option value="Hợp tác kiến trúc sư &amp; dự án">Hợp tác kiến trúc sư &amp; dự án</option>
+                <option value="Yêu cầu khác">Yêu cầu khác</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="contact-field-wrap full-width">
+            <label for="contactMessage" class="contact-field-label">Nội dung / Nhu cầu chi tiết <span class="required-star">*</span></label>
+            <textarea
+              id="contactMessage"
+              name="contactMessage"
+              [(ngModel)]="contactForm.message"
+              placeholder="Bạn muốn tư vấn phòng khách, phòng ngủ, kích thước sản phẩm hay cần khảo sát không gian? Hãy chia sẻ cùng LIVORA..."
+              rows="4"
+              class="contact-textarea"
+              maxlength="1500"
+              required
+            ></textarea>
+          </div>
+
+          <div class="contact-form-footer">
+            <button
+              type="submit"
+              class="btn-submit-contact"
+              [disabled]="contactSubmitting"
+            >
+              <span *ngIf="!contactSubmitting" class="btn-submit-content">
+                <span>Gửi yêu cầu liên hệ ngay</span>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                  <polyline points="12 5 19 12 12 19"></polyline>
+                </svg>
+              </span>
+              <span *ngIf="contactSubmitting" class="btn-submitting-spinner">
+                <span class="spinner-circle"></span>
+                <span>Đang gửi thông tin...</span>
+              </span>
+            </button>
+            <span class="contact-privacy-note">
+              🔒 Thông tin của bạn được cam kết bảo mật tuyệt đối.
+            </span>
+          </div>
+        </form>
       </div>
     </div>
   </section>

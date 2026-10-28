@@ -133,7 +133,7 @@ async function createCheckoutOrder(req, res) {
       for (const item of quote.items) {
         const stock = await Product.findOneAndUpdate(
           { _id: item.productId, isActive: true, stockQuantity: { $gte: item.quantity } },
-          { $inc: { stockQuantity: -item.quantity } },
+          { $inc: { stockQuantity: -item.quantity, soldQuantity: item.quantity } },
           { session, new: true }
         );
         if (!stock) throw new CheckoutError('Sản phẩm vừa hết hàng. Vui lòng kiểm tra giỏ hàng.', 409);
