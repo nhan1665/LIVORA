@@ -37,7 +37,6 @@
 
     <aside class="space-y-4 border-t border-gray-100 lg:sticky lg:top-24">
 
-      @let filters = ['Sắp xếp', 'Chất liệu', 'Giá', 'Đánh giá'];
       @for (filter of filters; track filter) {
         <div class="border-b border-gray-200 py-4 flex flex-col cursor-pointer group" (click)="toggleFilter(filter)">
 
@@ -78,49 +77,59 @@
     </aside>
 
     <main class="lg:col-span-3">
-      <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-x-3 gap-y-8 md:gap-x-4 md:gap-y-12">
+      @if (displayedProducts.length === 0) {
+        <div class="py-16 text-center text-gray-500 bg-gray-50 rounded-lg p-8 border border-dashed border-gray-200">
+          <svg class="mx-auto h-12 w-12 text-gray-300 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+          </svg>
+          <p class="text-base font-medium text-gray-700 mb-1">Chưa có sản phẩm nào trong danh mục này</p>
+          <p class="text-xs text-gray-400">Các sản phẩm mới cập nhật sẽ sớm hiển thị tại đây.</p>
+        </div>
+      } @else {
+        <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-x-3 gap-y-8 md:gap-x-4 md:gap-y-12">
 
-        @for (product of displayedProducts; track product.id) {
-          <a [routerLink]="['/rooms', currentRoom, currentCategory, product.id]" class="group relative flex flex-col justify-between cursor-pointer">
+          @for (product of displayedProducts; track product.id) {
+            <a [routerLink]="['/rooms', currentRoom, currentCategory, product.id]" class="group relative flex flex-col justify-between cursor-pointer">
 
-            <div>
-              <div class="relative overflow-hidden aspect-square w-full bg-gray-50 rounded-sm mb-4 flex items-center justify-center p-2 md:p-4">
+              <div>
+                <div class="relative overflow-hidden aspect-square w-full bg-gray-50 rounded-sm mb-4 flex items-center justify-center p-2 md:p-4">
 
-                @if (product.badge) {
-                  <span class="absolute top-2 left-2 z-10 text-[9px] md:text-[10px] font-bold tracking-wider uppercase px-1.5 py-0.5 md:px-2 md:py-1 text-white"
-                        [class.bg-[#E50046]]="product.badge === 'Best seller' || product.badge === 'Bán chạy'"
-                        [class.bg-orange-500]="product.badge === 'New' || product.badge === 'Mới'">
-                    {{ product.badge }}
+                  @if (product.badge) {
+                    <span class="absolute top-2 left-2 z-10 text-[9px] md:text-[10px] font-bold tracking-wider uppercase px-1.5 py-0.5 md:px-2 md:py-1 text-white"
+                          [class.bg-[#E50046]]="product.badge === 'Best seller' || product.badge === 'Bán chạy'"
+                          [class.bg-orange-500]="product.badge === 'New' || product.badge === 'Mới'">
+                      {{ product.badge }}
+                    </span>
+                  }
+                  <img [src]="product.image" [alt]="product.name" class="max-w-full max-h-full object-contain group-hover:scale-102 transition-transform duration-500">
+                </div>
+
+                <h4 class="text-xs md:text-sm font-extrabold text-gray-900 tracking-tight uppercase mb-1">{{ product.name }}</h4>
+                <p class="text-[11px] md:text-xs text-gray-500 line-clamp-2 min-h-[32px] mb-3 leading-tight">{{ product.description }}</p>
+              </div>
+
+              <div>
+                <div class="mb-3">
+                  <span class="bg-[#FFDB00] text-gray-900 font-extrabold text-lg md:text-xl px-1.5 py-0.5 inline-block">
+                    ${{ product.price }}
                   </span>
-                }
-                <img [src]="product.image" [alt]="product.name" class="max-w-full max-h-full object-contain group-hover:scale-102 transition-transform duration-500">
-              </div>
+                </div>
 
-              <h4 class="text-xs md:text-sm font-extrabold text-gray-900 tracking-tight uppercase mb-1">{{ product.name }}</h4>
-              <p class="text-[11px] md:text-xs text-gray-500 line-clamp-2 min-h-[32px] mb-3 leading-tight">{{ product.description }}</p>
-            </div>
-
-            <div>
-              <div class="mb-3">
-                <span class="bg-[#FFDB00] text-gray-900 font-extrabold text-lg md:text-xl px-1.5 py-0.5 inline-block">
-                  ${{ product.price }}
-                </span>
-              </div>
-
-              <div class="flex items-center justify-between mt-auto">
-                <div class="flex items-center space-x-1 text-[10px] md:text-xs text-gray-500">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 md:h-3.5 md:w-3.5 text-gray-900" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 .587l3.668 7.431 8.2 1.192-5.934 5.787 1.4 8.168L12 18.896l-7.334 3.857 1.4-8.168L.132 9.21l8.2-1.192z"/>
-                  </svg>
-                  <span class="underline cursor-pointer hover:text-gray-900">({{ product.reviews }})</span>
+                <div class="flex items-center justify-between mt-auto">
+                  <div class="flex items-center space-x-1 text-[10px] md:text-xs text-gray-500">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 md:h-3.5 md:w-3.5 text-gray-900" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M12 .587l3.668 7.431 8.2 1.192-5.934 5.787 1.4 8.168L12 18.896l-7.334 3.857 1.4-8.168L.132 9.21l8.2-1.192z"/>
+                    </svg>
+                    <span class="underline cursor-pointer hover:text-gray-900">({{ product.reviews }})</span>
+                  </div>
                 </div>
               </div>
-            </div>
 
-          </a>
-        }
+            </a>
+          }
 
-      </div>
+        </div>
+      }
     </main>
 
   </div>

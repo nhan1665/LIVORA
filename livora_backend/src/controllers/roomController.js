@@ -35,9 +35,9 @@ const getRooms = async (req, res) => {
       const items = await Room.find(filter).sort({ displayOrder: 1, createdAt: -1 }).lean();
       return sendSuccess(res, items.map(r => ({
         id: r._id.toString(),
-        code: r.code || `RM-${r.slug.toUpperCase()}`,
+        code: r.code || (r.slug ? `RM-${r.slug.toUpperCase()}` : 'RM-SPACE'),
         name: r.name,
-        slug: r.slug,
+        slug: r.slug || '',
         description: r.description,
         thumbnail: r.thumbnail,
         displayOrder: r.displayOrder,
@@ -70,9 +70,9 @@ const getRooms = async (req, res) => {
         });
         return {
           id: r._id.toString(),
-          code: r.code || `RM-${r.slug.toUpperCase()}`,
+          code: r.code || (r.slug ? `RM-${r.slug.toUpperCase()}` : 'RM-SPACE'),
           name: r.name,
-          slug: r.slug,
+          slug: r.slug || '',
           description: r.description,
           thumbnail: r.thumbnail,
           displayOrder: r.displayOrder,

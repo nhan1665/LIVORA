@@ -184,6 +184,11 @@ const seedInitialData = require('./src/config/seed');
 const startServer = async () => {
   const conn = await connectDB();
   if (!conn) throw new Error('MongoDB connection is required before starting the API.');
+  try {
+    await seedInitialData();
+  } catch (seedErr) {
+    console.warn('Lỗi khi seed initial data:', seedErr.message);
+  }
   app.listen(PORT, () => {
     console.log(`LIVORA Backend API listening on http://localhost:${PORT}`);
   });

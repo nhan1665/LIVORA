@@ -26,20 +26,7 @@ export const routes: Routes = [
 
   // room routes
   { path: 'rooms', component: RoomCategories },
+  { path: 'rooms/:roomName', component: RoomProductList },
   { path: 'rooms/:roomName/:categoryName', component: RoomProductList },
-  { path: 'rooms/:roomName/:categoryName/:productId', component: RoomProductDetail },
-  {
-    path: 'rooms/:roomName',
-    redirectTo: (routeData) => {
-      const room = routeData.params['roomName'];
-
-      if (room === 'living-room') return `/rooms/${room}/sofas`; //mockup
-      if (room === 'kitchen') return `/rooms/${room}/cabinets`;  //mockup 
-      if (room === 'bathroom') return `/rooms/${room}/mirrors`;  //mockup
-      if (room === 'dining-room') return `/rooms/${room}/dining-tables`; //mockup
-
-      return `/rooms/${room}/beds`;
-    },
-    pathMatch: 'full'
-  },
+  { path: 'rooms/:roomName/:categoryName/:productId', component: RoomProductDetail }
 ];
