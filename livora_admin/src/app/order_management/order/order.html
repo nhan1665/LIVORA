@@ -14,9 +14,9 @@
       <h1>Danh sách đơn hàng</h1>
     </div>
     <div class="order-actions">
-      <button type="button" class="btn-refresh" (click)="refreshOrders()" title="Cập nhật đơn hàng mới nhất từ hệ thống">
-        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 4px;"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
-        Làm mới
+      <button type="button" class="btn-refresh" (click)="refreshOrders()" [disabled]="isRefreshing" title="Cập nhật đơn hàng mới nhất từ hệ thống">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" [class.spin-icon]="isRefreshing" style="vertical-align: middle; margin-right: 4px;"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+        {{ isRefreshing ? 'Đang làm mới...' : 'Làm mới' }}
       </button>
       <button type="button" class="btn-create" (click)="openCreateOrderModal()">
         + Tạo đơn hàng mới
@@ -59,6 +59,7 @@
       <app-filter-bar
         searchPlaceholder="Tìm mã đơn, tên hoặc SĐT khách hàng..."
         [searchValue]="keyword"
+        (searchValueChange)="onSearchChange($event)"
         [statusValue]="orderStatusFilter"
         [statusOptions]="statusOptions"
         (filter)="onFilter($event)"
@@ -342,6 +343,7 @@
               type="text"
               placeholder="Ví dụ: 0912345678"
               [(ngModel)]="customerPhone"
+              (input)="onPhoneChange()"
               (blur)="onPhoneBlur()"
               (keyup.enter)="onPhoneBlur()"
               style="flex: 1;"
@@ -356,9 +358,11 @@
               {{ isSearchingCustomer ? 'Đang tìm...' : 'Tra cứu' }}
             </button>
           </div>
-          @if (phoneLookupFound) {
+          @if (isSearchingCustomer) {
+            <small class="lookup-hint" style="color: #6366f1; font-weight: 600;">⏳ Đang tìm kiếm khách hàng trong hệ thống...</small>
+          } @else if (phoneLookupFound) {
             <small class="lookup-badge">&check; Đã tìm thấy khách hàng. Thông tin đã được tự động điền!</small>
-          } @else if (isNewCustomer && customerPhone.trim().length >= 10) {
+          } @else if (isNewCustomer && customerPhone.trim().length >= 9) {
             <small class="lookup-hint" style="color: #2563eb; font-weight: 600;">
               &plus; Khách hàng mới — Hệ thống sẽ tự động tạo hồ sơ khách hàng mới khi hoàn tất đơn!
             </small>

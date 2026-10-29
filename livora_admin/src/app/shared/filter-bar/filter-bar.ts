@@ -48,7 +48,6 @@ export class FilterBar {
   onStatusSelect(val: string): void {
     this.statusValue = val;
     this.statusValueChange.emit(val);
-    this.onApplyFilter();
   }
 
   onApplyFilter(): void {

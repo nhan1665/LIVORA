@@ -811,3 +811,12 @@
     grid-template-columns: 1fr;
   }
 }
+
+
+@keyframes spin-refresh {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.spin-icon {
+  animation: spin-refresh 0.75s linear infinite;
+}
