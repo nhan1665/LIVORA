@@ -359,15 +359,15 @@
             </button>
           </div>
           @if (isSearchingCustomer) {
-            <small class="lookup-hint" style="color: #6366f1; font-weight: 600;">⏳ Đang tìm kiếm khách hàng trong hệ thống...</small>
+            <small class="lookup-hint" style="color: #6366f1; font-weight: 600;">⏳ Đang tra cứu trong CSDL Khách hàng (Customers)...</small>
           } @else if (phoneLookupFound) {
-            <small class="lookup-badge">&check; Đã tìm thấy khách hàng. Thông tin đã được tự động điền!</small>
+            <small class="lookup-badge">&check; Đã tìm thấy trong CSDL Khách hàng (Customers). Dữ liệu đã được tự động điền!</small>
           } @else if (isNewCustomer && customerPhone.trim().length >= 9) {
             <small class="lookup-hint" style="color: #2563eb; font-weight: 600;">
-              &plus; Khách hàng mới — Hệ thống sẽ tự động tạo hồ sơ khách hàng mới khi hoàn tất đơn!
+              &plus; Khách hàng mới (chưa có trong CSDL Khách hàng) — Hệ thống sẽ tự động tạo hồ sơ khách hàng mới khi tạo đơn!
             </small>
           } @else {
-            <small class="lookup-hint">Nhập SĐT để tự tra cứu hoặc hệ thống sẽ tạo mới nếu là khách hàng mới.</small>
+            <small class="lookup-hint">Nhập SĐT để tra cứu trong CSDL Khách hàng (Customers) hoặc tạo mới nếu chưa tồn tại.</small>
           }
         </div>
         <div class="form-group">

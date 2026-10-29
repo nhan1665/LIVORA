@@ -46,8 +46,8 @@
         <div class="form-row-2">
           <!-- Email -->
           <div class="form-group" [class.has-error]="showValidationErrors && !email">
-            <input type="email" class="form-control" id="email" placeholder="Email" [(ngModel)]="email" name="email"
-              (input)="saveShippingInfo()" required />
+            <input type="email" class="form-control" id="email" placeholder="Email (không bắt buộc)" [(ngModel)]="email" name="email"
+              (input)="saveShippingInfo()" />
             <span *ngIf="showValidationErrors && !email" class="field-error">Vui lòng nhập email</span>
           </div>
 
@@ -63,9 +63,11 @@
         <div class="form-row-3">
           <!-- Province -->
           <div class="form-group" [class.has-error]="showValidationErrors && !selectedProvince">
-            <input class="form-control" [(ngModel)]="selectedProvince" name="province"
-              (change)="onProvinceChange()" list="shippingProvinces" placeholder="Tỉnh / Thành phố" required>
-            <datalist id="shippingProvinces"><option *ngFor="let prov of provinces" [value]="prov"></option></datalist>
+            <select class="form-control select-control" [(ngModel)]="selectedProvince" name="province"
+              (change)="onProvinceChange()" required>
+              <option value="" disabled>Tỉnh / Thành phố</option>
+              <option *ngFor="let prov of provinces" [value]="prov">{{ prov }}</option>
+            </select>
           </div>
 
           <!-- District -->
@@ -89,7 +91,7 @@
 
         <!-- Address Field -->
         <div class="form-group" [class.has-error]="showValidationErrors && !address">
-          <input type="text" class="form-control" id="address" placeholder="Địa chỉ" [(ngModel)]="address"
+          <input type="text" class="form-control" id="address" placeholder="Địa chỉ chi tiết (Số nhà, tên đường...)" [(ngModel)]="address"
             name="address" (input)="saveShippingInfo()" required />
           <span *ngIf="showValidationErrors && !address" class="field-error">Vui lòng nhập địa chỉ giao hàng</span>
         </div>
@@ -101,7 +103,6 @@
         <h2 class="section-subtitle">Phương thức vận chuyển</h2>
 
         <p *ngIf="loadingOptions" role="status">Đang tải phương thức vận chuyển...</p>
-        <p *ngIf="!loadingOptions && selectedProvince && !shippingOptions.length" role="status">Không có phương thức vận chuyển khả dụng.</p>
 
         <div class="options-list">
           <label *ngFor="let option of shippingOptions" class="option-card" [class.selected]="selectedShippingId === option.id">
@@ -134,7 +135,7 @@
             <input type="radio" name="paymentMethod" class="option-radio"
               [checked]="cartService.paymentMethod() === 'bank'" (change)="setPaymentMethod('bank')" />
             <span class="option-label-wrapper">
-              <span class="option-main-text">Chuyển khoản ngân hàng</span>
+              <span class="option-main-text">Chuyển khoản ngân hàng (Quét mã QR)</span>
             </span>
           </label>
 
@@ -147,8 +148,8 @@
           <i class="bi bi-chevron-left"></i> Giỏ hàng
         </a>
 
-        <button (click)="completeOrder()" class="btn-complete-order" [disabled]="placingOrder || loadingQuote || !selectedShippingId">
-          {{ placingOrder ? 'ĐANG ĐẶT HÀNG...' : 'HOÀN TẤT ĐƠN HÀNG' }}
+        <button (click)="completeOrder()" class="btn-complete-order" [disabled]="placingOrder || loadingQuote">
+          {{ placingOrder ? 'ĐANG XỬ LÝ ĐẶT HÀNG...' : 'HOÀN TẤT ĐƠN HÀNG' }}
         </button>
       </div>
 
@@ -158,29 +159,28 @@
     <div class="order-summary-column">
       <div class="summary-container">
 
-        <!-- Summary Items List -->
+        <!-- Items list preview -->
         <div class="summary-items-list">
           <div *ngFor="let item of cartService.items()" class="summary-item-row">
-            <!-- Thumbnail with quantity badge -->
-            <div class="summary-img-wrapper">
-              <img [src]="item.image" [alt]="item.name" class="summary-img" />
-              <span class="qty-badge">{{ item.quantity }}</span>
+            <div class="summary-item-img-box">
+              <img [src]="item.image" [alt]="item.name" class="summary-item-img" />
+              <span class="summary-item-badge">{{ item.quantity }}</span>
             </div>
-
-            <!-- Item Name -->
-            <span class="summary-item-name">{{ item.name }}</span>
-
-            <!-- Item Price -->
-            <span class="summary-item-price">{{ item.price * item.quantity | number:'1.0-0' }} ₫</span>
+            <div class="summary-item-info">
+              <h4 class="summary-item-name">{{ item.name }}</h4>
+              <p class="summary-item-desc">{{ item.description }}</p>
+            </div>
+            <div class="summary-item-price">
+              {{ (item.price * item.quantity) | number:'1.0-0' }} ₫
+            </div>
           </div>
         </div>
 
         <div class="summary-divider"></div>
 
-        <!-- Promo Code Apply Box -->
-        <div class="checkout-promo-box">
-          <input type="text" class="checkout-promo-input" placeholder="Mã giảm giá" [(ngModel)]="promoInput"
-            (keyup.enter)="applyPromo()" />
+        <!-- Promo Code Input Group -->
+        <div class="summary-promo-group">
+          <input type="text" placeholder="Mã giảm giá" class="promo-box-input" [(ngModel)]="promoInput" />
           <button (click)="applyPromo()" class="btn-use-promo">ÁP DỤNG</button>
         </div>
         <p *ngIf="promoMessage" [class.error-msg]="promoError" class="checkout-promo-msg">
@@ -193,7 +193,7 @@
         <div class="calc-rows-container">
           <div class="calc-row">
             <span>Tạm tính</span>
-            <span class="calc-val">{{ (cartService.serverQuote()?.subtotal ?? cartService.subtotal()) | number:'1.0-0' }} ₫</span>
+            <span class="calc-val">{{ cartService.subtotal() | number:'1.0-0' }} ₫</span>
           </div>
 
           <div *ngIf="cartService.discountAmount() > 0" class="calc-row discount-text">
@@ -226,7 +226,40 @@
   </div>
 </main>
 
-<!-- ====== ORDER SUCCESS POPUP MODAL ====== -->
+<!-- ====== QR PAYMENT POPUP MODAL (BANK TRANSFER) ====== -->
+<div *ngIf="showQRModal" class="modal-backdrop">
+  <div class="modal-card qr-modal" style="text-align: center; max-width: 420px; background: #fff; padding: 30px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.15);">
+    <h2 class="modal-title" style="margin-bottom: 10px; font-size: 20px; font-weight: bold; color: #2d231e;">Thanh toán chuyển khoản</h2>
+    <p class="modal-subtitle" style="margin-bottom: 16px; font-size: 14px; color: #666;">
+      Vui lòng quét mã QR để thanh toán <strong>{{ (confirmedTotal || cartService.total()) | number:'1.0-0' }} ₫</strong>
+    </p>
+
+    <div class="qr-timer-box" style="margin-bottom: 16px; font-size: 16px; font-weight: bold; color: #d9534f;">
+      <i class="bi bi-clock"></i> Thời gian giữ mã: {{ formattedQRTime }}
+    </div>
+
+    <img [src]="qrDataString" alt="Mã QR Chuyển khoản"
+      style="border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin: 0 auto; display: block; max-width: 220px;" />
+
+    <p style="margin-top: 15px; font-size: 13px; color: #555; background: #fdf8f4; padding: 10px; border-radius: 6px; border: 1px dashed #c99c75;">
+      Mã đơn hàng: <strong>{{ orderNumber }}</strong><br>
+      Nội dung CK: <strong>LIVORA {{ orderNumber }}</strong>
+    </p>
+
+    <div style="display: flex; gap: 10px; margin-top: 20px;">
+      <button (click)="cancelQRPayment()"
+        style="flex: 1; padding: 12px; background-color: #f1f1f1; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; color: #444;">
+        Hủy
+      </button>
+      <button (click)="confirmQRPayment()"
+        style="flex: 1; padding: 12px; background-color: #c99c75; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; color: white;">
+        Tôi đã thanh toán
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ====== ORDER SUCCESS POPUP MODAL (RULE 1 VERIFICATION) ====== -->
 <div *ngIf="showSuccessModal" class="modal-backdrop">
   <div class="modal-card">
     <div class="success-icon-wrapper">
@@ -235,6 +268,12 @@
 
     <h2 class="modal-title">Đặt hàng thành công!</h2>
     <p class="modal-subtitle">Cảm ơn bạn đã mua sắm tại LIVORA.</p>
+
+    <!-- Rule 1 Log Badge -->
+    <div style="background: #eef7ee; border: 1px solid #c2e2c2; color: #2e7d32; border-radius: 6px; padding: 8px 12px; font-size: 13px; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; text-align: left;">
+      <i class="bi bi-journal-check" style="font-size: 16px;"></i>
+      <span>Đã ghi log đơn hàng vào Web User và đồng bộ 1 dòng đơn hàng sang Web Admin.</span>
+    </div>
 
     <div class="order-details-box">
       <div class="detail-line">
@@ -251,12 +290,11 @@
       </div>
       <div class="detail-line">
         <span class="detail-label">Địa chỉ giao hàng:</span>
-        <span class="detail-value">{{ address }}, {{ selectedWard ? selectedWard + ', ' : '' }}{{ selectedDistrict ?
-          selectedDistrict + ', ' : '' }}{{ selectedProvince }}</span>
+        <span class="detail-value">{{ address }}, {{ selectedWard ? selectedWard + ', ' : '' }}{{ selectedDistrict ? selectedDistrict + ', ' : '' }}{{ selectedProvince }}</span>
       </div>
       <div class="detail-line">
         <span class="detail-label">Tổng thanh toán:</span>
-        <span class="detail-value text-red">{{ confirmedTotal | number:'1.0-0' }} ₫</span>
+        <span class="detail-value text-red">{{ (confirmedTotal || cartService.total()) | number:'1.0-0' }} ₫</span>
       </div>
       <div class="detail-line">
         <span class="detail-label">Thanh toán:</span>
@@ -267,8 +305,7 @@
     </div>
 
     <p class="modal-info-text">
-      Đơn hàng đã được ghi nhận. LIVORA sẽ liên hệ để xác nhận giao hàng.
-      <span *ngIf="cartService.paymentMethod() === 'bank'">Thanh toán chuyển khoản đang chờ xác nhận; thông tin chuyển khoản sẽ được cung cấp qua kênh chính thức.</span>
+      Đơn hàng đã được lưu trữ an toàn trong cơ sở dữ liệu. Bạn có thể tra cứu đơn bất cứ lúc nào tại mục Tra cứu đơn hàng bằng số điện thoại.
     </p>
 
     <button (click)="closeSuccessModal()" class="btn-close-modal">

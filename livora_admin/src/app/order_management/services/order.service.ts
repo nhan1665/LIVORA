@@ -423,6 +423,21 @@ export class OrderService {
     }
   }
 
+  private readonly catalogCustomers: CustomerSnapshot[] = [
+    {
+      name: 'Dương Trọng Nhân',
+      phone: '0562173125',
+      email: 'nhandt23406@st.uel.edu.vn',
+      address: '123 Nguyễn Huệ, Quận 1, TP. HCM',
+    },
+    {
+      name: 'Nguyễn Văn A',
+      phone: '0901234567',
+      email: 'vana@example.com',
+      address: '456 Lê Lợi, Quận 1, TP. HCM',
+    },
+  ];
+
   getCatalogProducts(): CatalogProductOption[] {
     return [...this.catalogProducts];
   }
@@ -430,11 +445,11 @@ export class OrderService {
   findCustomerByPhone(phone: string): CustomerSnapshot | null {
     const cleanPhone = phone.trim().replace(/[\s\-\.]/g, '');
     if (!cleanPhone) return null;
-    const match = this.orders.find(o => {
-      const op = (o.customerInfo?.phone || '').trim().replace(/[\s\-\.]/g, '');
-      return op === cleanPhone || op.includes(cleanPhone) || cleanPhone.includes(op);
+    const match = this.catalogCustomers.find(c => {
+      const cp = (c.phone || '').trim().replace(/[\s\-\.]/g, '');
+      return cp === cleanPhone || cp.includes(cleanPhone) || cleanPhone.includes(cp);
     });
-    return match ? { ...match.customerInfo } : null;
+    return match ? { ...match } : null;
   }
 
   async findCustomerByPhoneAsync(phone: string): Promise<{
@@ -448,10 +463,17 @@ export class OrderService {
     const cleanPhone = phone.trim().replace(/[\s\-\.]/g, '');
     if (!cleanPhone) return null;
 
-    // 1. Kiểm tra Customers từ MongoDB Atlas
+    // 1. Kiểm tra DUY NHẤT trong CSDL Khách hàng (MongoDB Atlas Customers Collection)
     if (typeof fetch !== 'undefined') {
       try {
-        const res = await fetch(`http://localhost:5000/api/customers?search=${encodeURIComponent(cleanPhone)}`);
+        const token = (typeof localStorage !== 'undefined' ? localStorage.getItem('livora_admin_token') : null) ||
+                      (typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('livora_admin_token') : null);
+        const res = await fetch(`http://localhost:5000/api/customers?search=${encodeURIComponent(cleanPhone)}`, {
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { Authorization: `Bearer ${token}` } : {})
+          }
+        });
         const json = await res.json();
         if (json && json.success && Array.isArray(json.data) && json.data.length > 0) {
           const match = json.data.find((c: any) => {
@@ -469,32 +491,12 @@ export class OrderService {
             };
           }
         }
-      } catch (_) {}
-
-      // 2. Kiểm tra đơn hàng cũ từ MongoDB Atlas
-      try {
-        const orderRes = await fetch(`http://localhost:5000/api/orders?search=${encodeURIComponent(cleanPhone)}`);
-        const orderJson = await orderRes.json();
-        if (orderJson && orderJson.success && Array.isArray(orderJson.data) && orderJson.data.length > 0) {
-          const matchOrder = orderJson.data.find((o: any) => {
-            const op = (o.customerInfo?.phone || '').trim().replace(/[\s\-\.]/g, '');
-            return op === cleanPhone || op.includes(cleanPhone) || cleanPhone.includes(op);
-          });
-          if (matchOrder && matchOrder.customerInfo) {
-            return {
-              id: matchOrder.userId || matchOrder.customerId || undefined,
-              name: matchOrder.customerInfo.fullName || matchOrder.customerInfo.name,
-              phone: matchOrder.customerInfo.phone,
-              email: matchOrder.customerInfo.email || '',
-              address: matchOrder.customerInfo.address || '',
-              customerType: 'guest',
-            };
-          }
-        }
-      } catch (_) {}
+      } catch (err) {
+        console.warn('[OrderService] Lỗi tra cứu CSDL Khách hàng:', err);
+      }
     }
 
-    // 3. Fallback bộ nhớ đệm orders
+    // 2. Fallback cho CSDL Customer mẫu (TUYỆT ĐỐI KHÔNG tìm theo danh sách Đơn hàng)
     const local = this.findCustomerByPhone(cleanPhone);
     if (local) {
       return {
@@ -502,7 +504,7 @@ export class OrderService {
         phone: local.phone,
         email: local.email || '',
         address: local.address || '',
-        customerType: 'guest',
+        customerType: 'registered',
       };
     }
 

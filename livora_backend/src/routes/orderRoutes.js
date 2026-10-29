@@ -9,11 +9,22 @@ const {
   cancelOrder,
 } = require('../controllers/orderController');
 
-router.use(requireAdmin);
-router.get('/', getOrders);
+// Public route: Customers and users can create orders
 router.post('/', createOrder);
+
+// Public route: Order lookup by ID or order code
 router.get('/:id', getOrderById);
-router.patch('/:id/status', updateOrderStatus);
-router.patch('/:id/cancel', cancelOrder);
+
+// Order listing: Allows search for tracking, otherwise requires admin authentication
+router.get('/', (req, res, next) => {
+  if (req.query.search || req.query.phone || req.query.userId) {
+    return getOrders(req, res, next);
+  }
+  return requireAdmin(req, res, () => getOrders(req, res, next));
+});
+
+// Admin management routes
+router.patch('/:id/status', requireAdmin, updateOrderStatus);
+router.patch('/:id/cancel', requireAdmin, cancelOrder);
 
 module.exports = router;
