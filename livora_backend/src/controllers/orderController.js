@@ -298,6 +298,35 @@ const createOrder = async (req, res) => {
     }
     if (!linkedCustomer && cPhone) {
       linkedCustomer = await Customer.findOne({ phone: cPhone.trim() });
+      if (!linkedCustomer) {
+        try {
+          linkedCustomer = new Customer({
+            fullName: cName.trim(),
+            phone: cPhone.trim(),
+            email: customerInfo.email ? customerInfo.email.trim() : undefined,
+            address: orderAddress.trim(),
+            province: customerInfo.province || undefined,
+            district: customerInfo.district || undefined,
+            ward: customerInfo.ward || undefined,
+            totalOrders: 1,
+            accumulatedSpent: totalAmount,
+            lastActiveAt: new Date(),
+          });
+          await linkedCustomer.save();
+        } catch (custErr) {
+          console.warn('Auto create customer error:', custErr.message);
+        }
+      } else {
+        linkedCustomer.totalOrders = (linkedCustomer.totalOrders || 0) + 1;
+        linkedCustomer.accumulatedSpent = (linkedCustomer.accumulatedSpent || 0) + totalAmount;
+        linkedCustomer.lastActiveAt = new Date();
+        await linkedCustomer.save();
+      }
+    } else if (linkedCustomer) {
+      linkedCustomer.totalOrders = (linkedCustomer.totalOrders || 0) + 1;
+      linkedCustomer.accumulatedSpent = (linkedCustomer.accumulatedSpent || 0) + totalAmount;
+      linkedCustomer.lastActiveAt = new Date();
+      await linkedCustomer.save();
     }
 
     // Map payment method

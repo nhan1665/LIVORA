@@ -159,7 +159,7 @@ async function createCheckoutOrder(req, res) {
         voucherCode: quote.voucherCode,
         subtotalAmount: quote.subtotal,
         discountAmount: quote.discount,
-        shippingConfigId: shippingId,
+        shippingConfigId: mongoose.isValidObjectId(shippingId) ? shippingId : null,
         shippingMethod: quote.shipping.shippingMethod,
         shippingProvince: quote.shipping.province,
         shippingFee: quote.shippingFee,
