@@ -947,6 +947,21 @@ export class Homepage implements OnInit, AfterViewInit {
   // ==========================================
   // FOOTER ACTIONS
   // ==========================================
+  getFooterPlaceholder(key: string): string {
+    switch (key) {
+      case 'facebook':
+        return 'https://facebook.com/ten-trang';
+      case 'instagram':
+        return 'https://instagram.com/ten-trang';
+      case 'zalo':
+        return 'https://zalo.me/0901234567 hoặc 0901234567';
+      case 'phone':
+        return 'Số điện thoại WhatsApp (vd: 0901234567 hoặc https://wa.me/...)';
+      default:
+        return 'Nhập đường dẫn liên kết...';
+    }
+  }
+
   saveFooterConfig(): void {
     if (!this.footerConfig || this.footerConfig.length === 0) {
       this.showToast('Không có cấu hình footer để lưu.');
@@ -954,16 +969,42 @@ export class Homepage implements OnInit, AfterViewInit {
     }
 
     let savedCount = 0;
+    const total = this.footerConfig.length;
+    let hasError = false;
+
     this.footerConfig.forEach((item) => {
+      if (item.value) {
+        item.value = item.value.trim();
+      }
+
       if (item.id) {
         this.homepageService.updateFooter(item.id, item).subscribe({
           next: () => {
             savedCount++;
-            if (savedCount === this.footerConfig.length) {
+            if (savedCount === total && !hasError) {
               this.showToast('Thay đổi cấu hình Footer đã được lưu thành công vào cơ sở dữ liệu!');
             }
           },
-          error: (err) => console.error('Error updating footer item:', err),
+          error: (err) => {
+            console.error('Error updating footer item:', err);
+            hasError = true;
+            this.showToast(`Lỗi khi lưu cấu hình kênh: ${item.name}`);
+          },
+        });
+      } else {
+        this.homepageService.createFooter(item).subscribe({
+          next: (created) => {
+            item.id = created.id;
+            savedCount++;
+            if (savedCount === total && !hasError) {
+              this.showToast('Thay đổi cấu hình Footer đã được lưu thành công vào cơ sở dữ liệu!');
+            }
+          },
+          error: (err) => {
+            console.error('Error creating footer item:', err);
+            hasError = true;
+            this.showToast(`Lỗi khi tạo cấu hình kênh: ${item.name}`);
+          },
         });
       }
     });

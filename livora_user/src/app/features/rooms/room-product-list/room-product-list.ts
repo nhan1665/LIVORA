@@ -2,7 +2,13 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { ProductService } from '../../../services/product.service';
+import { ProductService, UserProduct } from '../../../services/product.service';
+
+export interface CategoryTabItem {
+  id: string;
+  name: string;
+  image: string;
+}
 
 @Component({
   selector: 'app-room-product-list',
@@ -18,11 +24,15 @@ export class RoomProductList implements OnInit {
   products: any[] = [];
   isBestSellerOnly: boolean = false;
   sortOption: string = '';
+  filters: string[] = ['Sắp xếp', 'Chất liệu', 'Giá', 'Đánh giá'];
+
+  dbCategories: any[] = [];
 
   constructor(
     private route: ActivatedRoute,
     private productService: ProductService
   ) {}
+
   roomNamesMap: Record<string, string> = {
     'bedroom': 'Phòng ngủ',
     'living-room': 'Phòng khách',
@@ -50,6 +60,85 @@ export class RoomProductList implements OnInit {
     'mirrors': 'Gương',
     'towels': 'Khăn tắm'
   };
+
+  defaultCategoryImageMap: Record<string, string> = {
+    'beds': '/images/categories/bedroom/beds.png',
+    'mattresses': '/images/categories/bedroom/mattresses.png',
+    'wardrobes': '/images/categories/bedroom/wardrobes.png',
+    'bedding': '/images/categories/bedroom/bedding.png',
+    'blankets': '/images/categories/bedroom/blankets.png',
+    'lighting': '/images/categories/bedroom/lighting.png',
+    'sofas': '/images/categories/living-room/sofas.png',
+    'armchairs': '/images/categories/living-room/armchairs.png',
+    'coffee-tables': '/images/categories/living-room/coffee-tables.png',
+    'tv-stands': '/images/categories/living-room/tv-stands.png',
+    'rugs': '/images/categories/living-room/rugs.png',
+    'cabinets': '/images/categories/kitchen/cabinets.png',
+    'dining-tables': '/images/categories/kitchen/dining-tables.png',
+    'chairs': '/images/categories/kitchen/chairs.png',
+    'sideboards': '/images/categories/dining-room/sideboards.png',
+    'mirrors': '/images/categories/bathroom/mirrors.png',
+    'towels': '/images/categories/bathroom/towels.png'
+  };
+
+  roomCategoriesMap: Record<string, CategoryTabItem[]> = {
+    'bedroom': [
+      { id: 'beds', name: 'Giường', image: '/images/categories/bedroom/beds.png' },
+      { id: 'mattresses', name: 'Nệm', image: '/images/categories/bedroom/mattresses.png' },
+      { id: 'wardrobes', name: 'Tủ quần áo', image: '/images/categories/bedroom/wardrobes.png' },
+      { id: 'bedding', name: 'Bộ chăn ga', image: '/images/categories/bedroom/bedding.png' },
+      { id: 'blankets', name: 'Chăn & Mền', image: '/images/categories/bedroom/blankets.png' },
+      { id: 'lighting', name: 'Đèn', image: '/images/categories/bedroom/lighting.png' }
+    ],
+    'living-room': [
+      { id: 'sofas', name: 'Sofa', image: '/images/categories/living-room/sofas.png' },
+      { id: 'armchairs', name: 'Ghế bành', image: '/images/categories/living-room/armchairs.png' },
+      { id: 'coffee-tables', name: 'Bàn trà', image: '/images/categories/living-room/coffee-tables.png' },
+      { id: 'tv-stands', name: 'Kệ TV', image: '/images/categories/living-room/tv-stands.png' },
+      { id: 'rugs', name: 'Thảm', image: '/images/categories/living-room/rugs.png' },
+      { id: 'lighting', name: 'Đèn', image: '/images/categories/living-room/lighting.png' }
+    ],
+    'kitchen': [
+      { id: 'cabinets', name: 'Tủ bếp', image: '/images/categories/kitchen/cabinets.png' },
+      { id: 'dining-tables', name: 'Bàn ăn', image: '/images/categories/kitchen/dining-tables.png' },
+      { id: 'chairs', name: 'Ghế', image: '/images/categories/kitchen/chairs.png' },
+      { id: 'lighting', name: 'Đèn', image: '/images/categories/kitchen/lighting.png' }
+    ],
+    'dining-room': [
+      { id: 'dining-tables', name: 'Bàn ăn', image: '/images/categories/kitchen/dining-tables.png' },
+      { id: 'chairs', name: 'Ghế', image: '/images/categories/kitchen/chairs.png' },
+      { id: 'sideboards', name: 'Tủ búp phê', image: '/images/categories/dining-room/sideboards.png' },
+      { id: 'lighting', name: 'Đèn', image: '/images/categories/kitchen/lighting.png' }
+    ],
+    'bathroom': [
+      { id: 'mirrors', name: 'Gương', image: '/images/categories/bathroom/mirrors.png' },
+      { id: 'cabinets', name: 'Tủ phòng tắm', image: '/images/categories/bathroom/cabinets.png' },
+      { id: 'towels', name: 'Khăn tắm', image: '/images/categories/bathroom/towels.png' },
+      { id: 'lighting', name: 'Đèn', image: '/images/categories/bathroom/lighting.png' }
+    ]
+  };
+
+  get subCategories(): CategoryTabItem[] {
+    const defaultList: CategoryTabItem[] = this.roomCategoriesMap[this.currentRoom] || [];
+    const result: CategoryTabItem[] = [...defaultList];
+    const existingIds = new Set(result.map(c => c.id));
+
+    if (this.dbCategories && this.dbCategories.length > 0) {
+      for (const cat of this.dbCategories) {
+        const slug = cat.slug || cat._id;
+        if (!existingIds.has(slug)) {
+          result.push({
+            id: slug,
+            name: cat.name,
+            image: cat.thumbnail || this.defaultCategoryImageMap[slug] || '/images/categories/bedroom/beds.png'
+          });
+          existingIds.add(slug);
+        }
+      }
+    }
+
+    return result.length > 0 ? result : (this.roomCategoriesMap['bedroom'] || []);
+  }
 
   get displayedProducts() {
     let result = [...this.products];
@@ -104,6 +193,7 @@ export class RoomProductList implements OnInit {
   }
 
   ngOnInit() {
+    // 1. Tải danh sách không gian phòng từ Database
     this.productService.getRooms().subscribe({
       next: (rooms) => {
         if (Array.isArray(rooms)) {
@@ -111,11 +201,32 @@ export class RoomProductList implements OnInit {
             if (r.slug && r.name) {
               this.roomNamesMap[r.slug] = r.name;
             }
+            if (r._id && r.name) {
+              this.roomNamesMap[r._id] = r.name;
+            }
           });
         }
       }
     });
 
+    // 2. Tải danh sách loại sản phẩm (Categories) từ Database
+    this.productService.getCategories().subscribe({
+      next: (cats) => {
+        if (Array.isArray(cats)) {
+          this.dbCategories = cats.filter((c: any) => c.isActive !== false);
+          this.dbCategories.forEach((c: any) => {
+            if (c.slug && c.name) {
+              this.categoryNamesMap[c.slug] = c.name;
+            }
+            if (c._id && c.name) {
+              this.categoryNamesMap[c._id] = c.name;
+            }
+          });
+        }
+      }
+    });
+
+    // 3. Lắng nghe thay đổi tham số Route để lấy dữ liệu sản phẩm tương ứng
     this.route.paramMap.subscribe(params => {
       const room = params.get('roomName');
       const category = params.get('categoryName');
@@ -124,78 +235,67 @@ export class RoomProductList implements OnInit {
 
       if (category) {
         this.currentCategory = category;
-        // Gán dữ liệu mẫu làm fallback nhanh
-        this.products = this.mockDatabase[category] || [];
+      } else {
+        // Tự động chọn danh mục mặc định phù hợp với từng phòng
+        const defaultRoomCategoryMap: Record<string, string> = {
+          'bedroom': 'beds',
+          'living-room': 'sofas',
+          'kitchen': 'cabinets',
+          'dining-room': 'dining-tables',
+          'bathroom': 'mirrors'
+        };
+        this.currentCategory = defaultRoomCategoryMap[this.currentRoom] || this.subCategories[0]?.id || 'all';
+      }
 
-        // Gọi Backend API để lấy danh sách sản phẩm thật từ MongoDB Atlas
-        this.productService.getProducts({ room: this.currentRoom, category: this.currentCategory }).subscribe({
-          next: (realProducts) => {
-            if (realProducts && realProducts.length > 0) {
-              this.products = realProducts.map(p => ({
-                id: p.id || p.slug,
-                name: p.name,
-                dimensions: p.dimensions ? `${p.dimensions.length}x${p.dimensions.width} cm` : '',
-                price: p.salePrice || p.price,
-                originalPrice: p.salePrice ? p.price : undefined,
-                images: p.images && p.images.length > 0 ? p.images : [p.thumbnail],
-                badge: p.badge || (p.stockQuantity > 0 ? 'Còn hàng' : 'Hết hàng'),
-                rating: p.averageRating || 5.0,
-                reviews: p.totalReviews || 0,
-                colors: p.colors || [],
-              }));
-            }
-          },
-          error: () => {
-            // Giữ fallback mockDatabase nếu backend tạm thời không kết nối được
-          }
-        });
+      this.loadProductsForCurrentSelection();
+    });
+  }
+
+  loadProductsForCurrentSelection(): void {
+    const categoryParam = this.currentCategory !== 'all' ? this.currentCategory : undefined;
+
+    // Hiển thị fallback ngay trong khi chờ API
+    if (this.mockDatabase[this.currentCategory]) {
+      this.products = [...this.mockDatabase[this.currentCategory]];
+    }
+
+    // Gọi Backend API để lấy dữ liệu sản phẩm mới nhất từ MongoDB
+    this.productService.getProducts({
+      room: this.currentRoom,
+      category: categoryParam,
+      pageSize: 50
+    }).subscribe({
+      next: (realProducts) => {
+        if (realProducts && realProducts.length > 0) {
+          this.products = realProducts.map((p: UserProduct) => ({
+            id: p.id || p.slug,
+            name: p.name,
+            description: p.description || '',
+            dimensions: p.dimensions ? `${p.dimensions.length}x${p.dimensions.width} cm` : '',
+            price: p.salePrice || p.price,
+            originalPrice: p.salePrice ? p.price : undefined,
+            image: p.thumbnail || (p.images && p.images.length > 0 ? p.images[0] : '/images/products/default.png'),
+            images: p.images && p.images.length > 0 ? p.images : [p.thumbnail || '/images/products/default.png'],
+            badge: p.badge || (p.stockQuantity > 0 ? 'Còn hàng' : 'Hết hàng'),
+            rating: p.averageRating || 5.0,
+            reviews: p.totalReviews || 0,
+            colors: p.colors || [],
+          }));
+        } else if (!this.mockDatabase[this.currentCategory]) {
+          this.products = [];
+        }
+      },
+      error: (err) => {
+        console.warn('Lỗi khi tải sản phẩm từ Database:', err);
+        if (!this.mockDatabase[this.currentCategory]) {
+          this.products = [];
+        }
       }
     });
   }
 
   toggleFilter(filterName: string) {
     this.activeFilter = this.activeFilter === filterName ? null : filterName;
-  }
-
-  roomCategoriesMap: Record<string, any[]> = {
-    'bedroom': [
-      { id: 'beds', name: 'Giường', image: '/images/categories/bedroom/beds.png' },
-      { id: 'mattresses', name: 'Nệm', image: '/images/categories/bedroom/mattresses.png' },
-      { id: 'wardrobes', name: 'Tủ quần áo', image: '/images/categories/bedroom/wardrobes.png' },
-      { id: 'bedding', name: 'Bộ chăn ga', image: '/images/categories/bedroom/bedding.png' },
-      { id: 'blankets', name: 'Chăn & Mền', image: '/images/categories/bedroom/blankets.png' },
-      { id: 'lighting', name: 'Đèn', image: '/images/categories/bedroom/lighting.png' }
-    ],
-    'living-room': [
-      { id: 'sofas', name: 'Sofa', image: '/images/categories/living-room/sofas.png' },
-      { id: 'armchairs', name: 'Ghế bành', image: '/images/categories/living-room/armchairs.png' },
-      { id: 'coffee-tables', name: 'Bàn trà', image: '/images/categories/living-room/coffee-tables.png' },
-      { id: 'tv-stands', name: 'Kệ TV', image: '/images/categories/living-room/tv-stands.png' },
-      { id: 'rugs', name: 'Thảm', image: '/images/categories/living-room/rugs.png' },
-      { id: 'lighting', name: 'Đèn', image: '/images/categories/living-room/lighting.png' }
-    ],
-    'kitchen': [
-      { id: 'cabinets', name: 'Tủ bếp', image: '/images/categories/kitchen/cabinets.png' },
-      { id: 'dining-tables', name: 'Bàn ăn', image: '/images/categories/kitchen/dining-tables.png' },
-      { id: 'chairs', name: 'Ghế', image: '/images/categories/kitchen/chairs.png' },
-      { id: 'lighting', name: 'Đèn', image: '/images/categories/kitchen/lighting.png' }
-    ],
-    'dining-room': [
-      { id: 'dining-tables', name: 'Bàn ăn', image: '/images/categories/kitchen/dining-tables.png' },
-      { id: 'chairs', name: 'Ghế', image: '/images/categories/kitchen/chairs.png' },
-      { id: 'sideboards', name: 'Tủ búp phê', image: '/images/categories/dining-room/sideboards.png' },
-      { id: 'lighting', name: 'Đèn', image: '/images/categories/kitchen/lighting.png' }
-    ],
-    'bathroom': [
-      { id: 'mirrors', name: 'Gương', image: '/images/categories/bathroom/mirrors.png' },
-      { id: 'cabinets', name: 'Tủ phòng tắm', image: '/images/categories/bathroom/cabinets.png' },
-      { id: 'towels', name: 'Khăn tắm', image: '/images/categories/bathroom/towels.png' },
-      { id: 'lighting', name: 'Đèn', image: '/images/categories/bathroom/lighting.png' }
-    ]
-  };
-
-  get subCategories() {
-    return this.roomCategoriesMap[this.currentRoom] || this.roomCategoriesMap['bedroom'];
   }
 
   mockDatabase: Record<string, any[]> = {

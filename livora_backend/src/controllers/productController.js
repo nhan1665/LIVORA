@@ -4,6 +4,35 @@ const Room = require('../models/Room');
 const Order = require('../models/Order');
 const { sendSuccess, sendPaginated, sendError } = require('../utils/responseHelper');
 
+const removeVietnameseTones = (str) => {
+  return (str || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/đ/g, 'd')
+    .replace(/Đ/g, 'D');
+};
+
+const getCategoryCodePrefix = (cat) => {
+  if (!cat) return 'SP';
+  if (cat.code && !cat.code.toUpperCase().startsWith('CAT-')) {
+    const cleaned = cat.code.toUpperCase().replace(/[^A-Z0-9]/g, '');
+    if (cleaned) return cleaned;
+  }
+  if (cat.name) {
+    const unsigned = removeVietnameseTones(cat.name).toUpperCase().trim();
+    const firstWord = unsigned.split(/[\s,&-]+/)[0].replace(/[^A-Z0-9]/g, '');
+    if (firstWord && firstWord.length >= 2) return firstWord;
+  }
+  if (cat.code) {
+    const stripped = cat.code.toUpperCase().replace(/^CAT[-_]/, '').replace(/[^A-Z0-9]/g, '');
+    if (stripped) return stripped;
+  }
+  if (cat.slug) {
+    return cat.slug.toUpperCase().replace(/[^A-Z0-9]/g, '');
+  }
+  return 'SP';
+};
+
 // Tự động đồng bộ số lượt mua (soldQuantity) từ Orders hoặc khởi tạo giá trị ban đầu nếu sản phẩm chưa có
 let isSyncedSoldQuantity = false;
 const syncSoldQuantities = async () => {
@@ -51,6 +80,39 @@ const syncSoldQuantities = async () => {
   }
 };
 
+let isSyncedCategoryAndRoomSlugs = false;
+const syncProductCategoryAndRoomSlugs = async () => {
+  if (isSyncedCategoryAndRoomSlugs) return;
+  try {
+    const unpopulated = await Product.find({
+      $or: [
+        { categorySlug: { $in: ['', null] } },
+        { roomSlugs: { $size: 0 } },
+        { roomSlugs: { $exists: false } },
+      ],
+    });
+    for (const p of unpopulated) {
+      let catSlug = p.categorySlug;
+      if (!catSlug && p.categoryId) {
+        const cat = await Category.findById(p.categoryId).lean();
+        if (cat) catSlug = cat.slug;
+      }
+      let rmSlugs = p.roomSlugs || [];
+      if (rmSlugs.length === 0 && p.roomIds && p.roomIds.length > 0) {
+        const rms = await Room.find({ _id: { $in: p.roomIds } }).lean();
+        if (rms) rmSlugs = rms.map((r) => r.slug);
+      }
+      await Product.updateOne(
+        { _id: p._id },
+        { $set: { categorySlug: catSlug || '', roomSlugs: rmSlugs } }
+      );
+    }
+    isSyncedCategoryAndRoomSlugs = true;
+  } catch (err) {
+    console.error('syncProductCategoryAndRoomSlugs error:', err);
+  }
+};
+
 /**
  * @desc    Get products (Filter by Room, Category, Keyword, Status, Sort, Pagination)
  * @route   GET /api/products
@@ -58,6 +120,7 @@ const syncSoldQuantities = async () => {
 const getProducts = async (req, res) => {
   try {
     await syncSoldQuantities();
+    await syncProductCategoryAndRoomSlugs();
     const {
       search = '',
       category = 'all',
@@ -71,39 +134,64 @@ const getProducts = async (req, res) => {
     } = req.query;
 
     const filter = {};
+    const andConditions = [];
 
     // Search keyword
     if (search && search.trim()) {
       const term = search.trim();
-      filter.$or = [
-        { name: { $regex: term, $options: 'i' } },
-        { sku: { $regex: term, $options: 'i' } },
-        { description: { $regex: term, $options: 'i' } },
-      ];
+      andConditions.push({
+        $or: [
+          { name: { $regex: term, $options: 'i' } },
+          { sku: { $regex: term, $options: 'i' } },
+          { description: { $regex: term, $options: 'i' } },
+        ],
+      });
     }
 
     // Category filter (slug or id)
     if (category && category !== 'all') {
-      filter.$or = [
-        { categorySlug: category },
-        ...(category.match(/^[0-9a-fA-F]{24}$/) ? [{ categoryId: category }] : []),
-      ];
+      let catIds = [];
+      if (category.match(/^[0-9a-fA-F]{24}$/)) {
+        catIds.push(new mongoose.Types.ObjectId(category));
+      } else {
+        const foundCat = await Category.findOne({ $or: [{ slug: category }, { code: category.toUpperCase() }] }).lean();
+        if (foundCat) catIds.push(foundCat._id);
+      }
+      andConditions.push({
+        $or: [
+          { categorySlug: category },
+          ...(catIds.length > 0 ? [{ categoryId: { $in: catIds } }] : []),
+        ],
+      });
     }
 
     // Room filter (slug or id)
     if (room && room !== 'all') {
-      filter.$or = [
-        { roomSlugs: room },
-        ...(room.match(/^[0-9a-fA-F]{24}$/) ? [{ roomIds: room }] : []),
-      ];
+      let roomObjIds = [];
+      if (room.match(/^[0-9a-fA-F]{24}$/)) {
+        roomObjIds.push(new mongoose.Types.ObjectId(room));
+      } else {
+        const foundRoom = await Room.findOne({ $or: [{ slug: room }, { code: room.toUpperCase() }] }).lean();
+        if (foundRoom) roomObjIds.push(foundRoom._id);
+      }
+      andConditions.push({
+        $or: [
+          { roomSlugs: room },
+          ...(roomObjIds.length > 0 ? [{ roomIds: { $in: roomObjIds } }] : []),
+        ],
+      });
     }
 
     // Status filter
     if (status !== 'all') {
       if (status === 'active' || status === 'Đang kinh doanh') {
-        filter.$or = [{ status: 'active' }, { status: 'Đang kinh doanh' }];
+        andConditions.push({
+          $or: [{ status: 'active' }, { status: 'Đang kinh doanh' }, { isActive: true }],
+        });
       } else if (status === 'paused' || status === 'inactive' || status === 'ngưng kinh doanh') {
-        filter.$or = [{ status: 'inactive' }, { status: 'ngưng kinh doanh' }, { isActive: false }];
+        andConditions.push({
+          $or: [{ status: 'inactive' }, { status: 'ngưng kinh doanh' }, { isActive: false }],
+        });
       }
     }
 
@@ -114,15 +202,23 @@ const getProducts = async (req, res) => {
 
     // 3D Model filter
     if (has3D === 'yes') {
-      filter.$or = [
-        { file3DUrl: { $exists: true, $ne: '' } },
-        { model3DUrl: { $exists: true, $ne: null } },
-      ];
+      andConditions.push({
+        $or: [
+          { file3DUrl: { $exists: true, $ne: '' } },
+          { model3DUrl: { $exists: true, $ne: null } },
+        ],
+      });
     } else if (has3D === 'no') {
-      filter.$and = [
-        { $or: [{ file3DUrl: { $exists: false } }, { file3DUrl: '' }] },
-        { $or: [{ model3DUrl: { $exists: false } }, { model3DUrl: null }] },
-      ];
+      andConditions.push({
+        $and: [
+          { $or: [{ file3DUrl: { $exists: false } }, { file3DUrl: '' }] },
+          { $or: [{ model3DUrl: { $exists: false } }, { model3DUrl: null }] },
+        ],
+      });
+    }
+
+    if (andConditions.length > 0) {
+      filter.$and = andConditions;
     }
 
     // Sorting
@@ -293,30 +389,92 @@ const createProduct = async (req, res) => {
     if (!name || !name.trim()) return sendError(res, 'Tên sản phẩm là bắt buộc.', 400);
     if (!price && price !== 0) return sendError(res, 'Giá sản phẩm là bắt buộc.', 400);
 
-    const autoSku = sku && sku.trim()
-      ? sku.trim().toUpperCase()
-      : `SKU-${Date.now().toString().slice(-6)}`;
+    let finalCategoryId = null;
+    let finalCategorySlug = categorySlug || '';
+    let foundCategoryDoc = null;
+    if (categoryId) {
+      if (mongoose.Types.ObjectId.isValid(categoryId)) {
+        finalCategoryId = categoryId;
+        foundCategoryDoc = await Category.findById(categoryId).lean();
+        if (foundCategoryDoc && !finalCategorySlug) finalCategorySlug = foundCategoryDoc.slug;
+      } else {
+        foundCategoryDoc = await Category.findOne({
+          $or: [{ slug: categoryId }, { code: String(categoryId).toUpperCase() }, { name: categoryId }],
+        }).lean();
+        if (foundCategoryDoc) {
+          finalCategoryId = foundCategoryDoc._id;
+          finalCategorySlug = foundCategoryDoc.slug;
+        }
+      }
+    }
+
+    let autoSku = sku && sku.trim() ? sku.trim().toUpperCase() : '';
+    const prefix = getCategoryCodePrefix(foundCategoryDoc);
+
+    // Nếu không nhập mã SKU, tự sinh theo công thức [mã loại sản phẩm]-SP-XXX (ví dụ GIUONG-SP001)
+    if (!autoSku) {
+      const existingSkus = await Product.find({
+        sku: new RegExp('^' + prefix + '-SP', 'i'),
+      }).select('sku').lean();
+
+      let maxNum = 0;
+      for (const p of existingSkus) {
+        const match = p.sku.match(new RegExp('^' + prefix + '-SP-?(\\d+)', 'i'));
+        if (match && match[1]) {
+          const num = parseInt(match[1], 10);
+          if (num > maxNum) maxNum = num;
+        }
+      }
+      autoSku = `${prefix}-SP${String(maxNum + 1).padStart(3, '0')}`;
+    }
+
+    const existingSku = await Product.findOne({ sku: autoSku });
+    if (existingSku) return sendError(res, `Mã SKU [${autoSku}] đã tồn tại. Vui lòng chọn mã khác.`, 400);
 
     const autoSlug = slug && slug.trim()
       ? slug.trim().toLowerCase()
       : name.trim().toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-');
 
-    const existingSku = await Product.findOne({ sku: autoSku });
-    if (existingSku) return sendError(res, `Mã SKU [${autoSku}] đã tồn tại.`, 400);
-
     const stock = Number(stockQuantity) || 0;
     const stockStatus = stock > 0 ? 'in_stock' : 'out_of_stock';
     const isAct = status !== 'ngưng kinh doanh' && status !== 'inactive';
-    const finalFile3D = file3DUrl || req.body.model3DUrl || '';
+    const finalFile3D = (file3DUrl || req.body.model3DUrl || '').trim();
+
+    let finalRoomIds = [];
+    let finalRoomSlugs = Array.isArray(roomSlugs) ? [...roomSlugs] : [];
+    if (Array.isArray(roomIds) && roomIds.length > 0) {
+      for (const rId of roomIds) {
+        if (mongoose.Types.ObjectId.isValid(rId)) {
+          finalRoomIds.push(rId);
+        } else {
+          const foundRoom = await Room.findOne({
+            $or: [{ slug: rId }, { code: String(rId).toUpperCase() }, { name: rId }],
+          }).lean();
+          if (foundRoom) {
+            finalRoomIds.push(foundRoom._id);
+            if (!finalRoomSlugs.includes(foundRoom.slug)) {
+              finalRoomSlugs.push(foundRoom.slug);
+            }
+          }
+        }
+      }
+    }
+
+    if (finalRoomIds.length > 0 && finalRoomSlugs.length === 0) {
+      const foundRooms = await Room.find({ _id: { $in: finalRoomIds } }).lean();
+      if (foundRooms && foundRooms.length > 0) {
+        finalRoomSlugs = foundRooms.map((r) => r.slug);
+      }
+    }
 
     const product = new Product({
       sku: autoSku,
       name: name.trim(),
       slug: autoSlug,
-      categoryId: categoryId || null,
-      categorySlug: categorySlug || '',
-      roomIds: roomIds || [],
-      roomSlugs: roomSlugs || [],
+      categoryId: finalCategoryId,
+      categorySlug: finalCategorySlug,
+      roomIds: finalRoomIds,
+      roomSlugs: finalRoomSlugs,
       price: Number(price),
       salePrice: salePrice ? Number(salePrice) : null,
       stockQuantity: stock,
@@ -378,10 +536,57 @@ const updateProduct = async (req, res) => {
     if (body.soldQuantity !== undefined) {
       product.soldQuantity = Math.max(0, Number(body.soldQuantity) || 0);
     }
-    if (body.categoryId !== undefined) product.categoryId = body.categoryId || null;
-    if (body.categorySlug !== undefined) product.categorySlug = body.categorySlug;
-    if (body.roomIds !== undefined) product.roomIds = body.roomIds;
-    if (body.roomSlugs !== undefined) product.roomSlugs = body.roomSlugs;
+    if (body.categoryId !== undefined) {
+      if (body.categoryId && mongoose.Types.ObjectId.isValid(body.categoryId)) {
+        product.categoryId = body.categoryId;
+        const foundCat = await Category.findById(body.categoryId).lean();
+        if (foundCat) product.categorySlug = foundCat.slug;
+      } else if (body.categoryId) {
+        const foundCat = await Category.findOne({
+          $or: [{ slug: body.categoryId }, { code: String(body.categoryId).toUpperCase() }, { name: body.categoryId }],
+        }).lean();
+        if (foundCat) {
+          product.categoryId = foundCat._id;
+          product.categorySlug = foundCat.slug;
+        } else {
+          product.categoryId = null;
+        }
+      } else {
+        product.categoryId = null;
+      }
+    }
+    if (body.categorySlug !== undefined && !product.categorySlug) product.categorySlug = body.categorySlug;
+    if (body.roomIds !== undefined) {
+      const rIds = Array.isArray(body.roomIds) ? body.roomIds : [];
+      const validRoomIds = [];
+      const validRoomSlugs = [];
+      for (const rId of rIds) {
+        if (mongoose.Types.ObjectId.isValid(rId)) {
+          validRoomIds.push(rId);
+        } else {
+          const foundRoom = await Room.findOne({
+            $or: [{ slug: rId }, { code: String(rId).toUpperCase() }, { name: rId }],
+          }).lean();
+          if (foundRoom) {
+            validRoomIds.push(foundRoom._id);
+            if (!validRoomSlugs.includes(foundRoom.slug)) {
+              validRoomSlugs.push(foundRoom.slug);
+            }
+          }
+        }
+      }
+      product.roomIds = validRoomIds;
+      if (validRoomIds.length > 0 && validRoomSlugs.length === 0) {
+        const foundRooms = await Room.find({ _id: { $in: validRoomIds } }).lean();
+        if (foundRooms && foundRooms.length > 0) {
+          validRoomSlugs.push(...foundRooms.map((r) => r.slug));
+        }
+      }
+      product.roomSlugs = validRoomSlugs;
+    }
+    if (body.roomSlugs !== undefined && (!product.roomSlugs || product.roomSlugs.length === 0)) {
+      product.roomSlugs = body.roomSlugs;
+    }
     if (body.thumbnail !== undefined) product.thumbnail = body.thumbnail;
     if (body.images !== undefined) product.images = body.images;
     if (body.description !== undefined) product.description = body.description;

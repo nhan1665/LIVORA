@@ -1,6 +1,8 @@
 /** Admin-facing Room contract used by the Room feature's demo service. */
 export interface Room {
   id: string;
+  _id?: string;
+  slug?: string;
   /** Provisional business identifier; the backend schema currently defines `slug`, not `code`. */
   code: string;
   name: string;
@@ -13,6 +15,7 @@ export interface Room {
 export interface RoomDraft {
   code: string;
   name: string;
+  slug?: string;
   description: string;
   thumbnail: string;
   isActive: boolean;

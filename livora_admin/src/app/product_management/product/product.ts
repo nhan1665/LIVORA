@@ -12,6 +12,8 @@ import {
   ProductSummaryMetrics,
 } from './product.model';
 import { ProductService } from './product.service';
+import { CategoryService } from '../category/category.service';
+import { RoomService } from '../../room_management/room/room.service';
 
 @Component({
   selector: 'app-product',
@@ -22,6 +24,8 @@ import { ProductService } from './product.service';
 })
 export class Product implements OnInit {
   private readonly productService = inject(ProductService);
+  private readonly categoryService = inject(CategoryService);
+  private readonly roomService = inject(RoomService);
   private readonly cdr = inject(ChangeDetectorRef);
 
   readonly pageSize = 10;
@@ -75,8 +79,8 @@ export class Product implements OnInit {
     sku: '',
     name: '',
     slug: '',
-    categoryId: 'cat-01',
-    roomIds: ['living-room'],
+    categoryId: '',
+    roomIds: [],
     price: 0,
     salePrice: null,
     stockQuantity: 10,
@@ -91,33 +95,135 @@ export class Product implements OnInit {
     file3DUrl: '',
   };
 
-  // Static options synchronized with livora_user & DB Table 17 & 18
-  readonly availableCategories = [
-    { id: 'cat-01', code: 'CAT-SOFA', name: 'Sofa & Armchair' },
-    { id: 'cat-02', code: 'CAT-TABLE', name: 'Bàn trà & Bàn ăn' },
-    { id: 'cat-03', code: 'CAT-CHAIR', name: 'Ghế thư giãn & Ghế ăn' },
-    { id: 'cat-04', code: 'CAT-BED', name: 'Giường ngủ & Nệm' },
-    { id: 'cat-05', code: 'CAT-WARDROBE', name: 'Tủ quần áo & Tủ lưu trữ' },
-    { id: 'cat-06', code: 'CAT-LIGHT', name: 'Đèn trang trí & Chiếu sáng' },
-    { id: 'cat-07', code: 'CAT-RUG', name: 'Thảm trải sàn' },
-    { id: 'cat-08', code: 'CAT-MIRROR', name: 'Gương & Phụ kiện trang trí' },
-    { id: 'cat-09', code: 'CAT-BEDDING', name: 'Bộ chăn ga gối' },
-    { id: 'cat-10', code: 'CAT-CABINET', name: 'Tủ búp phê & Kệ TV' },
-    { id: 'cat-11', code: 'CAT-BATH', name: 'Phụ kiện phòng tắm & Khăn' },
-    { id: 'cat-12', code: 'CAT-OFFICE', name: 'Bàn ghế làm việc' },
-    { id: 'cat-13', code: 'CAT-OUTDOOR', name: 'Nội thất ban công ngoài trời' },
-    { id: 'cat-14', code: 'CAT-DECOR', name: 'Tranh & Lọ hoa nghệ thuật' },
-  ];
+  // Dynamic options loaded from MongoDB Atlas (Categories & Rooms collections)
+  availableCategories: { id: string; code?: string; name: string; slug?: string }[] = [];
+  availableRooms: { id: string; name: string; slug?: string }[] = [];
 
-  readonly availableRooms = [
-    { id: 'living-room', name: 'Phòng khách' },
-    { id: 'bedroom', name: 'Phòng ngủ' },
-    { id: 'kitchen', name: 'Phòng bếp' },
-    { id: 'dining-room', name: 'Phòng ăn' },
-    { id: 'bathroom', name: 'Phòng tắm' },
-  ];
+  // Helper chuyển đổi tiếng Việt có dấu sang không dấu
+  removeVietnameseTones(str: string): string {
+    return (str || '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/đ/g, 'd')
+      .replace(/Đ/g, 'D');
+  }
+
+  // Lấy tiền tố mã loại sản phẩm (ví dụ "Giường ngủ" -> "GIUONG", "Sofa" -> "SOFA")
+  getCategoryPrefix(cat: { id?: string; code?: string; name: string; slug?: string } | undefined): string {
+    if (!cat) return 'SP';
+
+    // 1. Nếu có mã riêng không phải tiền tố chung CAT-
+    if (cat.code && !cat.code.toUpperCase().startsWith('CAT-')) {
+      const cleaned = cat.code.toUpperCase().replace(/[^A-Z0-9]/g, '');
+      if (cleaned) return cleaned;
+    }
+
+    // 2. Tách từ đầu tiên trong tên danh mục tiếng Việt (VD: "Giường ngủ" -> "GIUONG", "Bàn ăn" -> "BAN")
+    if (cat.name) {
+      const unsigned = this.removeVietnameseTones(cat.name).toUpperCase().trim();
+      const firstWord = unsigned.split(/[\s,&-]+/)[0].replace(/[^A-Z0-9]/g, '');
+      if (firstWord && firstWord.length >= 2) return firstWord;
+    }
+
+    // 3. Nếu mã có dạng CAT-SOFA -> lấy SOFA
+    if (cat.code) {
+      const stripped = cat.code.toUpperCase().replace(/^CAT[-_]/, '').replace(/[^A-Z0-9]/g, '');
+      if (stripped) return stripped;
+    }
+
+    // 4. Lấy từ slug
+    if (cat.slug) {
+      return cat.slug.toUpperCase().replace(/[^A-Z0-9]/g, '');
+    }
+
+    return 'SP';
+  }
+
+  // Tính toán số thứ tự tiếp theo XXX theo định dạng 3 chữ số (001, 002, ...)
+  calculateNextSkuNumber(prefix: string): string {
+    let maxNum = 0;
+    const regex = new RegExp(`^${prefix}-SP-?(\\d+)`, 'i');
+
+    for (const p of this.products()) {
+      if (p.sku) {
+        const match = p.sku.match(regex);
+        if (match && match[1]) {
+          const num = parseInt(match[1], 10);
+          if (num > maxNum) maxNum = num;
+        }
+      }
+    }
+    return String(maxNum + 1).padStart(3, '0');
+  }
+
+  // Tự động sinh mã sản phẩm theo công thức [mã loại sản phẩm]-SP-XXX (ví dụ: GIUONG-SP001)
+  generateSkuForSelectedCategory(): void {
+    const selectedCat = this.availableCategories.find((c) => c.id === this.formDraft.categoryId);
+    const prefix = this.getCategoryPrefix(selectedCat);
+    const nextNum = this.calculateNextSkuNumber(prefix);
+    this.formDraft.sku = `${prefix}-SP${nextNum}`;
+  }
+
+  onCategoryChange(): void {
+    if (!this.isEditMode()) {
+      this.generateSkuForSelectedCategory();
+    }
+  }
+
+  regenerateSku(): void {
+    this.generateSkuForSelectedCategory();
+  }
+
+  loadCategories(callback?: () => void): void {
+    this.categoryService.getAllCategories().subscribe({
+      next: (cats) => {
+        if (Array.isArray(cats)) {
+          this.availableCategories = cats.map((c) => ({
+            id: c.id || (c as any)._id,
+            code: c.code || (c.slug ? `CAT-${c.slug.toUpperCase()}` : 'CAT'),
+            name: c.name,
+            slug: c.slug,
+          }));
+          if (this.availableCategories.length > 0 && !this.formDraft.categoryId) {
+            this.formDraft.categoryId = this.availableCategories[0].id;
+          }
+          this.cdr.markForCheck();
+        }
+        if (callback) callback();
+      },
+      error: (err) => {
+        console.error('Lỗi khi tải danh mục từ categories collection:', err);
+        if (callback) callback();
+      },
+    });
+  }
+
+  loadRooms(callback?: () => void): void {
+    this.roomService.getAllRooms().subscribe({
+      next: (rooms) => {
+        if (Array.isArray(rooms)) {
+          this.availableRooms = rooms.map((r) => ({
+            id: r.id || (r as any)._id,
+            name: r.name,
+            slug: r.slug,
+          }));
+          if (this.availableRooms.length > 0 && this.formDraft.roomIds.length === 0) {
+            this.formDraft.roomIds = [this.availableRooms[0].id];
+          }
+          this.cdr.markForCheck();
+        }
+        if (callback) callback();
+      },
+      error: (err) => {
+        console.error('Lỗi khi tải phòng từ rooms collection:', err);
+        if (callback) callback();
+      },
+    });
+  }
 
   ngOnInit(): void {
+    this.loadCategories();
+    this.loadRooms();
     this.loadData();
   }
 
@@ -297,8 +403,8 @@ export class Product implements OnInit {
       sku: '',
       name: '',
       slug: '',
-      categoryId: 'cat-01',
-      roomIds: ['living-room'],
+      categoryId: this.availableCategories[0]?.id || '',
+      roomIds: this.availableRooms[0]?.id ? [this.availableRooms[0].id] : [],
       price: 0,
       salePrice: null,
       stockQuantity: 10,
@@ -316,6 +422,25 @@ export class Product implements OnInit {
     this.colorsInput = this.formDraft.colors.join(', ');
     this.imagesInput = this.formDraft.images.join(', ');
 
+    // Always fetch latest categories from MongoDB Categories collection when opening the modal
+    this.loadCategories(() => {
+      if (!this.formDraft.categoryId && this.availableCategories.length > 0) {
+        this.formDraft.categoryId = this.availableCategories[0].id;
+      }
+      this.generateSkuForSelectedCategory();
+      this.cdr.markForCheck();
+    });
+    this.loadRooms(() => {
+      if (this.formDraft.roomIds.length === 0 && this.availableRooms.length > 0) {
+        this.formDraft.roomIds = [this.availableRooms[0].id];
+      }
+      this.cdr.markForCheck();
+    });
+
+    if (this.availableCategories.length > 0) {
+      this.generateSkuForSelectedCategory();
+    }
+
     this.isModalOpen.set(true);
   }
 
@@ -324,6 +449,9 @@ export class Product implements OnInit {
     this.editingProductId.set(item.id);
     this.errorMessage.set('');
     this.activeModalTab.set('general');
+
+    this.loadCategories();
+    this.loadRooms();
 
     this.formDraft = {
       sku: item.sku,
@@ -384,12 +512,17 @@ export class Product implements OnInit {
   saveProduct(): void {
     if (!this.formDraft.sku.trim()) {
       this.activeModalTab.set('general');
-      this.errorMessage.set('Vui lòng nhập mã sản phẩm (SKU).');
+      this.errorMessage.set('Vui lòng nhập hoặc sinh mã sản phẩm (SKU).');
       return;
     }
     if (!this.formDraft.name.trim()) {
       this.activeModalTab.set('general');
       this.errorMessage.set('Vui lòng nhập tên sản phẩm.');
+      return;
+    }
+    if (!this.formDraft.categoryId) {
+      this.activeModalTab.set('general');
+      this.errorMessage.set('Vui lòng chọn loại sản phẩm từ danh mục.');
       return;
     }
     if (this.formDraft.price <= 0) {
@@ -414,6 +547,25 @@ export class Product implements OnInit {
       .map((s) => s.trim())
       .filter((s) => s.length > 0);
     this.formDraft.images = parsedImages.length > 0 ? parsedImages : [this.formDraft.thumbnail];
+
+    if (!this.formDraft.slug) {
+      this.formDraft.slug = this.categoryService.slugify(this.formDraft.name);
+    }
+    const selectedCat = this.availableCategories.find(
+      (c) => c.id === this.formDraft.categoryId || c.slug === this.formDraft.categoryId
+    );
+    if (selectedCat && selectedCat.slug) {
+      (this.formDraft as any).categorySlug = selectedCat.slug;
+    }
+    const selectedRooms = this.availableRooms.filter(
+      (r) => this.formDraft.roomIds.includes(r.id) || this.formDraft.roomIds.includes(r.slug || '')
+    );
+    if (selectedRooms.length > 0) {
+      (this.formDraft as any).roomSlugs = selectedRooms.map((r) => r.slug || r.id);
+    }
+
+    // File 3D GLB hoàn toàn tùy chọn, không bắt buộc
+    this.formDraft.file3DUrl = (this.formDraft.file3DUrl || '').trim();
 
     this.isSubmitting.set(true);
     this.errorMessage.set('');

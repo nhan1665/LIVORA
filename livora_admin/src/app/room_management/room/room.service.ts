@@ -15,6 +15,13 @@ export class RoomService {
   private readonly http = inject(HttpClient);
   private readonly apiUrl = `${environment.apiBaseUrl}/rooms`;
 
+  getAllRooms(): Observable<Room[]> {
+    return this.http.get<any>(this.apiUrl, { params: { all: 'true' } }).pipe(
+      map((res) => (res.data || []) as Room[]),
+      catchError((err) => throwError(() => new Error(err.error?.message || 'Không thể tải danh sách phòng.')))
+    );
+  }
+
   listRooms(query: RoomListQuery): Observable<RoomListResponse> {
     let params = new HttpParams()
       .set('page', query.page.toString())
