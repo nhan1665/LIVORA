@@ -12,6 +12,7 @@ export interface RoomCategoryItem {
 
 @Component({
   selector: 'app-room-categories',
+  standalone: true,
   imports: [CommonModule, RouterLink],
   templateUrl: './room-categories.html',
   styleUrl: './room-categories.css'

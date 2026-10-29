@@ -36,9 +36,9 @@ const getCategories = async (req, res) => {
       const items = await Category.find(filter).sort({ displayOrder: 1, createdAt: -1 }).lean();
       return sendSuccess(res, items.map(c => ({
         id: c._id.toString(),
-        code: c.code || `CAT-${c.slug.toUpperCase()}`,
+        code: c.code || (c.slug ? `CAT-${c.slug.toUpperCase()}` : 'CAT-ITEM'),
         name: c.name,
-        slug: c.slug,
+        slug: c.slug || '',
         description: c.description,
         thumbnail: c.thumbnail,
         displayOrder: c.displayOrder,
@@ -72,9 +72,9 @@ const getCategories = async (req, res) => {
         });
         return {
           id: c._id.toString(),
-          code: c.code || `CAT-${c.slug.toUpperCase()}`,
+          code: c.code || (c.slug ? `CAT-${c.slug.toUpperCase()}` : 'CAT-ITEM'),
           name: c.name,
-          slug: c.slug,
+          slug: c.slug || '',
           description: c.description,
           thumbnail: c.thumbnail,
           displayOrder: c.displayOrder,

@@ -5,18 +5,26 @@
       <h3 class="footer-title">Ý tưởng LIVORA</h3>
       <p class="footer-description">Nâng tầm cuộc sống gia đình thông qua thiết kế tiện dụng và sự khéo léo dành cho mọi người.</p>
       <div class="social-icons" style="display: flex; gap: 12px; margin-top: 15px;">
-        <a [href]="facebookUrl" target="_blank" class="social-icon" style="color: #666; transition: color 0.2s;" title="Facebook">
-          <i class="bi bi-facebook" style="font-size: 20px;"></i>
-        </a>
-        <a [href]="instagramUrl" target="_blank" class="social-icon" style="color: #666; transition: color 0.2s;" title="Instagram">
-          <i class="bi bi-instagram" style="font-size: 20px;"></i>
-        </a>
-        <a [href]="zaloUrl" target="_blank" class="social-icon" style="color: #666; transition: color 0.2s;" title="Chat Zalo">
-          <i class="bi bi-chat-dots-fill" style="font-size: 20px;"></i>
-        </a>
-        <a [href]="'tel:' + phone" class="social-icon" style="color: #666; transition: color 0.2s;" [title]="'Gọi điện: ' + phone">
-          <i class="bi bi-telephone-fill" style="font-size: 18px;"></i>
-        </a>
+        @if (showFacebook && facebookUrl) {
+          <a [href]="facebookUrl" target="_blank" rel="noopener noreferrer" class="social-icon" style="color: #666; transition: color 0.2s;" title="Facebook">
+            <i class="bi bi-facebook" style="font-size: 20px;"></i>
+          </a>
+        }
+        @if (showInstagram && instagramUrl) {
+          <a [href]="instagramUrl" target="_blank" rel="noopener noreferrer" class="social-icon" style="color: #666; transition: color 0.2s;" title="Instagram">
+            <i class="bi bi-instagram" style="font-size: 20px;"></i>
+          </a>
+        }
+        @if (showZalo && zaloUrl) {
+          <a [href]="zaloUrl" target="_blank" rel="noopener noreferrer" class="social-icon" style="color: #666; transition: color 0.2s;" title="Chat Zalo">
+            <i class="bi bi-chat-dots-fill" style="font-size: 20px;"></i>
+          </a>
+        }
+        @if (showPhone && (whatsappUrl || phone)) {
+          <a [href]="whatsappUrl" target="_blank" rel="noopener noreferrer" class="social-icon" style="color: #666; transition: color 0.2s;" [title]="'WhatsApp: ' + phone">
+            <i class="bi bi-whatsapp" style="font-size: 20px;"></i>
+          </a>
+        }
       </div>
     </div>
 

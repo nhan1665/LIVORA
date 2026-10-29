@@ -665,7 +665,7 @@
           </div>
           <div class="channel-text-info">
             <span class="channel-name-title">{{ item.name }}</span>
-            <span class="channel-desc-sub">{{ item.subtitle }}</span>
+            <span class="channel-desc-sub">{{ item.key === 'phone' ? 'Hotline mở WhatsApp' : item.subtitle }}</span>
           </div>
         </div>
 
@@ -688,7 +688,8 @@
               </svg>
               }
             </span>
-            <input type="text" class="filter-input-control bm-has-prefix channel-input-box" [(ngModel)]="item.value" />
+            <input type="text" class="filter-input-control bm-has-prefix channel-input-box" [(ngModel)]="item.value"
+              [placeholder]="getFooterPlaceholder(item.key)" />
           </div>
         </div>
 

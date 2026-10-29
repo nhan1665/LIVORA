@@ -338,7 +338,7 @@
             [class.active]="activeModalTab() === 'media'"
             (click)="setModalTab('media')"
           >
-            3. Hình ảnh & Mô hình 3D AR
+            3. Hình ảnh & Mô hình 3D (Tùy chọn)
           </button>
         </div>
 
@@ -347,16 +347,28 @@
           <div class="form-row">
             <div class="form-group col-half">
               <label for="prod-sku" class="form-label required">Mã sản phẩm (SKU)</label>
+              <div style="display: flex; gap: 8px;">
               <input
                 id="prod-sku"
                 type="text"
                 class="form-input"
                 [(ngModel)]="formDraft.sku"
                 name="prodSku"
-                placeholder="VD: LIV-SOFA-01"
+                  placeholder="VD: GIUONG-SP001"
+                  style="text-transform: uppercase; font-family: monospace; font-weight: 600; flex: 1;"
                 required
               />
-              <span class="field-hint">Mã định danh duy nhất quản lý tồn kho</span>
+                <button
+                  type="button"
+                  class="btn btn-secondary"
+                  style="padding: 6px 12px; font-size: 13px; white-space: nowrap; margin-top: 4px;"
+                  title="Tự động sinh lại mã theo danh mục"
+                  (click)="regenerateSku()"
+                >
+                  🔄 Tạo mã
+                </button>
+              </div>
+              <span class="field-hint">Công thức: [Mã loại]-SP-XXX (VD: GIUONG-SP001)</span>
             </div>
 
             <div class="form-group col-half">
@@ -366,12 +378,16 @@
                 class="select-control form-input"
                 [(ngModel)]="formDraft.categoryId"
                 name="prodCategory"
+                (change)="onCategoryChange()"
                 required
               >
+                <option value="" disabled selected>-- Chọn loại sản phẩm từ categories --</option>
+                <option *ngIf="availableCategories.length === 0" value="" disabled>Đang tải danh mục từ CSDL...</option>
                 <option *ngFor="let cat of availableCategories" [value]="cat.id">
                   {{ cat.name }} ({{ cat.code }})
                 </option>
               </select>
+              <span class="field-hint">Dữ liệu được lấy trực tiếp từ collection categories</span>
             </div>
           </div>
 
@@ -610,8 +626,8 @@
             <div class="ar-box-header">
               <div class="ar-icon">🧊</div>
               <div>
-                <label for="prod-glb" class="form-label">Mô hình 3D AR (.GLB URL)</label>
-                <p class="field-hint">Hỗ trợ định dạng .GLB chuẩn WebGL/ARCore/ARKit cho tính năng xem trực tiếp trong phòng thực tế ảo</p>
+                <label for="prod-glb" class="form-label">Mô hình 3D AR (.GLB URL) <span style="font-weight: normal; color: #64748b; font-size: 12px;">(Không bắt buộc - Tùy chọn)</span></label>
+                <p class="field-hint">Tùy chọn: Nhập liên kết file .GLB nếu có mô hình 3D AR. Nếu để trống, sản phẩm hiển thị ảnh thông thường.</p>
               </div>
             </div>
             <input
@@ -620,7 +636,7 @@
               class="form-input"
               [(ngModel)]="formDraft.file3DUrl"
               name="prodGlb"
-              placeholder="https://assets.livora.vn/models/3d/product-name.glb"
+              placeholder="Tùy chọn: Nhập URL file .glb nếu có hoặc để trống"
             />
           </div>
         </div>
