@@ -89,7 +89,7 @@ export class Space {
   save(form: NgForm): void {
     if (this.mode === 'view' || this.saving()) return;
     form.control.markAllAsTouched();
-    if (form.invalid || !this.form.modelFile) { this.formError.set('Nhập mã, tên, phòng, kích thước hợp lệ và file .glb.'); return; }
+    if (form.invalid) { this.formError.set('Vui lòng nhập đầy đủ mã, tên và kích thước hợp lệ.'); return; }
     this.saving.set(true); this.formError.set('');
     this.service.save(this.form, this.editing?.id).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({next: () => { this.saving.set(false); this.modalOpen.set(false); this.notice.set(this.editing ? 'Đã cập nhật không gian.' : 'Đã thêm không gian.'); this.spaceCount.update((count) => this.editing ? count : count + 1); this.load(); }, error: (error: Error) => { this.saving.set(false); this.formError.set(error.message); }});
   }

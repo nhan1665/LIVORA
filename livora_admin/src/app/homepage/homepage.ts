@@ -296,7 +296,7 @@ export class Homepage implements OnInit, AfterViewInit {
       {
         key: 'actions',
         label: 'THAO TÁC',
-        width: '110px',
+        width: '140px',
         align: 'center',
         type: 'actions',
         actions: [
@@ -316,6 +316,12 @@ export class Homepage implements OnInit, AfterViewInit {
             label: 'Hiện thông báo',
             variant: 'view',
             show: (row: MarqueeItem) => row.status === 'Đã ẩn',
+          },
+          {
+            id: 'delete',
+            label: 'Xóa thông báo',
+            variant: 'delete',
+            danger: true,
           },
         ],
       },
@@ -1029,7 +1035,31 @@ export class Homepage implements OnInit, AfterViewInit {
         return;
       }
       this.toggleStatus(item, 'Đang hoạt động');
+    } else if (event.action === 'delete') {
+      this.promptDeleteItem(item);
     }
+  }
+
+  promptDeleteItem(item: MarqueeItem): void {
+    this.confirmTitle = 'Xác nhận xóa thông báo';
+    this.confirmMessage = `Bạn có chắc chắn muốn xóa vĩnh viễn thông báo "${item.code}" (${item.title}) khỏi cơ sở dữ liệu không? Thao tác này không thể hoàn tác.`;
+    this.confirmText = 'Xóa thông báo';
+    this.confirmType = 'danger';
+    this.pendingAction = () => {
+      this.homepageService.deleteMarquee(item.id).subscribe({
+        next: () => {
+          this.marqueeList = this.marqueeList.filter((m) => m.id !== item.id);
+          this.showToast(`Đã xóa vĩnh viễn thông báo ${item.code}`);
+          this.cdr.detectChanges();
+        },
+        error: (err) => {
+          alert(err.message || 'Không thể xóa thông báo.');
+          this.loadMarquees();
+          this.cdr.detectChanges();
+        },
+      });
+    };
+    this.isConfirmOpen = true;
   }
 
   promptHideItem(item: MarqueeItem): void {

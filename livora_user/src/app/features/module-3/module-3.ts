@@ -22,7 +22,7 @@ export interface Hotspot {
 export interface Room {
   id: string;
   name: string;
-  category: 'Phòng ngủ' | 'Phòng khách' | 'Phòng bếp' | 'Phòng tắm' | 'Phòng ăn' | 'Bedroom' | 'Living Room' | 'Kitchen' | 'Bathroom' | 'Dining room' | string;
+  category: string;
   image: string;
   hotspots: Hotspot[];
   style?: string;
@@ -50,195 +50,9 @@ export class Module3 implements OnInit, OnDestroy {
   selectedCategory: string = 'Tất cả';
 
   // Filter options
-  categories: string[] = ['Tất cả', 'Phòng ngủ', 'Phòng khách', 'Phòng bếp', 'Phòng tắm', 'Phòng ăn'];
+  categories: string[] = ['Tất cả'];
 
-  // Default fallback rooms
-  readonly defaultRooms: Room[] = [
-    {
-      id: 'bedroom-scandic',
-      name: 'Phòng ngủ phong cách Bắc Âu thanh bình',
-      category: 'Phòng ngủ',
-      style: 'Bắc Âu',
-      content: 'Không gian phòng ngủ thư thái với chất liệu gỗ tự nhiên và màu sắc trang nhã.',
-      image: 'https://images.unsplash.com/photo-1616594039964-ae9021a400a0?auto=format&fit=crop&w=1200&q=80',
-      hotspots: [
-        {
-          top: 48,
-          left: 38,
-          product: {
-            id: '10',
-            name: 'Bộ chăn ga DVALA',
-            category: 'Bộ chăn ga',
-            price: 20,
-            description: 'Chất liệu cotton mềm mại, dễ giặt ủi và thân thiện với làn da.',
-            image: 'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=600&q=80'
-          }
-        },
-        {
-          top: 62,
-          left: 50,
-          product: {
-            id: '1',
-            name: 'Khung giường gỗ thông NEIDEN',
-            category: 'Giường',
-            price: 89,
-            description: 'Thiết kế nhỏ gọn, hoàn hảo cho không gian hẹp hoặc trần nhà thấp.',
-            image: 'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=600&q=80'
-          }
-        },
-        {
-          top: 18,
-          left: 75,
-          product: {
-            id: '16',
-            name: 'Đèn thủy tinh mờ FADO',
-            category: 'Đèn',
-            price: 19,
-            description: 'Chao đèn thủy tinh mờ lan tỏa ánh sáng dịu nhẹ khắp căn phòng.',
-            image: 'https://images.unsplash.com/photo-1507473885765-e6ed057f782c?auto=format&fit=crop&w=600&q=80'
-          }
-        }
-      ]
-    },
-    {
-      id: 'living-cosy',
-      name: 'Phòng khách tối giản ấm cúng',
-      category: 'Phòng khách',
-      style: 'Tối giản',
-      content: 'Tối ưu công năng sử dụng với những đường nét hình khối tinh gọn, hiện đại.',
-      image: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=1200&q=80',
-      hotspots: [
-        {
-          top: 68,
-          left: 32,
-          product: {
-            id: '40',
-            name: 'Ghế bọc đệm ODGER',
-            category: 'Ghế',
-            price: 45,
-            description: 'Thiết kế công thái học với lòng ghế uốn cong tạo cảm giác dễ chịu khi ngồi.',
-            image: 'https://images.unsplash.com/photo-1503602642458-232111445657?auto=format&fit=crop&w=600&q=80'
-          }
-        },
-        {
-          top: 72,
-          left: 72,
-          product: {
-            id: '38',
-            name: 'Bàn ăn gỗ sồi LISABO',
-            category: 'Bàn ăn',
-            price: 79,
-            description: 'Bộ bàn ăn gỗ thông truyền thống đi kèm 4 ghế đồng bộ thanh lịch.',
-            image: 'https://images.unsplash.com/photo-1577140917170-285929fb55b7?auto=format&fit=crop&w=600&q=80'
-          }
-        },
-        {
-          top: 32,
-          left: 68,
-          product: {
-            id: '16',
-            name: 'Đèn thủy tinh mờ FADO',
-            category: 'Đèn',
-            price: 19,
-            description: 'Chao đèn thủy tinh mờ lan tỏa ánh sáng dịu nhẹ khắp căn phòng.',
-            image: 'https://images.unsplash.com/photo-1507473885765-e6ed057f782c?auto=format&fit=crop&w=600&q=80'
-          }
-        }
-      ]
-    },
-    {
-      id: 'kitchen-modern',
-      name: 'Phòng bếp hiện đại và tinh tế',
-      category: 'Phòng bếp',
-      style: 'Hiện đại',
-      content: 'Khu vực nấu nướng sang trọng và tiện nghi với các giải pháp thông minh.',
-      image: 'https://images.unsplash.com/photo-1617228069096-4638a7ffc906?q=80&w=1742&auto=format&fit=crop',
-      hotspots: [
-        {
-          top: 65,
-          left: 45,
-          product: {
-            id: '38',
-            name: 'Bàn ăn gỗ sồi LISABO',
-            category: 'Bàn ăn',
-            price: 79,
-            description: 'Bộ bàn ăn gỗ thông truyền thống đi kèm 4 ghế đồng bộ thanh lịch.',
-            image: 'https://images.unsplash.com/photo-1577140917170-285929fb55b7?auto=format&fit=crop&w=600&q=80'
-          }
-        },
-        {
-          top: 68,
-          left: 62,
-          product: {
-            id: '40',
-            name: 'Ghế ăn ODGER',
-            category: 'Ghế',
-            price: 45,
-            description: 'Thiết kế công thái học với lòng ghế uốn cong tạo cảm giác dễ chịu khi ngồi.',
-            image: 'https://images.unsplash.com/photo-1503602642458-232111445657?auto=format&fit=crop&w=600&q=80'
-          }
-        }
-      ]
-    },
-    {
-      id: 'bathroom-spa',
-      name: 'Phòng tắm phong cách spa thư giãn',
-      category: 'Phòng tắm',
-      style: 'Spa Zen',
-      content: 'Không gian phòng tắm đậm chất nghỉ dưỡng, tái tạo năng lượng mỗi ngày.',
-      image: 'https://images.unsplash.com/photo-1618220179428-22790b461013?auto=format&fit=crop&w=1200&q=80',
-      hotspots: [
-        {
-          top: 35,
-          left: 50,
-          product: {
-            id: '16',
-            name: 'Đèn thủy tinh mờ FADO',
-            category: 'Đèn',
-            price: 19,
-            description: 'Chao đèn thủy tinh mờ lan tỏa ánh sáng dịu nhẹ khắp căn phòng.',
-            image: 'https://images.unsplash.com/photo-1507473885765-e6ed057f782c?auto=format&fit=crop&w=600&q=80'
-          }
-        }
-      ]
-    },
-    {
-      id: 'dining-room-warm',
-      name: 'Phòng ăn gia đình sum họp ấm áp',
-      category: 'Phòng ăn',
-      style: 'Ấm cúng',
-      content: 'Nơi gắn kết gia đình qua những bữa cơm ngon với bàn ghế gỗ sồi ấm áp.',
-      image: 'https://images.unsplash.com/photo-1616486886892-ff366aa67ba4?q=80&w=1160&auto=format&fit=crop',
-      hotspots: [
-        {
-          top: 55,
-          left: 40,
-          product: {
-            id: '40',
-            name: 'Ghế bọc đệm ODGER',
-            category: 'Ghế',
-            price: 45,
-            description: 'Thiết kế công thái học với lòng ghế uốn cong tạo cảm giác dễ chịu khi ngồi.',
-            image: 'https://images.unsplash.com/photo-1503602642458-232111445657?auto=format&fit=crop&w=600&q=80'
-          }
-        },
-        {
-          top: 58,
-          left: 65,
-          product: {
-            id: '38',
-            name: 'Bàn ăn gỗ sồi LISABO',
-            category: 'Bàn ăn',
-            price: 79,
-            description: 'Bộ bàn ăn gỗ thông truyền thống đi kèm 4 ghế đồng bộ thanh lịch.',
-            image: 'https://images.unsplash.com/photo-1577140917170-285929fb55b7?auto=format&fit=crop&w=600&q=80'
-          }
-        }
-      ]
-    }
-  ];
-
-  rooms: Room[] = [...this.defaultRooms];
+  rooms: Room[] = [];
 
   // Active room for full screen modal view
   selectedRoom: Room | null = null;
@@ -276,16 +90,21 @@ export class Module3 implements OnInit, OnDestroy {
             }))
           }));
 
-          // Compute dynamic category filter pills
           const distinctCategories = Array.from(
             new Set(this.rooms.map((r) => r.category).filter(Boolean))
           );
           this.categories = ['Tất cả', ...distinctCategories];
-          this.cdr.detectChanges();
+        } else {
+          this.rooms = [];
+          this.categories = ['Tất cả'];
         }
+        this.cdr.detectChanges();
       },
       error: (err) => {
-        console.warn('Lỗi khi nạp cảm hứng từ server, sử dụng danh sách mẫu:', err);
+        this.rooms = [];
+        this.categories = ['Tất cả'];
+        this.cdr.detectChanges();
+        console.warn('Lỗi khi nạp cảm hứng từ server:', err);
       }
     });
   }
@@ -315,13 +134,11 @@ export class Module3 implements OnInit, OnDestroy {
 
   openRoomModal(room: Room) {
     this.selectedRoom = room;
-    // Disable background scroll
     document.body.style.overflow = 'hidden';
   }
 
   closeRoomModal() {
     this.selectedRoom = null;
-    // Enable background scroll
     document.body.style.overflow = '';
   }
 
@@ -331,34 +148,14 @@ export class Module3 implements OnInit, OnDestroy {
 
     let roomName = 'bedroom';
     let categoryName = 'beds';
-    let productId = '1';
+    let productId = prodId;
 
-    if (prodId === 'neiden-bed' || prodId === '1') {
-      productId = '1';
-      roomName = 'bedroom'; categoryName = 'beds';
-    } else if (prodId === 'pillow-1' || prodId === '10') {
-      productId = '10';
-      roomName = 'bedroom'; categoryName = 'bedding';
-    } else if (prodId === 'chair-odger' || prodId === '40') {
-      productId = '40';
-      roomName = 'dining-room'; categoryName = 'chairs';
-    } else if (prodId === 'lisabo-table' || prodId === '38') {
-      productId = '38';
-      roomName = 'dining-room'; categoryName = 'dining-tables';
-    } else if (prodId === 'lamp-fado' || prodId === '16') {
-      productId = '16';
-      roomName = 'living-room'; categoryName = 'lighting';
-    } else {
-      productId = prodId;
-      const catLower = (this.selectedRoom?.category || '').toLowerCase();
-      if (catLower.includes('khách') || catLower.includes('living')) roomName = 'living-room';
-      else if (catLower.includes('bếp') || catLower.includes('kitchen')) roomName = 'kitchen';
-      else if (catLower.includes('tắm') || catLower.includes('bathroom')) roomName = 'bathroom';
-      else if (catLower.includes('ăn') || catLower.includes('dining')) roomName = 'dining-room';
-      else roomName = 'bedroom';
-
-      categoryName = 'beds';
-    }
+    const catLower = (this.selectedRoom?.category || '').toLowerCase();
+    if (catLower.includes('khách') || catLower.includes('living')) roomName = 'living-room';
+    else if (catLower.includes('bếp') || catLower.includes('kitchen')) roomName = 'kitchen';
+    else if (catLower.includes('tắm') || catLower.includes('bathroom')) roomName = 'bathroom';
+    else if (catLower.includes('ăn') || catLower.includes('dining')) roomName = 'dining-room';
+    else roomName = 'bedroom';
 
     this.router.navigate(['/rooms', roomName, categoryName, productId]);
   }

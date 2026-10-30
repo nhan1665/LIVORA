@@ -18,41 +18,34 @@ export interface RoomCategoryItem {
   styleUrl: './room-categories.css'
 })
 export class RoomCategories implements OnInit {
-  defaultRooms: RoomCategoryItem[] = [
-    { id: 1, name: 'Phòng ngủ', slug: 'bedroom', image: '/images/rooms/bedroom.png' },
-    { id: 2, name: 'Phòng bếp', slug: 'kitchen', image: '/images/rooms/kitchen.png' },
-    { id: 3, name: 'Phòng khách', slug: 'living-room', image: '/images/rooms/living-room.png' },
-    { id: 4, name: 'Phòng ăn', slug: 'dining-room', image: '/images/rooms/dining-room.png' },
-    { id: 5, name: 'Phòng tắm', slug: 'bathroom', image: '/images/rooms/bathroom.jpg' },
-  ];
-
-  rooms: RoomCategoryItem[] = [...this.defaultRooms];
+  rooms: RoomCategoryItem[] = [];
+  isLoading = true;
 
   constructor(private productService: ProductService) {}
 
   ngOnInit(): void {
+    this.isLoading = true;
     this.productService.getRooms().subscribe({
       next: (data) => {
-        if (Array.isArray(data) && data.length > 0) {
-          const defaultImageMap: Record<string, string> = {
-            'bedroom': '/images/rooms/bedroom.png',
-            'kitchen': '/images/rooms/kitchen.png',
-            'living-room': '/images/rooms/living-room.png',
-            'dining-room': '/images/rooms/dining-room.png',
-            'bathroom': '/images/rooms/bathroom.jpg'
-          };
+        this.isLoading = false;
+        if (Array.isArray(data)) {
           this.rooms = data
             .filter((r: any) => r.isActive !== false)
             .map((r: any) => ({
               id: r.id || r._id,
               name: r.name,
               slug: r.slug,
-              image: r.thumbnail || defaultImageMap[r.slug] || '/images/rooms/bedroom.png'
+              // Sử dụng chính xác đường dẫn / URL hình ảnh được nhập và lưu trong Database
+              image: r.thumbnail || ''
             }));
+        } else {
+          this.rooms = [];
         }
       },
       error: (err) => {
-        console.warn('Could not load dynamic rooms, using default list:', err);
+        this.isLoading = false;
+        this.rooms = [];
+        console.warn('Lỗi khi tải danh sách phòng từ database:', err);
       }
     });
   }

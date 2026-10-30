@@ -16,8 +16,13 @@
     </button>
   </div>
 
+  <div *ngIf="filteredRooms.length === 0" style="padding: 60px 20px; text-align: center; color: #6b7280;">
+    <p style="font-size: 18px; font-weight: 600; color: #374151; margin-bottom: 8px;">Chưa có bài viết cảm hứng nào</p>
+    <p style="font-size: 14px; margin: 0;">Các không gian cảm hứng thiết kế từ hệ thống sẽ sớm được cập nhật tại đây.</p>
+  </div>
+
   <!-- ====== ROOM INSPIRATION GRID ====== -->
-  <div class="rooms-feed-grid">
+  <div class="rooms-feed-grid" *ngIf="filteredRooms.length > 0">
     <div *ngFor="let room of filteredRooms" class="room-card" (click)="openRoomModal(room)">
       <!-- Room Image Wrapper -->
       <div class="room-image-wrapper">
