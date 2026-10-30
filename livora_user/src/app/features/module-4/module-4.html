@@ -38,25 +38,45 @@
       </div>
     </div>
 
-    <div class="rooms-grid">
-      @for (room of rooms; track (room.id || room.name + '_' + $index)) {
-        <article class="room-card" (click)="onRoomCardClick(room)">
-          <div class="room-thumb">
-            <img [src]="room.image" [alt]="room.name" loading="lazy">
-            <span class="room-tag">{{ room.tag }}</span>
-            <button type="button" class="room-add" aria-label="Thiết kế phòng này">
-              <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true">
-                <path d="M11 5h2v6h6v2h-6v6h-2v-6H5v-2h6V5z" />
-              </svg>
-            </button>
-          </div>
-          <div class="room-info">
-            <h3 class="room-name">{{ room.name }}</h3>
-            <span class="room-area">{{ room.area }}</span>
-          </div>
-        </article>
-      }
-    </div>
+    @if (rooms.length === 0) {
+      <div style="padding: 48px; text-align: center; background: #f9fafb; border: 1px dashed #d1d5db; border-radius: 8px; margin-top: 16px;">
+        <svg style="margin: 0 auto 12px; width: 40px; height: 40px; color: #9ca3af;" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+        </svg>
+        <p style="font-size: 16px; font-weight: 600; color: #111827; margin-bottom: 6px;">Chưa có không gian thiết kế mẫu nào</p>
+        <p style="font-size: 13px; color: #6b7280; margin: 0;">Các không gian mẫu được tạo từ trang Quản lý không gian ở Admin sẽ tự động xuất hiện tại đây.</p>
+      </div>
+    } @else {
+      <div class="rooms-grid">
+        @for (room of rooms; track (room.id || room.name + '_' + $index)) {
+          <article class="room-card" (click)="onRoomCardClick(room)">
+            <div class="room-thumb">
+              @if (room.image) {
+                <img [src]="room.image" [alt]="room.name" loading="lazy">
+              } @else {
+                <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: #f3f4f6; color: #9ca3af;">
+                  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <rect x="3" y="3" width="18" height="18" rx="2"/>
+                    <circle cx="8.5" cy="8.5" r="1.5"/>
+                    <polyline points="21 15 16 10 5 21"/>
+                  </svg>
+                </div>
+              }
+              <span class="room-tag">{{ room.tag }}</span>
+              <button type="button" class="room-add" aria-label="Thiết kế phòng này">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true">
+                  <path d="M11 5h2v6h6v2h-6v6h-2v-6H5v-2h6V5z" />
+                </svg>
+              </button>
+            </div>
+            <div class="room-info">
+              <h3 class="room-name">{{ room.name }}</h3>
+              <span class="room-area">{{ room.area }}</span>
+            </div>
+          </article>
+        }
+      </div>
+    }
   </section>
 
 </main>

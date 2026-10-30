@@ -66,15 +66,7 @@ export class Module4 implements OnInit, OnDestroy {
   private readonly productService = inject(ProductService);
   private readonly cdr = inject(ChangeDetectorRef);
 
-  // Default fallback rooms if backend has no spaces yet
-  readonly defaultRooms: RoomDesign[] = [
-    { name: 'Phòng khách', area: '32 m²', image: 'images/rooms/living-room.png', tag: 'Rộng rãi & ấm cúng', length: 8, width: 4, height: 2.8 },
-    { name: 'Phòng ngủ', area: '23 m²', image: 'images/rooms/bedroom.png', tag: 'Yên tĩnh & thư giãn', length: 6, width: 4, height: 2.8 },
-    { name: 'Phòng bếp', area: '18 m²', image: 'images/rooms/kitchen.png', tag: 'Sáng sủa & tiện nghi', length: 5, width: 3.6, height: 2.8 },
-    { name: 'Phòng ăn', area: '21 m²', image: 'images/rooms/dining-room.png', tag: 'Ấm áp & sum vầy', length: 6, width: 3.5, height: 2.8 },
-  ];
-
-  rooms: RoomDesign[] = [...this.defaultRooms];
+  rooms: RoomDesign[] = [];
 
   // Select Size Modal state
   showSelectSizeModal = false;
@@ -83,20 +75,9 @@ export class Module4 implements OnInit, OnDestroy {
   selectLength = 6;
   selectWidth = 4;
 
-  categories: string[] = ['Tất cả danh mục', 'Giường', 'Tủ quần áo', 'Ngăn kéo', 'Sofa', 'Bàn trà', 'Bàn ăn', 'Ghế'];
+  categories: string[] = ['Tất cả danh mục'];
 
-  readonly defaultProducts: PlannerProduct[] = [
-    { id: 'idanas', name: 'IDANÄS', desc: 'Tủ 6 ngăn kéo, trắng, 84x135 cm', price: 299, image: 'images/products/bedroom/beds/MALM.png', category: 'Ngăn kéo' },
-    { id: 'vihals', name: 'VIHALS', desc: 'Tủ 6 ngăn kéo, trắng, 89x48x122 cm', price: 179, image: 'images/products/bedroom/beds/VIHALS.png', category: 'Ngăn kéo' },
-    { id: 'gullaberg', name: 'GULLABERG', desc: 'Tủ 6 ngăn kéo, trắng, 89x48x122 cm', price: 225, image: 'images/products/bedroom/beds/GULLABERG.png', category: 'Ngăn kéo' },
-    { id: 'slattum', name: 'SLATTUM', desc: 'Khung giường bọc nệm, 160x200 cm', price: 349, image: 'images/products/bedroom/beds/SLATTUM.png', category: 'Giường' },
-    { id: 'malm', name: 'MALM', desc: 'Khung giường cao, trắng, 160x200 cm', price: 279, image: 'images/products/bedroom/beds/MALM-2.png', category: 'Giường' },
-    { id: 'neiden', name: 'NEIDEN', desc: 'Khung giường gỗ thông, 90x200 cm', price: 89, image: 'images/products/bedroom/beds/NEIDEN.png', category: 'Giường' },
-    { id: 'ramnefjall', name: 'RAMNEFJÄLL', desc: 'Khung giường bọc nệm, 140x200 cm', price: 399, image: 'images/products/bedroom/beds/RAMNEFJÄLL.png', category: 'Giường' },
-    { id: 'vihals-w', name: 'VIHALS', desc: 'Tủ quần áo 2 cánh, trắng, 105 cm', price: 249, image: 'images/products/bedroom/beds/MALM-3.png', category: 'Tủ quần áo' },
-  ];
-
-  products: PlannerProduct[] = [...this.defaultProducts];
+  products: PlannerProduct[] = [];
 
   // ---- planner state ----
   plannerOpen = signal(false);
@@ -125,6 +106,25 @@ export class Module4 implements OnInit, OnDestroy {
     this.loadAdminSpaces();
     this.loadProducts();
     this.loadSavedDesignsFromStorage();
+
+    // Khôi phục và tự động lưu thiết kế đang chờ nếu người dùng vừa đăng nhập quay lại
+    if (this.authService.isLoggedIn) {
+      try {
+        const pendingStr = localStorage.getItem('livora_pending_design');
+        if (pendingStr) {
+          const pending = JSON.parse(pendingStr);
+          localStorage.removeItem('livora_pending_design');
+          if (pending && pending.room) {
+            this.openPlanner(pending.room);
+            if (pending.currentGlbName) this.currentGlbName = pending.currentGlbName;
+            if (Array.isArray(pending.items) && pending.items.length > 0) {
+              this.placed.set(pending.items);
+              setTimeout(() => this.saveDesign(), 600);
+            }
+          }
+        }
+      } catch {}
+    }
   }
 
   ngOnDestroy(): void {
@@ -137,48 +137,12 @@ export class Module4 implements OnInit, OnDestroy {
     this.spaceService.getSpaceTemplates().subscribe({
       next: (spaces) => {
         if (Array.isArray(spaces) && spaces.length > 0) {
-          const roomImages: Record<string, string> = {
-            'phòng ngủ': 'images/rooms/bedroom.png',
-            'phòng bếp': 'images/rooms/kitchen.png',
-            'phòng ăn': 'images/rooms/dining-room.png',
-            'phòng tắm': 'images/rooms/bathroom.jpg',
-            'phòng khách': 'images/rooms/living-room.png',
-          };
-
-          const resolveImage = (s: UserSpaceItem): string => {
-            // 1. If the space has a base64 or external url image, use it directly!
-            if (s.previewImage && (s.previewImage.startsWith('data:image') || s.previewImage.startsWith('http'))) {
-              return s.previewImage;
-            }
-
-            // 2. Prioritize matching by the assigned room name
-            const rName = (s.roomName || '').trim().toLowerCase();
-            for (const [key, val] of Object.entries(roomImages)) {
-              if (rName.includes(key)) return val;
-            }
-
-            // 3. If previewImage has a specific local path
-            if (s.previewImage && !s.previewImage.includes('default-space')) {
-              let p = s.previewImage;
-              if (p.startsWith('/')) p = p.slice(1);
-              return p;
-            }
-
-            // 4. Fallback matching by space name
-            const sName = (s.name || '').toLowerCase();
-            if (sName.includes('ngủ') || sName.includes('bed')) return 'images/rooms/bedroom.png';
-            if (sName.includes('bếp') || sName.includes('kitchen')) return 'images/rooms/kitchen.png';
-            if (sName.includes('ăn') || sName.includes('dining')) return 'images/rooms/dining-room.png';
-            if (sName.includes('tắm') || sName.includes('bath')) return 'images/rooms/bathroom.jpg';
-
-            return 'images/rooms/living-room.png';
-          };
-
           this.rooms = spaces.map((s) => ({
             id: s.id,
             name: s.name,
             area: s.area || `${(s.lengthM || 6) * (s.widthM || 4)} m²`,
-            image: resolveImage(s),
+            // Sử dụng trực tiếp ảnh preview lưu trong Database của không gian
+            image: s.previewImage || '',
             tag: s.file3DUrl ? 'Mô hình 3D (.GLB)' : (s.roomName || 'Không gian chuẩn'),
             file3DUrl: s.file3DUrl || '',
             roomId: s.roomId,
@@ -186,10 +150,16 @@ export class Module4 implements OnInit, OnDestroy {
             width: s.widthM || 4,
             height: s.heightM || 2.8,
           }));
-          this.cdr.detectChanges();
+        } else {
+          this.rooms = [];
         }
+        this.cdr.detectChanges();
       },
-      error: (err) => console.warn('Using default spaces fallback:', err)
+      error: (err) => {
+        this.rooms = [];
+        this.cdr.detectChanges();
+        console.warn('Lỗi khi tải danh sách không gian:', err);
+      }
     });
   }
 
@@ -197,24 +167,30 @@ export class Module4 implements OnInit, OnDestroy {
     this.productService.getProducts({ all: true } as any).subscribe({
       next: (res) => {
         if (Array.isArray(res) && res.length > 0) {
-          const mapped = res.map((p) => ({
+          this.products = res.map((p) => ({
             id: p.id || p.slug,
             name: p.name,
             desc: p.description ? p.description.slice(0, 50) + '...' : `Sản phẩm cao cấp LIVORA`,
             price: p.salePrice || p.price || 99,
-            image: p.thumbnail || (p.images && p.images[0]) || 'images/products/bedroom/beds/MALM.png',
+            // Toàn bộ ảnh sản phẩm được lấy trực tiếp từ database
+            image: p.thumbnail || (p.images && p.images[0]) || '',
             category: p.categoryName || 'Nội thất',
             sku: p.sku
           }));
 
-          this.products = [...mapped, ...this.defaultProducts];
-
           const distinctCats = Array.from(new Set(this.products.map(p => p.category).filter(Boolean)));
           this.categories = ['Tất cả danh mục', ...distinctCats];
-          this.cdr.detectChanges();
+        } else {
+          this.products = [];
+          this.categories = ['Tất cả danh mục'];
         }
+        this.cdr.detectChanges();
       },
-      error: () => console.warn('Using default products fallback')
+      error: () => {
+        this.products = [];
+        this.categories = ['Tất cả danh mục'];
+        this.cdr.detectChanges();
+      }
     });
   }
 
@@ -230,37 +206,7 @@ export class Module4 implements OnInit, OnDestroy {
       }
     } catch {}
 
-    // Default sample saved designs
-    this.savedDesigns.set([
-      {
-        id: 'des-sample-1',
-        name: 'Phòng ngủ ấm cúng Master',
-        spaceName: 'Phòng ngủ',
-        glbFileName: 'bedroom_scandi.glb',
-        date: '01/07/2026 14:30',
-        totalPrice: 528,
-        itemCount: 2,
-        items: [
-          { ...this.defaultProducts[3], x: 35, y: 45, placedId: 'p-1' },
-          { ...this.defaultProducts[1], x: 65, y: 55, placedId: 'p-2' }
-        ],
-        previewImage: 'images/rooms/bedroom.png'
-      },
-      {
-        id: 'des-sample-2',
-        name: 'Phòng khách tối giản Japandi',
-        spaceName: 'Phòng khách',
-        glbFileName: 'living_minimal.glb',
-        date: '05/07/2026 10:15',
-        totalPrice: 524,
-        itemCount: 2,
-        items: [
-          { ...this.defaultProducts[0], x: 30, y: 48, placedId: 'p-3' },
-          { ...this.defaultProducts[2], x: 62, y: 52, placedId: 'p-4' }
-        ],
-        previewImage: 'images/rooms/living-room.png'
-      }
-    ]);
+    this.savedDesigns.set([]);
   }
 
   showToastNotification(msg: string): void {
@@ -405,6 +351,24 @@ export class Module4 implements OnInit, OnDestroy {
       return;
     }
 
+    // Yêu cầu người dùng đăng nhập tài khoản mới cho phép lưu thiết kế
+    if (!this.authService.isLoggedIn) {
+      this.showToastNotification('Bạn cần đăng nhập để lưu thiết kế phòng!');
+      try {
+        const pendingData = {
+          room: this.activeRoom(),
+          currentGlbName: this.currentGlbName,
+          items: placedItems
+        };
+        localStorage.setItem('livora_pending_design', JSON.stringify(pendingData));
+      } catch {}
+
+      if (confirm('Bạn cần đăng nhập để lưu thiết kế phòng. Chuyển đến trang Đăng nhập ngay bây giờ?')) {
+        this.router.navigate(['/login'], { queryParams: { returnUrl: '/design' } });
+      }
+      return;
+    }
+
     const room = this.activeRoom();
     const newDesign: SavedDesign = {
       id: 'des-' + Date.now(),
@@ -415,7 +379,7 @@ export class Module4 implements OnInit, OnDestroy {
       totalPrice: this.total(),
       itemCount: placedItems.length,
       items: [...placedItems],
-      previewImage: room?.image || 'images/rooms/living-room.png'
+      previewImage: room?.image || ''
     };
 
     // Save to local storage

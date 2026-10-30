@@ -126,8 +126,11 @@ const createRoomDesign = async (req, res) => {
       height: Number(heightM) || 2.8,
     };
 
+    const mongoose = require('mongoose');
+    let validRoomId = null;
     let finalPreview = previewImage;
-    if (roomId) {
+    if (roomId && mongoose.Types.ObjectId.isValid(roomId)) {
+      validRoomId = roomId;
       const Room = require('../models/Room');
       const roomDoc = await Room.findById(roomId).lean();
       if (roomDoc && roomDoc.thumbnail) {
@@ -138,11 +141,13 @@ const createRoomDesign = async (req, res) => {
       finalPreview = '/images/rooms/living-room.png';
     }
 
+    const validCustomerId = customerId && mongoose.Types.ObjectId.isValid(customerId) ? customerId : null;
+
     const design = new RoomDesign({
       code,
       name: name.trim(),
-      roomId: roomId || null,
-      customerId: customerId || null,
+      roomId: validRoomId,
+      customerId: validCustomerId,
       file3DUrl: file3DUrl || '',
       previewImage: finalPreview,
       dimensions: parsedDims,
@@ -186,7 +191,8 @@ const updateRoomDesign = async (req, res) => {
     if (b.name) design.name = b.name.trim();
     if (b.code) design.code = b.code;
     if (b.roomId !== undefined) {
-      design.roomId = b.roomId || null;
+      const mongoose = require('mongoose');
+      design.roomId = (b.roomId && mongoose.Types.ObjectId.isValid(b.roomId)) ? b.roomId : null;
       if (!b.previewImage && design.roomId) {
         const Room = require('../models/Room');
         const roomDoc = await Room.findById(design.roomId).lean();

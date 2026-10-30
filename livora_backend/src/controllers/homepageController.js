@@ -259,12 +259,7 @@ const getMarquees = async (req, res) => {
       filter.status = { $in: ['active', 'Đang hoạt động'] };
     }
 
-    let docs = await col.find(filter).sort({ order: 1, displayOrder: 1, createdAt: -1 }).toArray();
-
-    if (docs.length === 0 && Object.keys(filter).length === 0) {
-      await col.insertMany(defaultMarquees);
-      docs = await col.find({}).sort({ order: 1, displayOrder: 1, createdAt: -1 }).toArray();
-    }
+    const docs = await col.find(filter).sort({ order: 1, displayOrder: 1, createdAt: -1 }).toArray();
 
     const items = docs.map((d) => ({
       id: d._id.toString(),
@@ -521,12 +516,7 @@ const getBanners = async (req, res) => {
     if (req.query.activeOnly === 'true') {
       filter.status = 'active';
     }
-    let docs = await col.find(filter).sort({ displayOrder: 1, createdAt: -1 }).toArray();
-
-    if (docs.length === 0 && Object.keys(filter).length === 0) {
-      await col.insertMany(defaultBanners);
-      docs = await col.find({}).sort({ displayOrder: 1, createdAt: -1 }).toArray();
-    }
+    const docs = await col.find(filter).sort({ displayOrder: 1, createdAt: -1 }).toArray();
 
     const items = docs.map((d) => ({
       id: d._id.toString(),
@@ -840,12 +830,7 @@ const getBrands = async (req, res) => {
       filter.status = { $in: ['active', 'Đang hiển thị'] };
     }
 
-    let docs = await col.find(filter).sort({ displayOrder: 1, createdAt: -1 }).toArray();
-
-    if (docs.length === 0 && Object.keys(filter).length === 0) {
-      await col.insertMany(defaultBrands);
-      docs = await col.find({}).sort({ displayOrder: 1, createdAt: -1 }).toArray();
-    }
+    const docs = await col.find(filter).sort({ displayOrder: 1, createdAt: -1 }).toArray();
 
     const items = docs.map((d) => ({
       id: d._id.toString(),
@@ -1063,12 +1048,7 @@ const getFooters = async (req, res) => {
   try {
     await syncCollections();
     const col = mongoose.connection.db.collection('Footers');
-    let docs = await col.find({}).toArray();
-
-    if (docs.length === 0) {
-      await col.insertMany(defaultFooters);
-      docs = await col.find({}).toArray();
-    }
+    const docs = await col.find({}).toArray();
 
     const items = docs.map((d) => ({
       id: d._id.toString(),

@@ -4,13 +4,18 @@ import type { CheckoutQuote } from './checkout.service';
 export interface CartItem {
   id: string;
   name: string;
-  description: string;
+  description?: string;
   price: number;
+  originalPrice?: number;
   quantity: number;
   image: string;
   productId?: string;
   roomName?: string;
   categoryName?: string;
+  size?: string;
+  color?: string;
+  articleNumber?: string;
+  category?: string;
 }
 
 @Injectable({
