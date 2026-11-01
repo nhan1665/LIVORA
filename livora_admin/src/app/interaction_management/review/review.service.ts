@@ -49,16 +49,38 @@ export class ReviewService {
   }
 
   /**
-   * Hides an inappropriate review (BPMN 3.3.2.10 "Ẩn đánh giá").
+   * Cập nhật trạng thái hiển thị của đánh giá: 'visible' hoặc 'hidden'
+   */
+  updateReviewStatus(
+    id: string,
+    status: 'visible' | 'hidden',
+    hiddenReason = '',
+    moderatedBy = 'Quản trị viên'
+  ): Observable<Review> {
+    return this.http.patch<any>(`${this.apiUrl}/${id}/status`, { status, hiddenReason, moderatedBy }).pipe(
+      map((res) => res.data as Review),
+      catchError((err) => throwError(() => new Error(err.error?.message || 'Không thể cập nhật trạng thái đánh giá.')))
+    );
+  }
+
+  /**
+   * Hides an inappropriate review
    */
   hideReview(
     id: string,
     hiddenReason = '',
-    moderatedBy = 'CSKH — Trần Mai Phương'
+    moderatedBy = 'Quản trị viên'
   ): Observable<Review> {
-    return this.http.patch<any>(`${this.apiUrl}/${id}/hide`, { hiddenReason, moderatedBy }).pipe(
-      map((res) => res.data as Review),
-      catchError((err) => throwError(() => new Error(err.error?.message || 'Không thể ẩn đánh giá.')))
-    );
+    return this.updateReviewStatus(id, 'hidden', hiddenReason, moderatedBy);
+  }
+
+  /**
+   * Shows a hidden review back on the website
+   */
+  showReview(
+    id: string,
+    moderatedBy = 'Quản trị viên'
+  ): Observable<Review> {
+    return this.updateReviewStatus(id, 'visible', '', moderatedBy);
   }
 }

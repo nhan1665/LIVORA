@@ -7,6 +7,7 @@ const {
   updateProduct,
   toggleProduct,
   deleteProduct,
+  importProductsFromExcel,
 } = require('../controllers/productController');
 
 const mongoose = require('mongoose');
@@ -82,6 +83,7 @@ router.get('/debug/force-sync-sold', async (req, res) => {
 });
 
 router.get('/', getProducts);
+router.post('/import-excel', importProductsFromExcel);
 router.post('/', createProduct);
 router.get('/:id', getProductById);
 router.put('/:id', updateProduct);

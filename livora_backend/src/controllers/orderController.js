@@ -24,19 +24,33 @@ const formatOrderForResponse = (o) => ({
     district: o.customerInfo?.district || '',
     ward: o.customerInfo?.ward || '',
   },
-  items: (o.items || []).map((it) => ({
-    productId: it.productId ? it.productId.toString() : null,
-    sku: it.sku || '',
-    productName: it.productName,
-    name: it.productName,
-    color: it.selectedColor || '',
-    selectedColor: it.selectedColor || '',
-    thumbnail: it.thumbnail || 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=500',
-    price: it.unitPrice || 0,
-    unitPrice: it.unitPrice || 0,
-    quantity: it.quantity || 1,
-    subtotal: it.subtotal || 0,
-  })),
+  items: (o.items || []).map((it) => {
+    let pId = null;
+    let thumb = 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=500';
+    if (it.productId) {
+      if (typeof it.productId === 'object' && it.productId !== null) {
+        pId = it.productId._id ? it.productId._id.toString() : (it.productId.id ? it.productId.id.toString() : String(it.productId));
+        if (it.productId.thumbnail) thumb = it.productId.thumbnail;
+      } else {
+        pId = it.productId.toString();
+      }
+    }
+    if (it.thumbnail) thumb = it.thumbnail;
+
+    return {
+      productId: pId,
+      sku: it.sku || (it.productId && typeof it.productId === 'object' && it.productId.sku) || '',
+      productName: it.productName || (it.productId && typeof it.productId === 'object' && it.productId.name) || '',
+      name: it.productName || (it.productId && typeof it.productId === 'object' && it.productId.name) || '',
+      color: it.selectedColor || '',
+      selectedColor: it.selectedColor || '',
+      thumbnail: thumb,
+      price: it.unitPrice || 0,
+      unitPrice: it.unitPrice || 0,
+      quantity: it.quantity || 1,
+      subtotal: it.subtotal || 0,
+    };
+  }),
   subtotalAmount: o.subtotalAmount || 0,
   discountAmount: o.discountAmount || 0,
   voucherCode: o.voucherCode || '',
@@ -91,9 +105,10 @@ const getOrders = async (req, res) => {
       filter.paymentStatus = pStatus;
     }
 
-    if (userId) {
-      if (userId.match(/^[0-9a-fA-F]{24}$/)) {
-        filter.customerId = new mongoose.Types.ObjectId(userId);
+    const targetUserId = userId || req.query.customerId;
+    if (targetUserId) {
+      if (targetUserId.match(/^[0-9a-fA-F]{24}$/)) {
+        filter.customerId = new mongoose.Types.ObjectId(targetUserId);
       }
     }
 
@@ -124,7 +139,7 @@ const getOrders = async (req, res) => {
     const currentPage = Math.min(pageNum, totalPages);
     const skip = (currentPage - 1) * limit;
 
-    const orders = await Order.find(filter)
+    const orders = await Order.find(filter).populate('items.productId', 'thumbnail name sku')
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
@@ -213,10 +228,7 @@ const createOrder = async (req, res) => {
       return sendError(res, 'Địa chỉ giao hàng là bắt buộc.', 400);
     }
 
-    // Lấy một sản phẩm mẫu từ CSDL nếu cần fallback ObjectId
     const fallbackProduct = await Product.findOne();
-
-    // Xác thực sản phẩm, tính toán giá tiền & tồn kho
     let calculatedSubtotal = 0;
     const verifiedItems = [];
 
@@ -247,7 +259,6 @@ const createOrder = async (req, res) => {
         subtotal: lineSubtotal,
       });
 
-      // Trừ tồn kho nếu tìm thấy product thật trong CSDL
       if (product) {
         product.stockQuantity = Math.max(0, product.stockQuantity - qty);
         product.stockStatus = product.stockQuantity > 0 ? 'in_stock' : 'out_of_stock';
@@ -255,7 +266,6 @@ const createOrder = async (req, res) => {
       }
     }
 
-    // Tính giảm giá voucher
     let calculatedDiscount = 0;
     let validVoucherCode = null;
 
@@ -280,7 +290,6 @@ const createOrder = async (req, res) => {
     const shipFee = Math.max(0, Number(shippingFee) || 0);
     const totalAmount = Math.max(0, calculatedSubtotal - calculatedDiscount + shipFee);
 
-    // Tạo mã đơn hàng duy nhất e.g. ORD-2610-001
     const count = await Order.countDocuments();
     const today = new Date();
     const dateStr = `${String(today.getFullYear()).slice(-2)}${String(today.getMonth() + 1).padStart(2, '0')}`;
@@ -290,7 +299,6 @@ const createOrder = async (req, res) => {
       orderCode = `ORD-${dateStr}-${String(count + 1).padStart(3, '0')}-${Math.floor(100 + Math.random() * 900)}`;
     }
 
-    // Liên kết với Customer
     let linkedCustomer = null;
     const targetUserId = userId || customerId;
     if (targetUserId && typeof targetUserId === 'string' && targetUserId.match(/^[0-9a-fA-F]{24}$/)) {
@@ -329,7 +337,6 @@ const createOrder = async (req, res) => {
       await linkedCustomer.save();
     }
 
-    // Map payment method
     let mappedPaymentMethod = 'cod';
     const pmUpper = (paymentMethod || '').toUpperCase();
     if (pmUpper.includes('BANK') || pmUpper.includes('MOMO')) {
@@ -356,7 +363,9 @@ const createOrder = async (req, res) => {
       voucherCode: validVoucherCode,
       subtotalAmount: calculatedSubtotal,
       discountAmount: calculatedDiscount,
-      shippingFee: shipFee,
+      shippingFee: req.body.shippingFee !== undefined ? Number(req.body.shippingFee) : shipFee,
+      shippingMethod: req.body.shippingMethod || 'standard',
+      shippingProvince: req.body.shippingProvince || customerInfo.province || '',
       totalAmount,
       paymentMethod: mappedPaymentMethod,
       paymentStatus: mappedPaymentStatus,
@@ -367,7 +376,6 @@ const createOrder = async (req, res) => {
 
     await newOrder.save();
 
-    // Cập nhật thống kê khách hàng
     if (linkedCustomer) {
       await Customer.findByIdAndUpdate(linkedCustomer._id, {
         $inc: { totalOrders: 1, accumulatedSpent: totalAmount },

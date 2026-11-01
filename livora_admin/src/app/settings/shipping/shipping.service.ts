@@ -62,6 +62,14 @@ export class ShippingService {
     );
   }
 
+  /** Bulk import shipping configurations from Excel */
+  createShippingConfigsBulk(configs: any[]): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/bulk`, { items: configs }).pipe(
+      map((res) => res.data),
+      catchError((err) => throwError(() => new Error(err.error?.message || 'Không thể nhập danh sách vận chuyển hàng loạt.')))
+    );
+  }
+
   /** Updates an existing shipping configuration. */
   updateConfig(id: string, draft: ShippingDraft): Observable<ShippingConfig> {
     return this.http.put<any>(`${this.apiUrl}/${id}`, draft).pipe(
@@ -75,6 +83,14 @@ export class ShippingService {
     return this.http.patch<any>(`${this.apiUrl}/${id}/toggle`, {}).pipe(
       map((res) => res.data as ShippingConfig),
       catchError((err) => throwError(() => new Error(err.error?.message || 'Không thể thay đổi trạng thái cấu hình.')))
+    );
+  }
+
+  /** Deletes a shipping configuration. */
+  deleteConfig(id: string): Observable<void> {
+    return this.http.delete<any>(`${this.apiUrl}/${id}`).pipe(
+      map(() => void 0),
+      catchError((err) => throwError(() => new Error(err.error?.message || 'Không thể xóa cấu hình vận chuyển.')))
     );
   }
 }

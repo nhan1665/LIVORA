@@ -36,6 +36,7 @@ export interface Review {
   rating: number;
   comment: string;
   images: string[];
+  videos?: string[];
   status: ReviewStatus;
   /** Reason recorded when staff hides the review (Table 26 `hiddenReason`). */
   hiddenReason?: string;

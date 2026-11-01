@@ -731,18 +731,20 @@
             <label class="form-label">Địa chỉ đường, số nhà *</label>
             <input type="text" class="form-control" [(ngModel)]="newAddressForm.street" placeholder="e.g. 124 Pasteur" />
           </div>
-          <div class="edit-grid-3">
+          <div class="edit-grid-2">
             <div class="form-group">
-              <label class="form-label">Phường / Xã</label>
-              <input type="text" class="form-control" [(ngModel)]="newAddressForm.ward" placeholder="e.g. Phường Bến Nghé" />
+              <label class="form-label">Tỉnh / Thành phố *</label>
+              <select class="form-control" [(ngModel)]="newAddressForm.province" (change)="onNewAddressProvinceChange()">
+                <option value="" disabled selected>-- Chọn Tỉnh / Thành phố --</option>
+                <option *ngFor="let p of provinces" [value]="p">{{ p }}</option>
+              </select>
             </div>
             <div class="form-group">
-              <label class="form-label">Quận / Huyện</label>
-              <input type="text" class="form-control" [(ngModel)]="newAddressForm.district" placeholder="e.g. Quận 1" />
-            </div>
-            <div class="form-group">
-              <label class="form-label">Tỉnh / Thành phố</label>
-              <input type="text" class="form-control" [(ngModel)]="newAddressForm.province" placeholder="e.g. TP. Hồ Chí Minh" />
+              <label class="form-label">Phường / Xã *</label>
+              <select class="form-control" [(ngModel)]="newAddressForm.ward" [disabled]="!newAddressForm.province">
+                <option value="" disabled selected>{{ newAddressForm.province ? '-- Chọn Phường / Xã --' : 'Vui lòng chọn Tỉnh trước' }}</option>
+                <option *ngFor="let w of newAddressWards" [value]="w">{{ w }}</option>
+              </select>
             </div>
           </div>
           <div class="form-group">

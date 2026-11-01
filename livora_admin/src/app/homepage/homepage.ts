@@ -1163,8 +1163,8 @@ export class Homepage implements OnInit, AfterViewInit {
       code: this.notificationForm.code || `#MQ-${Math.floor(100 + Math.random() * 900)}`,
       title: this.notificationForm.title.trim(),
       iconType: this.notificationForm.iconType || 'truck',
-      startDate: this.notificationForm.startDate || this.formatTodayDate(),
-      endDate: this.notificationForm.endDate || '31/12/2026',
+      startDate: this.notificationForm.startDate || '',
+      endDate: this.notificationForm.endDate || '',
       order: Number(this.notificationForm.order) || 1,
       status: nextStatus,
     };

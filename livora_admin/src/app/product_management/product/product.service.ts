@@ -152,4 +152,14 @@ export class ProductService {
       catchError((err) => throwError(() => new Error(err.error?.message || 'Không thể xóa sản phẩm.')))
     );
   }
+
+  /**
+   * Bulk import products from parsed Excel/CSV data
+   */
+  importExcelProducts(products: any[]): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/import-excel`, { products }).pipe(
+      map((res) => res.data),
+      catchError((err) => throwError(() => new Error(err.error?.message || 'Không thể nhập sản phẩm từ Excel.')))
+    );
+  }
 }

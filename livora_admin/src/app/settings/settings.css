@@ -795,9 +795,412 @@ app-shipping .white-glove-price {
   }
 }
 
+app-shipping .icon-btn.danger:hover {
+  background: #fde8e8;
+  color: #c92a2a;
+  border-color: #f8b4b4;
+}
+
 @media (max-width: 640px) {
   app-voucher .voucher-policy-note,
   app-shipping .voucher-policy-note {
     display: none;
   }
+}
+
+
+/* ============================================================== */
+/* Voucher Table UI Overflow Fix & Target Customers Picker Styles */
+/* ============================================================== */
+app-voucher .im-filter-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+app-voucher .filter-search {
+  flex: 1 1 240px;
+  min-width: 200px;
+}
+
+app-voucher .filter-select {
+  flex: 0 1 auto;
+  min-width: 145px;
+}
+
+app-voucher .filter-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+@media (max-width: 1100px) {
+  app-voucher .filter-actions {
+    margin-left: 0;
+    width: 100%;
+    justify-content: flex-end;
+  }
+}
+
+app-voucher .table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+app-voucher .voucher-table {
+  min-width: 1120px;
+  width: 100%;
+}
+
+app-voucher .voucher-table .col-target {
+  white-space: nowrap;
+}
+
+app-voucher .voucher-table .col-actions {
+  text-align: right;
+  min-width: 130px;
+  width: 130px;
+  white-space: nowrap;
+}
+
+app-voucher .voucher-table .row-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+}
+
+/* Badge đối tượng áp dụng */
+app-voucher .target-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 11px;
+  border-radius: 14px;
+  font-size: 11.5px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+app-voucher .target-all {
+  background: #edf3f8;
+  color: #3b5998;
+}
+
+app-voucher .target-specific {
+  background: #fdf2e2;
+  color: #925c0e;
+}
+
+/* Customer Target Picker styles in modal */
+app-voucher .customer-picker-box {
+  background: #fcfbf9;
+  border: 1px solid #ebe4d8;
+  border-radius: 12px;
+  padding: 16px;
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+app-voucher .customer-filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+app-voucher .customer-search-input {
+  flex: 1 1 200px;
+  min-width: 180px;
+  height: 38px;
+  border: 1px solid #ded6c9;
+  border-radius: 8px;
+  padding: 0 12px;
+  font-size: 12.5px;
+  background: #ffffff;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+app-voucher .customer-search-input:focus {
+  border-color: #593c3b;
+}
+
+app-voucher .customer-filter-select {
+  height: 38px;
+  border: 1px solid #ded6c9;
+  border-radius: 8px;
+  padding: 0 12px;
+  font-size: 12px;
+  background: #ffffff;
+  color: #4a3f3b;
+  outline: none;
+  cursor: pointer;
+}
+
+app-voucher .customer-action-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 8px 12px;
+  background: #f4ede3;
+  border-radius: 8px;
+  font-size: 12px;
+}
+
+app-voucher .customer-count-badge {
+  font-weight: 600;
+  color: #593c3b;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+app-voucher .customer-picker-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+app-voucher .btn-picker-action {
+  background: #ffffff;
+  border: 1px solid #ded6c9;
+  border-radius: 6px;
+  padding: 5px 12px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #5d534b;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+app-voucher .btn-picker-action:hover {
+  background: #593c3b;
+  color: #ffffff;
+  border-color: #593c3b;
+}
+
+app-voucher .btn-picker-clear {
+  background: transparent;
+  border: none;
+  color: #b4432f;
+  font-size: 11.5px;
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0 4px;
+}
+
+app-voucher .customer-chips-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-height: 80px;
+  overflow-y: auto;
+  padding: 4px 0;
+}
+
+app-voucher .customer-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #efe7dc;
+  color: #443635;
+  border-radius: 14px;
+  padding: 3px 10px;
+  font-size: 11.5px;
+  font-weight: 500;
+}
+
+app-voucher .customer-chip-remove {
+  background: none;
+  border: none;
+  color: #7b6d68;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  padding: 0;
+  display: flex;
+  align-items: center;
+}
+
+app-voucher .customer-chip-remove:hover {
+  color: #b4432f;
+}
+
+app-voucher .customer-table-wrap {
+  max-height: 240px;
+  overflow-y: auto;
+  border: 1px solid #e7ded2;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+app-voucher .customer-mini-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+app-voucher .customer-mini-table th {
+  position: sticky;
+  top: 0;
+  background: #f7f3ec;
+  color: #6a6057;
+  font-weight: 600;
+  padding: 8px 12px;
+  text-align: left;
+  border-bottom: 1px solid #ded5c7;
+  z-index: 2;
+  font-size: 11px;
+}
+
+app-voucher .customer-mini-table td {
+  padding: 8px 12px;
+  border-bottom: 1px solid #f1ece4;
+  color: #3b3231;
+  vertical-align: middle;
+}
+
+app-voucher .customer-mini-table tr:hover {
+  background: #fdfaf6;
+}
+
+app-voucher .customer-meta-sub {
+  font-size: 11px;
+  color: #8c8278;
+}
+
+app-voucher .badge-orders {
+  display: inline-block;
+  background: #f3ede2;
+  color: #70583b;
+  border-radius: 10px;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+app-voucher .badge-new-cust {
+  display: inline-block;
+  background: #e6f4ea;
+  color: #137333;
+  border-radius: 10px;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+
+/* -------------------------------------------------------------- */
+/* Header action buttons (Import Excel & Download Template)       */
+/* -------------------------------------------------------------- */
+app-voucher .head-actions,
+app-shipping .head-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+app-voucher .btn-outline-action,
+app-shipping .btn-outline-action {
+  height: 42px;
+  padding: 0 16px;
+  background: #ffffff;
+  border: 1px solid #d5cbbf;
+  border-radius: 9px;
+  color: #593c3b;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+app-voucher .btn-outline-action:hover,
+app-shipping .btn-outline-action:hover {
+  background: #fbf8f4;
+  border-color: #593c3b;
+  color: #472f2e;
+}
+
+/* Modal import report styling */
+.excel-report-modal {
+  max-width: 520px;
+}
+.report-stat-row {
+  display: flex;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+.report-stat-card {
+  flex: 1;
+  padding: 12px 14px;
+  border-radius: 8px;
+  background: #faf7f2;
+  border: 1px solid #ece4d8;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.report-stat-card.success {
+  background: #f1f8f3;
+  border-color: #c9e6d2;
+}
+.report-stat-card.error {
+  background: #fdf2f2;
+  border-color: #f6c7c7;
+}
+.report-stat-val {
+  font-size: 20px;
+  font-weight: 700;
+  color: #3b302a;
+}
+.report-stat-card.success .report-stat-val {
+  color: #1b7a3e;
+}
+.report-stat-card.error .report-stat-val {
+  color: #c5221f;
+}
+.report-stat-lbl {
+  font-size: 12px;
+  color: #7b7066;
+}
+.report-error-box {
+  background: #fdf5f5;
+  border: 1px solid #fad2cf;
+  border-radius: 8px;
+  padding: 12px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+.report-error-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #c5221f;
+  margin-bottom: 6px;
+}
+.report-error-list {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 12.5px;
+  color: #632322;
+  line-height: 1.5;
 }

@@ -54,7 +54,7 @@ export class Space {
     this.designsService.list('', '', '', 1, 100).pipe(takeUntilDestroyed(this.destroyRef)).subscribe((result) => this.designCount.set(result.total));
     this.load();
   }
-  blank(): SpaceDraft { return {code: '', name: '', roomId: '', description: '', lengthM: 0, widthM: 0, heightM: 0, modelFile: null, isActive: true}; }
+  blank(): SpaceDraft { return {code: '', name: '', roomId: '', description: '', lengthM: null as any, widthM: null as any, heightM: null as any, modelFile: null, isActive: true}; }
   selectTab(tab: Tab): void { this.tab = tab; this.notice.set(''); this.search = ''; this.roomFilter = ''; this.status = 'all'; this.spaceFilter = ''; this.customerFilter = ''; this.page.set(1); this.load(); }
   load(): void {
     this.loading.set(true); this.error.set('');

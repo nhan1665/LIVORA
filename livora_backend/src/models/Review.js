@@ -25,9 +25,9 @@ const reviewSchema = new mongoose.Schema(
       default: '',
     },
     customerId: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: mongoose.Schema.Types.Mixed,
       ref: 'Customer',
-      default: null,
+      required: false,
     },
     customerName: {
       type: String,
@@ -43,9 +43,9 @@ const reviewSchema = new mongoose.Schema(
       default: '',
     },
     orderId: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: mongoose.Schema.Types.Mixed,
       ref: 'Order',
-      default: null,
+      required: false,
     },
     rating: {
       type: Number,
@@ -59,6 +59,10 @@ const reviewSchema = new mongoose.Schema(
       trim: true,
     },
     images: {
+      type: [String],
+      default: [],
+    },
+    videos: {
       type: [String],
       default: [],
     },

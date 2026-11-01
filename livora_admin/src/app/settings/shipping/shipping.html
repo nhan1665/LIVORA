@@ -1,10 +1,31 @@
 <div class="shipping-page">
   <header class="page-head">
     <h1 class="page-title">Thiết Lập Vận Chuyển</h1>
-    <button type="button" class="btn-primary-create" (click)="openCreateModal()">
-      <span class="plus-mark">+</span>
-      <span>Thêm cấu hình</span>
-    </button>
+    <div class="head-actions">
+      <button type="button" class="btn-outline-action" (click)="downloadExcelTemplate()" title="Tải mẫu Excel 2 tab gồm template nhập và danh sách mã tỉnh">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+          <polyline points="7 10 12 15 17 10" />
+          <line x1="12" y1="15" x2="12" y2="3" />
+        </svg>
+        <span>Tải file mẫu (2 tab)</span>
+      </button>
+
+      <button type="button" class="btn-outline-action" (click)="excelFileInput.click()" [disabled]="isImporting()" title="Tải lên file Excel để nhập cấu hình vận chuyển">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+          <polyline points="17 8 12 3 7 8" />
+          <line x1="12" y1="3" x2="12" y2="15" />
+        </svg>
+        <span>{{ isImporting() ? 'Đang xử lý...' : 'Upload Excel' }}</span>
+      </button>
+      <input #excelFileInput type="file" accept=".xlsx, .xls" (change)="onFileSelected($event)" style="display: none;" />
+
+      <button type="button" class="btn-primary-create" (click)="openCreateModal()">
+        <span class="plus-mark">+</span>
+        <span>Thêm cấu hình</span>
+      </button>
+    </div>
   </header>
 
   <section class="im-filter-card" aria-label="Bộ lọc cấu hình vận chuyển">
@@ -149,6 +170,14 @@
                       [title]="item.isActive ? 'Ngừng áp dụng' : 'Áp dụng cấu hình'"
                     >
                       <span class="toggle-knob"></span>
+                    </button>
+                    <button type="button" class="icon-btn danger" (click)="deleteConfig(item)" title="Xóa cấu hình" aria-label="Xóa cấu hình">
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <polyline points="3 6 5 6 21 6" />
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                        <line x1="10" y1="11" x2="10" y2="17" />
+                        <line x1="14" y1="11" x2="14" y2="17" />
+                      </svg>
                     </button>
                   </div>
                 </td>
@@ -313,7 +342,7 @@
         <span class="field-help">Tự động áp dụng cước 0đ tại giỏ hàng khi giá trị đơn đạt mốc.</span>
       </div>
 
-      <div class="form-field">
+      <div class="form-field" style="grid-column: 1 / -1;">
         <label class="field-label" for="etaInput">5. Thời gian giao dự kiến <span class="required">*</span></label>
         <div class="input-affix">
           <svg class="input-leading-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -324,38 +353,50 @@
         </div>
         <span class="field-help">Hiển thị cho khách hàng tại bước thanh toán và email xác nhận.</span>
       </div>
-
-      <div class="form-field">
-        <label class="field-label" for="timeSlotSelect">6. Khung giờ cam kết</label>
-        <select id="timeSlotSelect" class="field-input field-select" [(ngModel)]="formDraft.timeSlot">
-          @for (slot of timeSlots; track slot) {
-            <option [value]="slot">{{ slot }}</option>
-          }
-        </select>
-        <span class="field-help">Gia chủ có thể chọn khoảng giờ 2 tiếng chính xác với thợ kỹ thuật.</span>
-      </div>
-    </div>
-
-    <div class="white-glove-box">
-      <div class="white-glove-head">
-        <span class="field-label">7. Tiêu chuẩn White-Glove Atelier đi kèm</span>
-        <span class="white-glove-badge">Bao gồm sẵn</span>
-      </div>
-      <label class="white-glove-row">
-        <input type="checkbox" [(ngModel)]="formDraft.whiteGloveIncluded" />
-        <span class="radio-mark" aria-hidden="true"></span>
-        <span class="white-glove-text">
-          <strong>Lắp ráp &amp; vệ sinh hút bụi hoàn thiện</strong>
-          <small>Kỹ thuật viên Livora trực tiếp tháo dỡ đóng gói, kê đặt đúng bản vẽ và lau sạch bụi mùn cưa.</small>
-        </span>
-        <span class="white-glove-price">0 đ (Tiêu chuẩn)</span>
-      </label>
     </div>
   </div>
 
   <span modal-footer-extra class="voucher-policy-note">
     Cấu hình sẽ được cập nhật tức thời với ứng dụng Web &amp; Mobile LIVORA
   </span>
+</app-form-modal>
+
+<!-- Modal báo cáo kết quả Import Excel Vận chuyển -->
+<app-form-modal
+  [isOpen]="importReport().open"
+  [title]="importReport().title"
+  size="md"
+  submitText="Đã hiểu"
+  (save)="closeImportReport()"
+  (close)="closeImportReport()"
+>
+  <div class="excel-report-modal">
+    <div class="report-stat-row">
+      <div class="report-stat-card success">
+        <span class="report-stat-val">{{ importReport().successCount }}</span>
+        <span class="report-stat-lbl">Thành công (Thêm mới: {{ importReport().insertedCount }}, Cập nhật: {{ importReport().updatedCount }})</span>
+      </div>
+      <div class="report-stat-card" [class.error]="importReport().errors.length > 0">
+        <span class="report-stat-val">{{ importReport().errors.length }}</span>
+        <span class="report-stat-lbl">Lỗi / Dòng không hợp lệ</span>
+      </div>
+    </div>
+
+    @if (importReport().errors.length > 0) {
+      <div class="report-error-box">
+        <div class="report-error-title">Chi tiết lỗi xử lý theo dòng:</div>
+        <ul class="report-error-list">
+          @for (err of importReport().errors; track $index) {
+            <li>{{ err }}</li>
+          }
+        </ul>
+      </div>
+    } @else {
+      <p style="font-size: 13.5px; color: #1e6b36; margin: 0; line-height: 1.5;">
+        Tất cả dữ liệu cấu hình vận chuyển trong file Excel đã được kiểm tra mã tỉnh và lưu thành công vào cơ sở dữ liệu.
+      </p>
+    }
+  </div>
 </app-form-modal>
 
 @if (toastMessage()) {

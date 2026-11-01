@@ -983,3 +983,117 @@ app-product .text-right {
     flex-direction: column;
   }
 }
+
+/* Media Upload & Preview Enhancements */
+app-product .btn-upload {
+  white-space: nowrap;
+  flex-shrink: 0;
+  padding: 9px 14px;
+}
+
+app-product .thumbnail-preview-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 10px;
+  padding: 10px 14px;
+  background-color: #faf9f7;
+  border: 1px solid #e7e3dc;
+  border-radius: 8px;
+}
+
+app-product .thumb-preview-img {
+  width: 64px;
+  height: 64px;
+  border-radius: 6px;
+  object-fit: cover;
+  border: 1px solid #dcd7cf;
+  background-color: #ffffff;
+}
+
+app-product .thumb-preview-info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-start;
+}
+
+app-product .thumb-badge {
+  font-size: 11px;
+  font-weight: 600;
+  color: #15803d;
+  background-color: #dcfce7;
+  padding: 2px 8px;
+  border-radius: 12px;
+}
+
+app-product .btn-remove-thumb {
+  background: none;
+  border: none;
+  color: #dc2626;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+  transition: opacity 0.2s;
+}
+
+app-product .btn-remove-thumb:hover {
+  opacity: 0.8;
+}
+
+app-product .gallery-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2px;
+}
+
+app-product .gallery-preview-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+app-product .gallery-preview-item {
+  position: relative;
+  width: 72px;
+  height: 72px;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid #dcd7cf;
+  background-color: #ffffff;
+}
+
+app-product .gallery-preview-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+app-product .gallery-delete-btn {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background-color: rgba(220, 38, 38, 0.85);
+  color: #ffffff;
+  border: none;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  transition: background-color 0.2s;
+}
+
+app-product .gallery-delete-btn:hover {
+  background-color: #b91c1c;
+}

@@ -11,6 +11,7 @@ import {
   CustomerTypeFilter,
 } from './customer.model';
 import { CustomerService } from './customer.service';
+import { VIETNAM_PROVINCE_NAMES, getWardsForProvince } from '../../shared/data/vietnam-locations';
 
 @Component({
   selector: 'app-customer',
@@ -68,6 +69,8 @@ export class Customer implements OnInit {
   };
 
   // Add address modal state
+  readonly provinces = VIETNAM_PROVINCE_NAMES;
+  newAddressWards: string[] = [];
   readonly isAddAddressModalOpen = signal(false);
   newAddressForm = {
     label: '',
@@ -76,7 +79,7 @@ export class Customer implements OnInit {
     street: '',
     ward: '',
     district: '',
-    province: 'TP. Hồ Chí Minh',
+    province: '',
     note: '',
     isDefault: false,
   };
@@ -274,11 +277,24 @@ export class Customer implements OnInit {
       street: '',
       ward: '',
       district: '',
-      province: 'TP. Hồ Chí Minh',
+      province: '',
       note: '',
       isDefault: (current?.addresses.length || 0) === 0,
     };
+    this.newAddressWards = [];
     this.isAddAddressModalOpen.set(true);
+  }
+
+  onNewAddressProvinceChange(): void {
+    if (this.newAddressForm.province) {
+      this.newAddressWards = getWardsForProvince(this.newAddressForm.province);
+      if (!this.newAddressWards.includes(this.newAddressForm.ward)) {
+        this.newAddressForm.ward = '';
+      }
+    } else {
+      this.newAddressWards = [];
+      this.newAddressForm.ward = '';
+    }
   }
 
   closeAddAddressModal(): void {

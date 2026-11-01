@@ -1,8 +1,9 @@
-import { Component, inject } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { CartService, CartItem } from '../../../services/cart.service';
 import { FormsModule } from '@angular/forms';
+import { ProductService } from '../../../services/product.service';
 
 @Component({
   selector: 'app-cart',
@@ -11,54 +12,45 @@ import { FormsModule } from '@angular/forms';
   templateUrl: './cart.html',
   styleUrl: './cart.css',
 })
-export class Cart {
+export class Cart implements OnInit {
   public readonly cartService = inject(CartService);
   private readonly router = inject(Router);
+  private readonly productService = inject(ProductService);
 
-  // Recommendations seed data
-  readonly recommendedProducts = [
-    {
-      id: '1',
-      name: 'NEIDEN',
-      description: 'Khung giường gỗ thông tự nhiên, Giường đôi tiêu chuẩn',
-      price: 89,
-      image: 'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=600&q=80',
-      rating: 4.8,
-      reviews: 120,
-      isBestSeller: true,
-      roomName: 'bedroom',
-      categoryName: 'beds'
-    },
-    {
-      id: '40',
-      name: 'ODGER',
-      description: 'Ghế ăn công thái học composite, lòng ghế uốn cong',
-      price: 45,
-      image: 'https://images.unsplash.com/photo-1503602642458-232111445657?auto=format&fit=crop&w=600&q=80',
-      rating: 4.5,
-      reviews: 142,
-      isBestSeller: false,
-      roomName: 'dining-room',
-      categoryName: 'chairs'
-    },
-    {
-      id: '16',
-      name: 'FADO',
-      description: 'Đèn bàn chao thủy tinh mờ lan tỏa ánh sáng dịu nhẹ',
-      price: 19,
-      image: 'https://images.unsplash.com/photo-1507473885765-e6ed057f782c?auto=format&fit=crop&w=600&q=80',
-      rating: 4.9,
-      reviews: 733,
-      isBestSeller: false,
-      roomName: 'bedroom',
-      categoryName: 'lighting'
-    }
-  ];
+  // Recommendations loaded dynamically from backend database
+  recommendedProducts: any[] = [];
 
   // For promo code modal or direct input
   promoInput = '';
   promoMessage = '';
   promoError = false;
+
+  ngOnInit(): void {
+    this.loadRecommendations();
+  }
+
+  loadRecommendations(): void {
+    this.productService.getProducts({ pageSize: 4 }).subscribe({
+      next: (prods) => {
+        this.recommendedProducts = (prods || []).map((p) => ({
+          id: p.id,
+          name: p.name,
+          description: p.description || '',
+          price: p.salePrice || p.price,
+          originalPrice: p.price,
+          image: p.thumbnail || (p.images && p.images[0]) || '',
+          rating: p.averageRating || 5,
+          reviews: p.totalReviews || 0,
+          isBestSeller: p.badge === 'Bán chạy' || (p.soldQuantity || 0) > 10,
+          roomName: (p.roomSlugs && p.roomSlugs[0]) || 'living-room',
+          categoryName: p.categorySlug || 'furniture',
+        }));
+      },
+      error: () => {
+        this.recommendedProducts = [];
+      },
+    });
+  }
 
   increaseQty(item: CartItem) {
     this.cartService.updateQuantity(item.id, item.quantity + 1);
@@ -94,16 +86,17 @@ export class Cart {
     this.applyPromo();
   }
 
-  addRecommended(prod: typeof this.recommendedProducts[0]) {
+  addRecommended(prod: any) {
     this.cartService.addToCart({
       id: prod.id,
       name: prod.name,
       description: prod.description,
       price: prod.price,
+      originalPrice: prod.originalPrice,
       image: prod.image,
       productId: prod.id,
       roomName: prod.roomName,
-      categoryName: prod.categoryName
+      categoryName: prod.categoryName,
     });
   }
 

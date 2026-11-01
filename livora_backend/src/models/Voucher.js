@@ -49,6 +49,17 @@ const voucherSchema = new mongoose.Schema(
       default: 1,
       min: [1, 'Giới hạn lượt dùng mỗi khách hàng phải lớn hơn 0.'],
     },
+    targetType: {
+      type: String,
+      enum: ['all', 'specific'],
+      default: 'all',
+    },
+    applicableCustomerIds: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Customer',
+      },
+    ],
     startDate: {
       type: Date,
       required: [true, 'Ngày bắt đầu là bắt buộc.'],

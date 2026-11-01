@@ -124,7 +124,8 @@
     <div class="card-header">
       <div class="header-left">
         <h2 class="card-title">Quản lý Banner</h2>
-        <span class="active-pill-badge" [style.background-color]="activeBannerCount < 3 ? '#ffebe6' : ''" [style.color]="activeBannerCount < 3 ? '#cf1322' : ''">
+        <span class="active-pill-badge" [style.background-color]="activeBannerCount < 3 ? '#ffebe6' : ''"
+          [style.color]="activeBannerCount < 3 ? '#cf1322' : ''">
           <span class="pill-dot" [style.background-color]="activeBannerCount < 3 ? '#cf1322' : ''"></span>
           <span>Đang hiển thị: {{ activeBannerCount }} banner (Tối thiểu 3)</span>
         </span>
@@ -142,29 +143,34 @@
     </div>
 
     <!-- Quota Notice Alert Box for Banner -->
-    <div class="quota-notice-box" [style.background-color]="activeBannerCount < 3 ? '#fff2f0' : ''" [style.border-color]="activeBannerCount < 3 ? '#ffccc7' : ''">
+    <div class="quota-notice-box" [style.background-color]="activeBannerCount < 3 ? '#fff2f0' : ''"
+      [style.border-color]="activeBannerCount < 3 ? '#ffccc7' : ''">
       <div class="notice-info-wrapper">
         <div class="notice-icon">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" [attr.stroke]="activeBannerCount < 3 ? '#cf1322' : '#6B5953'" stroke-width="2"
-            stroke-linecap="round" stroke-linejoin="round">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+            [attr.stroke]="activeBannerCount < 3 ? '#cf1322' : '#6B5953'" stroke-width="2" stroke-linecap="round"
+            stroke-linejoin="round">
             <circle cx="12" cy="12" r="10"></circle>
             <line x1="12" y1="16" x2="12" y2="12"></line>
             <line x1="12" y1="8" x2="12.01" y2="8"></line>
           </svg>
         </div>
         <p class="notice-text" [style.color]="activeBannerCount < 3 ? '#cf1322' : ''">
-          @if (activeBannerCount < 3) {
-            <strong>CẢNH BÁO HẠN NGẠCH:</strong> Hiện tại chỉ có <strong>{{ activeBannerCount }}</strong> banner đang hiển thị. Hệ thống yêu cầu <strong>tối thiểu 3 banner</strong> để đảm bảo bố cục slider trang chủ! Vui lòng kích hoạt thêm banner.
-          } @else {
-            Hệ thống yêu cầu duy trì tối thiểu 3 banner đang hiển thị trên trang chủ để đảm bảo trải nghiệm khách hàng và hiệu ứng chuyển slide mượt mà.
-          }
+          @if (activeBannerCount < 3) { <strong>CẢNH BÁO HẠN NGẠCH:</strong> Hiện tại chỉ có <strong>{{
+              activeBannerCount }}</strong> banner đang hiển thị. Hệ thống yêu cầu <strong>tối thiểu 3 banner</strong>
+            để đảm bảo bố cục slider trang chủ! Vui lòng kích hoạt thêm banner.
+            } @else {
+            Hệ thống yêu cầu duy trì tối thiểu 3 banner đang hiển thị trên trang chủ để đảm bảo trải nghiệm khách hàng
+            và hiệu ứng chuyển slide mượt mà.
+            }
         </p>
       </div>
 
       <div class="quota-progress-container">
         <span class="quota-label">TỐI THIỂU 3</span>
         <div class="quota-progress-bar">
-          <div class="quota-progress-fill" [style.width.%]="activeBannerPercentage" [style.background-color]="activeBannerCount < 3 ? '#cf1322' : '#6B5953'"></div>
+          <div class="quota-progress-fill" [style.width.%]="activeBannerPercentage"
+            [style.background-color]="activeBannerCount < 3 ? '#cf1322' : '#6B5953'"></div>
         </div>
       </div>
     </div>
@@ -203,8 +209,8 @@
       <div class="filter-group" style="width: 140px;">
         <label class="filter-label">TỪ NGÀY</label>
         <div class="search-input-wrapper">
-          <input type="text" class="filter-input" placeholder="DD/MM/YYYY"
-            [(ngModel)]="bannerFilterStartDate" (input)="onBannerFilter()" (keyup.enter)="onBannerFilter()" />
+          <input type="text" class="filter-input" placeholder="DD/MM/YYYY" [(ngModel)]="bannerFilterStartDate"
+            (input)="onBannerFilter()" (keyup.enter)="onBannerFilter()" />
         </div>
       </div>
 
@@ -212,8 +218,8 @@
       <div class="filter-group" style="width: 140px;">
         <label class="filter-label">ĐẾN NGÀY</label>
         <div class="search-input-wrapper">
-          <input type="text" class="filter-input" placeholder="DD/MM/YYYY"
-            [(ngModel)]="bannerFilterEndDate" (input)="onBannerFilter()" (keyup.enter)="onBannerFilter()" />
+          <input type="text" class="filter-input" placeholder="DD/MM/YYYY" [(ngModel)]="bannerFilterEndDate"
+            (input)="onBannerFilter()" (keyup.enter)="onBannerFilter()" />
         </div>
       </div>
 
@@ -1130,7 +1136,8 @@
             <label class="brand-field-label">
               NỘI DUNG GIỚI THIỆU THƯƠNG HIỆU <span class="required-star">*</span>
             </label>
-            <span class="brand-word-counter" [class.counter-warning]="brandWordCount > 900" [class.counter-danger]="brandWordCount > 1000">
+            <span class="brand-word-counter" [class.counter-warning]="brandWordCount > 900"
+              [class.counter-danger]="brandWordCount > 1000">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                 <polyline points="14 2 14 8 20 8"></polyline>
@@ -1139,10 +1146,9 @@
             </span>
           </div>
 
-          <textarea rows="7"
-                    class="brand-modal-input brand-modal-textarea"
-                    placeholder="Nhập nội dung câu chuyện thương hiệu... (Tối đa 1000 từ, tự động xuống dòng theo văn bản)"
-                    [(ngModel)]="brandForm.description"></textarea>
+          <textarea rows="7" class="brand-modal-input brand-modal-textarea"
+            placeholder="Nhập nội dung câu chuyện thương hiệu... (Tối đa 1000 từ, tự động xuống dòng theo văn bản)"
+            [(ngModel)]="brandForm.description"></textarea>
         </div>
 
         <!-- 4. Trạng thái hiển thị -->
@@ -1175,7 +1181,9 @@
             </svg>
           </div>
           <p class="brand-alert-text">
-            <strong>Quy tắc trang chủ:</strong> Chỉ cho phép duy nhất 1 thương hiệu được hiển thị trên web người dùng. Khi thêm mới hoặc kích hoạt thương hiệu này, các thương hiệu khác sẽ tự động được chuyển sang trạng thái ẩn.
+            <strong>Quy tắc trang chủ:</strong> Chỉ cho phép duy nhất 1 thương hiệu được hiển thị trên web người dùng.
+            Khi thêm mới hoặc kích hoạt thương hiệu này, các thương hiệu khác sẽ tự động được chuyển sang trạng thái ẩn.
+            Document failed validation
           </p>
         </div>
       </div>

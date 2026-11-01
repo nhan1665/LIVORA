@@ -1,6 +1,39 @@
-import { Component, ChangeDetectorRef, inject } from '@angular/core';
+import { Component, ChangeDetectorRef, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
+
+export interface TrackingItem {
+  name: string;
+  image: string;
+  color: string;
+  quantity: number;
+  price: number;
+  subtotal: number;
+}
+
+export interface TrackingOrder {
+  id: string;
+  code: string;
+  status: string;
+  statusDisplay: string;
+  date: string;
+  paymentMethod: string;
+  paymentStatus: string;
+  customer: {
+    name: string;
+    phone: string;
+    address: string;
+  };
+  items: TrackingItem[];
+  subtotal: number;
+  shipping: number;
+  discount: number;
+  total: number;
+  notes?: string;
+  cancelReason?: string;
+  canCancel: boolean;
+}
 
 @Component({
   selector: 'app-module6',
@@ -9,136 +42,294 @@ import { FormsModule } from '@angular/forms';
   templateUrl: './module-6.html',
   styleUrl: './module-6.css',
 })
-export class Module6 {
+export class Module6 implements OnInit {
   private cdr = inject(ChangeDetectorRef);
+  private route = inject(ActivatedRoute);
+
   phoneNumber: string = '';
   hasSearched: boolean = false;
   orderFound: boolean = false;
   searching: boolean = false;
 
-  // Order data
-  orderInfo: any = null;
+  // Danh sách các đơn hàng tìm thấy (nếu 1 SĐT có nhiều đơn)
+  ordersList: TrackingOrder[] = [];
+  // Đơn hàng đang được xem chi tiết
+  orderInfo: TrackingOrder | null = null;
 
-  async searchOrder() {
-    this.hasSearched = true;
+  // ====== OTP HỦY ĐƠN HÀNG ======
+  showCancelModal: boolean = false;
+  currentOtp: string = '';
+  otpInput: string = '';
+  otpError: string = '';
+  cancelling: boolean = false;
+  cancelSuccessToast: string = '';
+  cancelReason: string = 'Đổi ý không muốn mua nữa';
+
+  readonly cancelReasonsList: string[] = [
+    'Đổi ý không muốn mua nữa',
+    'Thay đổi địa chỉ / số điện thoại nhận hàng',
+    'Muốn thay đổi sản phẩm / số lượng',
+    'Thời gian giao hàng dự kiến không phù hợp',
+    'Tìm thấy sản phẩm tương tự có giá tốt hơn',
+    'Lý do khác',
+  ];
+
+  ngOnInit(): void {
+    // Cho phép truyền query param ?phone=... hoặc ?orderCode=...
+    this.route.queryParams.subscribe((params) => {
+      const p = params['phone'] || params['search'] || params['code'];
+      if (p) {
+        this.phoneNumber = p;
+        this.searchOrder();
+      }
+    });
+  }
+
+  async searchOrder(): Promise<void> {
     const term = this.phoneNumber.trim();
+    this.hasSearched = true;
+    this.ordersList = [];
+    this.orderInfo = null;
+    this.cancelSuccessToast = '';
+
     if (!term) {
       this.orderFound = false;
-      this.orderInfo = null;
       return;
     }
 
-    // 1. Check localStorage user orders first
+    this.searching = true;
+    const foundOrdersMap = new Map<string, TrackingOrder>();
+
+    // 1. Kiểm tra trong localStorage (đơn vừa đặt từ phía Web User)
     try {
       const storedOrders = JSON.parse(localStorage.getItem('livora_user_orders') || '[]');
-      const matched = storedOrders.find((o: any) =>
-        (o.customerInfo?.phone && o.customerInfo.phone.includes(term)) ||
-        (o.phone && o.phone.includes(term)) ||
-        (o.orderCode && o.orderCode.toLowerCase().includes(term.toLowerCase()))
-      );
+      const matchedLocal = storedOrders.filter((o: any) => {
+        const phone = o.customerInfo?.phone || o.phone || '';
+        const code = o.orderCode || o.code || '';
+        return (
+          phone.replace(/\s+/g, '').includes(term.replace(/\s+/g, '')) ||
+          code.toLowerCase().includes(term.toLowerCase())
+        );
+      });
 
-      if (matched) {
-        this.orderFound = true;
-        this.orderInfo = {
-          code: matched.orderCode || 'ORD-NEW',
-          status: matched.orderStatus === 'pending' ? 'Pending' : (matched.orderStatus === 'shipping' ? 'Shipping' : 'Delivered'),
-          statusDisplay: matched.orderStatus === 'pending' ? 'Chờ xử lý' : (matched.orderStatus === 'shipping' ? 'Đang giao' : 'Đã giao'),
-          date: new Date(matched.createdAt || Date.now()).toLocaleDateString('vi-VN'),
-          customer: {
-            name: matched.customerInfo?.fullName || matched.customerInfo?.name || 'Khách hàng',
-            phone: matched.customerInfo?.phone || term,
-            address: matched.customerInfo?.address || matched.shippingAddress || 'Địa chỉ giao hàng',
-          },
-          items: (matched.items || []).map((it: any) => ({
-            name: it.name || it.productName || 'Sản phẩm nội thất LIVORA',
-            image: it.thumbnail || 'item.png',
-            color: it.color || it.selectedColor || 'Tiêu chuẩn',
-            quantity: it.quantity || 1,
-            price: it.price || it.unitPrice || 0,
-          })),
-          subtotal: matched.subtotalAmount || (matched.finalAmount - (matched.shippingFee || 0)),
-          shipping: matched.shippingFee || 0,
-          total: matched.finalAmount || matched.totalAmount || 0,
-        };
-        return;
-      }
-    } catch (_) {}
-
-    // 2. Query Backend MongoDB API
-    this.searching = true;
-    try {
-      const res = await fetch(`http://localhost:5000/api/orders?search=${encodeURIComponent(term)}`);
-      const data = await res.json();
-      if (data.success && data.data?.orders?.length > 0) {
-        const o = data.data.orders[0];
-        this.orderFound = true;
-        this.orderInfo = {
-          code: o.orderCode,
-          status: o.orderStatus === 'pending' ? 'Pending' : (o.orderStatus === 'shipping' ? 'Shipping' : 'Delivered'),
-          statusDisplay: o.orderStatus === 'pending' ? 'Chờ xử lý' : (o.orderStatus === 'shipping' ? 'Đang giao' : (o.orderStatus === 'delivered' ? 'Đã giao' : 'Đang xử lý')),
-          date: new Date(o.createdAt || Date.now()).toLocaleDateString('vi-VN'),
-          customer: {
-            name: o.customerInfo?.fullName || o.customerInfo?.name || 'Khách hàng',
-            phone: o.customerInfo?.phone || term,
-            address: o.customerInfo?.address || 'Địa chỉ giao hàng',
-          },
-          items: (o.items || []).map((it: any) => ({
-            name: it.productName || it.name || 'Sản phẩm nội thất',
-            image: it.thumbnail || 'item.png',
-            color: it.selectedColor || it.color || 'Tiêu chuẩn',
-            quantity: it.quantity || 1,
-            price: it.unitPrice || it.price || 0,
-          })),
-          subtotal: o.subtotalAmount || 0,
-          shipping: o.shippingFee || 0,
-          total: o.finalAmount || o.totalAmount || 0,
-        };
-        this.cdr.detectChanges();
-        return;
+      for (const o of matchedLocal) {
+        const mapped = this.mapRawOrderToTracking(o);
+        foundOrdersMap.set(mapped.code, mapped);
       }
     } catch (e) {
-      console.warn('[Module 6] Backend search failed:', e);
-    } finally {
-      this.searching = false;
-      this.cdr.detectChanges();
+      console.warn('[Module 6] LocalStorage read failed:', e);
     }
 
-    // 3. Fallback for demo mock phone numbers
-    if (term === '0901234567' || /^[0-9]{10}$/.test(term)) {
-      this.orderFound = true;
-      this.orderInfo = {
-        code: 'ORD-1234',
-        status: 'Delivering',
-        statusDisplay: 'Đang vận chuyển',
-        date: '24/10/2025',
-        customer: {
-          name: term === '0901234567' ? 'Nguyễn Văn A' : 'Khách hàng thân thiết',
-          phone: term,
-          address: '123 Nguyễn Huệ, Quận 1, TP. Hồ Chí Minh'
-        },
-        items: [
-          {
-            name: 'Khung giường 4 chân cao cấp tối giản kèm thanh chắn (thép không gỉ)',
-            image: 'item.png',
-            color: 'Trắng - Đen',
-            quantity: 1,
-            price: 899
-          },
-          {
-            name: 'Bàn đầu giường hiện đại có ngăn kéo',
-            image: 'item.png',
-            color: 'Gỗ sồi tự nhiên',
-            quantity: 2,
-            price: 150
+    // 2. Tra cứu từ Backend MongoDB API
+    try {
+      const res = await fetch(`http://localhost:5000/api/orders?search=${encodeURIComponent(term)}&pageSize=50`);
+      if (res.ok) {
+        const data = await res.json();
+        const apiOrders = data.data?.orders || data.data || [];
+        if (Array.isArray(apiOrders)) {
+          for (const o of apiOrders) {
+            const mapped = this.mapRawOrderToTracking(o);
+            foundOrdersMap.set(mapped.code, mapped);
           }
-        ],
-        subtotal: 1199,
-        shipping: 20,
-        total: 1219
-      };
-    } else {
-      this.orderFound = false;
-      this.orderInfo = null;
+        }
+      }
+    } catch (e) {
+      console.warn('[Module 6] Backend API search failed:', e);
+    } finally {
+      this.searching = false;
     }
+
+    const allOrders = Array.from(foundOrdersMap.values());
+    if (allOrders.length > 0) {
+      this.ordersList = allOrders;
+      this.orderInfo = allOrders[0]; // Mặc định mở đơn hàng đầu tiên (mới nhất)
+      this.orderFound = true;
+    } else {
+      this.ordersList = [];
+      this.orderInfo = null;
+      this.orderFound = false;
+    }
+
+    this.cdr.detectChanges();
+  }
+
+  selectOrder(order: TrackingOrder): void {
+    this.orderInfo = order;
+    this.cancelSuccessToast = '';
+    this.cdr.detectChanges();
+  }
+
+  // ====== QUY TRÌNH HỦY ĐƠN HÀNG ======
+  openCancelModal(): void {
+    if (!this.orderInfo || !this.orderInfo.canCancel) return;
+
+    // Sinh mã OTP 6 số ngẫu nhiên để test
+    this.currentOtp = Math.floor(100000 + Math.random() * 900000).toString();
+    this.otpInput = '';
+    this.otpError = '';
+    this.cancelReason = 'Đổi ý không muốn mua nữa';
+    this.showCancelModal = true;
+  }
+
+  closeCancelModal(): void {
+    this.showCancelModal = false;
+    this.otpInput = '';
+    this.otpError = '';
+  }
+
+  autoFillOtp(): void {
+    this.otpInput = this.currentOtp;
+    this.otpError = '';
+  }
+
+  resendOtp(): void {
+    this.currentOtp = Math.floor(100000 + Math.random() * 900000).toString();
+    this.otpInput = '';
+    this.otpError = '';
+  }
+
+  async confirmCancelOrder(): Promise<void> {
+    if (!this.orderInfo) return;
+
+    // 1. Kiểm tra mã OTP: Bắt buộc đúng mới cho pass
+    if (this.otpInput.trim() !== this.currentOtp) {
+      this.otpError = 'Mã OTP không chính xác. Vui lòng kiểm tra lại mã đã được cung cấp!';
+      return;
+    }
+
+    this.cancelling = true;
+    this.otpError = '';
+
+    const reason = this.cancelReason.trim() || 'Khách hàng yêu cầu hủy đơn qua mã OTP';
+
+    try {
+      // 2. Gửi request Hủy đơn lên Backend
+      let apiSuccess = false;
+      if (this.orderInfo.id) {
+        try {
+          const res = await fetch(`http://localhost:5000/api/orders/${this.orderInfo.id}/cancel`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ reason }),
+          });
+          const resData = await res.json();
+          if (resData.success) {
+            apiSuccess = true;
+          }
+        } catch (apiErr) {
+          console.warn('[Module 6] Backend cancel API error:', apiErr);
+        }
+      }
+
+      // 3. Đồng bộ cập nhật vào LocalStorage
+      try {
+        const storedOrders = JSON.parse(localStorage.getItem('livora_user_orders') || '[]');
+        const updated = storedOrders.map((o: any) => {
+          if (o.orderCode === this.orderInfo?.code || o.id === this.orderInfo?.id || o._id === this.orderInfo?.id) {
+            return {
+              ...o,
+              orderStatus: 'cancelled',
+              cancelReason: reason,
+              updatedAt: new Date().toISOString(),
+            };
+          }
+          return o;
+        });
+        localStorage.setItem('livora_user_orders', JSON.stringify(updated));
+      } catch (localErr) {
+        console.warn('[Module 6] LocalStorage update error:', localErr);
+      }
+
+      // 4. Cập nhật state hiển thị trên giao diện ngay lập tức
+      this.orderInfo.status = 'cancelled';
+      this.orderInfo.statusDisplay = 'Đã hủy';
+      this.orderInfo.cancelReason = reason;
+      this.orderInfo.canCancel = false;
+
+      // Cập nhật trong danh sách nếu có
+      const itemInList = this.ordersList.find((o) => o.code === this.orderInfo?.code);
+      if (itemInList) {
+        itemInList.status = 'cancelled';
+        itemInList.statusDisplay = 'Đã hủy';
+        itemInList.cancelReason = reason;
+        itemInList.canCancel = false;
+      }
+
+      this.showCancelModal = false;
+      this.cancelSuccessToast = `Đơn hàng #${this.orderInfo.code} đã được hủy thành công!`;
+    } catch (e) {
+      this.otpError = 'Có lỗi xảy ra khi hủy đơn hàng. Vui lòng thử lại sau.';
+    } finally {
+      this.cancelling = false;
+      this.cdr.detectChanges();
+    }
+  }
+
+  // ====== HELPER MAPPING ======
+  private mapRawOrderToTracking(o: any): TrackingOrder {
+    const rawStatus = (o.orderStatus || 'pending').toLowerCase();
+    const canCancel = ['pending', 'confirmed', 'processing', 'chờ xử lý', 'đã xác nhận'].includes(rawStatus);
+
+    let statusDisplay = 'Chờ xử lý';
+    if (rawStatus === 'confirmed') statusDisplay = 'Đã xác nhận';
+    else if (rawStatus === 'processing') statusDisplay = 'Đang xử lý';
+    else if (rawStatus === 'shipping' || rawStatus === 'delivering') statusDisplay = 'Đang giao hàng';
+    else if (rawStatus === 'delivered') statusDisplay = 'Đã giao thành công';
+    else if (rawStatus === 'cancelled') statusDisplay = 'Đã hủy';
+
+    const customer = {
+      name: o.customerInfo?.fullName || o.customerInfo?.name || 'Khách hàng',
+      phone: o.customerInfo?.phone || o.phone || '',
+      address: o.customerInfo?.address || o.shippingAddress || 'Địa chỉ giao hàng',
+    };
+
+    const items: TrackingItem[] = (o.items || []).map((it: any) => {
+      const unitPrice = Number(it.unitPrice || it.price) || 0;
+      const quantity = Math.max(1, Number(it.quantity) || 1);
+      return {
+        name: it.productName || it.name || 'Sản phẩm nội thất LIVORA',
+        image: it.thumbnail || it.image || 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=400',
+        color: it.selectedColor || it.color || 'Tiêu chuẩn',
+        quantity,
+        price: unitPrice,
+        subtotal: unitPrice * quantity,
+      };
+    });
+
+    const subtotal = Number(o.subtotalAmount) || items.reduce((sum, it) => sum + it.subtotal, 0);
+    const shipping = Number(o.shippingFee) || 0;
+    const discount = Number(o.discountAmount) || 0;
+    const total = Number(o.finalAmount || o.totalAmount) || Math.max(0, subtotal - discount + shipping);
+
+    const pm = (o.paymentMethod || '').toUpperCase();
+    const paymentMethodDisplay = pm.includes('BANK') ? 'Chuyển khoản ngân hàng (QR)' : 'Thanh toán khi nhận hàng (COD)';
+    const paymentStatusDisplay = o.paymentStatus === 'paid' ? 'Đã thanh toán' : 'Chưa thanh toán';
+
+    let dateDisplay = 'Hôm nay';
+    if (o.createdAt) {
+      const d = new Date(o.createdAt);
+      if (!isNaN(d.getTime())) {
+        dateDisplay = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+      }
+    }
+
+    return {
+      id: o.id || o._id || '',
+      code: o.orderCode || o.code || 'ORD-LIV',
+      status: rawStatus,
+      statusDisplay,
+      date: dateDisplay,
+      paymentMethod: paymentMethodDisplay,
+      paymentStatus: paymentStatusDisplay,
+      customer,
+      items,
+      subtotal,
+      shipping,
+      discount,
+      total,
+      notes: o.notes || o.note || '',
+      cancelReason: o.cancelReason || '',
+      canCancel,
+    };
   }
 }

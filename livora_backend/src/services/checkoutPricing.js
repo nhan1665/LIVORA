@@ -11,7 +11,30 @@ class CheckoutError extends Error {
   }
 }
 
-const normalizedProvince = (value) => String(value || '').trim().normalize('NFC').toLocaleLowerCase('vi');
+function stripVietnamese(str) {
+  if (!str) return '';
+  return String(str)
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/đ/g, 'd')
+    .replace(/Đ/g, 'D')
+    .toLowerCase()
+    .replace(/^(thanh pho|tinh|tp\.|tp)\s+/i, '')
+    .replace(/[\s\-\.]+/g, ' ')
+    .trim();
+}
+
+function isProvinceMatch(configured, requested) {
+  const k1 = stripVietnamese(configured);
+  const k2 = stripVietnamese(requested);
+  if (!k1 || !k2) return false;
+  if (k1 === k2) return true;
+  if ((k1 === 'hcm' || k1 === 'tp hcm') && (k2.includes('ho chi minh') || k2 === 'hcm')) return true;
+  if ((k2 === 'hcm' || k2 === 'tp hcm') && (k1.includes('ho chi minh') || k1 === 'hcm')) return true;
+  return k1.includes(k2) || k2.includes(k1);
+}
+
+const normalizedProvince = (value) => stripVietnamese(value);
 
 function requireVnd(value, field) {
   if (!Number.isSafeInteger(value) || value < 0) {
@@ -62,21 +85,54 @@ async function loadItems(requestedItems, session) {
 }
 
 async function loadShippingOptions(province, subtotal, session) {
-  const region = normalizedProvince(province);
-  const query = Shipping.find({ isActive: true });
+  const query = Shipping.find({ isActive: true }).sort({ updatedAt: -1, createdAt: -1 });
   if (session) query.session(session);
   const configs = await query;
 
   let matched = [];
   if (configs && configs.length) {
-    matched = configs.filter((config) => {
-      const configured = normalizedProvince(config.province);
-      return configured === region || configured === normalizedProvince('Toàn quốc') ||
-             (region && (region.includes(configured) || configured.includes(region)));
+    // 1. Tìm cấu hình riêng cho tỉnh thành được chọn (loại bỏ 'Toàn quốc')
+    const provinceMatches = configs.filter((c) => {
+      const normC = stripVietnamese(c.province);
+      if (normC === 'toan quoc') return false;
+      return isProvinceMatch(c.province, province);
     });
-    if (!matched.length) {
-      matched = configs.filter(c => normalizedProvince(c.province) === normalizedProvince('Toàn quốc'));
+
+    if (provinceMatches.length > 0) {
+      // Đã có thiết lập riêng cho tỉnh thành này -> CHỈ SỬ DỤNG CẤU HÌNH CỦA TỈNH ĐÓ
+      matched = provinceMatches;
+    } else {
+      // Không có thiết lập riêng -> Mới fallback tìm cấu hình 'Toàn quốc'
+      const nationwideMatches = configs.filter((c) => {
+        const normC = stripVietnamese(c.province);
+        return normC === 'toan quoc';
+      });
+      matched = nationwideMatches;
     }
+  }
+
+  // Sắp xếp ưu tiên:
+  // - Ưu tiên bản ghi có phí > 0 trước (để tránh bản ghi rác 0đ cũ đè lên bản ghi thiết lập mới của admin)
+  // - Ưu tiên bản ghi có ngày cập nhật mới nhất
+  if (matched.length > 0) {
+    matched.sort((a, b) => {
+      const aHasFee = (Number(a.fee) || 0) > 0 ? 1 : 0;
+      const bHasFee = (Number(b.fee) || 0) > 0 ? 1 : 0;
+      if (bHasFee !== aHasFee) return bHasFee - aHasFee;
+      const tB = new Date(b.updatedAt || b.createdAt || 0).getTime();
+      const tA = new Date(a.updatedAt || a.createdAt || 0).getTime();
+      return tB - tA;
+    });
+
+    // Deduplicate theo shippingMethod: mỗi loại phương thức (standard, express) chỉ lấy 1 bản ghi ưu tiên nhất
+    const methodMap = new Map();
+    for (const cfg of matched) {
+      if (!methodMap.has(cfg.shippingMethod)) {
+        methodMap.set(cfg.shippingMethod, cfg);
+      }
+    }
+    const order = { standard: 1, express: 2 };
+    matched = Array.from(methodMap.values()).sort((a, b) => (order[a.shippingMethod] || 99) - (order[b.shippingMethod] || 99));
   }
 
   if (!matched.length) {
@@ -85,8 +141,8 @@ async function loadShippingOptions(province, subtotal, session) {
         id: 'ship-standard',
         shippingMethod: 'standard',
         province: province || 'Toàn quốc',
-        estimatedDeliveryTime: '2 - 3 ngày',
-        fee: 0,
+        estimatedDeliveryTime: '3 - 5 ngày',
+        fee: 200,
       },
       {
         id: 'ship-express',
@@ -99,14 +155,14 @@ async function loadShippingOptions(province, subtotal, session) {
   }
 
   return matched.map((config) => {
-    const fee = requireVnd(config.fee, 'Phí vận chuyển');
-    const freeShipThreshold = requireVnd(config.freeShipThreshold ?? 0, 'Ngưỡng miễn phí vận chuyển');
+    // Áp đúng số tiền vận chuyển theo thiết lập trong DB
+    const rawFee = Math.max(0, Math.round(Number(config.fee) || 0));
     return {
       id: config._id.toString(),
       shippingMethod: config.shippingMethod,
       province: config.province,
       estimatedDeliveryTime: config.estimatedDeliveryTime,
-      fee: config.freeShipEnabled && subtotal >= freeShipThreshold ? 0 : fee,
+      fee: rawFee,
     };
   });
 }
@@ -122,6 +178,17 @@ async function loadVoucher(code, subtotal, customerId, session) {
     voucher.usedCount >= voucher.quantity || subtotal < voucher.minOrderValue) {
     throw new CheckoutError('Voucher không còn hợp lệ cho đơn hàng này.', 409);
   }
+
+  // Kiểm tra đối tượng áp dụng nếu là voucher chỉ định
+  if (voucher.targetType === 'specific') {
+    const applicableIds = Array.isArray(voucher.applicableCustomerIds)
+      ? voucher.applicableCustomerIds.map((id) => id.toString())
+      : [];
+    if (!applicableIds.includes(customerId.toString())) {
+      throw new CheckoutError('Mã ưu đãi này chỉ dành riêng cho khách hàng được chỉ định.', 409);
+    }
+  }
+
   requireVnd(voucher.minOrderValue, 'Giá trị đơn hàng tối thiểu');
   const cap = requireVnd(voucher.maxDiscountAmount ?? 0, 'Mức giảm tối đa');
   if (!['fixed_amount', 'percentage'].includes(voucher.discountType)) {
