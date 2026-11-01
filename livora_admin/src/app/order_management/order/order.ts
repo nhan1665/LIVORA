@@ -11,6 +11,7 @@ import {
   CatalogProductOption,
 } from '../models/order.model';
 import { OrderService } from '../services/order.service';
+import { VIETNAM_PROVINCE_NAMES, getWardsForProvince } from '../../shared/data/vietnam-locations';
 import { DataTable, TableColumn, TableActionEvent, BadgeInfo } from '../../shared/data-table/data-table';
 import { FilterBar, FilterSelectOption } from '../../shared/filter-bar/filter-bar';
 import { FormModal } from '../../shared/form-modal/form-modal';
@@ -199,6 +200,10 @@ export class OrderComponent implements OnInit {
   customerPhone: string = '';
   customerEmail: string = '';
   customerAddress: string = '';
+  provinces: string[] = VIETNAM_PROVINCE_NAMES;
+  customerProvince: string = 'TP. Hồ Chí Minh';
+  customerWard: string = '';
+  availableOrderWards: string[] = getWardsForProvince('TP. Hồ Chí Minh');
   selectedProductId: string = '';
   selectedQuantity: number = 1;
   selectedColor: string = '';
@@ -345,6 +350,10 @@ export class OrderComponent implements OnInit {
     this.selectedOrder = null;
   }
 
+  getNextStatus(status: OrderStatus): OrderStatus | null {
+    return this.orderService.getNextStatus(status);
+  }
+
   promptAdvanceStatus(order: Order): void {
     const next = this.orderService.getNextStatus(order.orderStatus);
     if (!next) {
@@ -431,6 +440,9 @@ export class OrderComponent implements OnInit {
     this.customerPhone = '';
     this.customerEmail = '';
     this.customerAddress = '';
+    this.customerProvince = 'TP. Hồ Chí Minh';
+    this.customerWard = '';
+    this.availableOrderWards = getWardsForProvince('TP. Hồ Chí Minh');
     this.orderItemsToCreate = [];
     this.voucherCodeInput = '';
     this.paymentMethodInput = 'COD';
@@ -463,6 +475,19 @@ export class OrderComponent implements OnInit {
       this.matchedCustomerId = null;
       this.cdr.detectChanges();
     }
+  }
+
+  onOrderProvinceChange(): void {
+    if (this.customerProvince) {
+      this.availableOrderWards = getWardsForProvince(this.customerProvince);
+      if (!this.availableOrderWards.includes(this.customerWard)) {
+        this.customerWard = '';
+      }
+    } else {
+      this.availableOrderWards = [];
+      this.customerWard = '';
+    }
+    this.cdr.detectChanges();
   }
 
   closeCreateOrderModal(): void {
@@ -576,7 +601,7 @@ export class OrderComponent implements OnInit {
   }
 
   get createShipping(): number {
-    return this.createSubtotal >= 5000000 || this.orderItemsToCreate.length === 0 ? 0 : 40000;
+    return this.orderItemsToCreate.length === 0 ? 0 : 200;
   }
 
   get createTotal(): number {
@@ -626,7 +651,8 @@ export class OrderComponent implements OnInit {
             name: this.customerName.trim(),
             phone: this.customerPhone.trim().replace(/[\s\-\.]/g, ''),
             email: this.customerEmail.trim(),
-            address: this.customerAddress.trim(),
+            address: [this.customerAddress.trim(), this.customerWard.trim(), this.customerProvince.trim()].filter(Boolean).join(', '),
+
           },
           items: this.orderItemsToCreate.map(i => ({
             productId: i.productId,
@@ -635,6 +661,7 @@ export class OrderComponent implements OnInit {
           })),
           voucherCode: this.voucherCodeInput,
           paymentMethod: this.paymentMethodInput,
+          shippingFee: this.createShipping,
           notes: this.orderNotesInput,
         },
         this.isNewCustomer,

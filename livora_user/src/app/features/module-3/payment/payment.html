@@ -60,30 +60,21 @@
         </div>
 
         <!-- Location Dropdowns Row -->
-        <div class="form-row-3">
+        <div class="form-row-2">
           <!-- Province -->
           <div class="form-group" [class.has-error]="showValidationErrors && !selectedProvince">
             <select class="form-control select-control" [(ngModel)]="selectedProvince" name="province"
               (change)="onProvinceChange()" required>
-              <option value="" disabled>Tỉnh / Thành phố</option>
+              <option value="" disabled selected>Chọn Tỉnh / Thành phố</option>
               <option *ngFor="let prov of provinces" [value]="prov">{{ prov }}</option>
             </select>
           </div>
 
-          <!-- District -->
-          <div class="form-group">
-            <select class="form-control select-control" [(ngModel)]="selectedDistrict" name="district"
-              [disabled]="!selectedProvince" (change)="onDistrictChange()">
-              <option value="" disabled selected>Quận / Huyện</option>
-              <option *ngFor="let dist of availableDistricts" [value]="dist">{{ dist }}</option>
-            </select>
-          </div>
-
           <!-- Ward -->
-          <div class="form-group">
+          <div class="form-group" [class.has-error]="showValidationErrors && !selectedWard">
             <select class="form-control select-control" [(ngModel)]="selectedWard" name="ward"
-              [disabled]="!selectedDistrict" (change)="onWardChange()">
-              <option value="" disabled selected>Phường / Xã</option>
+              [disabled]="!selectedProvince" (change)="onWardChange()">
+              <option value="" disabled selected>{{ selectedProvince ? 'Chọn Phường / Xã' : 'Vui lòng chọn Tỉnh trước' }}</option>
               <option *ngFor="let ward of availableWards" [value]="ward">{{ ward }}</option>
             </select>
           </div>
@@ -290,7 +281,7 @@
       </div>
       <div class="detail-line">
         <span class="detail-label">Địa chỉ giao hàng:</span>
-        <span class="detail-value">{{ address }}, {{ selectedWard ? selectedWard + ', ' : '' }}{{ selectedDistrict ? selectedDistrict + ', ' : '' }}{{ selectedProvince }}</span>
+        <span class="detail-value">{{ address }}, {{ selectedWard ? selectedWard + ', ' : '' }}{{ selectedProvince }}</span>
       </div>
       <div class="detail-line">
         <span class="detail-label">Tổng thanh toán:</span>

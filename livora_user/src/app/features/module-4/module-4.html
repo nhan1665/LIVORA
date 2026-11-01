@@ -120,7 +120,7 @@
         <button class="bar-icon" title="Lưu thiết kế vào danh sách" (click)="saveDesign()">
           <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 3v10.6l3.3-3.3 1.4 1.4L12 17.4l-4.7-5.7 1.4-1.4L12 13.6V3h0zM5 19h14v2H5z"/></svg>
         </button>
-        <span class="bar-total">${{ total() }}</span>
+        <span class="bar-total">{{ total() | number:'1.0-0' }} ₫</span>
         <button class="bar-summary" (click)="goCheckout()">Tổng kết ({{ placed().length }}) <span>&rsaquo;</span></button>
         <button class="bar-close" (click)="closePlanner()" aria-label="Đóng">&times;</button>
       </div>
@@ -166,7 +166,7 @@
                 <div class="prod-info">
                   <span class="prod-name">{{ p.name }}</span>
                   <span class="prod-desc">{{ p.desc }}</span>
-                  <span class="prod-price">${{ p.price }}</span>
+                  <span class="prod-price">{{ p.price | number:'1.0-0' }} ₫</span>
                 </div>
               </div>
             }
@@ -198,7 +198,7 @@
 
                 <div class="saved-summary-line">
                   <span class="saved-date">{{ design.date }}</span>
-                  <span class="saved-cost">{{ design.itemCount }} món · <strong>${{ design.totalPrice }}</strong></span>
+                  <span class="saved-cost">{{ design.itemCount }} món · <strong>{{ design.totalPrice | number:'1.0-0' }} ₫</strong></span>
                 </div>
 
                 <div class="saved-items-preview">
@@ -287,7 +287,7 @@
               <div class="item-img-wrapper">
                 <img [src]="p.image" [alt]="p.name">
               </div>
-              <div class="item-tag">{{ p.name }} · ${{ p.price }}</div>
+              <div class="item-tag">{{ p.name }} · {{ p.price | number:'1.0-0' }} ₫</div>
               <button class="item-remove" (click)="removeProduct($index)" aria-label="Xóa">&times;</button>
             </div>
           }

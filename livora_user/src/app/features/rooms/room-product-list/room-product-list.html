@@ -134,18 +134,24 @@
               </div>
 
               <div>
-                <div class="mb-3">
-                  <span class="bg-[#FFDB00] text-gray-900 font-extrabold text-lg md:text-xl px-1.5 py-0.5 inline-block">
-                    ${{ product.price }}
+                <div class="mb-3 flex items-baseline flex-wrap gap-2">
+                  <span class="bg-[#FFDB00] text-gray-900 font-extrabold text-sm md:text-base px-2 py-0.5 inline-block">
+                    {{ product.price | number:'1.0-0' }} ₫
                   </span>
+                  @if (product.originalPrice) {
+                    <span class="text-xs text-gray-400 line-through">
+                      {{ product.originalPrice | number:'1.0-0' }} ₫
+                    </span>
+                  }
                 </div>
 
                 <div class="flex items-center justify-between mt-auto">
-                  <div class="flex items-center space-x-1 text-[10px] md:text-xs text-gray-500">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 md:h-3.5 md:w-3.5 text-gray-900" fill="currentColor" viewBox="0 0 24 24">
+                  <div class="flex items-center space-x-1 text-[11px] md:text-xs text-gray-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-amber-500" fill="currentColor" viewBox="0 0 24 24">
                       <path d="M12 .587l3.668 7.431 8.2 1.192-5.934 5.787 1.4 8.168L12 18.896l-7.334 3.857 1.4-8.168L.132 9.21l8.2-1.192z"/>
                     </svg>
-                    <span class="underline cursor-pointer hover:text-gray-900">({{ product.reviews }})</span>
+                    <span class="font-bold text-gray-800">{{ product.rating | number:'1.1-1' }}</span>
+                    <span class="text-gray-400">({{ product.reviews }})</span>
                   </div>
                 </div>
               </div>

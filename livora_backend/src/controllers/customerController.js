@@ -14,6 +14,7 @@ const getCustomers = async (req, res) => {
       status = 'all',
       page = 1,
       pageSize = 10,
+      all = false,
     } = req.query;
 
     const filter = {};
@@ -36,8 +37,9 @@ const getCustomers = async (req, res) => {
       filter.status = status;
     }
 
+    const isAll = all === 'true' || all === true;
     const pageNum = Math.max(1, parseInt(page));
-    const limit = Math.max(1, Math.min(100, parseInt(pageSize)));
+    const limit = isAll ? 2000 : Math.max(1, Math.min(100, parseInt(pageSize)));
 
     const now = new Date();
     const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -50,9 +52,9 @@ const getCustomers = async (req, res) => {
       Customer.countDocuments(filter),
     ]);
 
-    const totalPages = Math.max(1, Math.ceil(totalItems / limit));
-    const currentPage = Math.min(pageNum, totalPages);
-    const skip = (currentPage - 1) * limit;
+    const totalPages = isAll ? 1 : Math.max(1, Math.ceil(totalItems / limit));
+    const currentPage = isAll ? 1 : Math.min(pageNum, totalPages);
+    const skip = isAll ? 0 : (currentPage - 1) * limit;
 
     const customers = await Customer.find(filter)
       .sort({ createdAt: -1 })

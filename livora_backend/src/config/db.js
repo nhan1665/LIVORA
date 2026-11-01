@@ -30,6 +30,14 @@ const connectDB = async () => {
     console.log(`📡 Host: ${conn.connection.host}`);
     console.log(`🗄️ Database: ${conn.connection.name}`);
 
+    // Tắt JSON Schema validation cho collection Reviews nếu MongoDB Atlas có validator gây lỗi "Document failed validation"
+    try {
+      await conn.connection.db.command({ collMod: 'Reviews', validationLevel: 'off' });
+      console.log('✅ Collection Reviews validation level set to off.');
+    } catch (collErr) {
+      // Bỏ qua nếu không hỗ trợ hoặc chưa tạo collection
+    }
+
     return conn;
   } catch (error) {
     console.error('❌ Kết nối MongoDB Atlas thất bại:', error.message);

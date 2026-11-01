@@ -8,11 +8,22 @@ export type VoucherDiscountType = 'percentage' | 'fixed_amount';
 
 export type VoucherDiscountTypeFilter = 'all' | VoucherDiscountType;
 
+/** Target audience: all customers or specific chosen customers */
+export type VoucherTargetType = 'all' | 'specific';
+
 /** Status filter derived from Table 27 `isActive`. */
 export type VoucherStatusFilter = 'all' | 'active' | 'off';
 
 /** Applicability window filter derived from `startDate` / `endDate`. */
 export type VoucherTimeFilter = 'all' | 'upcoming' | 'running' | 'expired';
+
+export interface ApplicableCustomerSummary {
+  id: string;
+  fullName: string;
+  email: string;
+  phone: string;
+  code?: string;
+}
 
 export interface Voucher {
   id: string;
@@ -32,10 +43,15 @@ export interface Voucher {
   /** Successful usage count (Table 27 `usedCount`). */
   usedCount: number;
   /**
-   * Provisional UI-only field from the design reference ("Giới hạn lượt dùng / Mỗi khách hàng").
-   * Table 27 has no per-customer limit column; pending backend contract approval.
+   * Limit usage per customer account.
    */
   perCustomerLimit?: number;
+  /** Target audience: 'all' or 'specific' */
+  targetType?: VoucherTargetType;
+  /** List of customer IDs granted this voucher if targetType === 'specific' */
+  applicableCustomerIds?: string[];
+  applicableCount?: number;
+  applicableCustomers?: ApplicableCustomerSummary[];
   /** ISO datetime when the program becomes valid (Table 27 `startDate`). */
   startDate: string;
   /** ISO datetime when the program stops being valid (Table 27 `endDate`). */
@@ -53,6 +69,8 @@ export interface VoucherDraft {
   minOrderValue: number;
   quantity: number;
   perCustomerLimit?: number;
+  targetType: VoucherTargetType;
+  applicableCustomerIds: string[];
   startDate: string;
   endDate: string;
   isActive: boolean;

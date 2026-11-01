@@ -3,6 +3,7 @@ try { dns.setServers(['8.8.8.8', '1.1.1.1']); } catch (_) {}
 require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
+global.mongoose = mongoose;
 const morgan = require('morgan');
 const connectDB = require('./src/config/db');
 const configureCors = require('./src/config/cors');
@@ -12,8 +13,8 @@ const PORT = process.env.PORT || 5000;
 
 // Middleware
 app.use(configureCors());
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
@@ -200,6 +201,3 @@ const startServer = async () => {
 startServer().catch(err => {
   console.error('Unhandled server error:', err);
 });
-
-// Trigger reload: 2026-10-19 21:46
-

@@ -28,7 +28,7 @@
             </button>
             <button class="nav-btn" [class.active]="activeTab === 'reviews'" (click)="setActiveTab('reviews')">
                 <i class="bi bi-star-fill"></i>
-                Đánh giá
+                Đánh giá sản phẩm
             </button>
         </nav>
 
@@ -43,12 +43,13 @@
     <!-- Right Content -->
     <main class="profile-content">
 
+        <!-- TAB 1: THÔNG TIN CÁ NHÂN & ĐỊA CHỈ -->
         <div *ngIf="activeTab === 'personal'" class="personal-content-wrapper"
             style="display: flex; flex-direction: column; gap: 40px;">
             <!-- Section: Personal Info -->
             <p *ngIf="profileLoading" role="status">Đang tải hồ sơ...</p>
-            <p *ngIf="profileError" role="alert">{{ profileError }}</p>
-            <p *ngIf="profileSuccess" role="status">{{ profileSuccess }}</p>
+            <p *ngIf="profileError" role="alert" style="color: #dc2626;">{{ profileError }}</p>
+            <p *ngIf="profileSuccess" role="status" style="color: #16a34a; font-weight: 500;">{{ profileSuccess }}</p>
             <fieldset class="form-container">
                 <legend class="section-title">THÔNG TIN CÁ NHÂN</legend>
 
@@ -155,21 +156,20 @@
                     <div class="form-row">
                         <div class="form-label">Tỉnh / Thành phố</div>
                         <div class="form-input">
-                            <input type="text" placeholder="Ví dụ: TP. Hồ Chí Minh, Hà Nội, Đà Nẵng..." [(ngModel)]="addressForm.province" name="addrProvince">
-                        </div>
-                    </div>
-
-                    <div class="form-row">
-                        <div class="form-label">Quận / Huyện</div>
-                        <div class="form-input">
-                            <input type="text" placeholder="Ví dụ: Quận 1, Quận Bình Thạnh..." [(ngModel)]="addressForm.district" name="addrDistrict">
+                            <select [(ngModel)]="addressForm.province" name="addrProvince" (change)="onAddressProvinceChange()" style="width: 100%; height: 38px; border: 1px solid #ddd; border-radius: 4px; padding: 0 10px; background-color: #fff; font-size: 13.5px;">
+                                <option value="" disabled selected>-- Chọn Tỉnh / Thành phố --</option>
+                                <option *ngFor="let prov of provinces" [value]="prov">{{ prov }}</option>
+                            </select>
                         </div>
                     </div>
 
                     <div class="form-row">
                         <div class="form-label">Phường / Xã</div>
                         <div class="form-input">
-                            <input type="text" placeholder="Ví dụ: Phường Bến Nghé, Xã..." [(ngModel)]="addressForm.ward" name="addrWard">
+                            <select [(ngModel)]="addressForm.ward" name="addrWard" [disabled]="!addressForm.province" style="width: 100%; height: 38px; border: 1px solid #ddd; border-radius: 4px; padding: 0 10px; background-color: #fff; font-size: 13.5px;">
+                                <option value="" disabled selected>{{ addressForm.province ? '-- Chọn Phường / Xã --' : 'Vui lòng chọn Tỉnh trước' }}</option>
+                                <option *ngFor="let ward of availableAddressWards" [value]="ward">{{ ward }}</option>
+                            </select>
                         </div>
                     </div>
 
@@ -234,329 +234,299 @@
             </fieldset>
         </div>
 
+        <!-- TAB 2: LỊCH SỬ ĐƠN HÀNG THẬT TỪ DATABASE -->
         <div *ngIf="activeTab === 'history'" class="history-container">
             <div class="history-filters" style="justify-content: center;">
                 <button class="filter-btn" [class.active]="activeFilter === 'all'" (click)="setFilter('all')">Tất cả</button>
-                <button class="filter-btn" [class.active]="activeFilter === 'pending'"
-                    (click)="setFilter('pending')">Chờ xử lý</button>
-                <button class="filter-btn" [class.active]="activeFilter === 'delivering'"
-                    (click)="setFilter('delivering')">Đang giao</button>
-                <button class="filter-btn" [class.active]="activeFilter === 'delivered'"
-                    (click)="setFilter('delivered')">Đã giao</button>
-                <button class="filter-btn" [class.active]="activeFilter === 'cancelled'"
-                    (click)="setFilter('cancelled')">Đã hủy</button>
-                <button class="filter-btn" [class.active]="activeFilter === 'returned'"
-                    (click)="setFilter('returned')">Đã trả</button>
+                <button class="filter-btn" [class.active]="activeFilter === 'pending'" (click)="setFilter('pending')">Chờ xử lý</button>
+                <button class="filter-btn" [class.active]="activeFilter === 'delivering'" (click)="setFilter('delivering')">Đang giao</button>
+                <button class="filter-btn" [class.active]="activeFilter === 'delivered'" (click)="setFilter('delivered')">Đã hoàn thành</button>
+                <button class="filter-btn" [class.active]="activeFilter === 'cancelled'" (click)="setFilter('cancelled')">Đã hủy</button>
             </div>
 
-            <div class="order-list">
-                <!-- Order 0: Pending -->
-                <div class="order-item" *ngIf="activeFilter === 'all' || activeFilter === 'pending'">
-                    <div class="order-image-wrapper">
-                        <span class="badge-bestseller">Bán chạy</span>
-                        <img src="item.png" alt="Khung giường" class="order-image">
-                    </div>
-                    <div class="order-content">
-                        <h4 class="order-title">Khung giường tối giản 4 chân cao cấp có thanh chắn đầu giường (inox)</h4>
-                        <div class="order-meta">
-                            <p>Số lượng: 1</p>
-                            <p>Màu sắc: Trắng - Đen</p>
-                        </div>
-                    </div>
-                    <div class="order-right">
-                        <div class="order-status status-pending">Chờ xử lý</div>
-                        <div class="order-total">
-                            <span>Tổng đơn hàng:</span>
-                            <span class="price">$899</span>
-                        </div>
-                        <div class="order-actions">
-                            <button class="btn-action"><i class="bi bi-x-circle-fill"></i> Hủy đơn hàng</button>
-                        </div>
-                    </div>
+            <div *ngIf="loadingOrders" style="text-align: center; padding: 40px; color: #666;">
+                <div class="spinner-border text-primary" role="status"></div>
+                <p style="margin-top: 10px;">Đang tải danh sách đơn hàng của bạn...</p>
+            </div>
+
+            <div class="order-list" *ngIf="!loadingOrders">
+                <div *ngIf="filteredOrders.length === 0" style="text-align: center; padding: 50px 20px; color: #888;">
+                    <i class="bi bi-inbox" style="font-size: 48px; color: #ccc;"></i>
+                    <p style="margin-top: 12px; font-size: 15px;">Bạn chưa có đơn hàng nào trong mục này.</p>
+                    <a routerLink="/rooms" style="display: inline-block; margin-top: 10px; background: #0058a3; color: #fff; padding: 8px 20px; border-radius: 20px; text-decoration: none; font-weight: 500;">
+                        Khám phá sản phẩm
+                    </a>
                 </div>
 
-                <!-- Order 1: Delivering -->
-                <div class="order-item" *ngIf="activeFilter === 'all' || activeFilter === 'delivering'">
-                    <div class="order-image-wrapper">
-                        <span class="badge-bestseller">Bán chạy</span>
-                        <img src="item.png" alt="Khung giường" class="order-image">
-                    </div>
-                    <div class="order-content">
-                        <h4 class="order-title">Khung giường tối giản 4 chân cao cấp có thanh chắn đầu giường (inox)</h4>
-                        <div class="order-meta">
-                            <p>Số lượng: 1</p>
-                            <p>Màu sắc: Trắng - Đen</p>
+                <div class="order-card-wrapper" *ngFor="let order of filteredOrders" style="background: #fff; border: 1px solid #e5e5e5; border-radius: 8px; margin-bottom: 20px; padding: 18px 20px;">
+                    <!-- Order Header -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f0f0f0; padding-bottom: 12px; margin-bottom: 15px;">
+                        <div>
+                            <span style="font-weight: 700; color: #111; font-size: 15px;">Mã đơn: {{ order.orderCode }}</span>
+                            <span style="color: #888; font-size: 13px; margin-left: 12px;">Ngày đặt: {{ formatDate(order.createdAt) }}</span>
+                        </div>
+                        <div>
+                            <span
+                                style="font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 12px;"
+                                [ngStyle]="{
+                                    'background-color': order.orderStatus === 'delivered' ? '#dcfce7' : (order.orderStatus === 'cancelled' ? '#fee2e2' : '#fef3c7'),
+                                    'color': order.orderStatus === 'delivered' ? '#15803d' : (order.orderStatus === 'cancelled' ? '#b91c1c' : '#b45309')
+                                }"
+                            >
+                                {{ getOrderStatusText(order.orderStatus) }}
+                            </span>
                         </div>
                     </div>
-                    <div class="order-right">
-                        <div class="order-status status-delivering">Đang giao</div>
-                        <div class="order-total">
-                            <span>Tổng đơn hàng:</span>
-                            <span class="price">$899</span>
-                        </div>
-                        <div class="order-actions">
-                            <button class="btn-action"><i class="bi bi-cart-fill"></i> Mua lại</button>
-                        </div>
-                    </div>
-                </div>
 
-                <!-- Order 2: Cancelled -->
-                <div class="order-item" *ngIf="activeFilter === 'all' || activeFilter === 'cancelled'">
-                    <div class="order-image-wrapper">
-                        <span class="badge-bestseller">Bán chạy</span>
-                        <img src="item.png" alt="Khung giường" class="order-image">
-                    </div>
-                    <div class="order-content">
-                        <h4 class="order-title">Khung giường tối giản 4 chân cao cấp có thanh chắn đầu giường (inox)</h4>
-                        <div class="order-meta">
-                            <p>Số lượng: 1</p>
-                            <p>Màu sắc: Trắng - Đen</p>
+                    <!-- Order Items List -->
+                    <div *ngFor="let item of order.items" class="order-item" style="border: none; padding: 10px 0; border-bottom: 1px dashed #f5f5f5;">
+                        <div class="order-image-wrapper" style="width: 70px; height: 70px; border-radius: 6px; overflow: hidden; background: #f9f9f9;">
+                            <img [src]="item.thumbnail || item.image || 'item.png'" [alt]="item.productName || item.name" class="order-image" style="width: 100%; height: 100%; object-fit: cover;">
                         </div>
-                    </div>
-                    <div class="order-right">
-                        <div class="order-status status-cancelled">Đã hủy</div>
-                        <div class="order-total">
-                            <span>Tổng đơn hàng:</span>
-                            <span class="price">$899</span>
+                        <div class="order-content" style="flex: 1; padding-left: 15px;">
+                            <h4 class="order-title" style="font-size: 14.5px; font-weight: 600; margin-bottom: 4px;">{{ item.productName || item.name }}</h4>
+                            <div class="order-meta" style="color: #666; font-size: 13px;">
+                                <span *ngIf="item.color">Màu: {{ item.color }} • </span>
+                                <span>Số lượng: {{ item.quantity }}</span>
+                                <span style="margin-left: 10px; color: #111; font-weight: 600;">{{ formatCurrency(item.unitPrice || item.price) }}</span>
+                            </div>
                         </div>
-                        <div class="order-actions">
-                            <button class="btn-action"><i class="bi bi-cart-fill"></i> Mua lại</button>
-                        </div>
-                    </div>
-                </div>
 
-                <!-- Order 3: Returned -->
-                <div class="order-item" *ngIf="activeFilter === 'all' || activeFilter === 'returned'">
-                    <div class="order-image-wrapper">
-                        <span class="badge-bestseller">Bán chạy</span>
-                        <img src="item.png" alt="Khung giường" class="order-image">
-                    </div>
-                    <div class="order-content">
-                        <h4 class="order-title">Khung giường tối giản 4 chân cao cấp có thanh chắn đầu giường (inox)</h4>
-                        <div class="order-meta">
-                            <p>Số lượng: 1</p>
-                            <p>Màu sắc: Trắng - Đen</p>
+                        <!-- Action cho từng sản phẩm trong đơn đã hoàn thành -->
+                        <div class="order-right" style="display: flex; flex-direction: column; align-items: flex-end; justify-content: center;">
+                            <div *ngIf="order.orderStatus === 'delivered'">
+                                <button
+                                    *ngIf="!isItemReviewed(order.id || order._id, item)"
+                                    type="button"
+                                    class="btn-action"
+                                    style="background: #0058a3; color: #fff; border-color: #0058a3; font-weight: 600;"
+                                    (click)="openReviewModal(order, item)"
+                                    title="Viết đánh giá cho sản phẩm này"
+                                >
+                                    <i class="bi bi-star-fill" style="margin-right: 4px; color: #facc15;"></i> Đánh giá
+                                </button>
+                                <span
+                                    *ngIf="isItemReviewed(order.id || order._id, item)"
+                                    style="font-size: 12.5px; color: #16a34a; font-weight: 600; display: inline-flex; align-items: center; gap: 5px; background: #dcfce7; padding: 6px 12px; border-radius: 14px; border: 1px solid #bbf7d0;"
+                                >
+                                    <i class="bi bi-check-circle-fill"></i> Đã đánh giá
+                                </span>
+                            </div>
                         </div>
                     </div>
-                    <div class="order-right">
-                        <div class="order-status status-returned">Đã trả</div>
-                        <div class="order-total">
-                            <span>Tổng đơn hàng:</span>
-                            <span class="price">$899</span>
-                        </div>
-                        <div class="order-actions">
-                            <button class="btn-action"><i class="bi bi-cart-fill"></i> Mua lại</button>
-                        </div>
-                    </div>
-                </div>
 
-                <!-- Order 4: Delivered (Review only) -->
-                <div class="order-item" *ngIf="activeFilter === 'all' || activeFilter === 'delivered'">
-                    <div class="order-image-wrapper">
-                        <span class="badge-bestseller">Bán chạy</span>
-                        <img src="item.png" alt="Khung giường" class="order-image">
-                    </div>
-                    <div class="order-content">
-                        <h4 class="order-title">Khung giường tối giản 4 chân cao cấp có thanh chắn đầu giường (inox)</h4>
-                        <div class="order-meta">
-                            <p>Số lượng: 1</p>
-                            <p>Màu sắc: Trắng - Đen</p>
-                        </div>
-                    </div>
-                    <div class="order-right">
-                        <div class="order-status status-delivered">Đã giao</div>
-                        <div class="order-total">
-                            <span>Tổng đơn hàng:</span>
-                            <span class="price">$899</span>
-                        </div>
-                        <div class="order-actions">
-                            <button class="btn-action"><i class="bi bi-pencil-square"></i> Đánh giá</button>
-                            <button class="btn-action"><i class="bi bi-cart-fill"></i> Mua lại</button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Order 5: Delivered (View review only) -->
-                <div class="order-item" *ngIf="activeFilter === 'all' || activeFilter === 'delivered'">
-                    <div class="order-image-wrapper">
-                        <span class="badge-bestseller">Bán chạy</span>
-                        <img src="item.png" alt="Khung giường" class="order-image">
-                    </div>
-                    <div class="order-content">
-                        <h4 class="order-title">Khung giường tối giản 4 chân cao cấp có thanh chắn đầu giường (inox)</h4>
-                        <div class="order-meta">
-                            <p>Số lượng: 2</p>
-                            <p>Màu sắc: Đen</p>
-                        </div>
-                    </div>
-                    <div class="order-right">
-                        <div class="order-status status-delivered">Đã giao</div>
-                        <div class="order-total">
-                            <span>Tổng đơn hàng:</span>
-                            <span class="price">$1798</span>
-                        </div>
-                        <div class="order-actions">
-                            <button class="btn-action"><i class="bi bi-eye-fill"></i> Xem đánh giá</button>
-                            <button class="btn-action"><i class="bi bi-cart-fill"></i> Mua lại</button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Order 6: Delivered (Review + Request refund) -->
-                <div class="order-item" *ngIf="activeFilter === 'all' || activeFilter === 'delivered'">
-                    <div class="order-image-wrapper">
-                        <span class="badge-bestseller">Bán chạy</span>
-                        <img src="item.png" alt="Khung giường" class="order-image">
-                    </div>
-                    <div class="order-content">
-                        <h4 class="order-title">Khung giường tối giản 4 chân cao cấp có thanh chắn đầu giường (inox)</h4>
-                        <div class="order-meta">
-                            <p>Số lượng: 1</p>
-                            <p>Màu sắc: Trắng - Đen</p>
-                        </div>
-                    </div>
-                    <div class="order-right">
-                        <div class="order-status status-delivered">Đã giao</div>
-                        <div class="order-total">
-                            <span>Tổng đơn hàng:</span>
-                            <span class="price">$899</span>
-                        </div>
-                        <div class="order-actions">
-                            <button class="btn-action"><i class="bi bi-credit-card-fill"></i> Yêu cầu hoàn tiền</button>
-                            <button class="btn-action"><i class="bi bi-pencil-square"></i> Đánh giá</button>
-                            <button class="btn-action"><i class="bi bi-cart-fill"></i> Mua lại</button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Order 7: Delivered (View review only - refund hidden as reviewed) -->
-                <div class="order-item" *ngIf="activeFilter === 'all' || activeFilter === 'delivered'">
-                    <div class="order-image-wrapper">
-                        <span class="badge-bestseller">Bán chạy</span>
-                        <img src="item.png" alt="Khung giường" class="order-image">
-                    </div>
-                    <div class="order-content">
-                        <h4 class="order-title">Khung giường tối giản 4 chân cao cấp có thanh chắn đầu giường (inox)</h4>
-                        <div class="order-meta">
-                            <p>Số lượng: 2</p>
-                            <p>Màu sắc: Đen</p>
-                        </div>
-                    </div>
-                    <div class="order-right">
-                        <div class="order-status status-delivered">Đã giao</div>
-                        <div class="order-total">
-                            <span>Tổng đơn hàng:</span>
-                            <span class="price">$1798</span>
-                        </div>
-                        <div class="order-actions">
-                            <button class="btn-action"><i class="bi bi-eye-fill"></i> Xem đánh giá</button>
-                            <button class="btn-action"><i class="bi bi-cart-fill"></i> Mua lại</button>
+                    <!-- Order Footer -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px; padding-top: 10px;">
+                        <span style="color: #666; font-size: 13px;">Hình thức thanh toán: {{ order.paymentMethod }}</span>
+                        <div style="font-size: 15px;">
+                            <span style="color: #555;">Tổng tiền: </span>
+                            <span style="font-size: 18px; font-weight: 700; color: #b91c1c;">{{ formatCurrency(order.finalAmount || order.totalAmount) }}</span>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
+        <!-- TAB 3: ĐÁNH GIÁ SẢN PHẨM -->
         <div *ngIf="activeTab === 'reviews'" class="history-container">
             <div class="history-filters" style="justify-content: center;">
-                <button class="filter-btn" [class.active]="reviewFilter === 'not_reviewed'" (click)="setReviewFilter('not_reviewed')">Chưa đánh giá</button>
-                <button class="filter-btn" [class.active]="reviewFilter === 'reviewed'" (click)="setReviewFilter('reviewed')">Đã đánh giá</button>
+                <button class="filter-btn" [class.active]="reviewFilter === 'not_reviewed'" (click)="setReviewFilter('not_reviewed')">
+                    Chưa đánh giá ({{ unreviewedItems.length }})
+                </button>
+                <button class="filter-btn" [class.active]="reviewFilter === 'reviewed'" (click)="setReviewFilter('reviewed')">
+                    Đã đánh giá ({{ reviewedItems.length }})
+                </button>
             </div>
 
-            <div class="order-list">
-                <!-- Not Reviewed Item 1 -->
-                <div class="order-item" *ngIf="reviewFilter === 'not_reviewed'">
-                    <div class="order-image-wrapper">
-                        <span class="badge-bestseller">Bán chạy</span>
-                        <img src="item.png" alt="Khung giường" class="order-image">
+            <!-- Danh sách sản phẩm CHƯA đánh giá từ các đơn hàng đã hoàn thành -->
+            <div class="order-list" *ngIf="reviewFilter === 'not_reviewed'">
+                <div *ngIf="unreviewedItems.length === 0" style="text-align: center; padding: 50px 20px; color: #888;">
+                    <i class="bi bi-check2-circle" style="font-size: 48px; color: #16a34a;"></i>
+                    <p style="margin-top: 12px; font-size: 15px;">Tuyệt vời! Bạn không có sản phẩm nào chưa được đánh giá.</p>
+                </div>
+
+                <div class="order-item" *ngFor="let entry of unreviewedItems" style="background: #fff; border: 1px solid #e5e5e5; border-radius: 8px; margin-bottom: 14px; padding: 16px;">
+                    <div class="order-image-wrapper" style="width: 80px; height: 80px; border-radius: 6px; overflow: hidden; background: #f9f9f9;">
+                        <img [src]="entry.item.thumbnail || entry.item.image || 'item.png'" [alt]="entry.item.productName || entry.item.name" class="order-image" style="width: 100%; height: 100%; object-fit: cover;">
                     </div>
-                    <div class="order-content">
-                        <h4 class="order-title">Khung giường tối giản 4 chân cao cấp có thanh chắn đầu giường (inox)</h4>
-                        <div class="order-meta">
-                            <p>Màu sắc: Trắng - Đen</p>
+                    <div class="order-content" style="flex: 1; padding-left: 15px;">
+                        <h4 class="order-title" style="font-size: 15px; font-weight: 600; margin-bottom: 4px;">{{ entry.item.productName || entry.item.name }}</h4>
+                        <div class="order-meta" style="color: #666; font-size: 13px;">
+                            <p>Đơn hàng: <strong>{{ entry.order.orderCode }}</strong> • Ngày giao: {{ formatDate(entry.order.createdAt) }}</p>
                         </div>
                     </div>
-                    <div class="order-right">
-                        <div class="order-actions" style="margin-top: auto;">
-                            <button class="btn-action"><i class="bi bi-pencil-square"></i> Đánh giá</button>
+                    <div class="order-right" style="display: flex; align-items: center;">
+                        <div class="order-actions">
+                            <button
+                                type="button"
+                                class="btn-action"
+                                style="background: #0058a3; color: #fff; border-color: #0058a3; font-weight: 600;"
+                                (click)="openReviewModal(entry.order, entry.item)"
+                            >
+                                <i class="bi bi-star-fill" style="margin-right: 6px; color: #facc15;"></i> Viết đánh giá
+                            </button>
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <!-- Not Reviewed Item 2 -->
-                <div class="order-item" *ngIf="reviewFilter === 'not_reviewed'">
-                    <div class="order-image-wrapper">
-                        <span class="badge-bestseller">Bán chạy</span>
-                        <img src="item.png" alt="Khung giường" class="order-image">
-                    </div>
-                    <div class="order-content">
-                        <h4 class="order-title">Khung giường tối giản 4 chân cao cấp có thanh chắn đầu giường (inox)</h4>
-                        <div class="order-meta">
-                            <p>Màu sắc: Đen</p>
-                        </div>
-                    </div>
-                    <div class="order-right">
-                        <div class="order-actions" style="margin-top: auto;">
-                            <button class="btn-action"><i class="bi bi-pencil-square"></i> Đánh giá</button>
-                        </div>
-                    </div>
+            <!-- Danh sách sản phẩm ĐÃ đánh giá -->
+            <div class="order-list" *ngIf="reviewFilter === 'reviewed'">
+                <div *ngIf="reviewedItems.length === 0" style="text-align: center; padding: 50px 20px; color: #888;">
+                    <i class="bi bi-chat-square-text" style="font-size: 48px; color: #ccc;"></i>
+                    <p style="margin-top: 12px; font-size: 15px;">Bạn chưa có đánh giá nào.</p>
                 </div>
 
-                <!-- Reviewed Item 1 -->
-                <div class="order-item" *ngIf="reviewFilter === 'reviewed'">
-                    <div class="order-image-wrapper">
-                        <span class="badge-bestseller">Bán chạy</span>
-                        <img src="item.png" alt="Khung giường" class="order-image">
+                <div class="order-item" *ngFor="let rev of reviewedItems" style="background: #fff; border: 1px solid #e5e5e5; border-radius: 8px; margin-bottom: 14px; padding: 18px; align-items: flex-start;">
+                    <div class="order-image-wrapper" style="width: 80px; height: 80px; border-radius: 6px; overflow: hidden; background: #f9f9f9; flex-shrink: 0;">
+                        <img [src]="rev.productThumbnail || 'item.png'" [alt]="rev.productName" class="order-image" style="width: 100%; height: 100%; object-fit: cover;">
                     </div>
-                    <div class="order-content">
-                        <h4 class="order-title">Khung giường tối giản 4 chân cao cấp có thanh chắn đầu giường (inox)</h4>
-                        <div class="order-meta">
-                            <p>Màu sắc: Trắng - Đen</p>
+                    <div class="order-content" style="flex: 1; padding-left: 15px;">
+                        <h4 class="order-title" style="font-size: 15px; font-weight: 600; margin-bottom: 4px;">{{ rev.productName }}</h4>
+                        <!-- Stars -->
+                        <div style="display: flex; align-items: center; gap: 4px; color: #f59e0b; margin: 4px 0;">
+                            <ng-container *ngFor="let s of [1,2,3,4,5]">
+                                <i class="bi" [ngClass]="s <= rev.rating ? 'bi-star-fill' : 'bi-star'" style="font-size: 14px;"></i>
+                            </ng-container>
+                            <span style="color: #666; font-size: 12px; margin-left: 6px;">{{ rev.rating }}/5 sao • {{ formatDate(rev.createdAt) }}</span>
                         </div>
-                        <div class="review-stars" style="color: #ffc107; margin-top: 10px;">
-                            <i class="bi bi-star-fill"></i>
-                            <i class="bi bi-star-fill"></i>
-                            <i class="bi bi-star-fill"></i>
-                            <i class="bi bi-star-fill"></i>
-                            <i class="bi bi-star-fill"></i>
-                        </div>
-                    </div>
-                    <div class="order-right">
-                        <div class="order-actions" style="margin-top: auto;">
-                            <button class="btn-action"><i class="bi bi-eye-fill"></i> Xem đánh giá</button>
-                        </div>
-                    </div>
-                </div>
+                        <p style="color: #333; font-size: 13.5px; line-height: 1.5; margin-top: 6px; background: #fdfbf7; padding: 8px 12px; border-radius: 6px; border-left: 3px solid #0058a3;">
+                            "{{ rev.comment }}"
+                        </p>
 
-                <!-- Reviewed Item 2 -->
-                <div class="order-item" *ngIf="reviewFilter === 'reviewed'">
-                    <div class="order-image-wrapper">
-                        <span class="badge-bestseller">Bán chạy</span>
-                        <img src="item.png" alt="Khung giường" class="order-image">
-                    </div>
-                    <div class="order-content">
-                        <h4 class="order-title">Khung giường tối giản 4 chân cao cấp có thanh chắn đầu giường (inox)</h4>
-                        <div class="order-meta">
-                            <p>Màu sắc: Đen</p>
+                        <!-- Attached Images and Videos in reviewed item -->
+                        <div *ngIf="rev.images && rev.images.length > 0" style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px;">
+                            <img *ngFor="let img of rev.images" [src]="img" alt="Ảnh thực tế" style="width: 60px; height: 60px; object-fit: cover; border-radius: 4px; border: 1px solid #e5e7eb;">
                         </div>
-                        <div class="review-stars" style="color: #ffc107; margin-top: 10px;">
-                            <i class="bi bi-star-fill"></i>
-                            <i class="bi bi-star-fill"></i>
-                            <i class="bi bi-star-fill"></i>
-                            <i class="bi bi-star-fill"></i>
-                            <i class="bi bi-star-fill"></i>
+                        <div *ngIf="rev.videos && rev.videos.length > 0" style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px;">
+                            <video *ngFor="let vid of rev.videos" [src]="vid" controls style="width: 140px; height: 80px; object-fit: cover; border-radius: 4px; border: 1px solid #e5e7eb; background: #000;"></video>
                         </div>
                     </div>
-                    <div class="order-right">
-                        <div class="order-actions" style="margin-top: auto;">
-                            <button class="btn-action"><i class="bi bi-eye-fill"></i> Xem đánh giá</button>
-                        </div>
+                    <div class="order-right" style="display: flex; align-items: center; flex-shrink: 0; margin-left: 10px;">
+                        <span
+                            style="font-size: 12px; font-weight: 600; padding: 4px 8px; border-radius: 12px;"
+                            [ngStyle]="{
+                                'background-color': rev.status === 'visible' ? '#dcfce7' : '#fee2e2',
+                                'color': rev.status === 'visible' ? '#15803d' : '#b91c1c'
+                            }"
+                        >
+                            {{ rev.status === 'visible' ? 'Đang hiển thị' : 'Đã ẩn' }}
+                        </span>
                     </div>
                 </div>
             </div>
         </div>
 
     </main>
+
+    <!-- Modal Viết Đánh Giá Sản Phẩm Cho Đơn Hàng Đã Hoàn Thành -->
+    <div *ngIf="isReviewModalOpen" class="logout-modal-overlay" (click)="closeReviewModal()" style="display: flex; align-items: center; justify-content: center; z-index: 9999;">
+        <div class="logout-modal-content" (click)="$event.stopPropagation()" style="max-width: 540px; width: 92%; max-height: 90vh; overflow-y: auto; padding: 24px 28px; text-align: left;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid #f0f0f0; padding-bottom: 12px; margin-bottom: 16px;">
+                <div>
+                    <h3 style="font-size: 18px; font-weight: 700; color: #111; margin: 0;">Đánh giá sản phẩm</h3>
+                    <p style="font-size: 12px; color: #666; margin: 4px 0 0 0;">Đơn hàng: {{ reviewingTarget?.orderCode }}</p>
+                </div>
+                <button type="button" (click)="closeReviewModal()" style="background: none; border: none; font-size: 18px; cursor: pointer; color: #888;">✕</button>
+            </div>
+
+            <!-- Product preview in modal -->
+            <div style="display: flex; gap: 12px; align-items: center; background: #faf9f7; padding: 10px 12px; border-radius: 8px; margin-bottom: 18px;">
+                <img [src]="reviewingTarget?.productThumbnail || 'item.png'" [alt]="reviewingTarget?.productName" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px; border: 1px solid #e5e5e5;">
+                <div style="font-size: 13.5px; font-weight: 600; color: #222;">
+                    {{ reviewingTarget?.productName }}
+                </div>
+            </div>
+
+            <!-- Star Rating Input -->
+            <div style="margin-bottom: 18px;">
+                <label style="display: block; font-size: 13px; font-weight: 600; color: #333; margin-bottom: 8px;">Mức độ hài lòng của bạn</label>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <button
+                        *ngFor="let s of [1,2,3,4,5]"
+                        type="button"
+                        (click)="setReviewRating(s)"
+                        style="background: none; border: none; font-size: 26px; cursor: pointer; padding: 0 2px; color: #f59e0b;"
+                        title="{{ s }} sao"
+                    >
+                        <i class="bi" [ngClass]="s <= reviewRating ? 'bi-star-fill' : 'bi-star'"></i>
+                    </button>
+                    <span style="font-size: 13px; font-weight: 600; color: #f59e0b; margin-left: 8px;">
+                        {{ reviewRating === 5 ? 'Tuyệt vời (5/5)' : (reviewRating === 4 ? 'Tốt (4/5)' : (reviewRating === 3 ? 'Bình thường (3/5)' : (reviewRating === 2 ? 'Tệ (2/5)' : 'Rất tệ (1/5)'))) }}
+                    </span>
+                </div>
+            </div>
+
+            <!-- Comment Textarea -->
+            <div style="margin-bottom: 18px;">
+                <label for="reviewCommentInput" style="display: block; font-size: 13px; font-weight: 600; color: #333; margin-bottom: 6px;">
+                    Nhận xét chi tiết <span style="color: #dc2626;">*</span>
+                </label>
+                <textarea
+                    id="reviewCommentInput"
+                    rows="4"
+                    [(ngModel)]="reviewComment"
+                    placeholder="Hãy chia sẻ trải nghiệm sử dụng sản phẩm: chất lượng, hoàn thiện, thiết kế..."
+                    style="width: 100%; border: 1px solid #d1d5db; border-radius: 6px; padding: 10px; font-size: 13.5px; box-sizing: border-box; outline: none; font-family: inherit;"
+                ></textarea>
+            </div>
+
+            <!-- Upload Hình ảnh & Video (Không bắt buộc) -->
+            <div style="margin-bottom: 18px;">
+                <label style="display: block; font-size: 13px; font-weight: 600; color: #333; margin-bottom: 6px;">
+                    Hình ảnh / Video thực tế <span style="font-size: 12px; font-weight: normal; color: #888;">(Không bắt buộc)</span>
+                </label>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px;">
+                    <!-- Nút thêm ảnh -->
+                    <label style="display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px; background: #f8fafc; border: 1px dashed #94a3b8; border-radius: 6px; font-size: 12.5px; font-weight: 500; color: #334155; cursor: pointer;">
+                        <i class="bi bi-camera" style="font-size: 15px;"></i>
+                        <span>Thêm ảnh (tối đa 5)</span>
+                        <input type="file" accept="image/*" multiple (change)="onImageFileSelected($event)" style="display: none;">
+                    </label>
+                    <!-- Nút thêm video -->
+                    <label style="display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px; background: #f8fafc; border: 1px dashed #94a3b8; border-radius: 6px; font-size: 12.5px; font-weight: 500; color: #334155; cursor: pointer;">
+                        <i class="bi bi-camera-video" style="font-size: 15px;"></i>
+                        <span>Thêm video (tối đa 1)</span>
+                        <input type="file" accept="video/*" (change)="onVideoFileSelected($event)" style="display: none;">
+                    </label>
+                </div>
+
+                <!-- Preview ảnh đã chọn -->
+                <div *ngIf="reviewImages.length > 0" style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px;">
+                    <div *ngFor="let img of reviewImages; let idx = index" style="position: relative; width: 64px; height: 64px; border-radius: 6px; overflow: hidden; border: 1px solid #cbd5e1;">
+                        <img [src]="img" alt="Ảnh review" style="width: 100%; height: 100%; object-fit: cover;">
+                        <button type="button" (click)="removeReviewImage(idx)" style="position: absolute; top: 2px; right: 2px; background: rgba(0,0,0,0.65); color: #fff; border: none; border-radius: 50%; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; font-size: 11px; cursor: pointer;">✕</button>
+                    </div>
+                </div>
+
+                <!-- Preview video đã chọn -->
+                <div *ngIf="reviewVideos.length > 0" style="display: flex; gap: 8px; flex-wrap: wrap;">
+                    <div *ngFor="let vid of reviewVideos; let idx = index" style="position: relative; width: 120px; height: 70px; border-radius: 6px; overflow: hidden; border: 1px solid #cbd5e1; background: #000;">
+                        <video [src]="vid" controls style="width: 100%; height: 100%; object-fit: cover;"></video>
+                        <button type="button" (click)="removeReviewVideo(idx)" style="position: absolute; top: 2px; right: 2px; background: rgba(0,0,0,0.65); color: #fff; border: none; border-radius: 50%; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; font-size: 11px; cursor: pointer; z-index: 5;">✕</button>
+                    </div>
+                </div>
+            </div>
+
+            <div *ngIf="reviewModalError" style="color: #dc2626; font-size: 13px; margin-bottom: 12px;">
+                {{ reviewModalError }}
+            </div>
+
+            <!-- Modal Actions -->
+            <div style="display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid #f0f0f0; padding-top: 14px;">
+                <button type="button" class="btn-cancel" (click)="closeReviewModal()" [disabled]="reviewSubmitting">Hủy</button>
+                <button
+                    type="button"
+                    class="btn-save"
+                    style="background: #0058a3; color: #fff; border: none; padding: 9px 20px; border-radius: 6px; font-weight: 600; cursor: pointer;"
+                    (click)="submitProductReview()"
+                    [disabled]="reviewSubmitting"
+                >
+                    {{ reviewSubmitting ? 'Đang gửi...' : 'Gửi đánh giá' }}
+                </button>
+            </div>
+        </div>
+    </div>
 
     <!-- Custom Logout Confirmation Modal -->
     @if (showLogoutConfirm) {

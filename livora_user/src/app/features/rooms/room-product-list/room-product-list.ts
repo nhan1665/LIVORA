@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -32,7 +32,8 @@ export class RoomProductList implements OnInit {
 
   constructor(
     private route: ActivatedRoute,
-    private productService: ProductService
+    private productService: ProductService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   roomNamesMap: Record<string, string> = {};
@@ -92,6 +93,7 @@ export class RoomProductList implements OnInit {
             if (r.slug && r.name) this.roomNamesMap[r.slug] = r.name;
             if (r._id && r.name) this.roomNamesMap[r._id] = r.name;
           });
+          this.cdr.detectChanges();
         }
       }
     });
@@ -105,6 +107,7 @@ export class RoomProductList implements OnInit {
             if (c.slug && c.name) this.categoryNamesMap[c.slug] = c.name;
             if (c._id && c.name) this.categoryNamesMap[c._id] = c.name;
           });
+          this.cdr.detectChanges();
         }
       }
     });
@@ -126,6 +129,8 @@ export class RoomProductList implements OnInit {
     const roomParam = this.currentRoom && this.currentRoom !== 'all' ? this.currentRoom : undefined;
 
     this.isLoading = true;
+    this.cdr.detectChanges();
+
     this.productService.getProducts({
       room: roomParam,
       category: categoryParam,
@@ -155,16 +160,19 @@ export class RoomProductList implements OnInit {
         } else {
           this.products = [];
         }
+        this.cdr.detectChanges();
       },
       error: (err) => {
         this.isLoading = false;
         this.products = [];
         console.warn('Lỗi khi tải sản phẩm từ Database:', err);
+        this.cdr.detectChanges();
       }
     });
   }
 
   toggleFilter(filterName: string) {
     this.activeFilter = this.activeFilter === filterName ? null : filterName;
+    this.cdr.detectChanges();
   }
 }

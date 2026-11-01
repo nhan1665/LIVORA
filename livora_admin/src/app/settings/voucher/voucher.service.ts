@@ -77,6 +77,17 @@ export class VoucherService {
     );
   }
 
+  /** Bulk import vouchers from Excel */
+  createVouchersBulk(vouchers: any[]): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/bulk`, { items: vouchers }).pipe(
+      map((res) => res.data),
+      catchError((err) => {
+        const message = err.error?.message || 'Không thể nhập danh sách voucher hàng loạt.';
+        return throwError(() => new Error(message));
+      })
+    );
+  }
+
   /** Updates an existing voucher. */
   updateVoucher(id: string, draft: VoucherDraft): Observable<Voucher> {
     return this.http.put<any>(`${this.apiUrl}/${id}`, draft).pipe(

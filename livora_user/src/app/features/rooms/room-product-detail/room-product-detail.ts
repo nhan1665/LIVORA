@@ -4,6 +4,8 @@ import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CartService } from '../../../services/cart.service';
 import { ProductService, UserProduct } from '../../../services/product.service';
+import { ReviewService, UserReviewItem } from '../../../services/review.service';
+import { AuthService } from '../../../services/auth.service';
 
 export interface ProductReviewItem {
   id: number;
@@ -54,13 +56,18 @@ export class RoomProductDetail implements OnInit, OnDestroy {
   isDetailsOpen: boolean = false;
 
   isReviewModalOpen: boolean = false;
-  activeReviewTab: string = 'UK';
+  activeReviewTab: string = 'All';
   isSortMenuOpen: boolean = false;
   isFilterMenuOpen: boolean = false;
   currentSort: string = 'newest';
   isWriteReviewOpen: boolean = false;
 
-  reviewsList: ProductReviewItem[] = [];
+  // Đánh giá THẬT từ Database
+  realReviews: UserReviewItem[] = [];
+  selectedStarFilter: number | 'all' = 'all';
+  reviewFilterMediaOnly: boolean = false;
+  loadingReviews: boolean = false;
+
   relatedProductsList: any[] = [];
 
   get relatedProducts() {
@@ -72,6 +79,8 @@ export class RoomProductDetail implements OnInit, OnDestroy {
     private router: Router,
     private cartService: CartService,
     private productService: ProductService,
+    private reviewService: ReviewService,
+    public authService: AuthService,
     private cdr: ChangeDetectorRef
   ) {}
 
@@ -84,6 +93,7 @@ export class RoomProductDetail implements OnInit, OnDestroy {
             if (r.slug && r.name) this.roomNamesMap[r.slug] = r.name;
             if (r._id && r.name) this.roomNamesMap[r._id] = r.name;
           });
+          this.cdr.detectChanges();
         }
       }
     });
@@ -96,6 +106,7 @@ export class RoomProductDetail implements OnInit, OnDestroy {
             if (c.slug && c.name) this.categoryNamesMap[c.slug] = c.name;
             if (c._id && c.name) this.categoryNamesMap[c._id] = c.name;
           });
+          this.cdr.detectChanges();
         }
       }
     });
@@ -129,7 +140,6 @@ export class RoomProductDetail implements OnInit, OnDestroy {
                 reviews: resProduct.totalReviews || 0,
                 articleNumber: resProduct.sku || 'LV-' + (resProduct.id || '').slice(-6),
                 description: resProduct.description || '',
-                // Toàn bộ hình ảnh sản phẩm được lấy trực tiếp từ Database
                 images: imageList,
                 colors: (resProduct.colors && resProduct.colors.length > 0)
                   ? resProduct.colors.map((c: string) => ({ name: c, image: primaryImage }))
@@ -139,9 +149,12 @@ export class RoomProductDetail implements OnInit, OnDestroy {
               };
               this.initProductState();
               this.loadRelatedProducts();
+              this.loadRealReviews();
+              this.cdr.detectChanges();
             } else {
               this.product = null;
               this.relatedProductsList = [];
+              this.realReviews = [];
               this.cdr.detectChanges();
             }
           },
@@ -149,6 +162,7 @@ export class RoomProductDetail implements OnInit, OnDestroy {
             this.isLoading = false;
             this.product = null;
             this.relatedProductsList = [];
+            this.realReviews = [];
             this.cdr.detectChanges();
           }
         });
@@ -157,6 +171,30 @@ export class RoomProductDetail implements OnInit, OnDestroy {
       }
 
       window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  }
+
+  // Tải danh sách đánh giá THẬT của sản phẩm
+  loadRealReviews() {
+    if (!this.productId) return;
+    this.loadingReviews = true;
+    this.reviewService.getProductReviews(this.productId).subscribe({
+      next: (res) => {
+        this.loadingReviews = false;
+        this.realReviews = res.items || [];
+        if (this.product) {
+          if (res.total > 0) {
+            this.product.reviews = res.total;
+            this.product.rating = res.avgRating;
+          }
+        }
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.loadingReviews = false;
+        this.realReviews = [];
+        this.cdr.detectChanges();
+      }
     });
   }
 
@@ -224,10 +262,41 @@ export class RoomProductDetail implements OnInit, OnDestroy {
   toggleReviewModal() {
     this.isReviewModalOpen = !this.isReviewModalOpen;
     document.body.style.overflow = this.isReviewModalOpen ? 'hidden' : '';
+    if (this.isReviewModalOpen && this.realReviews.length === 0) {
+      this.loadRealReviews();
+    }
   }
 
-  setReviewTab(tab: string) {
-    this.activeReviewTab = tab;
+  scrollToReviews() {
+    const el = document.getElementById('customer-reviews-section');
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else {
+      this.toggleReviewModal();
+    }
+  }
+
+  setStarFilter(star: number | 'all') {
+    this.selectedStarFilter = star;
+  }
+
+  toggleMediaFilter() {
+    this.reviewFilterMediaOnly = !this.reviewFilterMediaOnly;
+  }
+
+  get mediaReviewsCount(): number {
+    return this.realReviews.filter(r => (r.images && r.images.length > 0) || (r.videos && r.videos.length > 0)).length;
+  }
+
+  getStarCount(star: number): number {
+    return this.realReviews.filter((r) => Math.round(r.rating) === star).length;
+  }
+
+  getCustomerInitials(name: string): string {
+    if (!name || !name.trim()) return 'KH';
+    const parts = name.trim().split(' ').filter(p => p.length > 0);
+    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
   }
 
   toggleSortMenu() {
@@ -243,16 +312,15 @@ export class RoomProductDetail implements OnInit, OnDestroy {
     this.isFilterMenuOpen = !this.isFilterMenuOpen;
   }
 
-  openWriteReview() {
-    this.isWriteReviewOpen = true;
-  }
-
-  closeWriteReview() {
-    this.isWriteReviewOpen = false;
-  }
-
-  toggleWriteReview() {
-    this.isWriteReviewOpen = !this.isWriteReviewOpen;
+  goToProfileReviews() {
+    if (this.isReviewModalOpen) {
+      this.toggleReviewModal();
+    }
+    if (this.authService.isLoggedIn) {
+      this.router.navigate(['/profile'], { queryParams: { tab: 'reviews' } });
+    } else {
+      this.router.navigate(['/login'], { queryParams: { returnUrl: '/profile?tab=reviews' } });
+    }
   }
 
   showToast: boolean = false;
@@ -303,11 +371,30 @@ export class RoomProductDetail implements OnInit, OnDestroy {
     return stars;
   }
 
-  get processedReviews(): ProductReviewItem[] {
-    let result = [...this.reviewsList];
-    if (this.activeReviewTab !== 'All') {
-      result = result.filter(r => r.country === this.activeReviewTab);
+  // Phân bổ tỷ lệ sao thực tế từ database
+  get starBreakdown(): { star: number; count: number; percent: number }[] {
+    const total = this.realReviews.length;
+    const counts = [0, 0, 0, 0, 0];
+    for (const r of this.realReviews) {
+      const idx = Math.max(1, Math.min(5, Math.round(r.rating || 5))) - 1;
+      counts[idx]++;
     }
-    return result;
+    return [5, 4, 3, 2, 1].map((s) => ({
+      star: s,
+      count: counts[s - 1],
+      percent: total > 0 ? Math.round((counts[s - 1] / total) * 100) : (s === 5 ? 100 : 0),
+    }));
+  }
+
+  // Danh sách đánh giá hiển thị (đã qua lọc số sao và lọc có media)
+  get displayedReviews(): UserReviewItem[] {
+    let list = this.realReviews;
+    if (this.selectedStarFilter !== 'all') {
+      list = list.filter((r) => Math.round(r.rating) === this.selectedStarFilter);
+    }
+    if (this.reviewFilterMediaOnly) {
+      list = list.filter((r) => (r.images && r.images.length > 0) || (r.videos && r.videos.length > 0));
+    }
+    return list;
   }
 }

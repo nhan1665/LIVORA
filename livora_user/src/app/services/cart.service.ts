@@ -29,6 +29,7 @@ export class CartService {
   readonly discountCode = signal<string>('');
   readonly serverQuote = signal<CheckoutQuote | null>(null);
   readonly discountAmount = computed(() => this.serverQuote()?.discount || 0);
+  readonly customShippingFee = signal<number>(0);
   readonly shippingMethod = signal<'nhanh' | 'hoa-toc'>('nhanh');
   readonly paymentMethod = signal<'cod' | 'bank'>('cod');
 
@@ -42,6 +43,7 @@ export class CartService {
     district: '',
     ward: ''
   });
+
   constructor() {
     const savedCart = localStorage.getItem('livora_cart');
     if (savedCart) {
@@ -64,7 +66,12 @@ export class CartService {
     return this._items().reduce((total, item) => total + (item.price * item.quantity), 0);
   });
 
-  readonly shippingFee = computed(() => this.serverQuote()?.shippingFee || 0);
+  readonly shippingFee = computed(() => {
+    if (this.serverQuote()) {
+      return this.serverQuote()!.shippingFee;
+    }
+    return this.customShippingFee();
+  });
 
   readonly total = computed(() => {
     if (this.serverQuote()) return this.serverQuote()!.total;
@@ -122,6 +129,7 @@ export class CartService {
     this.orderNote.set('');
     this.clearDiscount();
     this.serverQuote.set(null);
+    this.customShippingFee.set(0);
     this.shippingMethod.set('nhanh');
     this.paymentMethod.set('cod');
     this.shippingInfo.set({

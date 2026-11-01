@@ -21,7 +21,7 @@ export class Review implements OnInit {
   private readonly reviewService = inject(ReviewService);
   private readonly cdr = inject(ChangeDetectorRef);
 
-  readonly pageSize = 5;
+  readonly pageSize = 10;
   readonly stars = [1, 2, 3, 4, 5];
 
   readonly reviews = signal<ReviewRecord[]>([]);
@@ -141,11 +141,8 @@ export class Review implements OnInit {
   }
 
   openHideModal(review: ReviewRecord): void {
-    if (review.status === 'hidden') {
-      return;
-    }
     this.selectedReview.set(review);
-    this.hideReasonDraft = '';
+    this.hideReasonDraft = review.hiddenReason || 'Nội dung vi phạm tiêu chuẩn cộng đồng';
     this.isHideModalOpen.set(true);
   }
 
@@ -156,9 +153,7 @@ export class Review implements OnInit {
 
   confirmHide(): void {
     const review = this.selectedReview();
-    if (!review) {
-      return;
-    }
+    if (!review) return;
 
     this.isSubmitting.set(true);
     this.reviewService.hideReview(review.id, this.hideReasonDraft).subscribe({
@@ -175,6 +170,26 @@ export class Review implements OnInit {
       error: (err: Error) => {
         this.isSubmitting.set(false);
         this.showToast(err.message || 'Không thể cập nhật trạng thái đánh giá.', 'error');
+      },
+    });
+  }
+
+  confirmShow(review: ReviewRecord): void {
+    if (!review) return;
+
+    this.isSubmitting.set(true);
+    this.reviewService.showReview(review.id).subscribe({
+      next: (updated) => {
+        this.isSubmitting.set(false);
+        if (this.isDetailModalOpen()) {
+          this.selectedReview.set(updated);
+        }
+        this.showToast(`Đã hiển thị lại đánh giá ${updated.code} trên website.`, 'success');
+        this.loadReviews();
+      },
+      error: (err: Error) => {
+        this.isSubmitting.set(false);
+        this.showToast(err.message || 'Không thể hiển thị lại đánh giá.', 'error');
       },
     });
   }

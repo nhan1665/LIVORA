@@ -7,16 +7,19 @@ const {
   createVoucher,
   updateVoucher,
   toggleVoucher,
+  createVouchersBulk,
 } = require('../controllers/voucherController');
 
 // GET    /api/vouchers          — List vouchers (with filter/search/pagination)
 // POST   /api/vouchers          — Create a new voucher
+// POST   /api/vouchers/bulk     — Bulk create vouchers from Excel/CSV
 // GET    /api/vouchers/:id      — Get voucher by ID
 // PUT    /api/vouchers/:id      — Update voucher
 // PATCH  /api/vouchers/:id/toggle — Toggle voucher active status
 
 router.get('/', getVouchers);
 router.post('/', createVoucher);
+router.post('/bulk', createVouchersBulk);
 router.get('/:id', getVoucherById);
 router.put('/:id', updateVoucher);
 router.patch('/:id/toggle', toggleVoucher);

@@ -158,6 +158,97 @@ const createShippingConfig = async (req, res) => {
 };
 
 /**
+ * @desc    Bulk create or upsert shipping configs from Excel import
+ * @route   POST /api/shipping/bulk
+ */
+const createShippingConfigsBulk = async (req, res) => {
+  try {
+    const rawItems = Array.isArray(req.body) ? req.body : req.body.items;
+    if (!Array.isArray(rawItems) || rawItems.length === 0) {
+      return sendError(res, 'Dữ liệu danh sách vận chuyển không hợp lệ hoặc đang trống.', 400);
+    }
+
+    const results = {
+      total: rawItems.length,
+      successCount: 0,
+      updatedCount: 0,
+      insertedCount: 0,
+      errors: [],
+    };
+
+    for (let i = 0; i < rawItems.length; i++) {
+      const row = rawItems[i];
+      const rowIdx = i + 1;
+
+      const province = String(row.province || '').trim();
+      const shippingMethod = String(row.shippingMethod || 'standard').toLowerCase().trim();
+
+      if (!province) {
+        results.errors.push(`Dòng ${rowIdx}: Tỉnh / Thành phố không được để trống.`);
+        continue;
+      }
+
+      if (!['standard', 'express'].includes(shippingMethod)) {
+        results.errors.push(`Dòng ${rowIdx}: Phương thức vận chuyển phải là 'standard' (Tiêu chuẩn) hoặc 'express' (Hỏa tốc).`);
+        continue;
+      }
+
+      const fee = Number(row.fee);
+      if (isNaN(fee) || fee < 0) {
+        results.errors.push(`Dòng ${rowIdx}: Cước phí không hợp lệ.`);
+        continue;
+      }
+
+      const estimatedDeliveryTime = String(row.estimatedDeliveryTime || (shippingMethod === 'express' ? '24 giờ' : '2 - 4 ngày')).trim();
+      const freeShipThreshold = Number(row.freeShipThreshold || 0);
+      const freeShipEnabled = row.freeShipEnabled !== undefined ? Boolean(row.freeShipEnabled) : freeShipThreshold > 0;
+      const isActive = row.isActive !== undefined ? Boolean(row.isActive) : true;
+      const whiteGloveIncluded = Boolean(row.whiteGloveIncluded);
+      const timeSlot = String(row.timeSlot || 'Giờ hành chính (8h00 - 18h00)').trim();
+      const hub = String(row.hub || '').trim();
+      const feeNote = String(row.feeNote || '').trim();
+
+      const existing = await Shipping.findOne({ shippingMethod, province });
+      if (existing) {
+        existing.fee = fee;
+        existing.estimatedDeliveryTime = estimatedDeliveryTime;
+        existing.freeShipThreshold = freeShipThreshold;
+        existing.freeShipEnabled = freeShipEnabled;
+        existing.isActive = isActive;
+        existing.whiteGloveIncluded = whiteGloveIncluded;
+        existing.timeSlot = timeSlot;
+        if (hub) existing.hub = hub;
+        if (feeNote) existing.feeNote = feeNote;
+        await existing.save();
+        results.updatedCount++;
+        results.successCount++;
+      } else {
+        await Shipping.create({
+          shippingMethod,
+          province,
+          fee,
+          estimatedDeliveryTime,
+          freeShipThreshold,
+          freeShipEnabled,
+          isActive,
+          whiteGloveIncluded,
+          timeSlot,
+          hub,
+          feeNote,
+        });
+        results.insertedCount++;
+        results.successCount++;
+      }
+    }
+
+    return sendSuccess(res, results, `Đã xử lý nhập ${results.successCount}/${results.total} cấu hình vận chuyển.`);
+  } catch (error) {
+    console.error('createShippingConfigsBulk error:', error);
+    return sendError(res, error.message || 'Lỗi xử lý import danh sách vận chuyển.', 500);
+  }
+};
+
+/**
  * @desc    Update shipping configuration
  * @route   PUT /api/shipping/:id
  */
@@ -239,6 +330,7 @@ const deleteShippingConfig = async (req, res) => {
 module.exports = {
   getShippingConfigs,
   createShippingConfig,
+  createShippingConfigsBulk,
   updateShippingConfig,
   toggleShippingConfig,
   deleteShippingConfig,

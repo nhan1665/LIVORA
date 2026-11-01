@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { ProductService } from '../../../services/product.service';
@@ -21,10 +21,15 @@ export class RoomCategories implements OnInit {
   rooms: RoomCategoryItem[] = [];
   isLoading = true;
 
-  constructor(private productService: ProductService) {}
+  constructor(
+    private productService: ProductService,
+    private cdr: ChangeDetectorRef
+  ) {}
 
   ngOnInit(): void {
     this.isLoading = true;
+    this.cdr.detectChanges();
+
     this.productService.getRooms().subscribe({
       next: (data) => {
         this.isLoading = false;
@@ -35,17 +40,18 @@ export class RoomCategories implements OnInit {
               id: r.id || r._id,
               name: r.name,
               slug: r.slug,
-              // Sử dụng chính xác đường dẫn / URL hình ảnh được nhập và lưu trong Database
               image: r.thumbnail || ''
             }));
         } else {
           this.rooms = [];
         }
+        this.cdr.detectChanges();
       },
       error: (err) => {
         this.isLoading = false;
         this.rooms = [];
         console.warn('Lỗi khi tải danh sách phòng từ database:', err);
+        this.cdr.detectChanges();
       }
     });
   }

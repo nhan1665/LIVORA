@@ -1,8 +1,14 @@
+const mongoose = require('mongoose');
 const Product = require('../models/Product');
 const Category = require('../models/Category');
 const Room = require('../models/Room');
 const Order = require('../models/Order');
 const { sendSuccess, sendPaginated, sendError } = require('../utils/responseHelper');
+
+const isValidObjectId = (id) => {
+  if (!id) return false;
+  return typeof id === 'string' && /^[0-9a-fA-F]{24}$/.test(id);
+};
 
 const removeVietnameseTones = (str) => {
   return (str || '')
@@ -393,7 +399,7 @@ const createProduct = async (req, res) => {
     let finalCategorySlug = categorySlug || '';
     let foundCategoryDoc = null;
     if (categoryId) {
-      if (mongoose.Types.ObjectId.isValid(categoryId)) {
+      if (isValidObjectId(categoryId)) {
         finalCategoryId = categoryId;
         foundCategoryDoc = await Category.findById(categoryId).lean();
         if (foundCategoryDoc && !finalCategorySlug) finalCategorySlug = foundCategoryDoc.slug;
@@ -444,7 +450,7 @@ const createProduct = async (req, res) => {
     let finalRoomSlugs = Array.isArray(roomSlugs) ? [...roomSlugs] : [];
     if (Array.isArray(roomIds) && roomIds.length > 0) {
       for (const rId of roomIds) {
-        if (mongoose.Types.ObjectId.isValid(rId)) {
+        if (isValidObjectId(rId)) {
           finalRoomIds.push(rId);
         } else {
           const foundRoom = await Room.findOne({
@@ -537,7 +543,7 @@ const updateProduct = async (req, res) => {
       product.soldQuantity = Math.max(0, Number(body.soldQuantity) || 0);
     }
     if (body.categoryId !== undefined) {
-      if (body.categoryId && mongoose.Types.ObjectId.isValid(body.categoryId)) {
+      if (body.categoryId && isValidObjectId(body.categoryId)) {
         product.categoryId = body.categoryId;
         const foundCat = await Category.findById(body.categoryId).lean();
         if (foundCat) product.categorySlug = foundCat.slug;
@@ -561,7 +567,7 @@ const updateProduct = async (req, res) => {
       const validRoomIds = [];
       const validRoomSlugs = [];
       for (const rId of rIds) {
-        if (mongoose.Types.ObjectId.isValid(rId)) {
+        if (isValidObjectId(rId)) {
           validRoomIds.push(rId);
         } else {
           const foundRoom = await Room.findOne({
@@ -670,6 +676,216 @@ const deleteProduct = async (req, res) => {
   }
 };
 
+/**
+ * @desc    Bulk import products from parsed Excel/CSV data
+ * @route   POST /api/products/import-excel
+ */
+const importProductsFromExcel = async (req, res) => {
+  try {
+    const { products } = req.body;
+    if (!Array.isArray(products) || products.length === 0) {
+      return sendError(res, 'Danh sách sản phẩm trống hoặc không hợp lệ.', 400);
+    }
+
+    const createdItems = [];
+    const errors = [];
+
+    const rawCategories = await Category.find().lean();
+    const allCategories = rawCategories.map((c) => ({
+      ...c,
+      code: c.code || (c.slug ? `CAT-${c.slug.toUpperCase()}` : 'CAT-SP'),
+    }));
+
+    const rawRooms = await Room.find().lean();
+    const allRooms = rawRooms.map((r) => ({
+      ...r,
+      code: r.code || (r.slug ? `RM-${r.slug.toUpperCase()}` : 'RM-SPACE'),
+    }));
+
+    const matchRoomDoc = (roomDoc, input) => {
+      if (!roomDoc || !input) return false;
+      const target = String(input).trim().toLowerCase();
+      const cleanTarget = target.replace(/^rm[-_]/, '').trim();
+      const unsignedTarget = removeVietnameseTones(target).trim();
+      const slugTarget = unsignedTarget.replace(/[\s_]+/g, '-');
+
+      const idStr = (roomDoc._id || '').toString().toLowerCase();
+      const codeStr = (roomDoc.code || '').toLowerCase();
+      const cleanCode = codeStr.replace(/^rm[-_]/, '');
+      const slugStr = (roomDoc.slug || '').toLowerCase();
+      const nameStr = (roomDoc.name || '').toLowerCase();
+      const unsignedName = removeVietnameseTones(nameStr);
+
+      return (
+        target === idStr ||
+        target === codeStr ||
+        cleanTarget === cleanCode ||
+        target === slugStr ||
+        cleanTarget === slugStr ||
+        slugTarget === slugStr ||
+        target === nameStr ||
+        unsignedTarget === unsignedName ||
+        slugTarget === cleanCode
+      );
+    };
+
+    const matchCategoryDoc = (catDoc, input) => {
+      if (!catDoc || !input) return false;
+      const target = String(input).trim().toLowerCase();
+      const cleanTarget = target.replace(/^cat[-_]/, '').trim();
+      const unsignedTarget = removeVietnameseTones(target).trim();
+      const slugTarget = unsignedTarget.replace(/[\s_]+/g, '-');
+
+      const idStr = (catDoc._id || '').toString().toLowerCase();
+      const codeStr = (catDoc.code || '').toLowerCase();
+      const cleanCode = codeStr.replace(/^cat[-_]/, '');
+      const slugStr = (catDoc.slug || '').toLowerCase();
+      const nameStr = (catDoc.name || '').toLowerCase();
+      const unsignedName = removeVietnameseTones(nameStr);
+
+      return (
+        target === idStr ||
+        target === codeStr ||
+        cleanTarget === cleanCode ||
+        target === slugStr ||
+        cleanTarget === slugStr ||
+        slugTarget === slugStr ||
+        target === nameStr ||
+        unsignedTarget === unsignedName ||
+        slugTarget === cleanCode
+      );
+    };
+
+    for (let i = 0; i < products.length; i++) {
+      const row = products[i];
+      const rowNum = i + 1;
+
+      if (!row.name || !String(row.name).trim()) {
+        errors.push(`Dòng ${rowNum}: Thiếu tên sản phẩm.`);
+        continue;
+      }
+
+      const price = Number(row.price);
+      if (isNaN(price) || price < 0) {
+        errors.push(`Dòng ${rowNum}: Giá bán không hợp lệ.`);
+        continue;
+      }
+
+      // 1. Kiểm tra Danh mục BẮT BUỘC: đối chiếu linh hoạt theo mã code, slug, id hoặc tên danh mục
+      let finalCategoryId = null;
+      let finalCategorySlug = '';
+      const rawCat = String(row.category_code || row.category || row.categoryId || row.categoryName || '').trim();
+      if (!rawCat) {
+        errors.push(`Dòng ${rowNum} (${row.name}): Chưa điền thông tin danh mục.`);
+        continue;
+      }
+      const foundCat = allCategories.find((c) => matchCategoryDoc(c, rawCat));
+      if (!foundCat) {
+        errors.push(`Dòng ${rowNum} (${row.name}): Mã/Tên danh mục "${rawCat}" KHÔNG TỒN TẠI trên hệ thống. Vui lòng đối chiếu mã danh mục tại tab "Danh_Muc".`);
+        continue;
+      }
+      finalCategoryId = foundCat._id;
+      finalCategorySlug = foundCat.slug || '';
+
+      // 2. Kiểm tra Phòng BẮT BUỘC: đối chiếu linh hoạt theo mã code, slug, id hoặc tên phòng
+      let finalRoomIds = [];
+      let finalRoomSlugs = [];
+      const rawRoom = String(row.room_code || row.room || row.rooms || row.roomNames || '').trim();
+      if (!rawRoom) {
+        errors.push(`Dòng ${rowNum} (${row.name}): Chưa điền thông tin không gian phòng.`);
+        continue;
+      }
+      const roomSearchArr = rawRoom
+        .split(/[,;|]/)
+        .map((s) => s.trim())
+        .filter(Boolean);
+      let invalidRooms = [];
+      for (const rs of roomSearchArr) {
+        const foundR = allRooms.find((r) => matchRoomDoc(r, rs));
+        if (foundR) {
+          if (!finalRoomIds.some((id) => id.toString() === foundR._id.toString())) {
+            finalRoomIds.push(foundR._id);
+            if (foundR.slug) finalRoomSlugs.push(foundR.slug);
+          }
+        } else {
+          invalidRooms.push(rs);
+        }
+      }
+      if (invalidRooms.length > 0 || finalRoomIds.length === 0) {
+        errors.push(`Dòng ${rowNum} (${row.name}): Mã/Tên phòng "${invalidRooms.join(', ') || rawRoom}" KHÔNG TỒN TẠI trên hệ thống. Vui lòng đối chiếu mã phòng tại tab "Danh_Sach_Phong".`);
+        continue;
+      }
+
+      let sku = row.sku ? String(row.sku).trim().toUpperCase() : '';
+      if (!sku) {
+        const catDoc = allCategories.find((c) => c._id.toString() === String(finalCategoryId));
+        const prefix = getCategoryCodePrefix(catDoc);
+        const rand = Math.floor(100 + Math.random() * 900);
+        sku = `${prefix}-SP${rand}-${Date.now().toString().slice(-4)}`;
+      }
+
+      const dup = await Product.findOne({ sku });
+      if (dup) {
+        sku = `${sku}-${Math.floor(10 + Math.random() * 90)}`;
+      }
+
+      const name = String(row.name).trim();
+      const slug = name.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-') + '-' + Date.now().toString().slice(-4);
+      const stock = Math.max(0, parseInt(row.stockQuantity ?? row.stock, 10) || 0);
+
+      const materials = Array.isArray(row.materials) ? row.materials : (row.materials ? String(row.materials).split(/[,;]/).map((s) => s.trim()).filter(Boolean) : []);
+      const colors = Array.isArray(row.colors) ? row.colors : (row.colors ? String(row.colors).split(/[,;]/).map((s) => s.trim()).filter(Boolean) : []);
+      const images = Array.isArray(row.images) ? row.images : (row.images ? String(row.images).split(/[,;]/).map((s) => s.trim()).filter(Boolean) : []);
+      const thumbnail = row.thumbnail || (images.length > 0 ? images[0] : 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=500');
+
+      const dimensions = {
+        length: Number(row.length ?? row.dimensions?.length) || 0,
+        width: Number(row.width ?? row.dimensions?.width) || 0,
+        height: Number(row.height ?? row.dimensions?.height) || 0,
+        weight: Number(row.weight ?? row.dimensions?.weight) || 0,
+      };
+
+      const newProd = new Product({
+        sku,
+        name,
+        slug,
+        categoryId: finalCategoryId,
+        categorySlug: finalCategorySlug,
+        roomIds: finalRoomIds,
+        roomSlugs: finalRoomSlugs,
+        price,
+        salePrice: row.salePrice ? Number(row.salePrice) : null,
+        stockQuantity: stock,
+        stockStatus: stock > 0 ? 'in_stock' : 'out_of_stock',
+        thumbnail,
+        images: images.length > 0 ? images : [thumbnail],
+        description: row.description || '',
+        dimensions,
+        materials,
+        colors,
+        status: 'active',
+        isActive: true,
+        file3DUrl: (row.file3DUrl || '').trim(),
+        model3DUrl: (row.file3DUrl || '').trim() || null,
+      });
+
+      await newProd.save();
+      createdItems.push({ id: newProd._id.toString(), sku: newProd.sku, name: newProd.name });
+    }
+
+    return sendSuccess(res, {
+      totalReceived: products.length,
+      importedCount: createdItems.length,
+      errorsCount: errors.length,
+      items: createdItems,
+      errors,
+    }, `Đã nhập thành công ${createdItems.length}/${products.length} sản phẩm.`);
+  } catch (error) {
+    console.error('importProductsFromExcel error:', error);
+    return sendError(res, error.message || 'Không thể nhập sản phẩm từ Excel.', 500);
+  }
+};
+
 module.exports = {
   getProducts,
   getProductById,
@@ -677,4 +893,5 @@ module.exports = {
   updateProduct,
   toggleProduct,
   deleteProduct,
+  importProductsFromExcel,
 };

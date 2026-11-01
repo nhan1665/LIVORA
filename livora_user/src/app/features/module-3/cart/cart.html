@@ -130,7 +130,7 @@
   </div>
 
   <!-- ====== RECOMMENDATIONS SECTION ====== -->
-  <section class="recommendations-section">
+  <section *ngIf="recommendedProducts.length > 0" class="recommendations-section">
     <h2 class="rec-title">Có thể bạn cũng thích</h2>
 
     <div class="rec-grid">
@@ -152,9 +152,9 @@
           </h3>
           <p class="rec-prod-desc">{{ prod.description }}</p>
 
-          <!-- Price tag (Yellow block) -->
+          <!-- Price tag -->
           <div class="rec-price-container">
-            <span class="rec-price-badge">${{ prod.price }}</span>
+            <span class="rec-price-badge">{{ prod.price | number:'1.0-0' }} ₫</span>
           </div>
 
           <!-- Rating and Action Row -->

@@ -5,6 +5,7 @@ import { CartService, CartItem } from '../../../services/cart.service';
 import { FormsModule } from '@angular/forms';
 import { CheckoutService, ShippingOption } from '../../../services/checkout.service';
 import { AuthService } from '../../../services/auth.service';
+import { VIETNAM_PROVINCE_NAMES, getWardsForProvince } from '../../../shared/data/vietnam-locations';
 
 export interface SavedAddress {
   id: string;
@@ -59,8 +60,8 @@ export class Payment implements OnInit, OnDestroy {
       id: 'ship-standard',
       shippingMethod: 'standard',
       province: 'Toàn quốc',
-      estimatedDeliveryTime: '2 - 3 ngày',
-      fee: 0,
+      estimatedDeliveryTime: '3 - 5 ngày',
+      fee: 200,
     },
     {
       id: 'ship-express',
@@ -71,66 +72,8 @@ export class Payment implements OnInit, OnDestroy {
     },
   ];
 
-  // Options lists
-  provinces: string[] = [
-    'TP. Hồ Chí Minh',
-    'Hà Nội',
-    'Đà Nẵng',
-    'Bình Dương',
-    'Đồng Tháp',
-    'Cần Thơ',
-    'Hải Phòng',
-  ];
-
-  districtsMap: { [key: string]: string[] } = {
-    'TP. Hồ Chí Minh': ['Quận 1', 'Quận 3', 'TP. Thủ Đức', 'Quận Bình Thạnh', 'Quận 7', 'Quận Tân Bình'],
-    'Hồ Chí Minh': ['Quận 1', 'Quận 3', 'TP. Thủ Đức', 'Quận Bình Thạnh', 'Quận 7', 'Quận Tân Bình'],
-    'Ho Chi Minh City': ['District 1', 'District 3', 'Thu Duc City', 'Binh Thanh District'],
-    'Hà Nội': ['Quận Hoàn Kiếm', 'Quận Ba Đình', 'Quận Cầu Giấy', 'Quận Tây Hồ', 'Quận Đống Đa'],
-    'Hanoi': ['Hoan Kiem District', 'Ba Dinh District', 'Cau Giay District', 'Tay Ho District'],
-    'Đà Nẵng': ['Quận Hải Châu', 'Quận Thanh Khê', 'Quận Liên Chiểu', 'Quận Sơn Trà'],
-    'Da Nang': ['Hai Chau District', 'Thanh Khe District', 'Lien Chieu District'],
-    'Bình Dương': ['TP. Thủ Dầu Một', 'TP. Thuận An', 'TP. Dĩ An', 'Bến Cát'],
-    'Binh Duong Province': ['Thu Dau Mot City', 'Thuan An City', 'Di An City'],
-    'Đồng Tháp': ['Huyện Châu Thành', 'TP. Sa Đéc', 'TP. Cao Lãnh'],
-    'Dong Thap Province': ['Chau Thanh District', 'Sa Dec City', 'Cao Lanh City'],
-    'Cần Thơ': ['Quận Ninh Kiều', 'Quận Cái Răng', 'Quận Bình Thủy'],
-    'Hải Phòng': ['Quận Hồng Bàng', 'Quận Ngô Quyền', 'Quận Lê Chân'],
-  };
-
-  wardsMap: { [key: string]: string[] } = {
-    'Quận 1': ['Phường Bến Nghé', 'Phường Đa Kao', 'Phường Tân Định', 'Phường Phạm Ngũ Lão'],
-    'Quận 3': ['Phường Võ Thị Sáu', 'Phường 12', 'Phường 14'],
-    'TP. Thủ Đức': ['Phường Linh Trung', 'Phường Hiệp Phú', 'Phường Thảo Điền', 'Phường Linh Xuân'],
-    'Quận Bình Thạnh': ['Phường 15', 'Phường 25', 'Phường Trường Thọ'],
-    'District 1': ['Ben Nghe Ward', 'Da Kao Ward', 'Tan Dinh Ward', 'Pham Ngu Lao Ward'],
-    'District 3': ['Vo Thi Sau Ward', 'Ward 12', 'Ward 14'],
-    'Thu Duc City': ['Linh Trung Ward', 'Hiep Phu Ward', 'Thao Dien Ward', 'Binh Tho Ward', 'Linh Xuan Ward'],
-    'Binh Thanh District': ['Ward 15', 'Ward 25', 'Truong Tho Ward'],
-    'Quận Hoàn Kiếm': ['Phường Hàng Trống', 'Phường Tràng Tiền', 'Phường Hàng Bông'],
-    'Hoan Kiem District': ['Hang Trong Ward', 'Trang Tien Ward', 'Hang Bong Ward'],
-    'Quận Ba Đình': ['Phường Trúc Bạch', 'Phường Liễu Giai', 'Phường Kim Mã'],
-    'Ba Dinh District': ['Truc Bach Ward', 'Lieu Giai Ward', 'Kim Ma Ward'],
-    'Quận Cầu Giấy': ['Phường Dịch Vọng', 'Phường Nghĩa Tân', 'Phường Mai Dịch'],
-    'Cau Giay District': ['Dich Vong Ward', 'Nghia Tan Ward', 'Mai Dich Ward'],
-    'Quận Tây Hồ': ['Phường Quảng An', 'Phường Bưởi', 'Phường Nhật Tân'],
-    'Tay Ho District': ['Quang An Ward', 'Buoi Ward', 'Nhat Tan Ward'],
-    'Quận Hải Châu': ['Phường Thuận Phước', 'Phường Thạch Thang', 'Phường Bình Thuận'],
-    'Hai Chau District': ['Thuan Phuoc Ward', 'Thach Thang Ward', 'Binh Thuan Ward'],
-    'Quận Thanh Khê': ['Phường An Khê', 'Phường Vĩnh Trung', 'Phường Chính Gián'],
-    'Thanh Khe District': ['An Khe Ward', 'Vinh Trung Ward', 'Chinh Gian Ward'],
-    'Quận Liên Chiểu': ['Phường Hòa Khánh Bắc', 'Phường Hòa Minh', 'Phường Hòa Hiệp Nam'],
-    'Lien Chieu District': ['Hoa Khanh Bac Ward', 'Hoa Minh Ward', 'Hoa Hiep Nam Ward'],
-    'TP. Thủ Dầu Một': ['Phường Phú Cường', 'Phường Hiệp Thành', 'Phường Chánh Nghĩa'],
-    'Thu Dau Mot City': ['Phu Cuong Ward', 'Hiep Thanh Ward', 'Chanh Nghia Ward'],
-    'TP. Thuận An': ['Phường Lái Thiêu', 'Phường An Phú', 'Phường Vĩnh Phú'],
-    'Thuan An City': ['Lai Thieu Ward', 'An Phu Ward', 'Vinh Phu Ward'],
-    'TP. Dĩ An': ['Phường Dĩ An', 'Phường Đông Hòa', 'Phường Tân Đông Hiệp'],
-    'Di An City': ['Di An Ward', 'Dong Hoa Ward', 'Tan Dong Hiep Ward'],
-    'Huyện Châu Thành': ['Xã Vĩnh Bình', 'Xã Tân Nhuận Đông', 'Xã An Nhơn'],
-    'Chau Thanh District': ['Vinh Binh Commune', 'Tan Nhuan Dong Commune', 'An Nhon Commune'],
-  };
-
+  // Options lists (34 tỉnh thành chuẩn Việt Nam)
+  provinces: string[] = VIETNAM_PROVINCE_NAMES;
   availableDistricts: string[] = [];
   availableWards: string[] = [];
 
@@ -211,7 +154,7 @@ export class Payment implements OnInit, OnDestroy {
     if (!this.selectedProvince) {
       this.selectedProvince = 'TP. Hồ Chí Minh';
     }
-    this.availableDistricts = this.districtsMap[this.selectedProvince] || [];
+    this.availableWards = getWardsForProvince(this.selectedProvince);
 
     this.promoInput = this.cartService.discountCode();
     void this.refreshShippingOptions();
@@ -231,11 +174,10 @@ export class Payment implements OnInit, OnDestroy {
     if (info.address) this.address = info.address;
     if (info.province) {
       this.selectedProvince = info.province;
-      this.onProvinceChange();
+      this.availableWards = getWardsForProvince(this.selectedProvince);
     }
     if (info.district) {
       this.selectedDistrict = info.district;
-      this.onDistrictChange();
     }
     if (info.ward) {
       this.selectedWard = info.ward;
@@ -250,8 +192,7 @@ export class Payment implements OnInit, OnDestroy {
       this.selectedProvince = 'TP. Hồ Chí Minh';
       this.selectedDistrict = '';
       this.selectedWard = '';
-      this.availableDistricts = this.districtsMap[this.selectedProvince] || [];
-      this.availableWards = [];
+      this.availableWards = getWardsForProvince(this.selectedProvince);
     } else {
       const addr = this.savedAddresses.find(a => a.id === this.selectedSavedAddressId);
       if (addr) {
@@ -264,28 +205,25 @@ export class Payment implements OnInit, OnDestroy {
     this.fullName = addr.fullName;
     this.phone = addr.phone;
     this.selectedProvince = addr.province || 'TP. Hồ Chí Minh';
-    this.availableDistricts = this.districtsMap[this.selectedProvince] || [];
-    this.selectedDistrict = addr.district;
-    this.availableWards = this.wardsMap[this.selectedDistrict] || [];
-    this.selectedWard = addr.ward;
+    this.availableWards = getWardsForProvince(this.selectedProvince);
+    this.selectedDistrict = addr.district || '';
+    this.selectedWard = addr.ward || '';
     this.address = addr.addressLine;
     this.saveShippingInfo();
     void this.refreshShippingOptions();
   }
 
   onProvinceChange() {
-    this.selectedDistrict = '';
-    this.selectedWard = '';
-    this.availableWards = [];
-    this.availableDistricts = this.districtsMap[this.selectedProvince] || [];
+    this.availableWards = getWardsForProvince(this.selectedProvince);
+    if (!this.availableWards.includes(this.selectedWard)) {
+      this.selectedWard = '';
+    }
     this.updateAddress();
     this.saveShippingInfo();
     void this.refreshShippingOptions();
   }
 
   onDistrictChange() {
-    this.selectedWard = '';
-    this.availableWards = this.wardsMap[this.selectedDistrict] || [];
     this.updateAddress();
     this.saveShippingInfo();
   }
@@ -297,11 +235,11 @@ export class Payment implements OnInit, OnDestroy {
 
   updateAddress() {
     const parts = [];
-    if (this.selectedProvince) parts.push(this.selectedProvince);
-    if (this.selectedDistrict) parts.push(this.selectedDistrict);
     if (this.selectedWard) parts.push(this.selectedWard);
-    if (!this.address) {
-      this.address = parts.join(' - ');
+    if (this.selectedDistrict) parts.push(this.selectedDistrict);
+    if (this.selectedProvince) parts.push(this.selectedProvince);
+    if (!this.address || this.address.includes(' - ') || this.address.includes(', ')) {
+      this.address = parts.join(', ');
     }
   }
 
@@ -344,10 +282,19 @@ export class Payment implements OnInit, OnDestroy {
       if (!this.shippingOptions.some(o => o.id === this.selectedShippingId)) {
         this.selectedShippingId = this.shippingOptions[0]?.id || 'ship-standard';
       }
+      const selectedOption = this.shippingOptions.find(o => o.id === this.selectedShippingId) || this.shippingOptions[0];
+      if (selectedOption) {
+        this.cartService.customShippingFee.set(selectedOption.fee);
+      }
+      void this.refreshQuote();
     } catch {
       if (version === this.optionsVersion) {
         this.shippingOptions = [...this.defaultShippingOptions];
         if (!this.selectedShippingId) this.selectedShippingId = this.defaultShippingOptions[0].id;
+        const selectedOption = this.shippingOptions.find(o => o.id === this.selectedShippingId) || this.shippingOptions[0];
+        if (selectedOption) {
+          this.cartService.customShippingFee.set(selectedOption.fee);
+        }
       }
     } finally {
       if (version === this.optionsVersion) {
@@ -359,6 +306,10 @@ export class Payment implements OnInit, OnDestroy {
 
   async setShippingMethod(id: string): Promise<void> {
     this.selectedShippingId = id;
+    const selectedOption = this.shippingOptions.find(o => o.id === id);
+    if (selectedOption) {
+      this.cartService.customShippingFee.set(selectedOption.fee);
+    }
     this.cartService.serverQuote.set(null);
     this.requestKey = '';
     await this.refreshQuote();
@@ -468,7 +419,7 @@ export class Payment implements OnInit, OnDestroy {
 
     const currentU = this.authService.currentUser();
     const selectedOption = this.shippingOptions.find(o => o.id === this.selectedShippingId) || this.shippingOptions[0];
-    const shippingFee = selectedOption?.fee || this.cartService.shippingFee() || 0;
+    const shippingFee = selectedOption && selectedOption.fee !== undefined ? selectedOption.fee : (this.cartService.shippingFee() || 0);
     const finalAmount = this.cartService.total();
 
     const orderPayload = {
@@ -495,6 +446,8 @@ export class Payment implements OnInit, OnDestroy {
       })),
       voucherCode: this.cartService.discountCode() || undefined,
       shippingFee,
+      shippingMethod: selectedOption?.shippingMethod || 'standard',
+      shippingProvince: selectedOption?.province || this.selectedProvince,
       paymentMethod: this.cartService.paymentMethod() === 'bank' ? 'BANK_TRANSFER' : 'COD',
       note: this.cartService.orderNote() || '',
     };

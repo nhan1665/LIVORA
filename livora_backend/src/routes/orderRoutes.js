@@ -25,6 +25,8 @@ router.get('/', (req, res, next) => {
 
 // Admin management routes
 router.patch('/:id/status', requireAdmin, updateOrderStatus);
-router.patch('/:id/cancel', requireAdmin, cancelOrder);
+
+// Order cancellation: Allows customer/guest to cancel via OTP tracking or admin
+router.patch('/:id/cancel', cancelOrder);
 
 module.exports = router;

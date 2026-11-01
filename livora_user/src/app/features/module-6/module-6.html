@@ -1,112 +1,275 @@
-
 <main class="tracking-container">
-  <!-- Search Section -->
+  <!-- ====== SEARCH SECTION ====== -->
   <section class="search-section">
     <div class="search-box">
-      <h1 class="tracking-title">Theo dõi đơn hàng</h1>
-      <p class="tracking-subtitle">Nhập số điện thoại để kiểm tra trạng thái vận chuyển và chi tiết đơn hàng.</p>
-      
+      <h1 class="tracking-title">Tra Cứu Đơn Hàng</h1>
+      <p class="tracking-subtitle">
+        Nhập số điện thoại đặt hàng (hoặc mã đơn hàng) để theo dõi tiến độ vận chuyển và quản lý đơn hàng.
+      </p>
+
       <div class="input-group">
-        <input 
-          type="text" 
-          [(ngModel)]="phoneNumber" 
+        <input
+          type="text"
+          [(ngModel)]="phoneNumber"
           (keyup.enter)="searchOrder()"
-          placeholder="VD: 0901234567" 
+          placeholder="Nhập số điện thoại (VD: 0901234567)..."
           class="tracking-input"
-        >
-        <button class="btn-track" (click)="searchOrder()">Tra cứu</button>
+        />
+        <button class="btn-track" (click)="searchOrder()" [disabled]="searching">
+          {{ searching ? 'Đang tra cứu...' : 'Tra cứu đơn hàng' }}
+        </button>
       </div>
 
-      <div class="error-msg" *ngIf="hasSearched && !orderFound">
-        Không tìm thấy đơn hàng. Vui lòng kiểm tra lại số điện thoại và thử lại.
+      <div class="error-msg" *ngIf="hasSearched && !orderFound && !searching">
+        <i class="bi bi-exclamation-triangle"></i>
+        Không tìm thấy đơn hàng nào liên kết với thông tin này. Vui lòng kiểm tra lại số điện thoại!
       </div>
     </div>
   </section>
 
-  <!-- Result Section -->
+  <!-- ====== TOAST NOTIFICATION ====== -->
+  <div *ngIf="cancelSuccessToast" class="tracking-success-toast">
+    <i class="bi bi-check-circle-fill"></i>
+    <span>{{ cancelSuccessToast }}</span>
+  </div>
+
+  <!-- ====== RESULT SECTION ====== -->
   <section class="result-section" *ngIf="hasSearched && orderFound && orderInfo">
+
+    <!-- Danh sách tabs nếu SĐT này có nhiều đơn hàng -->
+    <div *ngIf="ordersList.length > 1" class="orders-selector-tabs">
+      <span class="selector-label">Đơn hàng của bạn ({{ ordersList.length }}):</span>
+      <div class="tabs-list">
+        <button
+          *ngFor="let ord of ordersList"
+          type="button"
+          class="order-tab-btn"
+          [class.active]="ord.code === orderInfo.code"
+          (click)="selectOrder(ord)"
+        >
+          #{{ ord.code }} ({{ ord.statusDisplay }})
+        </button>
+      </div>
+    </div>
+
     <div class="order-card">
-      
+      <!-- Order Header -->
       <div class="order-header">
         <div>
           <h2>Đơn hàng #{{ orderInfo.code }}</h2>
-          <span class="order-date">Đặt ngày {{ orderInfo.date }}</span>
+          <span class="order-date">
+            <i class="bi bi-clock"></i> Đặt lúc {{ orderInfo.date }}
+          </span>
         </div>
-        <div class="order-status-badge">{{ orderInfo.statusDisplay || orderInfo.status }}</div>
+        <div class="status-badge-container">
+          <span
+            class="order-status-badge"
+            [class.status-pending]="orderInfo.status === 'pending'"
+            [class.status-confirmed]="orderInfo.status === 'confirmed'"
+            [class.status-processing]="orderInfo.status === 'processing'"
+            [class.status-shipping]="orderInfo.status === 'shipping' || orderInfo.status === 'delivering'"
+            [class.status-delivered]="orderInfo.status === 'delivered'"
+            [class.status-cancelled]="orderInfo.status === 'cancelled'"
+          >
+            {{ orderInfo.statusDisplay }}
+          </span>
+        </div>
       </div>
 
-      <!-- Timeline Tracking -->
-      <div class="tracking-timeline">
-        <div class="timeline-step" [class.active]="true">
+      <!-- Cancelled Alert Notice -->
+      <div *ngIf="orderInfo.status === 'cancelled'" class="cancelled-order-banner">
+        <i class="bi bi-x-octagon-fill"></i>
+        <div>
+          <strong>Đơn hàng này đã bị hủy</strong>
+          <p *ngIf="orderInfo.cancelReason">Lý do: {{ orderInfo.cancelReason }}</p>
+        </div>
+      </div>
+
+      <!-- Timeline Tracking (chỉ hiện khi chưa hủy) -->
+      <div *ngIf="orderInfo.status !== 'cancelled'" class="tracking-timeline">
+        <div class="timeline-step active">
           <div class="step-icon"><i class="bi bi-card-checklist"></i></div>
           <div class="step-label">Chờ xử lý</div>
         </div>
-        <div class="timeline-line" [class.active]="orderInfo.status === 'Shipping' || orderInfo.status === 'Delivering' || orderInfo.status === 'Delivered'"></div>
-        
-        <div class="timeline-step" [class.active]="orderInfo.status === 'Shipping' || orderInfo.status === 'Delivering' || orderInfo.status === 'Delivered'">
-          <div class="step-icon"><i class="bi bi-box-seam"></i></div>
-          <div class="step-label">Đang giao</div>
+        <div
+          class="timeline-line"
+          [class.active]="orderInfo.status === 'confirmed' || orderInfo.status === 'processing' || orderInfo.status === 'shipping' || orderInfo.status === 'delivering' || orderInfo.status === 'delivered'"
+        ></div>
+
+        <div
+          class="timeline-step"
+          [class.active]="orderInfo.status === 'confirmed' || orderInfo.status === 'processing' || orderInfo.status === 'shipping' || orderInfo.status === 'delivering' || orderInfo.status === 'delivered'"
+        >
+          <div class="step-icon"><i class="bi bi-check2-circle"></i></div>
+          <div class="step-label">Đã xác nhận</div>
         </div>
-        <div class="timeline-line" [class.active]="orderInfo.status === 'Delivering' || orderInfo.status === 'Delivered'"></div>
-        
-        <div class="timeline-step" [class.active]="orderInfo.status === 'Delivering' || orderInfo.status === 'Delivered'">
+        <div
+          class="timeline-line"
+          [class.active]="orderInfo.status === 'shipping' || orderInfo.status === 'delivering' || orderInfo.status === 'delivered'"
+        ></div>
+
+        <div
+          class="timeline-step"
+          [class.active]="orderInfo.status === 'shipping' || orderInfo.status === 'delivering' || orderInfo.status === 'delivered'"
+        >
           <div class="step-icon"><i class="bi bi-truck"></i></div>
-          <div class="step-label">Đang vận chuyển</div>
+          <div class="step-label">Đang giao hàng</div>
         </div>
-        <div class="timeline-line" [class.active]="orderInfo.status === 'Delivered'"></div>
-        
-        <div class="timeline-step" [class.active]="orderInfo.status === 'Delivered'">
+        <div class="timeline-line" [class.active]="orderInfo.status === 'delivered'"></div>
+
+        <div class="timeline-step" [class.active]="orderInfo.status === 'delivered'">
           <div class="step-icon"><i class="bi bi-house-door"></i></div>
           <div class="step-label">Đã giao</div>
         </div>
       </div>
 
+      <!-- Order Details Grid -->
       <div class="order-details-grid">
         <!-- Customer Info -->
         <div class="info-card customer-info">
-          <h3>Thông tin giao hàng</h3>
-          <p><strong>{{ orderInfo.customer.name }}</strong></p>
-          <p>{{ orderInfo.customer.phone }}</p>
-          <p>{{ orderInfo.customer.address }}</p>
+          <h3><i class="bi bi-geo-alt"></i> Thông tin giao hàng</h3>
+          <p><strong>Người nhận:</strong> {{ orderInfo.customer.name }}</p>
+          <p><strong>Số điện thoại:</strong> {{ orderInfo.customer.phone }}</p>
+          <p><strong>Địa chỉ nhận:</strong> {{ orderInfo.customer.address }}</p>
+          <p><strong>Hình thức thanh toán:</strong> {{ orderInfo.paymentMethod }} ({{ orderInfo.paymentStatus }})</p>
+          <p *ngIf="orderInfo.notes"><strong>Ghi chú:</strong> {{ orderInfo.notes }}</p>
         </div>
 
         <!-- Order Summary -->
         <div class="info-card order-summary">
-          <h3>Tóm tắt đơn hàng</h3>
+          <h3><i class="bi bi-receipt"></i> Tóm tắt đơn hàng</h3>
           <div class="summary-row">
             <span>Tạm tính</span>
-            <span>${{ orderInfo.subtotal }}</span>
+            <span>{{ orderInfo.subtotal | number:'1.0-0' }} ₫</span>
+          </div>
+          <div *ngIf="orderInfo.discount > 0" class="summary-row discount-row">
+            <span>Giảm giá</span>
+            <span class="discount-val">-{{ orderInfo.discount | number:'1.0-0' }} ₫</span>
           </div>
           <div class="summary-row">
             <span>Phí vận chuyển</span>
-            <span>${{ orderInfo.shipping }}</span>
+            <span>{{ orderInfo.shipping > 0 ? (orderInfo.shipping | number:'1.0-0') + ' ₫' : 'Miễn phí' }}</span>
           </div>
           <div class="summary-row total-row">
             <span>Tổng cộng</span>
-            <span>${{ orderInfo.total }}</span>
+            <span class="total-highlight">{{ orderInfo.total | number:'1.0-0' }} ₫</span>
           </div>
         </div>
       </div>
 
-      <!-- Order Items -->
+      <!-- Order Items List -->
       <div class="order-items-list">
-        <h3>Sản phẩm</h3>
+        <h3><i class="bi bi-box"></i> Danh sách sản phẩm</h3>
         <div class="item-row" *ngFor="let item of orderInfo.items">
           <div class="item-image">
-            <!-- fallback to item.png if missing -->
-            <img [src]="item.image === 'item.png' ? 'item.png' : 'item.png'" alt="{{ item.name }}">
+            <img [src]="item.image" [alt]="item.name" />
           </div>
           <div class="item-details">
             <h4>{{ item.name }}</h4>
-            <p>Màu sắc: {{ item.color }}</p>
+            <p *ngIf="item.color">Phân loại / Màu: {{ item.color }}</p>
           </div>
           <div class="item-qty">x{{ item.quantity }}</div>
-          <div class="item-price">${{ item.price * item.quantity }}</div>
+          <div class="item-price">{{ (item.price * item.quantity) | number:'1.0-0' }} ₫</div>
+        </div>
+      </div>
+
+      <!-- Order Actions Row (Nút HỦY ĐƠN) -->
+      <div class="order-actions-bar">
+        <div *ngIf="orderInfo.canCancel" class="cancel-action-wrapper">
+          <button type="button" class="btn-cancel-order" (click)="openCancelModal()">
+            <i class="bi bi-x-circle"></i> Hủy đơn hàng
+          </button>
+          <span class="cancel-hint">
+            * Bạn có thể hủy đơn hàng khi đơn chưa được chuyển sang khâu giao hàng. Hệ thống sẽ xác thực OTP gửi về SĐT của bạn.
+          </span>
+        </div>
+
+        <div *ngIf="orderInfo.status === 'delivered'" class="status-notice-badge success">
+          <i class="bi bi-check2-circle"></i> Đơn hàng đã giao thành công
+        </div>
+
+        <div *ngIf="orderInfo.status === 'cancelled'" class="status-notice-badge cancelled">
+          <i class="bi bi-info-circle"></i> Đơn hàng đã được hủy
         </div>
       </div>
 
     </div>
   </section>
 
-</main>
+  <!-- ====== MODAL XÁC THỰC OTP HỦY ĐƠN HÀNG ====== -->
+  <div *ngIf="showCancelModal" class="modal-backdrop">
+    <div class="modal-card cancel-modal-box">
+      <div class="modal-head">
+        <h3 class="modal-title">Xác thực hủy đơn hàng #{{ orderInfo?.code }}</h3>
+        <button type="button" class="btn-close-modal" (click)="closeCancelModal()">&times;</button>
+      </div>
 
+      <div class="modal-body">
+        <p class="modal-desc">
+          Mã xác thực OTP gồm 6 chữ số đã được gửi tới số điện thoại đặt hàng:
+          <strong class="phone-highlight">{{ orderInfo?.customer?.phone }}</strong>.
+        </p>
+
+        <!-- ====== KHUNG GIẢ LẬP MÃ OTP KIỂM THỬ ====== -->
+        <div class="otp-simulation-box">
+          <div class="simulation-header">
+            <span class="simulation-badge">
+              <i class="bi bi-shield-check"></i> GIẢ LẬP KIỂM THỬ OTP (TESTING)
+            </span>
+            <button type="button" class="btn-resend-otp" (click)="resendOtp()" title="Tạo mã mới">
+              <i class="bi bi-arrow-clockwise"></i> Gửi lại mã khác
+            </button>
+          </div>
+          <p class="simulation-text">
+            Hệ thống LIVORA đã mô phỏng gửi mã OTP đến số điện thoại trên:
+          </p>
+          <div class="simulation-code-row">
+            <span class="simulation-otp-code">{{ currentOtp }}</span>
+            <button type="button" class="btn-auto-fill" (click)="autoFillOtp()">
+              <i class="bi bi-box-arrow-in-down-left"></i> Nhập nhanh mã này
+            </button>
+          </div>
+          <span class="simulation-note">
+            * Tính năng giả lập OTP giúp bạn dễ dàng kiểm thử trực tiếp trên giao diện mà không cần chờ SMS thực tế.
+          </span>
+        </div>
+
+        <!-- Lý do hủy đơn -->
+        <div class="form-group-cancel">
+          <label class="form-label" for="cancelReasonSelect">Lý do hủy đơn hàng:</label>
+          <select id="cancelReasonSelect" class="form-select-cancel" [(ngModel)]="cancelReason">
+            <option *ngFor="let r of cancelReasonsList" [value]="r">{{ r }}</option>
+          </select>
+        </div>
+
+        <!-- Ô nhập OTP -->
+        <div class="form-group-cancel">
+          <label class="form-label" for="otpInput">Nhập mã OTP xác thực (6 số):</label>
+          <input
+            id="otpInput"
+            type="text"
+            maxlength="6"
+            class="otp-input-field"
+            placeholder="Ví dụ: {{ currentOtp }}"
+            [(ngModel)]="otpInput"
+            (keyup.enter)="confirmCancelOrder()"
+          />
+        </div>
+
+        <div *ngIf="otpError" class="otp-error-message">
+          <i class="bi bi-exclamation-circle-fill"></i> {{ otpError }}
+        </div>
+      </div>
+
+      <div class="modal-footer-cancel">
+        <button type="button" class="btn-cancel-back" (click)="closeCancelModal()" [disabled]="cancelling">
+          Quay lại
+        </button>
+        <button type="button" class="btn-confirm-cancel" (click)="confirmCancelOrder()" [disabled]="cancelling">
+          {{ cancelling ? 'Đang xử lý hủy đơn...' : 'Xác nhận hủy đơn hàng' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+</main>
