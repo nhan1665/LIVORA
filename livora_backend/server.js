@@ -8,13 +8,23 @@ const morgan = require('morgan');
 const connectDB = require('./src/config/db');
 const configureCors = require('./src/config/cors');
 
+const path = require('path');
+const fs = require('fs');
+
 const app = express();
 const PORT = process.env.PORT || 5000;
+
+// Ensure public upload directories exist
+const uploadDir = path.join(__dirname, 'public', 'uploads', 'policy');
+try {
+  fs.mkdirSync(uploadDir, { recursive: true });
+} catch (_) {}
 
 // Middleware
 app.use(configureCors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+app.use('/uploads', express.static(path.join(__dirname, 'public', 'uploads')));
 
 if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
@@ -179,7 +189,6 @@ app.use((err, req, res, next) => {
   });
 });
 
-const fs = require('fs');
 const seedInitialData = require('./src/config/seed');
 
 const startServer = async () => {

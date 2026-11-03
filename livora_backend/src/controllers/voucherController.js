@@ -401,9 +401,12 @@ const toggleVoucher = async (req, res) => {
  */
 const createVouchersBulk = async (req, res) => {
   try {
-    const { vouchers = [] } = req.body;
-    if (!Array.isArray(vouchers) || vouchers.length === 0) {
-      return sendError(res, 'Danh sách voucher tải lên không hợp lệ hoặc rỗng.', 400);
+    const rawItems = Array.isArray(req.body)
+      ? req.body
+      : (req.body.vouchers || req.body.items || []);
+
+    if (!Array.isArray(rawItems) || rawItems.length === 0) {
+      return sendError(res, 'Danh sách voucher tải lên không hợp lệ hoặc đang trống.', 400);
     }
 
     const inserted = [];
@@ -412,56 +415,79 @@ const createVouchersBulk = async (req, res) => {
       (await Voucher.find({}, 'code').lean()).map((v) => v.code.toUpperCase())
     );
 
-    for (let i = 0; i < vouchers.length; i++) {
-      const item = vouchers[i];
-      const rowNum = i + 2; // Tính theo dòng Excel bắt đầu từ 2
+    for (let i = 0; i < rawItems.length; i++) {
+      const item = rawItems[i];
+      const rowNum = i + 2; // Dòng dữ liệu trong Excel (sau dòng tiêu đề)
 
-      if (!item.code || !item.code.trim()) {
-        errors.push(`Dòng ${rowNum}: Thiếu mã voucher.`);
+      // 1. Kiểm tra Mã voucher
+      if (!item.code || !String(item.code).trim()) {
+        errors.push(`Dòng ${rowNum}: [Mã voucher] Không được để trống.`);
         continue;
       }
 
-      const normalizedCode = item.code.trim().toUpperCase();
+      const normalizedCode = String(item.code).trim().toUpperCase();
       if (!/^[A-Z0-9-]+$/.test(normalizedCode)) {
-        errors.push(`Dòng ${rowNum}: Mã "${normalizedCode}" chỉ gồm chữ in hoa, số và dấu gạch ngang.`);
+        errors.push(`Dòng ${rowNum}: [Mã voucher] Mã "${normalizedCode}" không hợp lệ (chỉ được gồm chữ cái in hoa, chữ số và dấu gạch ngang).`);
         continue;
       }
 
       if (existingCodes.has(normalizedCode)) {
-        errors.push(`Dòng ${rowNum}: Mã "${normalizedCode}" đã tồn tại trong hệ thống.`);
+        errors.push(`Dòng ${rowNum}: [Mã voucher] Mã "${normalizedCode}" đã tồn tại trong hệ thống. Vui lòng đổi mã khác.`);
         continue;
       }
 
-      if (!item.title || !item.title.trim()) {
-        errors.push(`Dòng ${rowNum}: Thiếu tên chương trình ưu đãi.`);
+      // 2. Kiểm tra Tên chương trình ưu đãi
+      if (!item.title || !String(item.title).trim()) {
+        errors.push(`Dòng ${rowNum} (${normalizedCode}): [Tên chương trình] Không được để trống.`);
         continue;
       }
 
+      // 3. Kiểm tra Loại giảm giá & Giá trị giảm
       const discountType = item.discountType === 'fixed_amount' ? 'fixed_amount' : 'percentage';
       const discountValue = Number(item.discountValue);
-      if (!discountValue || discountValue <= 0) {
-        errors.push(`Dòng ${rowNum}: Giá trị giảm phải lớn hơn 0.`);
+      if (isNaN(discountValue) || discountValue <= 0) {
+        errors.push(`Dòng ${rowNum} (${normalizedCode}): [Giá trị giảm] Phải là số dương lớn hơn 0.`);
         continue;
       }
       if (discountType === 'percentage' && discountValue > 100) {
-        errors.push(`Dòng ${rowNum}: Giá trị giảm theo phần trăm không được vượt quá 100%.`);
+        errors.push(`Dòng ${rowNum} (${normalizedCode}): [Giá trị giảm] Mức chiết khấu theo phần trăm không được vượt quá 100%.`);
         continue;
       }
 
+      // 4. Hạn mức giảm tối đa & Đơn hàng tối thiểu
       const maxDiscountAmount = Number(item.maxDiscountAmount) || 0;
-      const minOrderValue = Number(item.minOrderValue) || 1;
-      const quantity = Number(item.quantity) || 100;
-      const perCustomerLimit = Number(item.perCustomerLimit) || 1;
+      const minOrderValue = item.minOrderValue !== undefined && item.minOrderValue !== null ? Math.max(0, Number(item.minOrderValue) || 0) : 0;
 
+      // 5. Số lượng phát hành
+      const quantity = Number(item.quantity);
+      if (isNaN(quantity) || quantity <= 0) {
+        errors.push(`Dòng ${rowNum} (${normalizedCode}): [Số lượng phát hành] Phải là số nguyên lớn hơn 0.`);
+        continue;
+      }
+
+      const perCustomerLimit = Math.max(1, Number(item.perCustomerLimit) || 1);
+
+      // 6. Thời gian hiệu lực
       let startDate = item.startDate ? new Date(item.startDate) : new Date();
       let endDate = item.endDate ? new Date(item.endDate) : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
       if (isNaN(startDate.getTime())) startDate = new Date();
       if (isNaN(endDate.getTime())) endDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
 
+      if (endDate.getTime() <= startDate.getTime()) {
+        errors.push(`Dòng ${rowNum} (${normalizedCode}): [Thời gian hiệu lực] Ngày kết thúc phải sau ngày bắt đầu.`);
+        continue;
+      }
+
+      // 7. Người nhận voucher (Tất cả hoặc Chỉ định)
+      const targetType = item.targetType === 'specific' ? 'specific' : 'all';
+      const applicableCustomerIds = targetType === 'specific' && Array.isArray(item.applicableCustomerIds)
+        ? item.applicableCustomerIds
+        : [];
+
       try {
         const created = await Voucher.create({
           code: normalizedCode,
-          title: item.title.trim(),
+          title: String(item.title).trim(),
           discountType,
           discountValue,
           maxDiscountAmount,
@@ -469,8 +495,8 @@ const createVouchersBulk = async (req, res) => {
           quantity,
           usedCount: 0,
           perCustomerLimit,
-          targetType: item.targetType === 'specific' ? 'specific' : 'all',
-          applicableCustomerIds: Array.isArray(item.applicableCustomerIds) ? item.applicableCustomerIds : [],
+          targetType,
+          applicableCustomerIds,
           startDate,
           endDate,
           isActive: item.isActive !== false,
@@ -479,17 +505,18 @@ const createVouchersBulk = async (req, res) => {
         existingCodes.add(normalizedCode);
         inserted.push(created.code);
       } catch (err) {
-        errors.push(`Dòng ${rowNum} (${normalizedCode}): ${err.message}`);
+        errors.push(`Dòng ${rowNum} (${normalizedCode}): [Lỗi lưu dữ liệu] ${err.message}`);
       }
     }
 
     return sendSuccess(res, {
-      totalUploaded: vouchers.length,
+      totalUploaded: rawItems.length,
       insertedCount: inserted.length,
+      successCount: inserted.length,
       insertedCodes: inserted,
       errorCount: errors.length,
       errors,
-    }, `Đã nhập thành công ${inserted.length}/${vouchers.length} voucher.`);
+    }, `Đã xử lý nhập ${inserted.length}/${rawItems.length} voucher.`);
   } catch (error) {
     console.error('createVouchersBulk error:', error);
     return sendError(res, error.message || 'Lỗi khi nhập danh sách voucher.', 500);

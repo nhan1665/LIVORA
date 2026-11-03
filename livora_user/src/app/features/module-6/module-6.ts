@@ -2,6 +2,7 @@ import { Component, ChangeDetectorRef, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
+import { AuthService } from '../../services/auth.service';
 
 export interface TrackingItem {
   name: string;
@@ -45,6 +46,15 @@ export interface TrackingOrder {
 export class Module6 implements OnInit {
   private cdr = inject(ChangeDetectorRef);
   private route = inject(ActivatedRoute);
+  readonly authService = inject(AuthService);
+
+  get isLoggedIn(): boolean {
+    return this.authService.isLoggedIn;
+  }
+
+  get currentUser() {
+    return this.authService.currentUser();
+  }
 
   phoneNumber: string = '';
   hasSearched: boolean = false;
@@ -75,6 +85,12 @@ export class Module6 implements OnInit {
   ];
 
   ngOnInit(): void {
+    // Nếu người dùng đã đăng nhập và chưa nhập SĐT, tự động lấy SĐT của tài khoản để tìm kiếm
+    if (this.isLoggedIn && this.currentUser?.phone && !this.phoneNumber) {
+      this.phoneNumber = this.currentUser.phone;
+      this.searchOrder();
+    }
+
     // Cho phép truyền query param ?phone=... hoặc ?orderCode=...
     this.route.queryParams.subscribe((params) => {
       const p = params['phone'] || params['search'] || params['code'];
@@ -163,11 +179,17 @@ export class Module6 implements OnInit {
   openCancelModal(): void {
     if (!this.orderInfo || !this.orderInfo.canCancel) return;
 
-    // Sinh mã OTP 6 số ngẫu nhiên để test
-    this.currentOtp = Math.floor(100000 + Math.random() * 900000).toString();
     this.otpInput = '';
     this.otpError = '';
     this.cancelReason = 'Đổi ý không muốn mua nữa';
+
+    // Chỉ tài khoản vãng lai (chưa đăng nhập) mới cần sinh và gửi mã OTP (tiết kiệm chi phí)
+    if (!this.isLoggedIn) {
+      this.currentOtp = Math.floor(100000 + Math.random() * 900000).toString();
+    } else {
+      this.currentOtp = '';
+    }
+
     this.showCancelModal = true;
   }
 
@@ -191,16 +213,20 @@ export class Module6 implements OnInit {
   async confirmCancelOrder(): Promise<void> {
     if (!this.orderInfo) return;
 
-    // 1. Kiểm tra mã OTP: Bắt buộc đúng mới cho pass
-    if (this.otpInput.trim() !== this.currentOtp) {
-      this.otpError = 'Mã OTP không chính xác. Vui lòng kiểm tra lại mã đã được cung cấp!';
-      return;
+    // 1. Kiểm tra mã OTP: CHỈ BẮT BUỘC VỚI TÀI KHOẢN VÃNG LAI (chưa đăng nhập)
+    if (!this.isLoggedIn) {
+      if (this.otpInput.trim() !== this.currentOtp) {
+        this.otpError = 'Mã OTP không chính xác. Vui lòng kiểm tra lại mã đã được cung cấp!';
+        return;
+      }
     }
 
     this.cancelling = true;
     this.otpError = '';
 
-    const reason = this.cancelReason.trim() || 'Khách hàng yêu cầu hủy đơn qua mã OTP';
+    const reason = this.cancelReason.trim() || (this.isLoggedIn
+      ? 'Khách hàng đã đăng nhập yêu cầu hủy đơn'
+      : 'Khách hàng vãng lai xác thực OTP yêu cầu hủy đơn');
 
     try {
       // 2. Gửi request Hủy đơn lên Backend

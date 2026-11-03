@@ -18,7 +18,10 @@
         <i class="bi bi-exclamation-circle-fill"></i>
         <span>Vui lòng điền đầy đủ thông tin giao hàng để tiếp tục.</span>
       </div>
-      <div *ngIf="checkoutError" class="validation-alert" role="alert">{{ checkoutError }}</div>
+      <div *ngIf="checkoutError" class="validation-alert" role="alert">
+        <i class="bi bi-exclamation-triangle-fill" style="margin-right: 6px;"></i>
+        {{ checkoutError }}
+      </div>
 
       <!-- Shipping Info Form -->
       <form class="shipping-form" (submit)="$event.preventDefault()">
@@ -133,13 +136,41 @@
         </div>
       </section>
 
+      <!-- ====== COMPANY POLICY & TERMS AGREEMENT ====== -->
+      <div class="policy-agreement-card">
+        <label class="policy-checkbox-label">
+          <input 
+            type="checkbox" 
+            [(ngModel)]="isPolicyAgreed" 
+            name="isPolicyAgreed"
+            class="policy-checkbox"
+          />
+          <span class="policy-label-text">
+            Tôi đã đọc và đồng ý với 
+            <ng-container *ngIf="companyPolicy?.fileName; else defaultPolicyText">
+              <a href="javascript:void(0)" class="policy-link" (click)="openPolicyDocument($event)" title="Nhấn để mở xem file chính sách">
+                <i class="bi bi-file-earmark-pdf"></i>
+                Chính sách mua hàng ({{ companyPolicy?.fileName }})
+              </a>
+            </ng-container>
+            <ng-template #defaultPolicyText>
+              <strong style="color: #9f752e;">Chính sách mua hàng & Điều khoản của LIVORA</strong>
+            </ng-template>
+          </span>
+        </label>
+      </div>
+
       <!-- Form Footer Navigation -->
       <div class="form-navigation-row">
         <a routerLink="/cart" class="back-link">
           <i class="bi bi-chevron-left"></i> Giỏ hàng
         </a>
 
-        <button (click)="completeOrder()" class="btn-complete-order" [disabled]="placingOrder || loadingQuote">
+        <button 
+          (click)="completeOrder()" 
+          class="btn-complete-order" 
+          [class.disabled-policy]="!isPolicyAgreed"
+          [disabled]="placingOrder || loadingQuote">
           {{ placingOrder ? 'ĐANG XỬ LÝ ĐẶT HÀNG...' : 'HOÀN TẤT ĐƠN HÀNG' }}
         </button>
       </div>

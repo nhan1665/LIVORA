@@ -1048,14 +1048,53 @@ const getFooters = async (req, res) => {
   try {
     await syncCollections();
     const col = mongoose.connection.db.collection('Footers');
-    const docs = await col.find({}).toArray();
+    let docs = await col.find({}).toArray();
+
+    let policyItem = docs.find((d) => d.key === 'policy');
+    if (!policyItem) {
+      try {
+        const PolicyModel = require('../models/Policy');
+        const policyDoc = await PolicyModel.findOne().sort({ updatedAt: -1 });
+        const newPolicyDoc = {
+          key: 'policy',
+          name: 'Chính sách mua hàng',
+          subtitle: 'Tài liệu quy định chính sách mua hàng',
+          value: policyDoc?.fileUrl || policyDoc?.fileName || '',
+          fileName: policyDoc?.fileName || '',
+          fileUrl: policyDoc?.fileUrl || '',
+          fileSize: policyDoc?.fileSize || '',
+          fileData: policyDoc?.fileData || '',
+          status: 'Hiển thị',
+          iconType: 'policy',
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
+        const insertRes = await col.insertOne(newPolicyDoc);
+        newPolicyDoc._id = insertRes.insertedId;
+        docs.push(newPolicyDoc);
+      } catch (pErr) {
+        console.warn('Lỗi nạp Policy vào Footer:', pErr.message);
+      }
+    } else {
+      // Đồng bộ tên mới nhất trong CSDL
+      try {
+        await col.updateMany(
+          { key: 'policy' },
+          { $set: { name: 'Chính sách mua hàng', subtitle: 'Tài liệu quy định chính sách mua hàng' } }
+        );
+      } catch (_) {}
+    }
 
     const items = docs.map((d) => ({
       id: d._id.toString(),
       key: d.key || 'facebook',
-      name: d.name || '',
-      subtitle: d.subtitle || '',
+      name: d.key === 'policy' ? 'Chính sách mua hàng' : (d.name || ''),
+      subtitle: d.key === 'policy' ? 'Tài liệu quy định chính sách mua hàng' : (d.subtitle || ''),
       value: d.value || '',
+      fileName: d.fileName || '',
+      fileUrl: d.fileUrl || '',
+      fileSize: d.fileSize || '',
+      fileData: d.fileData || '',
       status: d.status || 'Hiển thị',
       iconType: d.iconType || d.key || 'facebook',
     }));
@@ -1069,13 +1108,17 @@ const getFooters = async (req, res) => {
 
 const createFooter = async (req, res) => {
   try {
-    const { key, name, subtitle, value, status, iconType } = req.body;
+    const { key, name, subtitle, value, status, iconType, fileName, fileSize, fileUrl, fileData } = req.body;
     const col = mongoose.connection.db.collection('Footers');
     const newDoc = {
       key: key || 'facebook',
       name: name ? name.trim() : 'Kênh liên hệ',
       subtitle: subtitle ? subtitle.trim() : '',
       value: value ? value.trim() : '',
+      fileName: fileName || '',
+      fileUrl: fileUrl || '',
+      fileSize: fileSize || '',
+      fileData: fileData || '',
       status: status || 'Hiển thị',
       iconType: iconType || key || 'facebook',
       createdAt: new Date(),
@@ -1092,8 +1135,15 @@ const createFooter = async (req, res) => {
 const updateFooter = async (req, res) => {
   try {
     const { id } = req.params;
-    const { key, name, subtitle, value, status, iconType } = req.body;
+    const { key, name, subtitle, value, status, iconType, fileName, fileSize, fileData } = req.body;
     const col = mongoose.connection.db.collection('Footers');
+
+    let query = buildIdQuery(id);
+    let current = await col.findOne(query);
+    if (!current && key) {
+      query = { key };
+      current = await col.findOne(query);
+    }
 
     const updateFields = { updatedAt: new Date() };
     if (name !== undefined) updateFields.name = name.trim();
@@ -1102,9 +1152,63 @@ const updateFooter = async (req, res) => {
     if (status !== undefined) updateFields.status = status;
     if (iconType !== undefined) updateFields.iconType = iconType;
 
-    let query = buildIdQuery(id);
-    if (!ObjectId.isValid(id) && key) {
-      query = { key };
+    const isPolicy = key === 'policy' || (current && current.key === 'policy');
+
+    if (isPolicy) {
+      let savedFileUrl = '';
+      if (fileData && fileData.startsWith('data:')) {
+        try {
+          const matches = fileData.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
+          if (matches && matches.length === 3) {
+            const buffer = Buffer.from(matches[2], 'base64');
+            const cleanName = (fileName || 'chinh_sach_hoan_tien.pdf').replace(/[^a-zA-Z0-9._-]/g, '_');
+            const targetDir = path.join(__dirname, '..', '..', 'public', 'uploads', 'policy');
+            const fs = require('fs');
+            fs.mkdirSync(targetDir, { recursive: true });
+
+            const diskFileName = `${Date.now()}_${cleanName}`;
+            const filePath = path.join(targetDir, diskFileName);
+            fs.writeFileSync(filePath, buffer);
+
+            savedFileUrl = `/uploads/policy/${diskFileName}`;
+          }
+        } catch (fErr) {
+          console.warn('Lỗi ghi file chính sách:', fErr.message);
+        }
+      }
+
+      if (fileName !== undefined) updateFields.fileName = fileName;
+      if (fileSize !== undefined) updateFields.fileSize = fileSize;
+      if (savedFileUrl) {
+        updateFields.fileUrl = savedFileUrl;
+        updateFields.value = savedFileUrl;
+      } else if (value !== undefined) {
+        updateFields.value = value.trim();
+      }
+      if (fileData !== undefined) updateFields.fileData = fileData;
+
+      // Đồng bộ sang collection Policies
+      try {
+        const PolicyModel = require('../models/Policy');
+        let policyDoc = await PolicyModel.findOne();
+        if (policyDoc) {
+          if (fileName) policyDoc.fileName = fileName;
+          if (fileSize) policyDoc.fileSize = fileSize;
+          if (savedFileUrl) policyDoc.fileUrl = savedFileUrl;
+          if (fileData) policyDoc.fileData = fileData;
+          await policyDoc.save();
+        } else if (fileName || savedFileUrl) {
+          await PolicyModel.create({
+            fileName: fileName || 'Chính sách mua hàng',
+            fileSize: fileSize || '',
+            fileUrl: savedFileUrl || '',
+            fileData: fileData || '',
+            updatedBy: 'Admin'
+          });
+        }
+      } catch (pErr) {
+        console.warn('Lỗi đồng bộ sang Policy model:', pErr.message);
+      }
     }
 
     await col.updateOne(query, { $set: updateFields });

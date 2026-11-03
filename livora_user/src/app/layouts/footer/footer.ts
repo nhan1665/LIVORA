@@ -18,11 +18,13 @@ export class Footer implements OnInit {
   zaloUrl = 'https://zalo.me/0901234567';
   phone = '0901234567';
   whatsappUrl = 'https://wa.me/84901234567';
+  policyUrl = '';
 
   showFacebook = true;
   showInstagram = true;
   showZalo = true;
   showPhone = true;
+  showPolicy = true;
 
   ngOnInit(): void {
     this.http.get<any>(`${environment.apiBaseUrl}/homepage/footers`).subscribe({
@@ -47,8 +49,26 @@ export class Footer implements OnInit {
               this.phone = val;
               this.whatsappUrl = this.normalizeWhatsAppUrl(val);
             }
+          } else if (item.key === 'policy') {
+            this.showPolicy = isVisible;
+            const target = item.fileUrl || val;
+            if (target && (target.startsWith('http') || target.startsWith('/uploads'))) {
+              this.policyUrl = target.startsWith('http') ? target : `http://localhost:5000${target}`;
+            }
           }
         });
+
+        if (!this.policyUrl) {
+          this.http.get<any>(`${environment.apiBaseUrl}/refunds/policy`).subscribe({
+            next: (pRes) => {
+              if (pRes?.data?.fileUrl) {
+                const target = pRes.data.fileUrl;
+                this.policyUrl = target.startsWith('http') ? target : `http://localhost:5000${target}`;
+              }
+            },
+            error: () => {}
+          });
+        }
       },
       error: () => {},
     });

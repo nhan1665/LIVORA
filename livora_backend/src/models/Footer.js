@@ -8,12 +8,16 @@ const footerSchema = new mongoose.Schema(
     },
     name: { type: String, required: true, trim: true },
     subtitle: { type: String, default: '', trim: true },
-    value: { type: String, required: true, trim: true },
+    value: { type: String, default: '', trim: true },
     status: { type: String, default: 'Hiển thị' },
     iconType: {
       type: String,
       default: 'facebook',
     },
+    fileName: { type: String, default: '' },
+    fileUrl: { type: String, default: '' },
+    fileSize: { type: String, default: '' },
+    fileData: { type: String, default: '' },
   },
   {
     timestamps: true,

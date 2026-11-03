@@ -1,0 +1,137 @@
+<div class="policy-simple-container">
+  <!-- Card Header -->
+  <div class="simple-header">
+    <div class="header-icon-box">
+      <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+        <polyline points="14 2 14 8 20 8"></polyline>
+        <line x1="12" y1="18" x2="12" y2="12"></line>
+        <line x1="9" y1="15" x2="15" y2="15"></line>
+      </svg>
+    </div>
+    <div>
+      <h2 class="title">Tải lên file chính sách</h2>
+      <p class="subtitle">Tải lên file tài liệu chính sách của công ty (PDF, Word, Ảnh...). Bên người dùng sẽ hiển thị link để khách hàng mở xem khi đặt hàng.</p>
+    </div>
+  </div>
+
+  <!-- Thông báo trạng thái -->
+  <div *ngIf="successMessage()" class="alert alert-success">
+    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+      <polyline points="22 4 12 14.01 9 11.01"></polyline>
+    </svg>
+    <span>{{ successMessage() }}</span>
+  </div>
+
+  <div *ngIf="errorMessage()" class="alert alert-danger">
+    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="10"></circle>
+      <line x1="12" y1="8" x2="12" y2="12"></line>
+      <line x1="12" y1="16" x2="12.01" y2="16"></line>
+    </svg>
+    <span>{{ errorMessage() }}</span>
+  </div>
+
+  <!-- Card nội dung chính -->
+  <div class="card-upload">
+    
+    <!-- 1. File hiện tại đang áp dụng -->
+    <div class="current-file-section" *ngIf="currentPolicy()?.fileName">
+      <div class="section-label">File chính sách hiện tại trên hệ thống:</div>
+      <div class="current-file-badge">
+        <div class="file-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+          </svg>
+        </div>
+        <div class="file-info">
+          <span class="file-name">{{ currentPolicy()?.fileName }}</span>
+          <span class="file-meta">
+            {{ currentPolicy()?.fileSize || 'Tài liệu' }} 
+            <span *ngIf="currentPolicy()?.updatedAt">• Cập nhật: {{ currentPolicy()?.updatedAt | date:'dd/MM/yyyy HH:mm' }}</span>
+          </span>
+        </div>
+        <button type="button" class="btn-check-file" (click)="openCurrentFile()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;">
+            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+            <polyline points="15 3 21 3 21 9"></polyline>
+            <line x1="10" y1="14" x2="21" y2="3"></line>
+          </svg>
+          Mở xem file
+        </button>
+      </div>
+    </div>
+
+    <!-- 2. Khu vực Upload file mới -->
+    <div class="upload-zone" (click)="fileInput.click()">
+      <input 
+        #fileInput 
+        type="file" 
+        accept=".pdf,.doc,.docx,.txt,.png,.jpg,.jpeg" 
+        (change)="onFileSelected($event)" 
+        style="display: none;" 
+      />
+      <div class="zone-content">
+        <div class="upload-icon-circle">
+          <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="17 8 12 3 7 8"></polyline>
+            <line x1="12" y1="3" x2="12" y2="15"></line>
+          </svg>
+        </div>
+        <div class="zone-text">
+          <span class="highlight">Bấm vào đây để chọn file</span> hoặc kéo thả file vào khung này
+        </div>
+        <div class="zone-sub">
+          Hỗ trợ: PDF, Word (DOC, DOCX), Tệp hình ảnh (PNG, JPG) — Tối đa 20MB
+        </div>
+      </div>
+    </div>
+
+    <!-- Thông báo đang nạp file -->
+    <div *ngIf="readingFile()" class="reading-notice">
+      <div class="spinner"></div>
+      <span>Đang nạp file, vui lòng đợi trong giây lát...</span>
+    </div>
+
+    <!-- File mới vừa được chọn -->
+    <div *ngIf="newFileName" class="selected-box">
+      <div class="selected-left">
+        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+        </svg>
+        <div>
+          <div class="selected-name">{{ newFileName }}</div>
+          <div class="selected-size">{{ newFileSize }} • File mới sẵn sàng lưu</div>
+        </div>
+      </div>
+      <button type="button" class="btn-remove" (click)="removeSelectedFile()">
+        ✕ Gỡ chọn
+      </button>
+    </div>
+
+    <!-- 3. Nút Lưu -->
+    <div class="action-footer">
+      <button 
+        type="button" 
+        class="btn-save-policy" 
+        (click)="savePolicyFile()" 
+        [disabled]="saving() || readingFile() || !newFileName">
+        <span *ngIf="!saving() && !readingFile()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px; vertical-align: text-bottom;">
+            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+            <polyline points="17 21 17 13 7 13 7 21"></polyline>
+            <polyline points="7 3 7 8 15 8"></polyline>
+          </svg>
+          Lưu file chính sách
+        </span>
+        <span *ngIf="readingFile()">Đang nạp file...</span>
+        <span *ngIf="saving()">Đang lưu lên hệ thống...</span>
+      </button>
+    </div>
+
+  </div>
+</div>

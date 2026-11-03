@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
@@ -65,8 +65,14 @@ export class RefundComponent implements OnInit {
     {
       key: 'customerName',
       label: 'KHÁCH HÀNG',
-      minWidth: '180px',
-      formatter: (val: string, row: Refund) => `${val}\n${row.contactPhone}`,
+      minWidth: '160px',
+      formatter: (val: string) => val || '—',
+    },
+    {
+      key: 'contactPhone',
+      label: 'SỐ ĐIỆN THOẠI',
+      minWidth: '120px',
+      formatter: (val: string) => val || '—',
     },
     {
       key: 'refundAmount',
@@ -134,6 +140,20 @@ export class RefundComponent implements OnInit {
 
   // Confirmation dialogs
   isApproveConfirmOpen: boolean = false;
+
+  // Modal File Chính Sách Hoàn Tiền
+  showPolicyModal: boolean = false;
+  currentPolicy: any = null;
+  policyFile: File | null = null;
+  policyFileName: string = '';
+  policyFileSize: string = '';
+  policyFileData: string = '';
+  readingPolicyFile: boolean = false;
+  savingPolicy: boolean = false;
+  policySuccessMsg: string = '';
+  policyErrorMsg: string = '';
+
+  private cdr = inject(ChangeDetectorRef);
 
   constructor(private refundService: RefundService) {}
 
@@ -253,6 +273,154 @@ export class RefundComponent implements OnInit {
     } else {
       this.showNotice(res.message, 'error');
     }
+  }
+
+  // ====== QUẢN LÝ CHÍNH SÁCH HOÀN TIỀN ======
+  async openPolicyModal(): Promise<void> {
+    this.policySuccessMsg = '';
+    this.policyErrorMsg = '';
+    this.policyFile = null;
+    this.policyFileName = '';
+    this.policyFileSize = '';
+    this.policyFileData = '';
+    this.showPolicyModal = true;
+
+    try {
+      this.currentPolicy = await this.refundService.getPolicy();
+    } catch (_) {
+      this.currentPolicy = null;
+    }
+    this.cdr.detectChanges();
+  }
+
+  closePolicyModal(): void {
+    this.showPolicyModal = false;
+    this.policySuccessMsg = '';
+    this.policyErrorMsg = '';
+    this.policyFile = null;
+    this.policyFileName = '';
+  }
+
+  onPolicyFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      const file = input.files[0];
+      if (file.size > 20 * 1024 * 1024) {
+        this.policyErrorMsg = 'Kích thước file không được vượt quá 20MB.';
+        input.value = '';
+        return;
+      }
+
+      this.policyFile = file;
+      this.policyFileName = file.name;
+      this.policyFileSize = this.formatBytes(file.size);
+      this.readingPolicyFile = true;
+      this.policyErrorMsg = '';
+      this.policySuccessMsg = '';
+
+      const reader = new FileReader();
+      reader.onload = (e: any) => {
+        this.policyFileData = e.target.result;
+        this.readingPolicyFile = false;
+        this.cdr.detectChanges();
+      };
+      reader.onerror = () => {
+        this.readingPolicyFile = false;
+        this.policyErrorMsg = 'Không thể đọc file. Vui lòng thử lại!';
+        this.cdr.detectChanges();
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
+  removePolicyFile(): void {
+    this.policyFile = null;
+    this.policyFileName = '';
+    this.policyFileSize = '';
+    this.policyFileData = '';
+  }
+
+  async savePolicyFile(): Promise<void> {
+    if (!this.policyFileData && !this.policyFile) {
+      this.policyErrorMsg = 'Vui lòng chọn một file chính sách để tải lên.';
+      return;
+    }
+
+    if (this.readingPolicyFile) {
+      this.policyErrorMsg = 'Đang nạp file, vui lòng đợi trong giây lát!';
+      return;
+    }
+
+    this.savingPolicy = true;
+    this.policyErrorMsg = '';
+    this.policySuccessMsg = '';
+
+    try {
+      const res = await this.refundService.updatePolicy({
+        fileName: this.policyFileName,
+        fileSize: this.policyFileSize,
+        fileData: this.policyFileData,
+        updatedBy: 'Admin Kế toán'
+      });
+
+      this.currentPolicy = res;
+      this.policyFile = null;
+      this.policyFileName = '';
+      this.policyFileSize = '';
+      this.policyFileData = '';
+      this.policySuccessMsg = 'Đã lưu file chính sách mua hàng thành công!';
+      setTimeout(() => this.policySuccessMsg = '', 4000);
+    } catch (e: any) {
+      this.policyErrorMsg = 'Lỗi khi lưu file chính sách: ' + (e.message || 'Thử lại sau.');
+    } finally {
+      this.savingPolicy = false;
+      this.cdr.detectChanges();
+    }
+  }
+
+  openCurrentPolicyFile(): void {
+    if (!this.currentPolicy) return;
+    const url = this.currentPolicy.fileUrl
+      ? (this.currentPolicy.fileUrl.startsWith('http') ? this.currentPolicy.fileUrl : `http://localhost:5000${this.currentPolicy.fileUrl}`)
+      : this.currentPolicy.fileData;
+    if (!url) return;
+
+    if (url.startsWith('http')) {
+      window.open(url, '_blank');
+      return;
+    }
+
+    if (url.startsWith('data:')) {
+      try {
+        const parts = url.split(',');
+        const mime = parts[0].match(/:(.*?);/)?.[1] || 'application/pdf';
+        const byteCharacters = atob(parts[1]);
+        const byteArrays = [];
+        for (let offset = 0; offset < byteCharacters.length; offset += 512) {
+          const slice = byteCharacters.slice(offset, offset + 512);
+          const byteNumbers = new Array(slice.length);
+          for (let i = 0; i < slice.length; i++) {
+            byteNumbers[i] = slice.charCodeAt(i);
+          }
+          byteArrays.push(new Uint8Array(byteNumbers));
+        }
+        const blob = new Blob(byteArrays, { type: mime });
+        const blobUrl = URL.createObjectURL(blob);
+        window.open(blobUrl, '_blank');
+        return;
+      } catch (e) {
+        console.error('Lỗi mở data url:', e);
+      }
+    }
+  }
+
+  formatBytes(bytes: number, decimals: number = 2): string {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const dm = decimals < 0 ? 0 : decimals;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
   }
 
   showNotice(message: string, type: 'success' | 'error'): void {
