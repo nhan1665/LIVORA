@@ -519,8 +519,11 @@
             </span>
 
             <div class="customer-picker-actions">
+              <button type="button" class="btn-picker-action" (click)="selectAllTotal()" title="Chọn toàn bộ khách hàng trong hệ thống">
+                Chọn tất cả ({{ allCustomers().length }})
+              </button>
               <button type="button" class="btn-picker-action" (click)="selectAllFiltered()">
-                Chọn tất cả ({{ filteredCustomers.length }})
+                Chọn đang lọc ({{ filteredCustomers.length }})
               </button>
               <button type="button" class="btn-picker-action" (click)="deselectAllFiltered()">
                 Bỏ chọn đang lọc
@@ -661,6 +664,195 @@
 
   <span modal-footer-extra class="voucher-policy-note">
     Quy định: Giá trị giảm &gt; 0, Số lượng &gt; 0, Hạn mức tối thiểu &gt; 0
+  </span>
+</app-form-modal>
+
+<!-- Modal Bước 2: Thiết lập Người nhận Voucher cho đợt Upload Excel -->
+<app-form-modal
+  [isOpen]="isExcelCustomerModalOpen()"
+  title="Thiết lập Người nhận Voucher (Đợt nhập Excel)"
+  subtitle="ATELIER PROMOTION · Cấu hình đối tượng áp dụng voucher"
+  size="lg"
+  [submitText]="'Xác nhận nhập ' + pendingExcelVouchers.length + ' voucher'"
+  cancelText="Hủy bỏ"
+  [isSubmitting]="isConfirmingExcel()"
+  (close)="cancelExcelImport()"
+  (submit)="confirmExcelImport()"
+>
+  <div class="voucher-form">
+    <!-- Banner tóm tắt các voucher từ Excel -->
+    <div style="display: flex; align-items: center; gap: 12px; padding: 14px 16px; background: #fdf8f4; border: 1px solid #fae2d0; border-radius: 8px; margin-bottom: 16px;">
+      <div style="color: #b0572d; display: flex; align-items: center; justify-content: center;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="16" y1="13" x2="8" y2="13"></line>
+          <line x1="16" y1="17" x2="8" y2="17"></line>
+        </svg>
+      </div>
+      <div style="flex: 1; font-size: 13px; line-height: 1.5; color: #2c2828;">
+        <div>Đã đọc và kiểm tra thành công <strong>{{ pendingExcelVouchers.length }} voucher</strong> từ file Excel:</div>
+        <div style="font-weight: 600; color: #b0572d; margin-top: 2px;">{{ pendingExcelVouchersSummary }}</div>
+      </div>
+    </div>
+
+    @if (excelModalError()) {
+      <div class="form-error-banner" role="alert">{{ excelModalError() }}</div>
+    }
+
+    <!-- Người được voucher (Đối tượng áp dụng) -->
+    <div class="form-field" style="margin-bottom: 16px;">
+      <span class="field-label">Người được voucher (Đối tượng áp dụng) <span class="required">*</span></span>
+      <div class="radio-card-grid">
+        <label class="radio-card" [class.selected]="excelTargetType === 'all'">
+          <input type="radio" name="excelTargetType" value="all" [(ngModel)]="excelTargetType" />
+          <span class="radio-mark" aria-hidden="true"></span>
+          <span class="radio-content">
+            <strong>Tất cả khách hàng</strong>
+            <small>Áp dụng công khai cho mọi tài khoản thành viên & khách mua sắm</small>
+          </span>
+        </label>
+        <label class="radio-card" [class.selected]="excelTargetType === 'specific'">
+          <input type="radio" name="excelTargetType" value="specific" [(ngModel)]="excelTargetType" />
+          <span class="radio-mark" aria-hidden="true"></span>
+          <span class="radio-content">
+            <strong>Khách hàng chỉ định</strong>
+            <small>Chọn danh sách khách hàng cụ thể (khách mới, khách thân thiết, VIP...)</small>
+          </span>
+        </label>
+      </div>
+
+      <!-- Khối chọn khách hàng khi chọn 'Chỉ định' -->
+      @if (excelTargetType === 'specific') {
+        <div class="customer-picker-box">
+          <!-- Bộ lọc thông minh -->
+          <div class="customer-filter-bar">
+            <input
+              type="text"
+              class="customer-search-input"
+              placeholder="Tìm theo tên, SĐT, email, mã KH..."
+              [(ngModel)]="excelCustomerSearchText"
+            />
+
+            <select class="customer-filter-select" [(ngModel)]="excelCustomerOrderFilter">
+              <option value="all">Đơn hàng: Tất cả</option>
+              <option value="no_orders">Khách hàng mới (0 đơn hàng)</option>
+              <option value="has_orders">Đã từng mua hàng (≥ 1 đơn)</option>
+              <option value="loyal">Khách thân thiết (≥ 3 đơn)</option>
+              <option value="vip">Khách hàng VIP (≥ 10 triệu)</option>
+            </select>
+
+            <select class="customer-filter-select" [(ngModel)]="excelCustomerDateFilter">
+              <option value="all">Ngày đăng ký: Tất cả</option>
+              <option value="7days">Mới đăng ký (7 ngày qua)</option>
+              <option value="30days">Mới đăng ký (30 ngày qua)</option>
+              <option value="90days">Mới đăng ký (90 ngày qua)</option>
+            </select>
+          </div>
+
+          <!-- Thanh hành động & Đếm (CHO PHÉP CLICK TẤT CẢ KHÁCH HÀNG) -->
+          <div class="customer-action-bar">
+            <span class="customer-count-badge">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                <circle cx="9" cy="7" r="4" />
+                <polyline points="16 11 18 13 22 9" />
+              </svg>
+              Đã chọn: <strong>{{ excelSelectedCustomerIds.size }}</strong> khách hàng
+            </span>
+
+            <div class="customer-picker-actions">
+              <button type="button" class="btn-picker-action" (click)="selectAllExcelTotal()" title="Chọn toàn bộ khách hàng trong hệ thống">
+                Chọn tất cả ({{ allCustomers().length }})
+              </button>
+              <button type="button" class="btn-picker-action" (click)="selectAllExcelFiltered()">
+                Chọn đang lọc ({{ filteredExcelCustomers.length }})
+              </button>
+              <button type="button" class="btn-picker-action" (click)="deselectAllExcelFiltered()">
+                Bỏ chọn đang lọc
+              </button>
+              @if (excelSelectedCustomerIds.size > 0) {
+                <button type="button" class="btn-picker-clear" (click)="clearAllExcelSelected()">
+                  Xóa tất cả đã chọn
+                </button>
+              }
+            </div>
+          </div>
+
+          <!-- Chips các khách hàng đã chọn -->
+          @if (excelSelectedCustomerIds.size > 0) {
+            <div class="customer-chips-wrap">
+              @for (cust of getSelectedExcelCustomerItems(); track cust.id) {
+                <span class="customer-chip">
+                  <span>{{ cust.fullName }} ({{ cust.phone || cust.code }})</span>
+                  <button type="button" class="customer-chip-remove" (click)="removeExcelSelected(cust.id)" title="Bỏ chọn">×</button>
+                </span>
+              }
+            </div>
+          }
+
+          <!-- Danh sách bảng thu nhỏ có cuộn -->
+          <div class="customer-table-wrap">
+            @if (loadingCustomers()) {
+              <div style="padding: 16px; text-align: center; color: #8c8278; font-size: 12.5px;">
+                Đang tải danh sách khách hàng...
+              </div>
+            } @else if (filteredExcelCustomers.length === 0) {
+              <div style="padding: 16px; text-align: center; color: #8c8278; font-size: 12.5px;">
+                Không tìm thấy khách hàng nào phù hợp với bộ lọc.
+              </div>
+            } @else {
+              <table class="customer-mini-table">
+                <thead>
+                  <tr>
+                    <th style="width: 36px; text-align: center;">#</th>
+                    <th>KHÁCH HÀNG</th>
+                    <th>LIÊN HỆ</th>
+                    <th>NGÀY TẠO</th>
+                    <th>ĐƠN HÀNG</th>
+                    <th>TỔNG CHI TIÊU</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (cust of filteredExcelCustomers; track cust.id) {
+                    <tr (click)="toggleExcelCustomer(cust.id)" style="cursor: pointer;">
+                      <td style="text-align: center;" (click)="$event.stopPropagation()">
+                        <input
+                          type="checkbox"
+                          [checked]="isExcelCustomerSelected(cust.id)"
+                          (change)="toggleExcelCustomer(cust.id)"
+                        />
+                      </td>
+                      <td>
+                        <div style="font-weight: 600; color: #2c2828;">{{ cust.fullName }}</div>
+                        <span class="customer-meta-sub">{{ cust.code }}</span>
+                      </td>
+                      <td>
+                        <div>{{ cust.phone || 'Chưa có SĐT' }}</div>
+                        <span class="customer-meta-sub">{{ cust.email }}</span>
+                      </td>
+                      <td>{{ formatDate(cust.createdAt) }}</td>
+                      <td>
+                        @if (cust.totalOrders === 0) {
+                          <span class="badge-new-cust">Khách mới (0 đơn)</span>
+                        } @else {
+                          <span class="badge-orders">{{ cust.totalOrders }} đơn</span>
+                        }
+                      </td>
+                      <td style="font-weight: 600;">{{ formatCurrency(cust.accumulatedSpent) }}</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+
+  <span modal-footer-extra class="voucher-policy-note">
+    Các voucher sau khi xác nhận sẽ được gán đối tượng khách hàng tương ứng
   </span>
 </app-form-modal>
 

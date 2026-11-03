@@ -255,89 +255,59 @@ export class Shipping implements OnInit {
 
   /**
    * Tải template vận chuyển gồm đúng 2 tab:
-   * Tab 1: Template_VanChuyen (template nhập liệu với dòng Code Header và Nhãn tiếng Việt)
+   * Tab 1: Template_VanChuyen (chỉ gồm các trường có trong popup Thêm mới cấu hình vận chuyển)
    * Tab 2: Danh_Sach_Ma_Tinh (danh mục mã chuẩn của toàn bộ 63 tỉnh thành)
    */
   async downloadExcelTemplate(): Promise<void> {
     try {
-      // Dòng 1: Code headers kỹ thuật chuẩn
+      // Dòng 1: Code headers kỹ thuật chuẩn (chỉ gồm đúng 5 trường trong popup Thêm mới)
       const codeHeaders = [
-        'province_code',
         'shipping_method',
+        'province_code',
         'fee',
-        'estimated_delivery_time',
         'free_ship_threshold',
-        'time_slot',
-        'white_glove_included',
-        'hub',
-        'fee_note',
-        'is_active',
+        'estimated_delivery_time',
       ];
 
-      // Dòng 2: Nhãn tiếng Việt hiển thị
+      // Dòng 2: Nhãn tiếng Việt hiển thị tương ứng popup
       const labelHeaders = [
-        'Mã tỉnh (* Tra cứu ở Tab 2)',
         'Phương thức (*: standard / express)',
-        'Cước phí VNĐ (* Bắt buộc)',
-        'Thời gian giao hàng (* Bắt buộc)',
-        'Đơn tối thiểu miễn phí ship (VNĐ)',
-        'Khung giờ giao hàng',
-        'Dịch vụ White Glove (Có / Không)',
-        'Trung tâm điều phối / Hub',
-        'Ghi chú cước phí',
-        'Trạng thái (Hoạt động / Tắt)',
+        'Mã tỉnh (* Tra cứu ở Tab 2)',
+        'Phí vận chuyển chuẩn VNĐ (* Bắt buộc)',
+        'Miễn phí cho đơn từ VNĐ (Tùy chọn)',
+        'Thời gian giao dự kiến (* Bắt buộc)',
       ];
 
       const sampleRow1 = [
-        'HCM',
         'standard',
+        'HCM',
         30000,
-        '1 - 2 ngày',
         500000,
-        'Giờ hành chính (8h00 - 18h00)',
-        'Có',
-        'Hub Tổng Miền Nam',
-        'Áp dụng toàn bộ nội thành TP.HCM',
-        'Hoạt động',
+        '1 - 2 ngày',
       ];
 
       const sampleRow2 = [
-        'HN',
         'standard',
+        'HN',
         35000,
-        '2 - 3 ngày',
         700000,
-        'Giờ hành chính (8h00 - 18h00)',
-        'Có',
-        'Hub Miền Bắc',
-        'Áp dụng khu vực Hà Nội',
-        'Hoạt động',
+        '2 - 3 ngày',
       ];
 
       const sampleRow3 = [
-        'DN',
         'express',
+        'DN',
         60000,
-        '24 giờ',
         1000000,
-        'Hỏa tốc theo yêu cầu',
-        'Không',
-        'Hub Miền Trung',
-        'Chuyển phát nhanh đường hàng không',
-        'Hoạt động',
+        '24 giờ',
       ];
 
       const sampleRow4 = [
-        'TQ',
         'standard',
+        'TQ',
         50000,
-        '3 - 5 ngày',
         1500000,
-        'Giờ hành chính (8h00 - 18h00)',
-        'Không',
-        'Trung tâm điều phối toàn quốc',
-        'Cấu hình tiêu chuẩn cho các tỉnh còn lại',
-        'Hoạt động',
+        '3 - 5 ngày',
       ];
 
       // Tab 2: Danh sách Mã tỉnh chuẩn
@@ -365,7 +335,7 @@ export class Shipping implements OnInit {
 
   /**
    * Upload file Excel vận chuyển:
-   * - Nhận diện cột theo Code Headers hoặc nhãn tiếng Việt.
+   * - Nhận diện cột theo Code Headers hoặc nhãn tiếng Việt tương ứng popup Thêm mới.
    * - Bắt buộc kiểm tra mã tỉnh với danh mục mã tỉnh chuẩn ở Tab 2.
    * - Nếu mã sai hoặc không tìm thấy -> Báo lỗi chi tiết không nhận diện được.
    */
@@ -395,16 +365,11 @@ export class Shipping implements OnInit {
 
       // 1. Phân tích header: tìm chỉ số các cột dựa theo code header hoặc tiếng Việt
       let headerRowIndex = 0;
-      let provinceCodeIdx = -1;
       let methodIdx = -1;
+      let provinceCodeIdx = -1;
       let feeIdx = -1;
-      let estTimeIdx = -1;
       let thresholdIdx = -1;
-      let timeSlotIdx = -1;
-      let whiteGloveIdx = -1;
-      let hubIdx = -1;
-      let noteIdx = -1;
-      let statusIdx = -1;
+      let estTimeIdx = -1;
 
       for (let r = 0; r < Math.min(3, rows.length); r++) {
         const headerRow = (rows[r] || []).map((c: any) =>
@@ -416,35 +381,26 @@ export class Shipping implements OnInit {
         };
 
         const tryCode = findCol('province_code', 'provincecode', 'mã tỉnh', 'ma tinh', 'code');
-        const tryFee = findCol('fee', 'cước phí', 'cuoc phi', 'phí vận chuyển', 'phi van chuyen');
+        const tryMethod = findCol('shipping_method', 'shippingmethod', 'phương thức', 'phuong thuc', 'method');
+        const tryFee = findCol('fee', 'cước phí', 'cuoc phi', 'phí vận chuyển', 'phi van chuyen', 'phí');
 
-        if (tryCode !== -1 || tryFee !== -1) {
+        if (tryCode !== -1 || tryFee !== -1 || tryMethod !== -1) {
           headerRowIndex = r;
+          methodIdx = tryMethod;
           provinceCodeIdx = tryCode;
           feeIdx = tryFee;
-          methodIdx = findCol('shipping_method', 'shippingmethod', 'phương thức', 'phuong thuc', 'method');
-          estTimeIdx = findCol('estimated_delivery_time', 'thời gian giao', 'thoi gian', 'time');
-          thresholdIdx = findCol('free_ship_threshold', 'freeship', 'miễn phí ship', 'mien phi ship');
-          timeSlotIdx = findCol('time_slot', 'khung giờ', 'khung gio', 'timeslot');
-          whiteGloveIdx = findCol('white_glove_included', 'white_glove', 'white glove', 'whiteglove');
-          hubIdx = findCol('hub', 'trung tâm', 'trung tam', 'kho');
-          noteIdx = findCol('fee_note', 'ghi chú', 'ghi chu', 'note');
-          statusIdx = findCol('is_active', 'isactive', 'trạng thái', 'trang thai', 'status');
+          thresholdIdx = findCol('free_ship_threshold', 'freeship', 'miễn phí', 'mien phi', 'đơn từ', 'don tu', 'ngưỡng');
+          estTimeIdx = findCol('estimated_delivery_time', 'thời gian giao', 'thoi gian', 'dự kiến', 'du kien', 'time', 'eta');
           break;
         }
       }
 
-      // Fallback vị trí mặc định nếu không khớp
-      if (provinceCodeIdx === -1) provinceCodeIdx = 0;
-      if (methodIdx === -1) methodIdx = 1;
+      // Fallback vị trí mặc định nếu không khớp tiêu đề
+      if (methodIdx === -1) methodIdx = 0;
+      if (provinceCodeIdx === -1) provinceCodeIdx = 1;
       if (feeIdx === -1) feeIdx = 2;
-      if (estTimeIdx === -1) estTimeIdx = 3;
-      if (thresholdIdx === -1) thresholdIdx = 4;
-      if (timeSlotIdx === -1) timeSlotIdx = 5;
-      if (whiteGloveIdx === -1) whiteGloveIdx = 6;
-      if (hubIdx === -1) hubIdx = 7;
-      if (noteIdx === -1) noteIdx = 8;
-      if (statusIdx === -1) statusIdx = 9;
+      if (thresholdIdx === -1) thresholdIdx = 3;
+      if (estTimeIdx === -1) estTimeIdx = 4;
 
       const clientErrors: string[] = [];
       const configsToUpload: any[] = [];
@@ -455,7 +411,7 @@ export class Shipping implements OnInit {
           continue;
         }
 
-        const rawCodeInput = String(row[provinceCodeIdx] || '').trim();
+        const rawCodeInput = provinceCodeIdx !== -1 ? String(row[provinceCodeIdx] || '').trim() : '';
 
         // Bỏ qua dòng header phụ tiếng Việt nếu có
         if (
@@ -468,15 +424,10 @@ export class Shipping implements OnInit {
         }
 
         const rowIdx = i + 1;
-        const methodRaw = String(row[methodIdx] || '').trim().toLowerCase();
-        const feeRaw = Number(row[feeIdx]);
-        const estimatedDeliveryTime = String(row[estTimeIdx] || '').trim();
-        const freeShipThreshold = row[thresholdIdx] !== '' && row[thresholdIdx] !== null && row[thresholdIdx] !== undefined ? Number(row[thresholdIdx]) : 0;
-        const timeSlot = String(row[timeSlotIdx] || 'Giờ hành chính (8h00 - 18h00)').trim();
-        const whiteGloveRaw = String(row[whiteGloveIdx] || '').trim().toLowerCase();
-        const hub = String(row[hubIdx] || '').trim();
-        const feeNote = String(row[noteIdx] || '').trim();
-        const statusRaw = String(row[statusIdx] || '').trim().toLowerCase();
+        const methodRaw = methodIdx !== -1 ? String(row[methodIdx] || '').trim().toLowerCase() : '';
+        const feeRaw = feeIdx !== -1 ? Number(row[feeIdx]) : NaN;
+        const thresholdRaw = thresholdIdx !== -1 && row[thresholdIdx] !== '' && row[thresholdIdx] !== null && row[thresholdIdx] !== undefined ? Number(row[thresholdIdx]) : 0;
+        const estimatedDeliveryTime = estTimeIdx !== -1 ? String(row[estTimeIdx] || '').trim() : '';
 
         // 1. Kiểm tra mã tỉnh (BẮT BUỘC TRA CỨU ĐÚNG MÃ TỈNH Ở TAB 2)
         if (!rawCodeInput) {
@@ -494,25 +445,23 @@ export class Shipping implements OnInit {
 
         const province = resolved.provinceName;
 
-        // 2. Phương thức vận chuyển
+        // 2. Phương thức vận chuyển (standard / express)
         const shippingMethod = (methodRaw.includes('express') || methodRaw.includes('nhanh') || methodRaw.includes('hỏa tốc'))
           ? 'express'
           : 'standard';
 
-        // 3. Cước phí
+        // 3. Cước phí chuẩn
         if (isNaN(feeRaw) || feeRaw < 0) {
           clientErrors.push(`Dòng ${rowIdx} (${province}): Cước phí "${row[feeIdx]}" không hợp lệ (phải là số nguyên VND >= 0).`);
           continue;
         }
 
-        // 4. Thời gian giao
+        // 4. Miễn phí cho đơn từ
+        const freeShipThreshold = isNaN(thresholdRaw) || thresholdRaw < 0 ? 0 : thresholdRaw;
+        const freeShipEnabled = freeShipThreshold > 0;
+
+        // 5. Thời gian giao dự kiến
         const finalEstTime = estimatedDeliveryTime || (shippingMethod === 'express' ? '24 giờ' : '2 - 4 ngày');
-
-        // 5. White glove
-        const whiteGloveIncluded = whiteGloveRaw.includes('có') || whiteGloveRaw === 'true' || whiteGloveRaw === '1' || whiteGloveRaw.includes('yes');
-
-        // 6. Trạng thái
-        const isActive = statusRaw === '' || statusRaw.includes('hoạt') || statusRaw === 'active' || statusRaw === 'true' || statusRaw === '1';
 
         configsToUpload.push({
           province,
@@ -520,12 +469,12 @@ export class Shipping implements OnInit {
           fee: feeRaw,
           estimatedDeliveryTime: finalEstTime,
           freeShipThreshold,
-          freeShipEnabled: freeShipThreshold > 0,
-          timeSlot,
-          whiteGloveIncluded,
-          hub: hub || `Trung tâm ${province}`,
-          feeNote,
-          isActive,
+          freeShipEnabled,
+          timeSlot: 'Giờ hành chính (8h00 - 18h00)',
+          whiteGloveIncluded: false,
+          hub: this.defaultHub(province),
+          feeNote: '',
+          isActive: true,
         });
       }
 

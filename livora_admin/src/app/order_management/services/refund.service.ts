@@ -254,4 +254,41 @@ export class RefundService {
       totalRefundedAmount,
     };
   }
+
+  // ====== QUẢN LÝ FILE CHÍNH SÁCH MUA HÀNG ======
+  async getPolicy(): Promise<any> {
+    try {
+      const res = await fetch('http://localhost:5000/api/refunds/policy');
+      const data = await res.json();
+      if (data && data.success) {
+        if (data.data) {
+          localStorage.setItem('livora_refund_policy', JSON.stringify(data.data));
+          return data.data;
+        } else {
+          localStorage.removeItem('livora_refund_policy');
+          return null;
+        }
+      }
+    } catch (_) {}
+
+    try {
+      const cached = localStorage.getItem('livora_refund_policy');
+      if (cached) return JSON.parse(cached);
+    } catch (_) {}
+    return null;
+  }
+
+  async updatePolicy(payload: { fileName: string; fileSize?: string; fileData?: string; updatedBy?: string }): Promise<any> {
+    const res = await fetch('http://localhost:5000/api/refunds/policy', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if (data && data.success && data.data) {
+      localStorage.setItem('livora_refund_policy', JSON.stringify(data.data));
+      return data.data;
+    }
+    throw new Error(data?.message || 'Lỗi lưu chính sách.');
+  }
 }

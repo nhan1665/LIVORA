@@ -34,7 +34,7 @@
       <ul class="footer-links">
         <li><a href="#">Liên hệ chúng tôi</a></li>
         <li><a href="#">Theo dõi đơn hàng</a></li>
-        <li><a href="#">Đổi trả hàng</a></li>
+        <li><a [href]="policyUrl || 'javascript:void(0)'" [target]="policyUrl ? '_blank' : '_self'" rel="noopener noreferrer">Chính sách mua hàng</a></li>
       </ul>
     </div>
 

@@ -238,6 +238,12 @@ export class Voucher implements OnInit {
     }
   }
 
+  selectAllTotal(): void {
+    for (const c of this.allCustomers()) {
+      this.selectedCustomerIds.add(c.id);
+    }
+  }
+
   deselectAllFiltered(): void {
     const filtered = this.filteredCustomers;
     for (const c of filtered) {
@@ -633,13 +639,19 @@ export class Voucher implements OnInit {
         const endDateRaw = row[endIdx];
         const statusRaw = String(row[statusIdx] || '').trim().toLowerCase();
 
+        // Validation chi tiết từng trường theo yêu cầu
         if (!rawCode) {
-          clientErrors.push(`Dòng ${rowIdx}: Mã voucher không được để trống.`);
+          clientErrors.push(`Dòng ${rowIdx}: [Mã voucher] Không được để trống.`);
+          continue;
+        }
+
+        if (!/^[A-Z0-9-]+$/.test(rawCode)) {
+          clientErrors.push(`Dòng ${rowIdx} (${rawCode}): [Mã voucher] Mã chỉ được gồm chữ cái in hoa, chữ số và dấu gạch ngang.`);
           continue;
         }
 
         if (!rawTitle) {
-          clientErrors.push(`Dòng ${rowIdx} (${rawCode}): Tên chương trình ưu đãi không được để trống.`);
+          clientErrors.push(`Dòng ${rowIdx} (${rawCode}): [Tên chương trình ưu đãi] Không được để trống.`);
           continue;
         }
 
@@ -648,17 +660,17 @@ export class Voucher implements OnInit {
           : 'percentage';
 
         if (isNaN(discountValue) || discountValue <= 0) {
-          clientErrors.push(`Dòng ${rowIdx} (${rawCode}): Giá trị giảm phải là số lớn hơn 0.`);
+          clientErrors.push(`Dòng ${rowIdx} (${rawCode}): [Giá trị giảm] Phải là số dương lớn hơn 0.`);
           continue;
         }
 
         if (discountType === 'percentage' && discountValue > 100) {
-          clientErrors.push(`Dòng ${rowIdx} (${rawCode}): Giảm theo % không được vượt quá 100%.`);
+          clientErrors.push(`Dòng ${rowIdx} (${rawCode}): [Giá trị giảm] Mức chiết khấu theo % không được vượt quá 100%.`);
           continue;
         }
 
         if (isNaN(quantity) || quantity <= 0) {
-          clientErrors.push(`Dòng ${rowIdx} (${rawCode}): Số lượng phát hành phải là số nguyên lớn hơn 0.`);
+          clientErrors.push(`Dòng ${rowIdx} (${rawCode}): [Số lượng phát hành] Phải là số nguyên lớn hơn 0.`);
           continue;
         }
 
@@ -678,6 +690,11 @@ export class Voucher implements OnInit {
           endDate = new Date(Date.now() + 30 * 86400000).toISOString();
         }
 
+        if (new Date(endDate).getTime() <= new Date(startDate).getTime()) {
+          clientErrors.push(`Dòng ${rowIdx} (${rawCode}): [Thời gian hiệu lực] Ngày kết thúc phải sau ngày bắt đầu.`);
+          continue;
+        }
+
         const isActive = statusRaw === '' || statusRaw.includes('hoạt') || statusRaw === 'active' || statusRaw === 'true' || statusRaw === '1';
 
         vouchersToUpload.push({
@@ -685,8 +702,8 @@ export class Voucher implements OnInit {
           title: rawTitle,
           discountType,
           discountValue,
-          maxDiscountAmount,
-          minOrderValue,
+          maxDiscountAmount: maxDiscountAmount || 0,
+          minOrderValue: minOrderValue || 0,
           quantity,
           perCustomerLimit,
           startDate,
@@ -711,31 +728,174 @@ export class Voucher implements OnInit {
         return;
       }
 
-      this.voucherService.createVouchersBulk(vouchersToUpload).subscribe({
-        next: (res) => {
-          this.isImporting.set(false);
-          const allErrors = [...clientErrors, ...(res.errors || [])];
-          this.importReport.set({
-            open: true,
-            title: 'Kết quả nhập dữ liệu Voucher từ Excel',
-            successCount: res.successCount || 0,
-            updatedCount: res.updatedCount || 0,
-            insertedCount: res.insertedCount || 0,
-            total: vouchersToUpload.length + clientErrors.length,
-            errors: allErrors,
-          });
-          this.showToast(`Đã nhập thành công ${res.successCount} voucher.`, 'success');
-          this.loadVouchers();
-        },
-        error: (err: Error) => {
-          this.isImporting.set(false);
-          this.showToast(err.message || 'Lỗi hệ thống khi tải dữ liệu voucher lên.', 'error');
-        },
-      });
+      // Đã đọc thành công các voucher hợp lệ -> Chuyển sang bước Thiết lập Người nhận Voucher
+      this.isImporting.set(false);
+      this.pendingExcelVouchers = vouchersToUpload;
+      this.excelValidationErrors = clientErrors;
+      this.excelTargetType = 'all';
+      this.excelSelectedCustomerIds.clear();
+      this.excelCustomerSearchText = '';
+      this.excelCustomerOrderFilter = 'all';
+      this.excelCustomerDateFilter = 'all';
+      this.excelModalError.set('');
+      this.loadAllCustomers();
+      this.isExcelCustomerModalOpen.set(true);
     } catch (err: any) {
       this.isImporting.set(false);
       this.showToast(err.message || 'Không thể xử lý file Excel đã chọn.', 'error');
     }
+  }
+
+  // === Xử lý Modal Chọn khách hàng cho Đợt Upload Excel ===
+  readonly isExcelCustomerModalOpen = signal(false);
+  readonly isConfirmingExcel = signal(false);
+  readonly excelModalError = signal('');
+  pendingExcelVouchers: any[] = [];
+  excelValidationErrors: string[] = [];
+
+  excelTargetType: 'all' | 'specific' = 'all';
+  excelSelectedCustomerIds = new Set<string>();
+  excelCustomerSearchText = '';
+  excelCustomerOrderFilter: 'all' | 'no_orders' | 'has_orders' | 'loyal' | 'vip' = 'all';
+  excelCustomerDateFilter: 'all' | '7days' | '30days' | '90days' = 'all';
+
+  get pendingExcelVouchersSummary(): string {
+    const codes = this.pendingExcelVouchers.map((v) => v.code);
+    if (codes.length <= 5) return codes.join(', ');
+    return `${codes.slice(0, 5).join(', ')} ... (+${codes.length - 5} mã khác)`;
+  }
+
+  get filteredExcelCustomers(): CustomerPickerItem[] {
+    const term = this.excelCustomerSearchText.trim().toLowerCase();
+    const orderFilter = this.excelCustomerOrderFilter;
+    const dateFilter = this.excelCustomerDateFilter;
+
+    const now = new Date().getTime();
+    const dayMs = 24 * 60 * 60 * 1000;
+
+    return this.allCustomers().filter((c) => {
+      if (term) {
+        const matchName = (c.fullName || '').toLowerCase().includes(term);
+        const matchPhone = (c.phone || '').toLowerCase().includes(term);
+        const matchEmail = (c.email || '').toLowerCase().includes(term);
+        const matchCode = (c.code || '').toLowerCase().includes(term);
+        if (!matchName && !matchPhone && !matchEmail && !matchCode) {
+          return false;
+        }
+      }
+
+      if (orderFilter === 'no_orders' && c.totalOrders > 0) return false;
+      if (orderFilter === 'has_orders' && c.totalOrders < 1) return false;
+      if (orderFilter === 'loyal' && c.totalOrders < 3) return false;
+      if (orderFilter === 'vip' && c.accumulatedSpent < 10000000 && c.totalOrders < 5) return false;
+
+      if (dateFilter !== 'all' && c.createdAt) {
+        const createdTime = new Date(c.createdAt).getTime();
+        if (!isNaN(createdTime)) {
+          const diffDays = (now - createdTime) / dayMs;
+          if (dateFilter === '7days' && diffDays > 7) return false;
+          if (dateFilter === '30days' && diffDays > 30) return false;
+          if (dateFilter === '90days' && diffDays > 90) return false;
+        }
+      }
+
+      return true;
+    });
+  }
+
+  isExcelCustomerSelected(id: string): boolean {
+    return this.excelSelectedCustomerIds.has(id);
+  }
+
+  toggleExcelCustomer(id: string): void {
+    if (this.excelSelectedCustomerIds.has(id)) {
+      this.excelSelectedCustomerIds.delete(id);
+    } else {
+      this.excelSelectedCustomerIds.add(id);
+    }
+  }
+
+  selectAllExcelFiltered(): void {
+    for (const c of this.filteredExcelCustomers) {
+      this.excelSelectedCustomerIds.add(c.id);
+    }
+  }
+
+  // CHO PHÉP CLICK TẤT CẢ KHÁCH HÀNG
+  selectAllExcelTotal(): void {
+    for (const c of this.allCustomers()) {
+      this.excelSelectedCustomerIds.add(c.id);
+    }
+  }
+
+  deselectAllExcelFiltered(): void {
+    for (const c of this.filteredExcelCustomers) {
+      this.excelSelectedCustomerIds.delete(c.id);
+    }
+  }
+
+  clearAllExcelSelected(): void {
+    this.excelSelectedCustomerIds.clear();
+  }
+
+  removeExcelSelected(id: string): void {
+    this.excelSelectedCustomerIds.delete(id);
+  }
+
+  getSelectedExcelCustomerItems(): CustomerPickerItem[] {
+    const ids = this.excelSelectedCustomerIds;
+    return this.allCustomers().filter((c) => ids.has(c.id));
+  }
+
+  cancelExcelImport(): void {
+    this.isExcelCustomerModalOpen.set(false);
+    this.pendingExcelVouchers = [];
+    this.excelValidationErrors = [];
+    this.excelModalError.set('');
+  }
+
+  confirmExcelImport(): void {
+    this.excelModalError.set('');
+    if (this.excelTargetType === 'specific' && this.excelSelectedCustomerIds.size === 0) {
+      this.excelModalError.set('Vui lòng chọn ít nhất một khách hàng hoặc chuyển sang tùy chọn "Tất cả khách hàng".');
+      return;
+    }
+
+    this.isConfirmingExcel.set(true);
+
+    const targetType = this.excelTargetType;
+    const customerIds = targetType === 'specific' ? Array.from(this.excelSelectedCustomerIds) : [];
+
+    const finalVouchers = this.pendingExcelVouchers.map((v) => ({
+      ...v,
+      targetType,
+      applicableCustomerIds: customerIds,
+    }));
+
+    this.voucherService.createVouchersBulk(finalVouchers).subscribe({
+      next: (res) => {
+        this.isConfirmingExcel.set(false);
+        this.isExcelCustomerModalOpen.set(false);
+        const allErrors = [...this.excelValidationErrors, ...(res?.errors || [])];
+        this.importReport.set({
+          open: true,
+          title: 'Kết quả nhập dữ liệu Voucher từ Excel',
+          successCount: res?.successCount || res?.insertedCount || 0,
+          updatedCount: res?.updatedCount || 0,
+          insertedCount: res?.insertedCount || 0,
+          total: finalVouchers.length + this.excelValidationErrors.length,
+          errors: allErrors,
+        });
+        this.showToast(`Đã nhập thành công ${res?.successCount || res?.insertedCount || 0} voucher.`, 'success');
+        this.pendingExcelVouchers = [];
+        this.excelValidationErrors = [];
+        this.loadVouchers();
+      },
+      error: (err: Error) => {
+        this.isConfirmingExcel.set(false);
+        this.excelModalError.set(err.message || 'Lỗi hệ thống khi nhập danh sách voucher.');
+      },
+    });
   }
 
   closeImportReport(): void {

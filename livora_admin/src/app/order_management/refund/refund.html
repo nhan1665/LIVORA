@@ -13,6 +13,17 @@
       <p class="eyebrow">LIVORA ADMINISTRATION &bull; QUẢN LÝ ĐƠN HÀNG</p>
       <h1>Yêu cầu hoàn tiền</h1>
     </div>
+    <div class="refund-heading-actions">
+      <button type="button" class="btn-policy-header" (click)="openPolicyModal()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px; vertical-align: text-bottom;">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="16" y1="13" x2="8" y2="13"></line>
+          <line x1="16" y1="17" x2="8" y2="17"></line>
+        </svg>
+        Chính sách mua hàng
+      </button>
+    </div>
   </header>
 
   <!-- KPI Stats -->
@@ -189,3 +200,114 @@
   (confirm)="confirmApprove()"
   (cancel)="cancelApproveConfirm()"
 ></app-confirm-dialog>
+
+<!-- ====== MODAL QUẢN LÝ FILE CHÍNH SÁCH HOÀN TIỀN ====== -->
+<div *ngIf="showPolicyModal" class="policy-modal-overlay" (click)="closePolicyModal()">
+  <div class="policy-modal-content" (click)="$event.stopPropagation()">
+    <div class="policy-modal-header">
+      <div class="header-icon-title">
+        <div class="icon-round">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            <line x1="12" y1="18" x2="12" y2="12"></line>
+            <line x1="9" y1="15" x2="15" y2="15"></line>
+          </svg>
+        </div>
+        <div>
+          <h3 class="modal-h3">File chính sách mua hàng</h3>
+          <p class="modal-sub">Tải lên file chính sách mua hàng của công ty (PDF, Word, Ảnh...)</p>
+        </div>
+      </div>
+      <button type="button" class="btn-modal-close" (click)="closePolicyModal()">&times;</button>
+    </div>
+
+    <div class="policy-modal-body">
+      <!-- Thông báo -->
+      <div *ngIf="policySuccessMsg" class="policy-notice-box success">
+        {{ policySuccessMsg }}
+      </div>
+      <div *ngIf="policyErrorMsg" class="policy-notice-box error">
+        {{ policyErrorMsg }}
+      </div>
+
+      <!-- 1. Trạng thái file hiện tại trên hệ thống -->
+      <div class="current-file-box">
+        <span class="box-title">FILE HIỆN TẠI TRÊN HỆ THỐNG:</span>
+        <div *ngIf="currentPolicy?.fileName" class="current-file-row">
+          <div class="current-file-name-group">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+            </svg>
+            <div>
+              <div class="fname">{{ currentPolicy.fileName }}</div>
+              <div class="fmeta">
+                {{ currentPolicy.fileSize || 'Tài liệu' }}
+                <span *ngIf="currentPolicy.updatedAt"> • Cập nhật: {{ currentPolicy.updatedAt | date:'dd/MM/yyyy HH:mm' }}</span>
+              </div>
+            </div>
+          </div>
+          <button type="button" class="btn-open-current" (click)="openCurrentPolicyFile()">
+            Mở xem file
+          </button>
+        </div>
+        <div *ngIf="!currentPolicy?.fileName" class="no-file-text">
+          Chưa có file chính sách mua hàng nào được tải lên hệ thống.
+        </div>
+      </div>
+
+      <!-- 2. Khung upload file mới -->
+      <div class="policy-upload-drop" (click)="policyFileInput.click()">
+        <input 
+          #policyFileInput 
+          type="file" 
+          accept=".pdf,.doc,.docx,.txt,.png,.jpg,.jpeg" 
+          (change)="onPolicyFileSelected($event)" 
+          style="display: none;" 
+        />
+        <div class="upload-drop-content">
+          <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 8px;">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="17 8 12 3 7 8"></polyline>
+            <line x1="12" y1="3" x2="12" y2="15"></line>
+          </svg>
+          <div class="drop-text">
+            <span class="highlight">Bấm để chọn file mới</span> hoặc kéo thả vào đây
+          </div>
+          <div class="drop-hint">Hỗ trợ định dạng: PDF, Word (DOC, DOCX), Ảnh (JPG, PNG) - Tối đa 20MB</div>
+        </div>
+      </div>
+
+      <!-- Trạng thái đọc file -->
+      <div *ngIf="readingPolicyFile" class="reading-indicator">
+        Đang nạp file, vui lòng đợi trong giây lát...
+      </div>
+
+      <!-- File mới được chọn -->
+      <div *ngIf="policyFileName" class="selected-new-file">
+        <div class="selected-left-info">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+          </svg>
+          <div>
+            <strong>{{ policyFileName }}</strong> ({{ policyFileSize }}) - Đã sẵn sàng lưu
+          </div>
+        </div>
+        <button type="button" class="btn-clear-file" (click)="removePolicyFile()">✕ Gỡ chọn</button>
+      </div>
+    </div>
+
+    <div class="policy-modal-actions">
+      <button type="button" class="btn-cancel-policy" (click)="closePolicyModal()">Đóng</button>
+      <button 
+        type="button" 
+        class="btn-save-policy-now" 
+        (click)="savePolicyFile()" 
+        [disabled]="savingPolicy || readingPolicyFile || !policyFileName">
+        {{ savingPolicy ? 'Đang lưu file...' : (readingPolicyFile ? 'Đang nạp file...' : 'Lưu file chính sách') }}
+      </button>
+    </div>
+  </div>
+</div>

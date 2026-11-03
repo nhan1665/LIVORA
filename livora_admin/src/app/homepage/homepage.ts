@@ -40,12 +40,16 @@ export interface BrandItem {
 
 export interface FooterConfigItem {
   id: string;
-  key: 'facebook' | 'instagram' | 'zalo' | 'phone';
+  key: 'facebook' | 'instagram' | 'zalo' | 'phone' | 'policy' | string;
   name: string;
   subtitle: string;
   value: string;
   status: 'Hiển thị' | 'Ẩn';
-  iconType: 'facebook' | 'instagram' | 'zalo' | 'phone';
+  iconType: 'facebook' | 'instagram' | 'zalo' | 'phone' | 'policy' | string;
+  fileName?: string;
+  fileUrl?: string;
+  fileSize?: string;
+  fileData?: string;
 }
 
 @Component({
@@ -239,7 +243,13 @@ export class Homepage implements OnInit, AfterViewInit {
     this.isLoadingFooters = true;
     this.homepageService.getFooters().subscribe({
       next: (data) => {
-        this.footerConfig = data;
+        this.footerConfig = (data || []).map((item) => {
+          if (item.key === 'policy') {
+            item.name = 'Chính sách mua hàng';
+            item.subtitle = 'Tài liệu quy định chính sách mua hàng';
+          }
+          return item;
+        });
         this.isLoadingFooters = false;
         this.cdr.detectChanges();
       },
@@ -963,9 +973,72 @@ export class Homepage implements OnInit, AfterViewInit {
         return 'https://zalo.me/0901234567 hoặc 0901234567';
       case 'phone':
         return 'Số điện thoại WhatsApp (vd: 0901234567 hoặc https://wa.me/...)';
+      case 'policy':
+        return 'Tên file hoặc link tài liệu chính sách mua hàng...';
       default:
         return 'Nhập đường dẫn liên kết...';
     }
+  }
+
+  onFooterPolicyFileSelected(event: Event, item: FooterConfigItem): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      const file = input.files[0];
+      item.fileName = file.name;
+      item.fileSize = `${(file.size / 1024).toFixed(1)} KB`;
+      item.value = file.name;
+
+      const reader = new FileReader();
+      reader.onload = (e: any) => {
+        item.fileData = e.target.result;
+        this.showToast(`Đã nạp file "${file.name}". Nhấn "Lưu thay đổi" để cập nhật vào CSDL!`);
+        this.cdr.detectChanges();
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
+  openFooterPolicyFile(item: FooterConfigItem): void {
+    if (item.fileUrl) {
+      const fullUrl = item.fileUrl.startsWith('http') ? item.fileUrl : `http://localhost:5000${item.fileUrl}`;
+      window.open(fullUrl, '_blank');
+      return;
+    }
+    if (item.fileData && item.fileData.startsWith('data:')) {
+      try {
+        const parts = item.fileData.split(',');
+        const mime = parts[0].match(/:(.*?);/)?.[1] || 'application/pdf';
+        const byteCharacters = atob(parts[1]);
+        const byteArrays = [];
+        for (let offset = 0; offset < byteCharacters.length; offset += 512) {
+          const slice = byteCharacters.slice(offset, offset + 512);
+          const byteNumbers = new Array(slice.length);
+          for (let i = 0; i < slice.length; i++) {
+            byteNumbers[i] = slice.charCodeAt(i);
+          }
+          byteArrays.push(new Uint8Array(byteNumbers));
+        }
+        const blob = new Blob(byteArrays, { type: mime });
+        const blobUrl = URL.createObjectURL(blob);
+        window.open(blobUrl, '_blank');
+        return;
+      } catch (e) {
+        console.error('Lỗi mở data url:', e);
+      }
+    }
+    if (item.value && (item.value.startsWith('http') || item.value.startsWith('/uploads'))) {
+      const url = item.value.startsWith('http') ? item.value : `http://localhost:5000${item.value}`;
+      window.open(url, '_blank');
+    }
+  }
+
+  removeFooterPolicyFile(item: FooterConfigItem): void {
+    item.fileName = '';
+    item.fileUrl = '';
+    item.fileSize = '';
+    item.fileData = '';
+    item.value = '';
+    this.showToast('Đã xóa chọn file chính sách. Nhấn "Lưu thay đổi" để áp dụng.');
   }
 
   saveFooterConfig(): void {
@@ -979,6 +1052,10 @@ export class Homepage implements OnInit, AfterViewInit {
     let hasError = false;
 
     this.footerConfig.forEach((item) => {
+      if (item.key === 'policy') {
+        item.name = 'Chính sách mua hàng';
+        item.subtitle = 'Tài liệu quy định chính sách mua hàng';
+      }
       if (item.value) {
         item.value = item.value.trim();
       }

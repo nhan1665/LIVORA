@@ -6,6 +6,7 @@ import { FormsModule } from '@angular/forms';
 import { CheckoutService, ShippingOption } from '../../../services/checkout.service';
 import { AuthService } from '../../../services/auth.service';
 import { VIETNAM_PROVINCE_NAMES, getWardsForProvince } from '../../../shared/data/vietnam-locations';
+import { environment } from '../../../../environments/environment';
 
 export interface SavedAddress {
   id: string;
@@ -16,6 +17,20 @@ export interface SavedAddress {
   ward: string;
   addressLine: string;
   isDefault: boolean;
+}
+
+export interface CompanyPolicyData {
+  _id?: string;
+  title?: string;
+  fileName?: string;
+  fileType?: string;
+  fileSize?: string;
+  fileUrl?: string;
+  fileData?: string;
+  summary?: string;
+  content?: string;
+  version?: string;
+  updatedAt?: string;
 }
 
 @Component({
@@ -85,6 +100,12 @@ export class Payment implements OnInit, OnDestroy {
   // Validation
   showValidationErrors = false;
 
+  // Policy Fields
+  companyPolicy: CompanyPolicyData | null = null;
+  isPolicyAgreed: boolean = false;
+  showPolicyModal: boolean = false;
+  loadingPolicy: boolean = false;
+
   // QR Modal
   showQRModal = false;
   qrTimer = 300;
@@ -104,6 +125,9 @@ export class Payment implements OnInit, OnDestroy {
 
     this.shippingOptions = [...this.defaultShippingOptions];
     this.selectedShippingId = this.defaultShippingOptions[0].id;
+
+    // Load company policy
+    this.fetchCompanyPolicy();
 
     // Load available regions from API
     this.checkoutService.regions().then((regions) => {
@@ -165,6 +189,85 @@ export class Payment implements OnInit, OnDestroy {
       clearInterval(this.qrInterval);
       this.qrInterval = null;
     }
+  }
+
+  async fetchCompanyPolicy() {
+    this.loadingPolicy = true;
+    try {
+      const response = await fetch(`${environment.apiBaseUrl}/refunds/policy`);
+      const data = await response.json();
+      if (data && data.success) {
+        this.companyPolicy = data.data || null;
+      } else {
+        this.companyPolicy = null;
+      }
+    } catch (err) {
+      console.warn('Lỗi khi tải chính sách mua hàng:', err);
+      this.companyPolicy = null;
+    } finally {
+      this.loadingPolicy = false;
+      this.cdr.detectChanges();
+    }
+  }
+
+  openPolicyModal(event?: Event) {
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+    this.showPolicyModal = true;
+  }
+
+  closePolicyModal() {
+    this.showPolicyModal = false;
+  }
+
+  agreePolicyFromModal() {
+    this.isPolicyAgreed = true;
+    this.showPolicyModal = false;
+    this.checkoutError = '';
+    this.cdr.detectChanges();
+  }
+
+  openPolicyDocument(event?: MouseEvent | Event) {
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+    const rawTarget = this.companyPolicy?.fileUrl || this.companyPolicy?.fileData;
+    if (!rawTarget) return;
+
+    if (rawTarget.startsWith('/uploads') || rawTarget.startsWith('http')) {
+      const fileTarget = rawTarget.startsWith('http') ? rawTarget : `http://localhost:5000${rawTarget}`;
+      window.open(fileTarget, '_blank');
+      return;
+    }
+
+    if (rawTarget.startsWith('data:')) {
+      try {
+        const parts = rawTarget.split(',');
+        const mime = parts[0].match(/:(.*?);/)?.[1] || 'application/pdf';
+        const byteCharacters = atob(parts[1]);
+        const byteArrays = [];
+        for (let offset = 0; offset < byteCharacters.length; offset += 512) {
+          const slice = byteCharacters.slice(offset, offset + 512);
+          const byteNumbers = new Array(slice.length);
+          for (let i = 0; i < slice.length; i++) {
+            byteNumbers[i] = slice.charCodeAt(i);
+          }
+          byteArrays.push(new Uint8Array(byteNumbers));
+        }
+        const blob = new Blob(byteArrays, { type: mime });
+        const blobUrl = URL.createObjectURL(blob);
+        window.open(blobUrl, '_blank');
+        return;
+      } catch (e) {
+        console.error('Lỗi mở data url:', e);
+      }
+    }
+
+    const fileTarget = `http://localhost:5000${rawTarget}`;
+    window.open(fileTarget, '_blank');
   }
 
   loadExistingInfo(info: any) {
@@ -413,6 +516,12 @@ export class Payment implements OnInit, OnDestroy {
       return;
     }
 
+    // Kiểm tra xem khách hàng đã đồng ý với chính sách công ty chưa
+    if (!this.isPolicyAgreed) {
+      this.checkoutError = 'Vui lòng đọc và tích chọn đồng ý với Chính sách công ty trước khi hoàn tất đặt hàng.';
+      return;
+    }
+
     this.showValidationErrors = false;
     this.placingOrder = true;
     this.checkoutError = '';
@@ -455,7 +564,7 @@ export class Payment implements OnInit, OnDestroy {
     try {
       // Gửi đơn hàng lên Backend MongoDB Atlas (/api/orders)
       const token = this.authService.token;
-      const response = await fetch('http://localhost:5000/api/orders', {
+      const response = await fetch(`${environment.apiBaseUrl}/orders`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
