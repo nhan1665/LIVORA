@@ -184,11 +184,7 @@ export class Module6 implements OnInit {
     this.cancelReason = 'Đổi ý không muốn mua nữa';
 
     // Chỉ tài khoản vãng lai (chưa đăng nhập) mới cần sinh và gửi mã OTP (tiết kiệm chi phí)
-    if (!this.isLoggedIn) {
-      this.currentOtp = Math.floor(100000 + Math.random() * 900000).toString();
-    } else {
-      this.currentOtp = '';
-    }
+    this.currentOtp = Math.floor(100000 + Math.random() * 900000).toString();
 
     this.showCancelModal = true;
   }
@@ -213,12 +209,10 @@ export class Module6 implements OnInit {
   async confirmCancelOrder(): Promise<void> {
     if (!this.orderInfo) return;
 
-    // 1. Kiểm tra mã OTP: CHỈ BẮT BUỘC VỚI TÀI KHOẢN VÃNG LAI (chưa đăng nhập)
-    if (!this.isLoggedIn) {
-      if (this.otpInput.trim() !== this.currentOtp) {
-        this.otpError = 'Mã OTP không chính xác. Vui lòng kiểm tra lại mã đã được cung cấp!';
-        return;
-      }
+    // 1. Kiểm tra mã OTP xác thực (yêu cầu chuẩn TC027)
+    if (!this.otpInput.trim() || this.otpInput.trim() !== this.currentOtp) {
+      this.otpError = 'Mã OTP không chính xác. Vui lòng nhập đúng mã OTP đã được cung cấp!';
+      return;
     }
 
     this.cancelling = true;

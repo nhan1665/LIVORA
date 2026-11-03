@@ -268,7 +268,7 @@
         </div>
 
         <!-- Ô nhập OTP (CHỈ HIỂN THỊ KHI LÀ TÀI KHOẢN VÃNG LAI) -->
-        <div *ngIf="!isLoggedIn" class="form-group-cancel">
+        <div class="form-group-cancel">
           <label class="form-label" for="otpInput">Nhập mã OTP xác thực (6 số):</label>
           <input
             id="otpInput"
@@ -291,7 +291,7 @@
           Quay lại
         </button>
         <button type="button" class="btn-confirm-cancel" (click)="confirmCancelOrder()" [disabled]="cancelling">
-          {{ cancelling ? 'Đang xử lý hủy đơn...' : (isLoggedIn ? 'Xác nhận hủy đơn hàng' : 'Xác thực OTP & Hủy đơn hàng') }}
+          {{ cancelling ? 'Đang xử lý hủy đơn...' : 'Xác thực OTP & Hủy đơn hàng' }}
         </button>
       </div>
     </div>
