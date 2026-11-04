@@ -38,6 +38,8 @@ export interface ProductItem {
   salePrice?: number | null;
   /** Available physical inventory count */
   stockQuantity: number;
+  /** Actual sold quantity from orders */
+  soldQuantity?: number;
   /** Main image URL / path */
   thumbnail: string;
   /** Gallery images */
@@ -79,6 +81,8 @@ export interface ProductDraft {
   price: number;
   salePrice?: number | null;
   stockQuantity: number;
+  /** Actual sold quantity from orders */
+  soldQuantity?: number;
   thumbnail: string;
   images: string[];
   description: string;

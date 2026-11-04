@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, ChangeDetectorRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -12,6 +12,9 @@ import { AuthService } from '../../services/auth.service';
   styleUrl: './login.css',
 })
 export class Login {
+  private readonly authService = inject(AuthService);
+  private readonly cdr = inject(ChangeDetectorRef);
+
   isLogin = true;
   isForgot = false;
   resetEmail = '';
@@ -37,6 +40,23 @@ export class Login {
   signUpErrorMessage = '';
   signUpSuccessMessage = '';
 
+  constructor(private router: Router, private route: ActivatedRoute) {
+    this.route.queryParams.subscribe(params => {
+      if (params['mode'] === 'signup') {
+        this.isLogin = false;
+        this.isForgot = false;
+      } else {
+        this.isLogin = true;
+        this.isForgot = false;
+      }
+
+      if (params['returnUrl']) {
+        this.returnUrl = params['returnUrl'];
+      }
+      this.cdr.detectChanges();
+    });
+  }
+
   togglePasswordVisibility() {
     this.showPassword = !this.showPassword;
   }
@@ -56,6 +76,7 @@ export class Login {
     this.resetSuccessMessage = '';
     this.resetEmail = '';
     this.errorMessage = '';
+    this.cdr.detectChanges();
   }
 
   showLoginForm(event: Event) {
@@ -65,6 +86,7 @@ export class Login {
     this.errorMessage = '';
     this.signUpErrorMessage = '';
     this.loginSuccessMessage = '';
+    this.cdr.detectChanges();
   }
 
   doResetPassword(event: Event) {
@@ -73,26 +95,8 @@ export class Login {
       this.errorMessage = 'Vui lòng nhập email hoặc số điện thoại.';
       return;
     }
-    this.errorMessage = '';
     this.errorMessage = 'Khôi phục mật khẩu hiện chưa khả dụng. Vui lòng liên hệ quản trị viên.';
-  }
-
-  private readonly authService = inject(AuthService);
-  
-  constructor(private router: Router, private route: ActivatedRoute) {
-    this.route.queryParams.subscribe(params => {
-      if (params['mode'] === 'signup') {
-        this.isLogin = false;
-        this.isForgot = false;
-      } else {
-        this.isLogin = true;
-        this.isForgot = false;
-      }
-
-      if (params['returnUrl']) {
-        this.returnUrl = params['returnUrl'];
-      }
-    });
+    this.cdr.detectChanges();
   }
 
   toggleForm(event: Event) {
@@ -103,10 +107,11 @@ export class Login {
     this.signUpErrorMessage = '';
     this.signUpSuccessMessage = '';
     this.loginSuccessMessage = '';
+    this.cdr.detectChanges();
   }
 
-  async doLogin(event: Event) {
-    event.preventDefault();
+  async doLogin(event?: Event) {
+    if (event) event.preventDefault();
     if (this.submitting) return;
 
     if (!this.username.trim() || !this.password) {
@@ -117,6 +122,8 @@ export class Login {
     this.submitting = true;
     this.errorMessage = '';
     this.loginSuccessMessage = '';
+    this.cdr.detectChanges();
+
     try {
       await this.authService.login(this.username, this.password);
       this.errorMessage = '';
@@ -125,11 +132,12 @@ export class Login {
       this.errorMessage = error instanceof Error ? error.message : 'Không thể đăng nhập. Vui lòng thử lại.';
     } finally {
       this.submitting = false;
+      this.cdr.detectChanges();
     }
   }
 
-  async doRegister(event: Event) {
-    event.preventDefault();
+  async doRegister(event?: Event) {
+    if (event) event.preventDefault();
     if (this.submitting) return;
 
     const email = this.signUpEmail.trim().toLowerCase();
@@ -157,15 +165,19 @@ export class Login {
     this.submitting = true;
     this.signUpErrorMessage = '';
     this.signUpSuccessMessage = '';
+    this.cdr.detectChanges();
 
     try {
       await this.authService.register({
         email,
         phone: phone || undefined,
         password,
+        fullName: this.signUpFullName.trim() || undefined,
       });
 
       this.signUpSuccessMessage = 'Đăng ký tài khoản thành công! Đang chuyển sang màn hình đăng nhập...';
+      this.cdr.detectChanges();
+
       setTimeout(() => {
         this.isLogin = true;
         this.username = email;
@@ -175,11 +187,13 @@ export class Login {
         this.signUpPassword = '';
         this.signUpConfirmPassword = '';
         this.signUpSuccessMessage = '';
+        this.cdr.detectChanges();
       }, 1200);
     } catch (error) {
       this.signUpErrorMessage = error instanceof Error ? error.message : 'Đăng ký thất bại. Vui lòng thử lại.';
     } finally {
       this.submitting = false;
+      this.cdr.detectChanges();
     }
   }
 

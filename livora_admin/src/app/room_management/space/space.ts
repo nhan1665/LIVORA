@@ -50,7 +50,22 @@ export class Space {
 
   constructor() {
     this.roomsService.listRooms({search: '', status: 'all', page: 1, pageSize: 100}).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({next: (result) => this.rooms.set(result.items), error: () => this.error.set('Không tải được danh sách phòng.')});
-    this.service.list('', '', 'all', 1, 100).pipe(takeUntilDestroyed(this.destroyRef)).subscribe((result) => { this.spaceCount.set(result.total); this.allSpaces.set(result.items); });
+    this.service.list('', '', 'all', 1, 100).pipe(takeUntilDestroyed(this.destroyRef)).subscribe((result) => {
+      this.spaceCount.set(result.total);
+      this.allSpaces.set(result.items);
+      if (result.total < 10) {
+        this.service.seedDefaults().subscribe({
+          next: () => {
+            this.service.list('', '', 'all', 1, 100).subscribe((r2) => {
+              this.spaceCount.set(r2.total);
+              this.allSpaces.set(r2.items);
+              this.load();
+            });
+          },
+          error: () => {}
+        });
+      }
+    });
     this.designsService.list('', '', '', 1, 100).pipe(takeUntilDestroyed(this.destroyRef)).subscribe((result) => this.designCount.set(result.total));
     this.load();
   }
@@ -72,7 +87,15 @@ export class Space {
   spaceCode(id: string): string { return this.allSpaces().find((s) => s.id === id)?.code ?? this.spaces().find((s) => s.id === id)?.code ?? '—'; }
   spacesForFilter(): SpaceRecord[] { return this.spaceFilter ? this.allSpaces().filter((item) => item.id === this.spaceFilter) : this.allSpaces(); }
   allSpaceOptions(): SpaceRecord[] { return this.allSpaces().length ? this.allSpaces() : this.spaces(); }
-  customers() { return this.designsService.customers(); }
+  customers(): { code: string; name: string }[] {
+    const map = new Map<string, string>();
+    this.designs().forEach((d) => {
+      if (d.customerCode && d.customerName) {
+        map.set(d.customerCode, `${d.customerCode} · ${d.customerName}`);
+      }
+    });
+    return Array.from(map.entries()).map(([code, name]) => ({ code, name }));
+  }
   area(item: SpaceRecord | SpaceDraft): string { return (item.lengthM * item.widthM).toFixed(1); }
   volume(): string { return (this.form.lengthM * this.form.widthM * this.form.heightM).toFixed(1); }
   selectedFileSize(): string { const bytes = this.form.modelFile?.size ?? 0; return bytes < 1024 ? `${bytes} B` : bytes < 1024 * 1024 ? `${(bytes / 1024).toFixed(1)} KB` : `${(bytes / 1024 / 1024).toFixed(1)} MB`; }

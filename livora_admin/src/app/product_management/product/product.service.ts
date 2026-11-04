@@ -162,4 +162,10 @@ export class ProductService {
       catchError((err) => throwError(() => new Error(err.error?.message || 'Không thể nhập sản phẩm từ Excel.')))
     );
   }
+
+  seedMockProducts(): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/seed-mock-products`).pipe(
+      catchError((err) => throwError(() => new Error(err.error?.message || 'Không thể tạo dữ liệu sản phẩm mẫu.')))
+    );
+  }
 }

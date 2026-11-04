@@ -183,13 +183,13 @@
                 Đã bán {{ product.soldQuantity }} lượt
               </span>
 
-              <!-- Đánh giá sao -->
-              <span class="bestseller-rating" *ngIf="product.averageRating">
+              <!-- Đánh giá sao (chỉ hiện khi có đánh giá thực tế trong CSDL) -->
+              <span class="bestseller-rating" *ngIf="product.totalReviews && product.totalReviews > 0">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="#c9a84c" stroke="#c9a84c" stroke-width="1.5">
                   <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
                 </svg>
                 {{ product.averageRating | number:'1.1-1' }}
-                <span class="bestseller-review-count" *ngIf="product.totalReviews">({{ product.totalReviews }})</span>
+                <span class="bestseller-review-count">({{ product.totalReviews }})</span>
               </span>
             </div>
 

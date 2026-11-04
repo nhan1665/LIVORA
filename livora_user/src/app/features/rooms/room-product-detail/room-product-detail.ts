@@ -136,7 +136,7 @@ export class RoomProductDetail implements OnInit, OnDestroy {
                 size: resProduct.dimensions ? `${resProduct.dimensions.length}x${resProduct.dimensions.width}x${resProduct.dimensions.height || 0} cm` : 'Tiêu chuẩn',
                 price: resProduct.salePrice || resProduct.price,
                 originalPrice: resProduct.salePrice ? resProduct.price : undefined,
-                rating: resProduct.averageRating || 5.0,
+                rating: resProduct.averageRating || 0,
                 reviews: resProduct.totalReviews || 0,
                 articleNumber: resProduct.sku || 'LV-' + (resProduct.id || '').slice(-6),
                 description: resProduct.description || '',
@@ -145,7 +145,8 @@ export class RoomProductDetail implements OnInit, OnDestroy {
                   ? resProduct.colors.map((c: string) => ({ name: c, image: primaryImage }))
                   : [{ name: 'Mặc định', image: primaryImage }],
                 file3DUrl: resProduct.file3DUrl || null,
-                has3DModel: !!resProduct.file3DUrl
+                has3DModel: !!resProduct.file3DUrl,
+                soldQuantity: resProduct.soldQuantity || 0,
               };
               this.initProductState();
               this.loadRelatedProducts();
@@ -357,7 +358,7 @@ export class RoomProductDetail implements OnInit, OnDestroy {
   }
 
   get ratingStars(): string[] {
-    const rating = this.product?.rating || 5;
+    const rating = this.product?.rating || 0;
     const stars: string[] = [];
     for (let i = 1; i <= 5; i++) {
       if (rating >= i) {
@@ -382,7 +383,7 @@ export class RoomProductDetail implements OnInit, OnDestroy {
     return [5, 4, 3, 2, 1].map((s) => ({
       star: s,
       count: counts[s - 1],
-      percent: total > 0 ? Math.round((counts[s - 1] / total) * 100) : (s === 5 ? 100 : 0),
+      percent: total > 0 ? Math.round((counts[s - 1] / total) * 100) : 0,
     }));
   }
 
@@ -396,5 +397,13 @@ export class RoomProductDetail implements OnInit, OnDestroy {
       list = list.filter((r) => (r.images && r.images.length > 0) || (r.videos && r.videos.length > 0));
     }
     return list;
+  }
+
+  onImageError(event: Event) {
+    const target = event.target as HTMLImageElement;
+    if (target) {
+      target.onerror = null;
+      target.src = 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=600&q=80';
+    }
   }
 }

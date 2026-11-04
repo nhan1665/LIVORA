@@ -261,6 +261,7 @@ const createOrder = async (req, res) => {
 
       if (product) {
         product.stockQuantity = Math.max(0, product.stockQuantity - qty);
+        product.soldQuantity = (product.soldQuantity || 0) + qty;
         product.stockStatus = product.stockQuantity > 0 ? 'in_stock' : 'out_of_stock';
         await product.save();
       }
@@ -468,7 +469,7 @@ const cancelOrder = async (req, res) => {
         if (!current) throw new Error('Order changed while cancelling.');
         for (const item of current.items) {
           const restored = await Product.updateOne({ _id: item.productId },
-            { $inc: { stockQuantity: item.quantity }, $set: { stockStatus: 'in_stock' } }, { session });
+            { $inc: { stockQuantity: item.quantity, soldQuantity: -item.quantity }, $set: { stockStatus: 'in_stock' } }, { session });
           if (restored.matchedCount !== 1) throw new Error('Checkout product is missing; cancellation requires reconciliation.');
         }
         if (current.voucherId) {
@@ -488,6 +489,14 @@ const cancelOrder = async (req, res) => {
       order.orderStatus = 'cancelled';
       order.cancelReason = reason.trim();
       await order.save();
+      for (const item of (order.items || [])) {
+        if (item.productId) {
+          await Product.updateOne(
+            { _id: item.productId },
+            { $inc: { stockQuantity: item.quantity, soldQuantity: -item.quantity }, $set: { stockStatus: 'in_stock' } }
+          );
+        }
+      }
     }
 
     return sendSuccess(res, formatOrderForResponse(order), 'Hủy đơn hàng thành công.');

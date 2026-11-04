@@ -116,4 +116,13 @@ export class ProductService {
       map((products) => products.slice(0, limit))
     );
   }
+
+  /**
+   * Đồng bộ lại dữ liệu 50 sản phẩm chuẩn xác và hình ảnh đẹp từ backend
+   */
+  syncMockProducts(): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/seed-mock-products`).pipe(
+      catchError(() => of(null))
+    );
+  }
 }

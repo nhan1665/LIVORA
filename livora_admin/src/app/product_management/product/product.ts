@@ -55,6 +55,7 @@ export class Product implements OnInit {
   statusDraft: ProductStatusFilter = 'all';
   has3DDraft: Product3DFilter = 'all';
   sortDraft: ProductSortOption = 'newest';
+  private hasAutoSeeded = false;
 
   // Active filters applied to query
   activeSearch = '';
@@ -295,6 +296,14 @@ export class Product implements OnInit {
 
     this.productService.queryProducts(query).subscribe({
       next: (res: ProductListResponse) => {
+        if (res.totalItems < 50 && !this.activeSearch && this.activeCategory === 'all' && !this.hasAutoSeeded) {
+          this.hasAutoSeeded = true;
+          this.productService.seedMockProducts().subscribe({
+            next: () => this.loadData(),
+            error: () => {}
+          });
+          return;
+        }
         this.products.set(res.items);
         this.totalItems.set(res.totalItems);
         this.totalPages.set(res.totalPages);

@@ -39,50 +39,117 @@ const getCategoryCodePrefix = (cat) => {
   return 'SP';
 };
 
-// Tự động đồng bộ số lượt mua (soldQuantity) từ Orders hoặc khởi tạo giá trị ban đầu nếu sản phẩm chưa có
+// Đồng bộ số lượng đã bán (soldQuantity) CHUẨN XÁC 100% từ CSDL Orders (không fake, chỉ có đơn mới có số lượng bán)
 let isSyncedSoldQuantity = false;
-const syncSoldQuantities = async () => {
-  if (isSyncedSoldQuantity) return;
+const syncSoldQuantities = async (force = false) => {
+  if (isSyncedSoldQuantity && !force) return;
   try {
-    const uninitialized = await Product.countDocuments({
-      $or: [{ soldQuantity: { $exists: false } }, { soldQuantity: null }],
-    });
-    if (uninitialized > 0) {
-      // 1. Tính tổng số lượng đã bán từ Orders
-      const salesAgg = await Order.aggregate([
-        { $unwind: '$items' },
-        { $group: { _id: '$items.productId', totalSold: { $sum: '$items.quantity' } } },
-      ]);
-      const salesMap = new Map();
-      salesAgg.forEach((s) => {
-        if (s._id) salesMap.set(s._id.toString(), s.totalSold);
-      });
+    // 1. Tính tổng số lượng thực tế đã bán từ Orders (chỉ tính đơn chưa bị hủy)
+    const salesAgg = await Order.aggregate([
+      { $match: { orderStatus: { $ne: 'cancelled' } } },
+      { $unwind: '$items' },
+      {
+        $group: {
+          _id: '$items.productId',
+          sku: { $first: '$items.sku' },
+          totalSold: { $sum: '$items.quantity' },
+        },
+      },
+    ]);
 
-      // 2. Cập nhật cho từng sản phẩm
-      const allProducts = await Product.find({
-        $or: [{ soldQuantity: { $exists: false } }, { soldQuantity: null }],
-      });
-      for (const prod of allProducts) {
-        let sold = salesMap.get(prod._id.toString()) || 0;
-        if (sold === 0) {
-          const isBest =
-            prod.badge?.toLowerCase().includes('bán chạy') ||
-            prod.badge?.toLowerCase().includes('best') ||
-            prod.isFeatured;
-          if (isBest) {
-            sold = Math.floor(Math.random() * 45) + 65; // 65-110 lượt mua
-          } else if (prod.totalReviews > 0) {
-            sold = prod.totalReviews * 4 + Math.floor(Math.random() * 12);
-          } else {
-            sold = Math.floor(Math.random() * 28) + 14; // 14-42 lượt mua
-          }
-        }
-        await Product.updateOne({ _id: prod._id }, { $set: { soldQuantity: sold } });
+    const salesById = new Map();
+    const salesBySku = new Map();
+    salesAgg.forEach((s) => {
+      if (s._id) salesById.set(s._id.toString(), Number(s.totalSold) || 0);
+      if (s.sku) salesBySku.set(s.sku.toUpperCase(), Number(s.totalSold) || 0);
+    });
+
+    // 2. Cập nhật chính xác số lượng đã bán cho toàn bộ sản phẩm:
+    // Có đơn đặt hàng -> lấy đúng số lượng đã bán từ đơn; Chưa có đơn -> đúng 0, KHÔNG FAKE!
+    const allProducts = await Product.find({}).select('_id sku soldQuantity').lean();
+    const bulkOps = [];
+    for (const prod of allProducts) {
+      const pIdStr = prod._id.toString();
+      const skuStr = prod.sku ? prod.sku.toUpperCase() : '';
+      const realSold = salesById.get(pIdStr) || salesBySku.get(skuStr) || 0;
+
+      if (prod.soldQuantity !== realSold) {
+        bulkOps.push({
+          updateOne: {
+            filter: { _id: prod._id },
+            update: { $set: { soldQuantity: realSold } },
+          },
+        });
       }
     }
+
+    if (bulkOps.length > 0) {
+      await Product.bulkWrite(bulkOps);
+      console.log(`✅ [Product Sales] Đã đồng bộ số lượng đã bán thực tế từ CSDL đơn hàng cho ${bulkOps.length} sản phẩm.`);
+    }
+
     isSyncedSoldQuantity = true;
   } catch (err) {
     console.error('syncSoldQuantities error:', err);
+  }
+};
+
+// Đồng bộ điểm đánh giá (averageRating) và số lượng đánh giá (totalReviews) CHUẨN XÁC 100% từ CSDL Reviews (không fake)
+let isSyncedRatingsAndReviews = false;
+const syncProductRatingsAndReviews = async (force = false) => {
+  if (isSyncedRatingsAndReviews && !force) return;
+  try {
+    const Review = require('../models/Review');
+    const reviewAgg = await Review.aggregate([
+      { $match: { status: 'visible' } },
+      {
+        $group: {
+          _id: '$productId',
+          totalReviews: { $sum: 1 },
+          avgRating: { $avg: '$rating' },
+        },
+      },
+    ]);
+
+    const reviewMap = new Map();
+    reviewAgg.forEach((r) => {
+      if (r._id) {
+        reviewMap.set(r._id.toString(), {
+          totalReviews: r.totalReviews || 0,
+          averageRating: Math.round((r.avgRating || 0) * 10) / 10,
+        });
+      }
+    });
+
+    const allProducts = await Product.find({}).select('_id averageRating totalReviews').lean();
+    const bulkOps = [];
+    for (const prod of allProducts) {
+      const pIdStr = prod._id.toString();
+      const realData = reviewMap.get(pIdStr) || { totalReviews: 0, averageRating: 0 };
+
+      if (prod.totalReviews !== realData.totalReviews || prod.averageRating !== realData.averageRating) {
+        bulkOps.push({
+          updateOne: {
+            filter: { _id: prod._id },
+            update: {
+              $set: {
+                totalReviews: realData.totalReviews,
+                averageRating: realData.averageRating,
+              },
+            },
+          },
+        });
+      }
+    }
+
+    if (bulkOps.length > 0) {
+      await Product.bulkWrite(bulkOps);
+      console.log(`✅ [Product Reviews] Đã đồng bộ số lượng đánh giá thực tế từ CSDL Reviews cho ${bulkOps.length} sản phẩm.`);
+    }
+
+    isSyncedRatingsAndReviews = true;
+  } catch (err) {
+    console.error('syncProductRatingsAndReviews error:', err);
   }
 };
 
@@ -126,6 +193,7 @@ const syncProductCategoryAndRoomSlugs = async () => {
 const getProducts = async (req, res) => {
   try {
     await syncSoldQuantities();
+    await syncProductRatingsAndReviews();
     await syncProductCategoryAndRoomSlugs();
     const {
       search = '',
@@ -288,8 +356,8 @@ const getProducts = async (req, res) => {
         dimensions: p.dimensions,
         materials: p.materials,
         colors: p.colors,
-        averageRating: p.averageRating,
-        totalReviews: p.totalReviews,
+        averageRating: p.averageRating || 0,
+        totalReviews: p.totalReviews || 0,
         stockStatus: p.stockStatus,
         status: isAct ? 'Đang kinh doanh' : 'ngưng kinh doanh',
         isActive: isAct,
@@ -363,8 +431,8 @@ const getProductById = async (req, res) => {
       dimensions: product.dimensions,
       materials: product.materials,
       colors: product.colors,
-      averageRating: product.averageRating,
-      totalReviews: product.totalReviews,
+      averageRating: product.averageRating || 0,
+      totalReviews: product.totalReviews || 0,
       stockStatus: product.stockStatus,
       status: product.status,
       isActive: product.isActive,
@@ -894,4 +962,6 @@ module.exports = {
   toggleProduct,
   deleteProduct,
   importProductsFromExcel,
+  syncSoldQuantities,
+  syncProductRatingsAndReviews,
 };
