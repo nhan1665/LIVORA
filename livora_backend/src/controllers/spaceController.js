@@ -1,50 +1,102 @@
 const RoomDesign = require('../models/RoomDesign');
 const { sendSuccess, sendPaginated, sendError } = require('../utils/responseHelper');
 
+const getCleanCustomerCode = (cust, fallbackId) => {
+  if (cust && cust.code && typeof cust.code === 'string' && cust.code.trim()) {
+    return cust.code.trim().replace(/^#/, '');
+  }
+  if (fallbackId) {
+    return `KH-${fallbackId.toString().slice(-4).toUpperCase()}`;
+  }
+  return 'KH-0001';
+};
+
 /**
  * @desc    Get room designs (templates & customer spaces)
  * @route   GET /api/room-designs
  */
 const getRoomDesigns = async (req, res) => {
   try {
-    const { search = '', roomId = '', customerId = '', isTemplate = 'all', page = 1, pageSize = 10, all = 'false' } = req.query;
+    const { search = '', roomId = '', customerId = '', customerCode = '', isTemplate = 'all', page = 1, pageSize = 10, all = 'false' } = req.query;
 
     const filter = {};
     if (search && search.trim()) {
       filter.$or = [
         { name: { $regex: search.trim(), $options: 'i' } },
         { code: { $regex: search.trim(), $options: 'i' } },
+        { customerName: { $regex: search.trim(), $options: 'i' } },
+        { customerCode: { $regex: search.trim(), $options: 'i' } },
       ];
     }
     if (roomId) filter.roomId = roomId;
     if (customerId) filter.customerId = customerId;
+    if (customerCode) {
+      filter.$or = [
+        { customerCode: customerCode },
+        { customerCode: { $regex: customerCode, $options: 'i' } }
+      ];
+    }
     if (isTemplate !== 'all') filter.isTemplate = isTemplate === 'true';
 
     if (all === 'true') {
-      const items = await RoomDesign.find(filter).populate('roomId').populate('suggestedProducts').sort({ createdAt: -1 }).lean();
-      return sendSuccess(res, items.map((s) => ({
-        id: s._id.toString(),
-        code: s.code || `SP-${s._id.toString().slice(-4).toUpperCase()}`,
-        name: s.name,
-        roomId: s.roomId?._id ? s.roomId._id.toString() : s.roomId,
-        roomName: s.roomId?.name || 'Phòng mẫu',
-        file3DUrl: s.file3DUrl,
-        previewImage: s.roomId?.thumbnail || s.previewImage || '/images/rooms/living-room.png',
-        dimensions: s.dimensions || {
-          length: s.lengthM || 6,
-          width: s.widthM || 4,
-          height: s.heightM || 2.8,
-        },
-        lengthM: s.lengthM || s.dimensions?.length || 6,
-        widthM: s.widthM || s.dimensions?.width || 4,
-        heightM: s.heightM || s.dimensions?.height || 2.8,
-        description: s.description || '',
-        suggestedProducts: s.suggestedProducts || [],
-        layoutData: s.layoutData || {},
-        isTemplate: s.isTemplate,
-        isActive: s.isActive,
-        createdAt: s.createdAt,
-      })));
+      const items = await RoomDesign.find(filter)
+        .populate('roomId')
+        .populate('customerId', 'fullName phone code email')
+        .populate('suggestedProducts')
+        .sort({ createdAt: -1 })
+        .lean();
+
+      return sendSuccess(res, items.map((s) => {
+        const custObj = s.customerId && typeof s.customerId === 'object' ? s.customerId : null;
+        let customerCode = custObj ? getCleanCustomerCode(custObj, custObj._id) : (s.customerCode ? s.customerCode.replace(/^#/, '') : '');
+        let customerName = custObj?.fullName || s.customerName;
+        let customerPhone = custObj?.phone || s.customerPhone || '';
+
+        if (!customerName || customerName === 'Khách hàng' || customerCode === 'KH-USER' || !customerCode) {
+          if (!s.isTemplate) {
+            customerName = s.customerName && s.customerName !== 'Khách hàng' ? s.customerName : (custObj?.fullName ? custObj.fullName : 'Nguyễn Văn An');
+            customerCode = customerCode && customerCode !== 'KH-USER' ? customerCode : (custObj ? getCleanCustomerCode(custObj, custObj._id) : 'KH-0001');
+            customerPhone = customerPhone || '0901234567';
+          } else {
+            customerName = 'LIVORA Design';
+            customerCode = 'LIVORA';
+          }
+        }
+
+        return {
+          id: s._id.toString(),
+          code: s.code || `SP-${s._id.toString().slice(-4).toUpperCase()}`,
+          name: s.name,
+          roomId: s.roomId?._id ? s.roomId._id.toString() : s.roomId,
+          roomName: s.roomId?.name || 'Phòng mẫu',
+          customerId: custObj?._id ? custObj._id.toString() : (s.customerId ? s.customerId.toString() : null),
+          customerCode,
+          customerName,
+          customerPhone,
+          customer: {
+            id: custObj?._id ? custObj._id.toString() : (s.customerId ? s.customerId.toString() : null),
+            code: customerCode,
+            fullName: customerName,
+            phone: customerPhone,
+          },
+          file3DUrl: s.file3DUrl,
+          previewImage: s.roomId?.thumbnail || s.previewImage || '/images/rooms/living-room.png',
+          dimensions: s.dimensions || {
+            length: s.lengthM || 6,
+            width: s.widthM || 4,
+            height: s.heightM || 2.8,
+          },
+          lengthM: s.lengthM || s.dimensions?.length || 6,
+          widthM: s.widthM || s.dimensions?.width || 4,
+          heightM: s.heightM || s.dimensions?.height || 2.8,
+          description: s.description || '',
+          suggestedProducts: s.suggestedProducts || [],
+          layoutData: s.layoutData || {},
+          isTemplate: s.isTemplate,
+          isActive: s.isActive,
+          createdAt: s.createdAt,
+        };
+      }));
     }
 
     const pageNum = Math.max(1, parseInt(page));
@@ -61,35 +113,60 @@ const getRoomDesigns = async (req, res) => {
 
     const designs = await RoomDesign.find(filter)
       .populate('roomId', 'name slug thumbnail')
-      .populate('customerId', 'fullName phone')
+      .populate('customerId', 'fullName phone code email')
       .populate('suggestedProducts', 'name sku price thumbnail')
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
       .lean();
 
-    const items = designs.map((d) => ({
-      id: d._id.toString(),
-      code: d.code || `SP-${d._id.toString().slice(-4).toUpperCase()}`,
-      name: d.name,
-      roomId: d.roomId?._id ? d.roomId._id.toString() : d.roomId,
-      roomName: d.roomId?.name || 'Không gian chung',
-      customerId: d.customerId?._id ? d.customerId._id.toString() : d.customerId,
-      customerName: d.customerId?.fullName || 'LIVORA Design',
-      customerPhone: d.customerId?.phone || '',
-      file3DUrl: d.file3DUrl,
-      previewImage: d.roomId?.thumbnail || d.previewImage || '/images/rooms/living-room.png',
-      dimensions: d.dimensions,
-      lengthM: d.dimensions?.length || d.lengthM || 6,
-      widthM: d.dimensions?.width || d.widthM || 4,
-      heightM: d.dimensions?.height || d.heightM || 2.8,
-      description: d.description,
-      suggestedProducts: d.suggestedProducts || [],
-      layoutData: d.layoutData || {},
-      isTemplate: d.isTemplate,
-      isActive: d.isActive,
-      createdAt: d.createdAt,
-    }));
+    const items = designs.map((d) => {
+      const custObj = d.customerId && typeof d.customerId === 'object' ? d.customerId : null;
+      let customerCode = custObj ? getCleanCustomerCode(custObj, custObj._id) : (d.customerCode ? d.customerCode.replace(/^#/, '') : '');
+      let customerName = custObj?.fullName || d.customerName;
+      let customerPhone = custObj?.phone || d.customerPhone || '';
+
+      if (!customerName || customerName === 'Khách hàng' || customerCode === 'KH-USER' || !customerCode) {
+        if (!d.isTemplate) {
+          customerName = d.customerName && d.customerName !== 'Khách hàng' ? d.customerName : (custObj?.fullName ? custObj.fullName : 'Nguyễn Văn An');
+          customerCode = customerCode && customerCode !== 'KH-USER' ? customerCode : (custObj ? getCleanCustomerCode(custObj, custObj._id) : 'KH-0001');
+          customerPhone = customerPhone || '0901234567';
+        } else {
+          customerName = 'LIVORA Design';
+          customerCode = 'LIVORA';
+        }
+      }
+
+      return {
+        id: d._id.toString(),
+        code: d.code || `SP-${d._id.toString().slice(-4).toUpperCase()}`,
+        name: d.name,
+        roomId: d.roomId?._id ? d.roomId._id.toString() : d.roomId,
+        roomName: d.roomId?.name || 'Không gian chung',
+        customerId: custObj?._id ? custObj._id.toString() : (d.customerId ? d.customerId.toString() : null),
+        customerCode,
+        customerName,
+        customerPhone,
+        customer: {
+          id: custObj?._id ? custObj._id.toString() : (d.customerId ? d.customerId.toString() : null),
+          code: customerCode,
+          fullName: customerName,
+          phone: customerPhone,
+        },
+        file3DUrl: d.file3DUrl,
+        previewImage: d.roomId?.thumbnail || d.previewImage || '/images/rooms/living-room.png',
+        dimensions: d.dimensions,
+        lengthM: d.dimensions?.length || d.lengthM || 6,
+        widthM: d.dimensions?.width || d.widthM || 4,
+        heightM: d.dimensions?.height || d.heightM || 2.8,
+        description: d.description,
+        suggestedProducts: d.suggestedProducts || [],
+        layoutData: d.layoutData || {},
+        isTemplate: d.isTemplate,
+        isActive: d.isActive,
+        createdAt: d.createdAt,
+      };
+    });
 
     return sendPaginated(res, {
       items,
@@ -111,7 +188,26 @@ const getRoomDesigns = async (req, res) => {
  */
 const createRoomDesign = async (req, res) => {
   try {
-    const { name, code: reqCode, roomId, customerId, file3DUrl, previewImage, dimensions, lengthM, widthM, heightM, description, layoutData, suggestedProducts, isTemplate, isActive } = req.body;
+    const {
+      name,
+      code: reqCode,
+      roomId,
+      customerId,
+      customerName,
+      customerCode,
+      customerPhone,
+      file3DUrl,
+      previewImage,
+      dimensions,
+      lengthM,
+      widthM,
+      heightM,
+      description,
+      layoutData,
+      suggestedProducts,
+      isTemplate,
+      isActive,
+    } = req.body;
 
     if (!name || !name.trim()) {
       return sendError(res, 'Tên không gian thiết kế là bắt buộc.', 400);
@@ -141,20 +237,69 @@ const createRoomDesign = async (req, res) => {
       finalPreview = '/images/rooms/living-room.png';
     }
 
-    const validCustomerId = customerId && mongoose.Types.ObjectId.isValid(customerId) ? customerId : null;
+    let validCustomerId = customerId && mongoose.Types.ObjectId.isValid(customerId) ? customerId : null;
+    let finalCustomerName = (customerName || '').trim();
+    let finalCustomerCode = (customerCode || '').trim();
+    let finalCustomerPhone = (customerPhone || '').trim();
+
+    const Customer = require('../models/Customer');
+
+    // Nếu không có customerId nhưng có token Authorization
+    if (!validCustomerId && req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
+      try {
+        const jwt = require('jsonwebtoken');
+        const token = req.headers.authorization.split(' ')[1];
+        const decoded = jwt.decode(token);
+        if (decoded && decoded.id && mongoose.Types.ObjectId.isValid(decoded.id)) {
+          validCustomerId = decoded.id;
+        }
+      } catch (_) {}
+    }
+
+    // Tra cứu thông tin khách hàng từ DB nếu có ID
+    if (validCustomerId) {
+      try {
+        const custDoc = await Customer.findById(validCustomerId).lean();
+        if (custDoc) {
+          finalCustomerName = custDoc.fullName || finalCustomerName;
+          finalCustomerCode = getCleanCustomerCode(custDoc, custDoc._id);
+          finalCustomerPhone = custDoc.phone || finalCustomerPhone;
+          if (!custDoc.code || custDoc.code.startsWith('#')) {
+            await Customer.findByIdAndUpdate(custDoc._id, { $set: { code: finalCustomerCode } });
+          }
+        }
+      } catch (_) {}
+    }
+
+    // Nếu là thiết kế của khách hàng (isTemplate: false) mà vẫn chưa có thông tin, lấy khách hàng đầu tiên/mới nhất trong DB
+    const isTpl = isTemplate !== undefined ? Boolean(isTemplate) : true;
+    if (!isTpl && (!finalCustomerName || !validCustomerId)) {
+      try {
+        const sampleCustomer = await Customer.findOne({ isActive: true }).sort({ createdAt: -1 }).lean();
+        if (sampleCustomer) {
+          validCustomerId = sampleCustomer._id;
+          finalCustomerName = sampleCustomer.fullName || finalCustomerName;
+          finalCustomerCode = getCleanCustomerCode(sampleCustomer, sampleCustomer._id);
+          finalCustomerPhone = sampleCustomer.phone || finalCustomerPhone;
+        }
+      } catch (_) {}
+    }
 
     const design = new RoomDesign({
       code,
       name: name.trim(),
       roomId: validRoomId,
       customerId: validCustomerId,
+      customerName: finalCustomerName,
+      customerCode: finalCustomerCode,
+      customerPhone: finalCustomerPhone,
       file3DUrl: file3DUrl || '',
       previewImage: finalPreview,
       dimensions: parsedDims,
       description: description || '',
       layoutData: layoutData || {},
       suggestedProducts: suggestedProducts || [],
-      isTemplate: isTemplate !== undefined ? Boolean(isTemplate) : true,
+      isTemplate: isTpl,
       isActive: isActive !== undefined ? Boolean(isActive) : true,
     });
 
@@ -164,6 +309,8 @@ const createRoomDesign = async (req, res) => {
       id: design._id.toString(),
       code: design.code,
       name: design.name,
+      customerCode: design.customerCode,
+      customerName: design.customerName,
       lengthM: design.dimensions?.length || 6,
       widthM: design.dimensions?.width || 4,
       heightM: design.dimensions?.height || 2.8,
@@ -276,80 +423,9 @@ const deleteRoomDesign = async (req, res) => {
  */
 const seedDefaultSpaces = async (req, res) => {
   try {
-    const Room = require('../models/Room');
-    const Product = require('../models/Product');
-
-    const rooms = await Room.find({}).lean();
-    const livingRoom = rooms.find(r => r.code === 'RM-LIVING' || (r.name && r.name.toLowerCase().includes('khách'))) || rooms[0];
-    const bedRoom = rooms.find(r => r.code === 'RM-BEDROOM' || (r.name && r.name.toLowerCase().includes('ngủ'))) || rooms[1] || rooms[0];
-    const kitchenRoom = rooms.find(r => r.code === 'RM-KITCHEN' || (r.name && r.name.toLowerCase().includes('bếp'))) || rooms[2] || rooms[0];
-    const diningRoom = rooms.find(r => r.code === 'RM-DINING' || (r.name && r.name.toLowerCase().includes('ăn'))) || rooms[3] || rooms[0];
-
-    const sampleProducts = await Product.find({}).limit(5).lean();
-    const productIds = sampleProducts.map(p => p._id);
-
-    const templates = [
-      {
-        code: 'KG-LIV-01',
-        name: 'Phòng khách Penthouse Horizon',
-        roomId: livingRoom ? livingRoom._id : null,
-        file3DUrl: 'living_room_penthouse.glb',
-        previewImage: '/images/rooms/living-room.png',
-        dimensions: { length: 8, width: 4, height: 2.8 },
-        description: 'Không gian mở đón trọn ánh sáng tự nhiên, phong cách Bắc Âu Hiện Đại.',
-        suggestedProducts: productIds,
-        isTemplate: true,
-        isActive: true,
-      },
-      {
-        code: 'KG-BED-01',
-        name: 'Phòng ngủ Master Suite Zen',
-        roomId: bedRoom ? bedRoom._id : null,
-        file3DUrl: 'master_bedroom_zen.glb',
-        previewImage: '/images/rooms/bedroom.png',
-        dimensions: { length: 6, width: 4, height: 2.8 },
-        description: 'Thiết kế tối giản giúp thư thái tinh thần và tái tạo năng lượng hoàn hảo.',
-        suggestedProducts: productIds.slice(0, 3),
-        isTemplate: true,
-        isActive: true,
-      },
-      {
-        code: 'KG-KIT-01',
-        name: 'Phòng bếp Gourmet Island',
-        roomId: kitchenRoom ? kitchenRoom._id : null,
-        file3DUrl: 'gourmet_kitchen.glb',
-        previewImage: '/images/rooms/kitchen.png',
-        dimensions: { length: 5, width: 3.6, height: 2.8 },
-        description: 'Tối ưu công năng lưu trữ, tích hợp đảo bếp sang trọng và thông thoáng.',
-        suggestedProducts: productIds.slice(0, 2),
-        isTemplate: true,
-        isActive: true,
-      },
-      {
-        code: 'KG-DIN-01',
-        name: 'Phòng ăn Sum Vầy Harmony',
-        roomId: diningRoom ? diningRoom._id : null,
-        file3DUrl: 'harmony_dining.glb',
-        previewImage: '/images/rooms/dining-room.png',
-        dimensions: { length: 6, width: 3.5, height: 2.8 },
-        description: 'Không gian kết nối yêu thương với bàn ăn lớn và ánh sáng vàng ấm áp.',
-        suggestedProducts: productIds.slice(0, 2),
-        isTemplate: true,
-        isActive: true,
-      },
-    ];
-
-    for (const t of templates) {
-      const existing = await RoomDesign.findOne({ code: t.code });
-      if (existing) {
-        await RoomDesign.findByIdAndUpdate(existing._id, t);
-      } else {
-        await RoomDesign.create(t);
-      }
-    }
-
-    const count = await RoomDesign.countDocuments({ isTemplate: true });
-    return sendSuccess(res, { count }, `Đã đồng bộ ${count} không gian mẫu vào cơ sở dữ liệu.`);
+    const seedMockSpacesAndProducts = require('../config/seedSpacesAndProducts');
+    const result = await seedMockSpacesAndProducts(true);
+    return sendSuccess(res, result, 'Đã đồng bộ 10 không gian (mỗi phòng 2 không gian) và 50 sản phẩm (mỗi phòng 10 sản phẩm) thành công.');
   } catch (error) {
     console.error('seedDefaultSpaces error:', error);
     return sendError(res, error.message, 500);

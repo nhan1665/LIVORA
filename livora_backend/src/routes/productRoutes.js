@@ -45,21 +45,8 @@ router.get('/debug/force-sync-sold', async (req, res) => {
     const updateResults = [];
     for (let i = 0; i < products.length; i++) {
       const p = products[i];
-      let sold = salesMap.get(p._id.toString()) || 0;
-      if (sold === 0) {
-        // Khởi tạo lượt mua hấp dẫn dựa trên badge, rating, thứ tự
-        const isBest =
-          p.badge?.toLowerCase().includes('bán chạy') ||
-          p.badge?.toLowerCase().includes('best') ||
-          p.isFeatured;
-        if (isBest) {
-          sold = 75 + ((i * 17) % 45); // 75-120
-        } else if (p.totalReviews > 0) {
-          sold = p.totalReviews * 4 + ((i * 7) % 15);
-        } else {
-          sold = 25 + ((i * 9) % 30); // 25-55
-        }
-      }
+      // Tuyệt đối không fake: lấy đúng số lượng bán từ CSDL đơn hàng, không có đơn thì là 0
+      const sold = salesMap.get(p._id.toString()) || 0;
 
       await col.updateOne({ _id: p._id }, { $set: { soldQuantity: sold } });
       updateResults.push({ id: p._id, name: p.name, soldQuantity: sold });
@@ -79,6 +66,16 @@ router.get('/debug/force-sync-sold', async (req, res) => {
     });
   } catch (err) {
     return res.status(500).json({ success: false, error: err.message, stack: err.stack });
+  }
+});
+
+router.get('/seed-mock-products', async (req, res) => {
+  try {
+    const seedMockSpacesAndProducts = require('../config/seedSpacesAndProducts');
+    const result = await seedMockSpacesAndProducts(true);
+    return res.json({ success: true, ...result });
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message });
   }
 });
 

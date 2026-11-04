@@ -2,6 +2,13 @@ const Customer = require('../models/Customer');
 const Order = require('../models/Order');
 const { sendSuccess, sendPaginated, sendError } = require('../utils/responseHelper');
 
+const getCleanCustomerCode = (c) => {
+  if (c && c.code && typeof c.code === 'string' && c.code.trim()) {
+    return c.code.trim().replace(/^#/, '');
+  }
+  return `KH-${c._id ? c._id.toString().slice(-4).toUpperCase() : '0001'}`;
+};
+
 /**
  * @desc    Get customers list with filter, search, summary & pagination
  * @route   GET /api/customers
@@ -70,7 +77,7 @@ const getCustomers = async (req, res) => {
 
       return {
         id: c._id.toString(),
-        code: c.code || `#KH-${c._id.toString().slice(-4).toUpperCase()}`,
+        code: getCleanCustomerCode(c),
         fullName: c.fullName,
         email: c.email,
         phone: c.phone,
@@ -134,7 +141,7 @@ const getCustomerById = async (req, res) => {
 
     return sendSuccess(res, {
       id: customer._id.toString(),
-      code: customer.code || `#KH-${customer._id.toString().slice(-4).toUpperCase()}`,
+      code: getCleanCustomerCode(customer),
       fullName: customer.fullName,
       email: customer.email,
       phone: customer.phone,

@@ -390,10 +390,14 @@ export class Module4 implements OnInit, OnDestroy {
 
     // Save to backend if user is logged in
     if (this.authService.isLoggedIn) {
+      const user = this.authService.currentUser();
       this.spaceService.saveDesign({
         name: newDesign.name,
         roomId: room?.roomId,
-        customerId: this.authService.currentUser()?.id,
+        customerId: user?.id,
+        customerName: user?.fullName || 'Khách hàng',
+        customerCode: user?.code || 'KH-USER',
+        customerPhone: user?.phone || '',
         file3DUrl: newDesign.glbFileName,
         previewImage: newDesign.previewImage,
         dimensions: { length: room?.length || 6, width: room?.width || 4, height: room?.height || 2.8 },

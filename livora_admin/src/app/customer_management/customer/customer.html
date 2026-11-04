@@ -205,7 +205,10 @@
                 <td class="td-name">
                   <div class="customer-cell">
                     <div class="customer-avatar" aria-hidden="true">{{ cust.initials }}</div>
-                    <span class="customer-name">{{ cust.fullName }}</span>
+                    <div style="display:flex;flex-direction:column">
+                      <span class="customer-name">{{ cust.fullName }}</span>
+                      <small style="font-size:11px;color:#704b4a;font-weight:600">{{ cust.code }}</small>
+                    </div>
                   </div>
                 </td>
 
@@ -318,7 +321,7 @@
             <div class="modal-profile-info">
               <div class="profile-title-row">
                 <h2 class="modal-profile-name">Hồ sơ khách hàng: {{ selectedCustomer()?.fullName }}</h2>
-                <span class="badge-code">#{{ selectedCustomer()?.code }}</span>
+                <span class="badge-code">{{ selectedCustomer()?.code }}</span>
                 <span class="type-pill" [class.type-registered]="selectedCustomer()?.customerType === 'registered'" [class.type-guest]="selectedCustomer()?.customerType === 'guest'">
                   {{ selectedCustomer()?.customerType === 'registered' ? 'Khách đã đăng ký' : 'Khách vãng lai' }}
                 </span>

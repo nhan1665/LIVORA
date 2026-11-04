@@ -51,6 +51,7 @@ export class CustomerService {
       map((res) => {
         const items = (res.data as any[]).map((c) => ({
           ...c,
+          code: (c.code || '').replace(/^#/, ''),
           initials: this.extractInitials(c.fullName || ''),
           tierSubtitle: c.customerType === 'registered' ? 'Khách hàng thành viên' : 'Khách vãng lai',
         }));
@@ -83,6 +84,7 @@ export class CustomerService {
         if (!c) return null;
         return {
           ...c,
+          code: (c.code || '').replace(/^#/, ''),
           initials: this.extractInitials(c.fullName || ''),
           tierSubtitle: c.customerType === 'registered' ? 'Khách hàng thành viên' : 'Khách vãng lai',
         } as Customer;

@@ -156,12 +156,20 @@ const customerRegister = async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const passwordHash = await bcrypt.hash(password, salt);
 
+    // Đảm bảo mã khách hàng duy nhất KH-xxxx không trùng lặp
     const count = await Customer.countDocuments();
-    const code = `KH-${String(count + 1).padStart(4, '0')}`;
+    let counter = count + 1;
+    let code = `KH-${String(counter).padStart(4, '0')}`;
+    while (await Customer.exists({ code })) {
+      counter++;
+      code = `KH-${String(counter).padStart(4, '0')}`;
+    }
+
+    const defaultFullName = (fullName || '').trim() || cleanEmail.split('@')[0];
 
     const newCustomer = new Customer({
       code,
-      fullName: (fullName || '').trim(),
+      fullName: defaultFullName,
       email: cleanEmail,
       phone: cleanPhone,
       passwordHash,
@@ -171,7 +179,7 @@ const customerRegister = async (req, res) => {
       addresses: address ? [{
         isDefault: true,
         label: 'Mặc định',
-        fullName: (fullName || '').trim(),
+        fullName: defaultFullName,
         phone: cleanPhone,
         addressLine: address.trim(),
         province: province || '',

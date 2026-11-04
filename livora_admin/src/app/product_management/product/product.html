@@ -213,6 +213,7 @@
                   <div class="product-sub">
                     <span class="sku-code">{{ item.sku }}</span>
                     <span class="room-pill" *ngFor="let rName of item.roomNames">{{ rName }}</span>
+                    <span *ngIf="item.totalReviews" style="font-size: 10px; color: #b45309; font-weight: 600;">★ {{ item.averageRating }} ({{ item.totalReviews }})</span>
                   </div>
                 </div>
               </div>
@@ -239,6 +240,7 @@
                 >
                   {{ item.stockQuantity > 0 ? 'Còn hàng' : 'Hết hàng' }}
                 </span>
+                <small style="font-size: 10px; color: #704b4a; display: block; margin-top: 2px;">(Đã bán: {{ item.soldQuantity || 0 }})</small>
               </div>
             </td>
 

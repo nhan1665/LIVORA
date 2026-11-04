@@ -105,6 +105,12 @@ export class SpaceService {
       catchError((err) => throwError(() => new Error(err.error?.message || 'Không tìm thấy không gian.')))
     );
   }
+
+  seedDefaults(): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/seed-defaults`).pipe(
+      catchError((err) => throwError(() => new Error(err.error?.message || 'Không thể đồng bộ dữ liệu mẫu.')))
+    );
+  }
 }
 
 @Injectable({ providedIn: 'root' })
@@ -120,21 +126,28 @@ export class DesignService {
 
     if (search) params = params.set('search', search);
     if (spaceId) params = params.set('roomId', spaceId);
+    if (customerCode) params = params.set('customerCode', customerCode);
 
     return this.http.get<any>(this.apiUrl, { params }).pipe(
       map((res) => {
         const rawItems = res.data || [];
-        const items: DesignRecord[] = rawItems.map((item: any) => ({
-          id: item._id || item.id,
-          code: item.code || `TK-${(item._id || item.id).toString().slice(-4).toUpperCase()}`,
-          customerCode: item.customerId?.code || 'KH-USER',
-          customerName: item.customerId?.fullName || 'Khách hàng',
-          name: item.name,
-          spaceId: item.spaceId || '',
-          roomId: typeof item.roomId === 'object' && item.roomId ? (item.roomId._id || item.roomId.id) : (item.roomId || ''),
-          productCodes: (item.suggestedProducts || []).map((p: any) => p.sku || p.name),
-          createdAt: item.createdAt || new Date().toISOString(),
-        }));
+        const items: DesignRecord[] = rawItems.map((item: any) => {
+          const rawCode = item.customerCode || item.customer?.code || item.customerId?.code || (item.customerId ? `KH-${item.customerId.toString().slice(-4).toUpperCase()}` : 'KH-0001');
+          const custCode = String(rawCode).replace(/^#/, '').trim();
+          const custName = item.customerName || item.customer?.fullName || item.customerId?.fullName || 'Khách hàng';
+
+          return {
+            id: item._id || item.id,
+            code: item.code || `TK-${(item._id || item.id).toString().slice(-4).toUpperCase()}`,
+            customerCode: custCode,
+            customerName: custName,
+            name: item.name,
+            spaceId: item.spaceId || '',
+            roomId: typeof item.roomId === 'object' && item.roomId ? (item.roomId._id || item.roomId.id) : (item.roomId || ''),
+            productCodes: (item.suggestedProducts || []).map((p: any) => p.sku || p.name),
+            createdAt: item.createdAt || new Date().toISOString(),
+          };
+        });
 
         return {
           items,

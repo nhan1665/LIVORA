@@ -51,14 +51,14 @@
             </div>
             }
             <div class="input-group">
-                <input type="text" placeholder="Email / Số điện thoại" [(ngModel)]="username" name="username">
+                <input type="text" placeholder="Email / Số điện thoại" [(ngModel)]="username" name="username" (keyup.enter)="doLogin($event)">
                 <span class="icon">
                     <i class="bi bi-telephone"></i>
                 </span>
             </div>
 
             <div class="input-group" style="margin-bottom: 5px; position: relative;">
-                <input [type]="showPassword ? 'text' : 'password'" placeholder="Mật khẩu" [(ngModel)]="password" name="password" style="padding-right: 40px;">
+                <input [type]="showPassword ? 'text' : 'password'" placeholder="Mật khẩu" [(ngModel)]="password" name="password" (keyup.enter)="doLogin($event)" style="padding-right: 40px;">
                 <span class="icon">
                     <i class="bi bi-lock"></i>
                 </span>
@@ -110,21 +110,28 @@
             }
 
             <div class="input-group">
-                <input type="email" placeholder="Email" [(ngModel)]="signUpEmail" name="signUpEmail">
+                <input type="text" placeholder="Họ và tên (tùy chọn)" [(ngModel)]="signUpFullName" name="signUpFullName" (keyup.enter)="doRegister($event)">
+                <span class="icon">
+                    <i class="bi bi-person"></i>
+                </span>
+            </div>
+
+            <div class="input-group">
+                <input type="email" placeholder="Email" [(ngModel)]="signUpEmail" name="signUpEmail" (keyup.enter)="doRegister($event)">
                 <span class="icon">
                     <i class="bi bi-envelope"></i>
                 </span>
             </div>
 
             <div class="input-group">
-                <input type="tel" placeholder="Số điện thoại (tùy chọn)" [(ngModel)]="signUpPhone" name="signUpPhone">
+                <input type="tel" placeholder="Số điện thoại (tùy chọn)" [(ngModel)]="signUpPhone" name="signUpPhone" (keyup.enter)="doRegister($event)">
                 <span class="icon">
                     <i class="bi bi-telephone"></i>
                 </span>
             </div>
 
             <div class="input-group" style="position: relative;">
-                <input [type]="showSignUpPassword ? 'text' : 'password'" placeholder="Mật khẩu (tối thiểu 6 ký tự)" [(ngModel)]="signUpPassword" name="signUpPassword" style="padding-right: 40px;">
+                <input [type]="showSignUpPassword ? 'text' : 'password'" placeholder="Mật khẩu (tối thiểu 6 ký tự)" [(ngModel)]="signUpPassword" name="signUpPassword" (keyup.enter)="doRegister($event)" style="padding-right: 40px;">
                 <span class="icon">
                     <i class="bi bi-lock"></i>
                 </span>
@@ -134,7 +141,7 @@
             </div>
 
             <div class="input-group" style="position: relative;">
-                <input [type]="showSignUpConfirmPassword ? 'text' : 'password'" placeholder="Xác nhận mật khẩu" [(ngModel)]="signUpConfirmPassword" name="signUpConfirmPassword" style="padding-right: 40px;">
+                <input [type]="showSignUpConfirmPassword ? 'text' : 'password'" placeholder="Xác nhận mật khẩu" [(ngModel)]="signUpConfirmPassword" name="signUpConfirmPassword" (keyup.enter)="doRegister($event)" style="padding-right: 40px;">
                 <span class="icon">
                     <i class="bi bi-lock"></i>
                 </span>

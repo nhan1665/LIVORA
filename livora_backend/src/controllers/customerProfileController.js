@@ -3,9 +3,11 @@ const { sendSuccess, sendError } = require('../utils/responseHelper');
 
 const publicProfile = (customer) => {
   const address = customer.addresses?.find((item) => item.isDefault) || customer.addresses?.[0];
+  const cleanCode = customer.code ? customer.code.replace(/^#/, '').trim() : (customer._id ? `KH-${customer._id.toString().slice(-4).toUpperCase()}` : 'KH-0001');
+
   return {
     id: customer._id.toString(),
-    code: customer.code || '',
+    code: cleanCode,
     fullName: customer.fullName,
     email: customer.email,
     phone: customer.phone || '',

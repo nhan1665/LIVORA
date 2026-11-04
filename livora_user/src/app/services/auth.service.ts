@@ -83,8 +83,34 @@ export class AuthService {
     localStorage.removeItem('livora_customer_token');
   }
 
+  private async fetchWithTimeout(url: string, options: RequestInit = {}, timeoutMs = 12000): Promise<Response> {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      const response = await fetch(url, { ...options, signal: controller.signal });
+      clearTimeout(timer);
+      return response;
+    } catch (err: any) {
+      clearTimeout(timer);
+      if (err.name === 'AbortError') {
+        throw new Error('Quá thời gian kết nối đến máy chủ. Vui lòng kiểm tra backend server.');
+      }
+      if (err.message && err.message.includes('Failed to fetch')) {
+        throw new Error('Không thể kết nối đến máy chủ backend (http://localhost:5000). Vui lòng đảm bảo server đang chạy.');
+      }
+      throw err;
+    }
+  }
+
   private async parseResponse(response: Response): Promise<any> {
-    const result = await response.json();
+    const text = await response.text();
+    let result: any = null;
+    try {
+      result = text ? JSON.parse(text) : {};
+    } catch {
+      throw new Error(`Máy chủ phản hồi không đúng định dạng JSON (${response.status}).`);
+    }
+
     if (!response.ok || !result.success) {
       throw new Error(result.message || 'Không thể kết nối với máy chủ.');
     }
@@ -92,7 +118,7 @@ export class AuthService {
   }
 
   async login(account: string, password: string): Promise<boolean> {
-    const response = await fetch(`${this.apiUrl}/login`, {
+    const response = await this.fetchWithTimeout(`${this.apiUrl}/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email: account.trim(), password }),
@@ -104,7 +130,7 @@ export class AuthService {
   }
 
   async register(data: { email: string; password: string; fullName?: string; phone?: string }): Promise<boolean> {
-    const response = await fetch(`${this.apiUrl}/register`, {
+    const response = await this.fetchWithTimeout(`${this.apiUrl}/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
@@ -116,7 +142,7 @@ export class AuthService {
   async refreshProfile(): Promise<CustomerUser> {
     const token = this.token;
     if (!token) throw new Error('Vui lòng đăng nhập.');
-    const response = await fetch(`${this.apiUrl}/me`, {
+    const response = await this.fetchWithTimeout(`${this.apiUrl}/me`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     const user = await this.parseResponse(response) as CustomerUser;
@@ -127,7 +153,7 @@ export class AuthService {
   async updateProfile(update: ProfileUpdate): Promise<CustomerUser> {
     const token = this.token;
     if (!token) throw new Error('Vui lòng đăng nhập.');
-    const response = await fetch(`${this.apiUrl}/me`, {
+    const response = await this.fetchWithTimeout(`${this.apiUrl}/me`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       body: JSON.stringify(update),

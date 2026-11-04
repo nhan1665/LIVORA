@@ -194,16 +194,30 @@ const seedInitialData = require('./src/config/seed');
 const startServer = async () => {
   const conn = await connectDB();
   if (!conn) throw new Error('MongoDB connection is required before starting the API.');
-  // Auto-seed tắt mặc định để bảo toàn database test của người dùng
-  if (process.env.AUTO_SEED === 'true') {
-    try {
-      await seedInitialData();
-    } catch (seedErr) {
-      console.warn('Lỗi khi seed initial data:', seedErr.message);
-    }
-  }
+
   app.listen(PORT, () => {
     console.log(`LIVORA Backend API listening on http://localhost:${PORT}`);
+
+    // Đồng bộ số lượng đã bán thực tế 100% từ CSDL đơn hàng Orders và đánh giá từ Reviews (tuyệt đối không fake)
+    const { syncSoldQuantities, syncProductRatingsAndReviews } = require('./src/controllers/productController');
+    syncSoldQuantities(true).catch((err) => {
+      console.warn('Lỗi khi đồng bộ soldQuantity từ Orders:', err.message);
+    });
+    syncProductRatingsAndReviews(true).catch((err) => {
+      console.warn('Lỗi khi đồng bộ ratings từ Reviews:', err.message);
+    });
+
+    // Tự động kiểm tra và seed dữ liệu 10 không gian & 50 sản phẩm trong background để không chặn server
+    const seedMockSpacesAndProducts = require('./src/config/seedSpacesAndProducts');
+    seedMockSpacesAndProducts().catch((seedErr) => {
+      console.warn('Lỗi khi seed mock spaces & products:', seedErr.message);
+    });
+
+    if (process.env.AUTO_SEED === 'true') {
+      seedInitialData().catch((seedErr) => {
+        console.warn('Lỗi khi seed initial data:', seedErr.message);
+      });
+    }
   });
 };
 

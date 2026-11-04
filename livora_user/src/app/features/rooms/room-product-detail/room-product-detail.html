@@ -16,12 +16,12 @@
       <div class="flex md:flex-col gap-3 overflow-x-auto no-scrollbar w-full md:w-20">
         @for (img of product.images; track img) {
           <button (click)="changeMainImage(img)" class="w-20 h-20 border-2" [class.border-gray-900]="mainImage === img" [class.border-transparent]="mainImage !== img">
-            <img [src]="img" class="w-full h-full object-contain p-1">
+            <img [src]="img" (error)="onImageError($event)" class="w-full h-full object-contain p-1">
           </button>
         }
       </div>
       <div class="flex-1 bg-gray-50 flex items-center justify-center p-8 min-h-[500px]">
-        <img [src]="mainImage" class="w-full h-full object-contain transition-all duration-500">
+        <img [src]="mainImage" (error)="onImageError($event)" class="w-full h-full object-contain transition-all duration-500">
       </div>
     </div>
 
@@ -36,21 +36,28 @@
 
       <!-- Rating & Reviews trigger: Click scroll thẳng xuống khu vực đánh giá bên dưới -->
       <div (click)="scrollToReviews()" class="flex items-center space-x-2 mb-8 cursor-pointer group" title="Xem tất cả đánh giá của khách hàng">
-        <div class="flex">
-          @for (star of ratingStars; track $index) {
-            <div class="relative w-4 h-4">
-              <svg class="absolute inset-0 text-gray-200" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
-              @if (star === 'full') {
-                <svg class="absolute inset-0 text-amber-500" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
-              } @else if (star === 'half') {
-                <div class="absolute inset-0 w-1/2 overflow-hidden text-amber-500">
-                  <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
-                </div>
-              }
-            </div>
-          }
-        </div>
-        <span class="text-sm font-semibold underline group-hover:text-[#0058A3] transition-colors">{{ product.rating | number:'1.1-1' }} ({{ realReviews.length || product.reviews }} đánh giá)</span>
+        @if ((realReviews.length > 0) || (product.reviews > 0)) {
+          <div class="flex">
+            @for (star of ratingStars; track $index) {
+              <div class="relative w-4 h-4">
+                <svg class="absolute inset-0 text-gray-200" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                @if (star === 'full') {
+                  <svg class="absolute inset-0 text-amber-500" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                } @else if (star === 'half') {
+                  <div class="absolute inset-0 w-1/2 overflow-hidden text-amber-500">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+          <span class="text-sm font-semibold underline group-hover:text-[#0058A3] transition-colors">{{ (product.rating || 0) | number:'1.1-1' }} ({{ realReviews.length || product.reviews }} đánh giá)</span>
+        } @else {
+          <span class="text-xs text-gray-400 group-hover:text-[#0058A3] transition-colors underline">Chưa có đánh giá nào (Hãy là người đầu tiên đánh giá)</span>
+        }
+        @if (product.soldQuantity && product.soldQuantity > 0) {
+          <span class="text-sm text-gray-400 font-medium ml-1">· Đã bán {{ product.soldQuantity }}</span>
+        }
       </div>
 
       <div class="mb-6">
@@ -137,7 +144,7 @@
         <!-- Cột 1: Điểm số trung bình -->
         <div class="lg:col-span-4 text-center lg:text-left lg:border-r lg:border-stone-200 lg:pr-8">
           <div class="flex items-center justify-center lg:justify-start gap-4 mb-2">
-            <span class="text-5xl md:text-6xl font-black text-gray-900">{{ product.rating | number:'1.1-1' }}</span>
+            <span class="text-5xl md:text-6xl font-black text-gray-900">{{ (realReviews.length > 0 ? product.rating : 0) | number:'1.1-1' }}</span>
             <div>
               <div class="flex text-amber-500 text-lg">
                 @for (star of ratingStars; track $index) {
@@ -147,9 +154,12 @@
               <p class="text-xs text-gray-500 mt-0.5">Dựa trên <strong>{{ realReviews.length }}</strong> đánh giá thực tế</p>
             </div>
           </div>
-          <div class="mt-3 inline-flex items-center gap-1.5 text-xs text-emerald-700 bg-emerald-50 font-semibold px-3 py-1.5 rounded-full">
+          <div class="mt-3 inline-flex items-center gap-1.5 text-xs text-emerald-700 bg-emerald-50 font-semibold px-3 py-1.5 rounded-full" *ngIf="realReviews.length > 0">
             <svg class="w-4 h-4 text-emerald-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>
             100% người mua xác nhận chất lượng tốt
+          </div>
+          <div class="mt-3 inline-flex items-center gap-1.5 text-xs text-gray-500 bg-gray-100 font-medium px-3 py-1.5 rounded-full" *ngIf="realReviews.length === 0">
+            Chưa có đánh giá nào từ khách hàng
           </div>
         </div>
 

@@ -22,6 +22,22 @@ const roomDesignSchema = new mongoose.Schema(
       ref: 'Customer',
       default: null,
     },
+    customerName: {
+      type: String,
+      default: '',
+      trim: true,
+    },
+    customerCode: {
+      type: String,
+      default: '',
+      trim: true,
+      uppercase: true,
+    },
+    customerPhone: {
+      type: String,
+      default: '',
+      trim: true,
+    },
     file3DUrl: {
       type: String,
       default: '',

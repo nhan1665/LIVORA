@@ -1,6 +1,7 @@
 <div class="w-full max-w-[1440px] mx-auto px-4 md:px-8 py-6">
 
-  <nav class="text-xs text-gray-500 space-x-2 mb-8 capitalize">
+  <!-- Breadcrumbs -->
+  <nav class="text-xs text-gray-500 space-x-2 mb-6 capitalize">
     <a routerLink="/rooms" class="hover:underline cursor-pointer text-gray-700">Phòng</a>
     <span>&gt;</span>
     <a [routerLink]="['/rooms', currentRoom]" class="hover:underline cursor-pointer text-gray-700">{{ formattedRoomName }}</a>
@@ -8,48 +9,37 @@
     <span class="text-gray-900 font-medium">{{ formattedCategoryName }}</span>
   </nav>
 
-  @if (subCategories.length > 0) {
-    <section class="mb-12">
-      <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">Danh mục</h3>
-      <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2 md:gap-4">
-        @for (cat of subCategories; track cat.id) {
-          <a [routerLink]="['/rooms', currentRoom, cat.id]"
-             class="group border border-gray-200 rounded-sm p-2 md:p-4 flex flex-col items-center justify-center text-center cursor-pointer bg-white hover:border-gray-900 hover:shadow-sm transition-all duration-300"
-             [class.border-gray-900]="cat.id === currentCategory"
-             [class.bg-gray-50]="cat.id === currentCategory">
-
-            <div class="w-10 h-10 md:w-16 md:h-16 mb-2 md:mb-3 flex items-center justify-center overflow-hidden">
-              @if (cat.image) {
-                <img [src]="cat.image" [alt]="cat.name" class="max-w-full max-h-full object-contain group-hover:scale-105 transition-transform duration-300">
-              } @else {
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="text-gray-400">
-                  <rect x="3" y="3" width="18" height="18" rx="2"/>
-                  <path d="M3 9h18M9 21V9"/>
-                </svg>
-              }
-            </div>
-            <span class="text-[10px] md:text-xs font-semibold text-gray-800">{{ cat.name }}</span>
-          </a>
-        }
-      </div>
-    </section>
-  }
-
-  <section class="mb-10 max-w-4xl">
-    <h1 class="text-4xl font-bold text-gray-900 mb-4 capitalize">{{ formattedCategoryName }}</h1>
+  <!-- Title & Description -->
+  <section class="mb-8 max-w-4xl">
+    <h1 class="text-3xl md:text-4xl font-bold text-gray-900 mb-3 capitalize">{{ formattedCategoryName }}</h1>
     <p class="text-sm text-gray-600 leading-relaxed" [innerHTML]="currentDescription"></p>
   </section>
 
-  <div class="text-xs text-gray-500 mb-4 font-medium">{{ displayedProducts.length }} sản phẩm</div>
+  <!-- Total products count & active filter status -->
+  <div class="flex items-center justify-between text-xs text-gray-500 mb-6 pb-3 border-b border-gray-100 font-medium">
+    <div>
+      Hiển thị <span class="font-bold text-gray-900">{{ displayedProducts.length }}</span> sản phẩm
+      @if (currentCategory && currentCategory !== 'all') {
+        <span>trong danh mục <strong class="text-gray-900">{{ formattedCategoryName }}</strong></span>
+      }
+    </div>
+    @if (selectedPriceRange || selectedRating > 0 || selectedMaterial || isBestSellerOnly || (currentCategory && currentCategory !== 'all')) {
+      <button (click)="selectedPriceRange = ''; selectedRating = 0; selectedMaterial = ''; isBestSellerOnly = false; sortOption = ''"
+              class="text-red-600 hover:text-red-700 hover:underline cursor-pointer flex items-center space-x-1">
+        <span>Xóa tất cả bộ lọc phụ</span>
+      </button>
+    }
+  </div>
 
   <div class="grid grid-cols-1 lg:grid-cols-4 gap-8 items-start">
 
-    <aside class="space-y-4 border-t border-gray-100 lg:sticky lg:top-24">
+    <!-- Bộ lọc bên trái (Sidebar Filter) -->
+    <aside class="space-y-2 border-t border-gray-200 lg:sticky lg:top-24 bg-white">
 
       @for (filter of filters; track filter) {
-        <div class="border-b border-gray-200 py-4 flex flex-col cursor-pointer group" (click)="toggleFilter(filter)">
+        <div class="border-b border-gray-200 py-3.5 flex flex-col group">
 
-          <div class="flex justify-between items-center">
+          <div class="flex justify-between items-center cursor-pointer select-none" (click)="toggleFilter(filter)">
             <span class="text-sm font-bold text-gray-900 group-hover:text-gray-600 transition-colors">{{ filter }}</span>
             <svg [class.rotate-180]="activeFilter === filter" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-500 group-hover:text-gray-900 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
@@ -57,34 +47,135 @@
           </div>
 
           @if (activeFilter === filter) {
-            <div class="pt-4 pb-2 space-y-3" (click)="$event.stopPropagation()">
+            <div class="pt-3 pb-1" (click)="$event.stopPropagation()">
+
+              <!-- 1. Bộ lọc Danh mục -->
+              @if (filter === 'Danh mục') {
+                <div class="space-y-1 max-h-60 overflow-y-auto pr-1">
+                  <a [routerLink]="['/rooms', currentRoom]"
+                     class="flex items-center justify-between text-xs py-2 px-2.5 rounded transition-colors cursor-pointer"
+                     [class.bg-gray-900]="!currentCategory || currentCategory === 'all'"
+                     [class.text-white]="!currentCategory || currentCategory === 'all'"
+                     [class.font-bold]="!currentCategory || currentCategory === 'all'"
+                     [class.text-gray-700]="currentCategory && currentCategory !== 'all'"
+                     [class.hover:bg-gray-100]="currentCategory && currentCategory !== 'all'">
+                    <span>Tất cả danh mục</span>
+                    <span class="text-[11px] opacity-75">({{ products.length }})</span>
+                  </a>
+
+                  @for (cat of subCategories; track cat.id) {
+                    <a [routerLink]="['/rooms', currentRoom, cat.id]"
+                       class="flex items-center justify-between text-xs py-2 px-2.5 rounded transition-colors cursor-pointer"
+                       [class.bg-gray-900]="cat.id === currentCategory"
+                       [class.text-white]="cat.id === currentCategory"
+                       [class.font-bold]="cat.id === currentCategory"
+                       [class.text-gray-700]="cat.id !== currentCategory"
+                       [class.hover:bg-gray-100]="cat.id !== currentCategory">
+                      <span>{{ cat.name }}</span>
+                      @if (cat.id === currentCategory) {
+                        <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                      }
+                    </a>
+                  }
+                </div>
+              }
+
+              <!-- 2. Bộ lọc Sắp xếp -->
               @if (filter === 'Sắp xếp') {
-                <label class="flex items-center space-x-3 cursor-pointer group/item">
-                  <input type="radio" name="sortMenu" value="price-asc" [(ngModel)]="sortOption" class="w-4 h-4 text-gray-900 focus:ring-gray-900 cursor-pointer">
-                  <span class="text-sm text-gray-600 group-hover/item:text-gray-900">Giá: Thấp đến Cao</span>
-                </label>
-                <label class="flex items-center space-x-3 cursor-pointer group/item">
-                  <input type="radio" name="sortMenu" value="price-desc" [(ngModel)]="sortOption" class="w-4 h-4 text-gray-900 focus:ring-gray-900 cursor-pointer">
-                  <span class="text-sm text-gray-600 group-hover/item:text-gray-900">Giá: Cao đến Thấp</span>
-                </label>
+                <div class="space-y-2.5">
+                  <label class="flex items-center space-x-2.5 cursor-pointer text-xs text-gray-700 hover:text-gray-900">
+                    <input type="radio" name="sortMenu" value="" [(ngModel)]="sortOption" class="w-3.5 h-3.5 text-gray-900 focus:ring-gray-900 cursor-pointer">
+                    <span>Mặc định (Phổ biến)</span>
+                  </label>
+                  <label class="flex items-center space-x-2.5 cursor-pointer text-xs text-gray-700 hover:text-gray-900">
+                    <input type="radio" name="sortMenu" value="price-asc" [(ngModel)]="sortOption" class="w-3.5 h-3.5 text-gray-900 focus:ring-gray-900 cursor-pointer">
+                    <span>Giá: Thấp đến Cao</span>
+                  </label>
+                  <label class="flex items-center space-x-2.5 cursor-pointer text-xs text-gray-700 hover:text-gray-900">
+                    <input type="radio" name="sortMenu" value="price-desc" [(ngModel)]="sortOption" class="w-3.5 h-3.5 text-gray-900 focus:ring-gray-900 cursor-pointer">
+                    <span>Giá: Cao đến Thấp</span>
+                  </label>
+                </div>
               }
-              @if (filter !== 'Sắp xếp') {
-                <span class="text-xs text-gray-400 italic">Tính năng sắp ra mắt...</span>
+
+              <!-- 3. Bộ lọc Chất liệu -->
+              @if (filter === 'Chất liệu') {
+                <div class="space-y-2 text-xs">
+                  <label class="flex items-center space-x-2.5 cursor-pointer text-gray-700 hover:text-gray-900">
+                    <input type="radio" name="matFilter" value="" [(ngModel)]="selectedMaterial" class="w-3.5 h-3.5 text-gray-900 focus:ring-gray-900">
+                    <span>Tất cả chất liệu</span>
+                  </label>
+                  @for (mat of availableMaterials; track mat) {
+                    <label class="flex items-center space-x-2.5 cursor-pointer text-gray-700 hover:text-gray-900">
+                      <input type="radio" name="matFilter" [value]="mat" [(ngModel)]="selectedMaterial" class="w-3.5 h-3.5 text-gray-900 focus:ring-gray-900">
+                      <span>{{ mat }}</span>
+                    </label>
+                  }
+                </div>
               }
+
+              <!-- 4. Bộ lọc Giá -->
+              @if (filter === 'Giá') {
+                <div class="space-y-2 text-xs">
+                  <label class="flex items-center space-x-2.5 cursor-pointer text-gray-700 hover:text-gray-900">
+                    <input type="radio" name="priceMenu" value="" [(ngModel)]="selectedPriceRange" class="w-3.5 h-3.5 text-gray-900 focus:ring-gray-900">
+                    <span>Tất cả mức giá</span>
+                  </label>
+                  <label class="flex items-center space-x-2.5 cursor-pointer text-gray-700 hover:text-gray-900">
+                    <input type="radio" name="priceMenu" value="under3m" [(ngModel)]="selectedPriceRange" class="w-3.5 h-3.5 text-gray-900 focus:ring-gray-900">
+                    <span>Dưới 3.000.000 ₫</span>
+                  </label>
+                  <label class="flex items-center space-x-2.5 cursor-pointer text-gray-700 hover:text-gray-900">
+                    <input type="radio" name="priceMenu" value="3m-10m" [(ngModel)]="selectedPriceRange" class="w-3.5 h-3.5 text-gray-900 focus:ring-gray-900">
+                    <span>3.000.000 ₫ - 10.000.000 ₫</span>
+                  </label>
+                  <label class="flex items-center space-x-2.5 cursor-pointer text-gray-700 hover:text-gray-900">
+                    <input type="radio" name="priceMenu" value="above10m" [(ngModel)]="selectedPriceRange" class="w-3.5 h-3.5 text-gray-900 focus:ring-gray-900">
+                    <span>Trên 10.000.000 ₫</span>
+                  </label>
+                </div>
+              }
+
+              <!-- 5. Bộ lọc Đánh giá -->
+              @if (filter === 'Đánh giá') {
+                <div class="space-y-2 text-xs">
+                  <label class="flex items-center space-x-2.5 cursor-pointer text-gray-700 hover:text-gray-900">
+                    <input type="radio" name="rateMenu" [value]="0" [(ngModel)]="selectedRating" class="w-3.5 h-3.5 text-gray-900 focus:ring-gray-900">
+                    <span>Tất cả đánh giá</span>
+                  </label>
+                  <label class="flex items-center space-x-2.5 cursor-pointer text-gray-700 hover:text-gray-900">
+                    <input type="radio" name="rateMenu" [value]="4.5" [(ngModel)]="selectedRating" class="w-3.5 h-3.5 text-gray-900 focus:ring-gray-900">
+                    <span class="flex items-center space-x-1">
+                      <span>Từ 4.5 sao trở lên</span>
+                      <svg class="w-3.5 h-3.5 text-amber-500 fill-current" viewBox="0 0 24 24"><path d="M12 .587l3.668 7.431 8.2 1.192-5.934 5.787 1.4 8.168L12 18.896l-7.334 3.857 1.4-8.168L.132 9.21l8.2-1.192z"/></svg>
+                    </span>
+                  </label>
+                  <label class="flex items-center space-x-2.5 cursor-pointer text-gray-700 hover:text-gray-900">
+                    <input type="radio" name="rateMenu" [value]="4.8" [(ngModel)]="selectedRating" class="w-3.5 h-3.5 text-gray-900 focus:ring-gray-900">
+                    <span class="flex items-center space-x-1">
+                      <span>Từ 4.8 sao trở lên</span>
+                      <svg class="w-3.5 h-3.5 text-amber-500 fill-current" viewBox="0 0 24 24"><path d="M12 .587l3.668 7.431 8.2 1.192-5.934 5.787 1.4 8.168L12 18.896l-7.334 3.857 1.4-8.168L.132 9.21l8.2-1.192z"/></svg>
+                    </span>
+                  </label>
+                </div>
+              }
+
             </div>
           }
         </div>
       }
 
-      <div class="pt-4 flex items-center justify-between">
+      <!-- Bộ lọc Bán chạy -->
+      <div class="pt-3 pb-2 flex items-center justify-between">
         <label for="best-seller" class="text-sm font-bold text-gray-900 cursor-pointer">Bán chạy</label>
         <div class="flex items-center space-x-2">
-          <span class="text-xs text-gray-400">{{ bestSellerCount }}</span>
+          <span class="text-xs text-gray-400">({{ bestSellerCount }})</span>
           <input type="checkbox" id="best-seller" [(ngModel)]="isBestSellerOnly" class="w-4 h-4 rounded border-gray-300 text-gray-900 focus:ring-gray-900 cursor-pointer">
         </div>
       </div>
     </aside>
 
+    <!-- Danh sách sản phẩm (Main Product Grid) -->
     <main class="lg:col-span-3">
       @if (isLoading) {
         <div class="py-16 text-center text-gray-500 bg-gray-50 rounded-lg p-8 border border-dashed border-gray-200">
@@ -96,8 +187,8 @@
           <svg class="mx-auto h-12 w-12 text-gray-300 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
           </svg>
-          <p class="text-base font-medium text-gray-700 mb-1">Chưa có sản phẩm nào trong danh mục này</p>
-          <p class="text-xs text-gray-400">Các sản phẩm thêm mới từ trang quản trị Admin sẽ tự động hiển thị tại đây.</p>
+          <p class="text-base font-medium text-gray-700 mb-1">Không tìm thấy sản phẩm phù hợp</p>
+          <p class="text-xs text-gray-400">Hãy thử chọn lại danh mục hoặc bỏ bớt các bộ lọc tiêu chí.</p>
         </div>
       } @else {
         <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-x-3 gap-y-8 md:gap-x-4 md:gap-y-12">
@@ -106,17 +197,21 @@
             <a [routerLink]="['/rooms', currentRoom, currentCategory, product.id]" class="group relative flex flex-col justify-between cursor-pointer">
 
               <div>
-                <div class="relative overflow-hidden aspect-square w-full bg-gray-50 rounded-sm mb-4 flex items-center justify-center p-2 md:p-4">
+                <div class="relative overflow-hidden aspect-square w-full bg-gray-50 rounded-sm mb-4 flex items-center justify-center p-2 md:p-3">
 
                   @if (product.badge) {
                     <span class="absolute top-2 left-2 z-10 text-[9px] md:text-[10px] font-bold tracking-wider uppercase px-1.5 py-0.5 md:px-2 md:py-1 text-white"
-                          [class.bg-[#E50046]]="product.badge === 'Best seller' || product.badge === 'Bán chạy'"
-                          [class.bg-orange-500]="product.badge === 'New' || product.badge === 'Mới'">
+                          [class.bg-[#E50046]]="product.badge === 'Best seller' || product.badge === 'Bán chạy' || product.badge === 'Hot'"
+                          [class.bg-orange-500]="product.badge === 'New' || product.badge === 'Mới' || product.badge === 'Ưu đãi'"
+                          [class.bg-blue-600]="product.badge !== 'Best seller' && product.badge !== 'Bán chạy' && product.badge !== 'Hot' && product.badge !== 'New' && product.badge !== 'Mới' && product.badge !== 'Ưu đãi'">
                       {{ product.badge }}
                     </span>
                   }
                   @if (product.image) {
-                    <img [src]="product.image" [alt]="product.name" class="max-w-full max-h-full object-contain group-hover:scale-102 transition-transform duration-500">
+                    <img [src]="product.image"
+                         [alt]="product.name"
+                         (error)="onImageError($event, product)"
+                         class="max-w-full max-h-full object-cover rounded-sm group-hover:scale-105 transition-transform duration-500">
                   } @else {
                     <div class="w-full h-full flex flex-col items-center justify-center text-gray-300">
                       <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
@@ -129,7 +224,7 @@
                   }
                 </div>
 
-                <h4 class="text-xs md:text-sm font-extrabold text-gray-900 tracking-tight uppercase mb-1">{{ product.name }}</h4>
+                <h4 class="text-xs md:text-sm font-extrabold text-gray-900 tracking-tight uppercase mb-1 line-clamp-1 group-hover:text-[#0058A3] transition-colors">{{ product.name }}</h4>
                 <p class="text-[11px] md:text-xs text-gray-500 line-clamp-2 min-h-[32px] mb-3 leading-tight">{{ product.description }}</p>
               </div>
 
@@ -146,13 +241,20 @@
                 </div>
 
                 <div class="flex items-center justify-between mt-auto">
-                  <div class="flex items-center space-x-1 text-[11px] md:text-xs text-gray-600">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-amber-500" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M12 .587l3.668 7.431 8.2 1.192-5.934 5.787 1.4 8.168L12 18.896l-7.334 3.857 1.4-8.168L.132 9.21l8.2-1.192z"/>
-                    </svg>
-                    <span class="font-bold text-gray-800">{{ product.rating | number:'1.1-1' }}</span>
-                    <span class="text-gray-400">({{ product.reviews }})</span>
-                  </div>
+                  @if (product.reviews && product.reviews > 0) {
+                    <div class="flex items-center space-x-1 text-[11px] md:text-xs text-gray-600">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-amber-500" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 .587l3.668 7.431 8.2 1.192-5.934 5.787 1.4 8.168L12 18.896l-7.334 3.857 1.4-8.168L.132 9.21l8.2-1.192z"/>
+                      </svg>
+                      <span class="font-bold text-gray-800">{{ product.rating | number:'1.1-1' }}</span>
+                      <span class="text-gray-400">({{ product.reviews }})</span>
+                    </div>
+                  } @else {
+                    <span class="text-[10px] md:text-[11px] text-gray-400">Chưa có đánh giá</span>
+                  }
+                  @if (product.soldQuantity && product.soldQuantity > 0) {
+                    <span class="text-[10px] md:text-[11px] text-gray-400 font-normal">Đã bán {{ product.soldQuantity }}</span>
+                  }
                 </div>
               </div>
 

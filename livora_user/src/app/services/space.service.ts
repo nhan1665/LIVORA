@@ -28,6 +28,9 @@ export interface CustomerDesignPayload {
   name: string;
   roomId?: string;
   customerId?: string;
+  customerName?: string;
+  customerCode?: string;
+  customerPhone?: string;
   file3DUrl?: string;
   previewImage?: string;
   dimensions?: { length: number; width: number; height: number };
@@ -84,10 +87,13 @@ export class SpaceService {
    * Lưu thiết kế của người dùng
    */
   saveDesign(payload: CustomerDesignPayload): Observable<any> {
+    const token = localStorage.getItem('livora_customer_token');
+    const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
+
     return this.http.post<any>(this.apiUrl, {
       ...payload,
       isTemplate: false,
-    });
+    }, { headers });
   }
 
   /**
