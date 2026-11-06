@@ -1,7 +1,6 @@
 <section class="room-page" aria-labelledby="room-page-title">
   <div class="room-heading-row">
     <div>
-      <p class="eyebrow">KIẾN TRÚC &amp; KHÔNG GIAN</p>
       <h1 id="room-page-title">Danh sách phòng</h1>
     </div>
     <div class="heading-actions">
@@ -104,7 +103,7 @@
               </tr>
             } @else {
               @for (room of rooms(); track room.id) {
-                <tr>
+                <tr (click)="openViewModal(room)" style="cursor: pointer;">
                   <td class="room-code">{{ room.code }}</td>
                   <td>
                     <img class="room-thumbnail" [src]="room.thumbnail" [alt]="'Ảnh ' + room.name" />
@@ -118,7 +117,7 @@
                       <span class="status-dot" aria-hidden="true"></span>{{ statusText(room.isActive) }}
                     </span>
                   </td>
-                  <td>
+                  <td (click)="$event.stopPropagation()">
                     <div class="row-actions">
                       <button class="icon-button" type="button" (click)="openViewModal(room)" [attr.aria-label]="'Xem ' + room.name" title="Xem chi tiết">
                         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.4-6 9.5-6 9.5 6 9.5 6-3.4 6-9.5 6-9.5-6-9.5-6Z" /><circle cx="12" cy="12" r="2.6" /></svg>
@@ -176,9 +175,40 @@
     cancelText="Hủy bỏ"
     [isSubmitting]="isSubmitting()"
     (close)="requestCloseModal()"
-    (submit)="saveRoom(roomForm)"
+    (submit)="saveRoom()"
   >
-    <form #roomForm="ngForm" class="room-form" (ngSubmit)="saveRoom(roomForm)" novalidate>
+    <!-- Navigation Tabs -->
+    <div style="display: flex; gap: 8px; border-bottom: 2px solid #ecdcdb; margin-bottom: 16px; padding-bottom: 4px;">
+      <button
+        type="button"
+        (click)="activeModalTab = 'form'"
+        [style.background]="activeModalTab === 'form' ? '#704b4a' : '#f5ebea'"
+        [style.color]="activeModalTab === 'form' ? '#ffffff' : '#704b4a'"
+        style="padding: 7px 14px; border-radius: 6px; font-weight: 600; font-size: 13px; border: none; cursor: pointer; display: flex; align-items: center; gap: 6px;"
+      >
+        <span>Thông tin phòng</span>
+      </button>
+      @if (modalMode !== 'create') {
+        <button
+          type="button"
+          (click)="activeModalTab = 'history'"
+          [style.background]="activeModalTab === 'history' ? '#704b4a' : '#f5ebea'"
+          [style.color]="activeModalTab === 'history' ? '#ffffff' : '#704b4a'"
+          style="padding: 7px 14px; border-radius: 6px; font-weight: 600; font-size: 13px; border: none; cursor: pointer; display: flex; align-items: center; gap: 6px;"
+        >
+          <span>Lịch sử thao tác</span>
+        </button>
+      }
+    </div>
+
+    @if (activeModalTab === 'history') {
+      <app-activity-log
+        entityType="room"
+        [entityId]="editingRoom?.id || form.code"
+        [entityCode]="form.code"
+      ></app-activity-log>
+    } @else {
+    <form #roomForm="ngForm" class="room-form" (ngSubmit)="saveRoom()" novalidate>
       @if (formError()) {
         <div class="form-alert" role="alert">{{ formError() }}</div>
       }
@@ -206,17 +236,19 @@
           }
         </div>
 
-        <div class="form-field">
-          <label for="room-status">Trạng thái vận hành <span class="required-mark">*</span></label>
-          <select id="room-status" name="isActive" [(ngModel)]="form.isActive" (ngModelChange)="markChanged()" [disabled]="modalMode === 'view' || isSubmitting()">
-            <option [ngValue]="true">Hoạt động (Hiển thị trên hệ thống)</option>
-            <option [ngValue]="false">Ngừng hoạt động</option>
-          </select>
-          <small class="status-hint" [class.inactive-hint]="!form.isActive">
-            <span class="status-dot" aria-hidden="true"></span>
-            {{ form.isActive ? 'Sẵn sàng hiển thị trong danh mục phòng.' : 'Không hiển thị cho lựa chọn mới trên website.' }}
-          </small>
-        </div>
+        @if (modalMode !== 'create') {
+          <div class="form-field">
+            <label for="room-status">Trạng thái vận hành <span class="required-mark">*</span></label>
+            <select id="room-status" name="isActive" [(ngModel)]="form.isActive" (ngModelChange)="markChanged()" [disabled]="modalMode === 'view' || isSubmitting()">
+              <option [ngValue]="true">Hoạt động (Hiển thị trên hệ thống)</option>
+              <option [ngValue]="false">Ngừng hoạt động</option>
+            </select>
+            <small class="status-hint" [class.inactive-hint]="!form.isActive">
+              <span class="status-dot" aria-hidden="true"></span>
+              {{ form.isActive ? 'Sẵn sàng hiển thị trong danh mục phòng.' : 'Không hiển thị cho lựa chọn mới trên website.' }}
+            </small>
+          </div>
+        }
 
         <div class="form-field form-field-full">
           <label for="room-name">Tên phòng <span class="required-mark">*</span></label>
@@ -286,6 +318,7 @@
         </div>
       </div>
     </form>
+    }
   </app-form-modal>
 }
 

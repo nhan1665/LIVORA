@@ -1,9 +1,10 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectorRef, Component, DestroyRef, inject, signal } from '@angular/core';
+import { ChangeDetectorRef, Component, DestroyRef, ViewChild, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule, NgForm } from '@angular/forms';
 import { ConfirmDialog } from '../../shared/confirm-dialog/confirm-dialog';
 import { FormModal } from '../../shared/form-modal/form-modal';
+import { ActivityLogComponent } from '../../shared/activity-log/activity-log';
 import { Room as RoomRecord } from '../room/room.model';
 import { RoomService } from '../room/room.service';
 import { DesignRecord, SpaceDraft, SpaceRecord } from './space.model';
@@ -11,8 +12,11 @@ import { DesignService, SpaceService } from './space.service';
 
 type Tab = 'spaces' | 'designs';
 type Mode = 'create' | 'edit' | 'view';
-@Component({ selector: 'app-space', standalone: true, imports: [CommonModule, FormsModule, FormModal, ConfirmDialog], templateUrl: './space.html' })
+@Component({ selector: 'app-space', standalone: true, imports: [CommonModule, FormsModule, FormModal, ConfirmDialog, ActivityLogComponent], templateUrl: './space.html' })
 export class Space {
+  @ViewChild('spaceForm') spaceForm?: NgForm;
+  activeModalTab: 'form' | 'history' = 'form';
+  activeDesignTab: 'info' | 'history' = 'info';
   private readonly service = inject(SpaceService);
   private readonly designsService = inject(DesignService);
   private readonly roomsService = inject(RoomService);
@@ -99,8 +103,8 @@ export class Space {
   area(item: SpaceRecord | SpaceDraft): string { return (item.lengthM * item.widthM).toFixed(1); }
   volume(): string { return (this.form.lengthM * this.form.widthM * this.form.heightM).toFixed(1); }
   selectedFileSize(): string { const bytes = this.form.modelFile?.size ?? 0; return bytes < 1024 ? `${bytes} B` : bytes < 1024 * 1024 ? `${(bytes / 1024).toFixed(1)} KB` : `${(bytes / 1024 / 1024).toFixed(1)} MB`; }
-  openCreate(): void { this.mode = 'create'; this.editing = null; this.form = this.blank(); this.formError.set(''); this.fileError.set(''); this.modalOpen.set(true); }
-  open(item: SpaceRecord, mode: Mode): void { this.mode = mode; this.editing = item; this.form = {code: item.code, name: item.name, roomId: item.roomId, description: item.description, lengthM: item.lengthM, widthM: item.widthM, heightM: item.heightM, modelFile: item.modelFile ? {...item.modelFile} : null, isActive: item.isActive}; this.formError.set(''); this.fileError.set(''); this.modalOpen.set(true); }
+  openCreate(): void { this.mode = 'create'; this.editing = null; this.form = this.blank(); this.formError.set(''); this.fileError.set(''); this.activeModalTab = 'form'; this.modalOpen.set(true); }
+  open(item: SpaceRecord, mode: Mode): void { this.mode = mode; this.editing = item; this.form = {code: item.code, name: item.name, roomId: item.roomId, description: item.description, lengthM: item.lengthM, widthM: item.widthM, heightM: item.heightM, modelFile: item.modelFile ? {...item.modelFile} : null, isActive: item.isActive}; this.formError.set(''); this.fileError.set(''); this.activeModalTab = 'form'; this.modalOpen.set(true); }
   close(): void { if (!this.saving()) this.modalOpen.set(false); }
   async selectFile(event: Event): Promise<void> {
     const file = (event.target as HTMLInputElement).files?.[0]; if (!file) return;
@@ -109,15 +113,16 @@ export class Space {
     this.fileError.set(''); this.formError.set('');
     this.cdr.markForCheck();
   }
-  save(form: NgForm): void {
+  save(formRef?: NgForm): void {
     if (this.mode === 'view' || this.saving()) return;
-    form.control.markAllAsTouched();
-    if (form.invalid) { this.formError.set('Vui lòng nhập đầy đủ mã, tên và kích thước hợp lệ.'); return; }
+    const form = formRef || this.spaceForm;
+    form?.control.markAllAsTouched();
+    if (!form || form.invalid) { this.formError.set('Vui lòng nhập đầy đủ mã, tên và kích thước hợp lệ.'); return; }
     this.saving.set(true); this.formError.set('');
     this.service.save(this.form, this.editing?.id).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({next: () => { this.saving.set(false); this.modalOpen.set(false); this.notice.set(this.editing ? 'Đã cập nhật không gian.' : 'Đã thêm không gian.'); this.spaceCount.update((count) => this.editing ? count : count + 1); this.load(); }, error: (error: Error) => { this.saving.set(false); this.formError.set(error.message); }});
   }
   requestStatus(item: SpaceRecord): void { this.pending.set(item); }
   cancelStatus(): void { this.pending.set(null); }
   confirmStatus(): void { const item = this.pending(); if (!item) return; this.service.setActive(item.id, !item.isActive).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({next: () => { this.pending.set(null); this.notice.set('Đã cập nhật trạng thái không gian.'); this.load(); }, error: (error: Error) => { this.pending.set(null); this.notice.set(error.message); }}); }
-  viewDesign(item: DesignRecord): void { this.selectedDesign.set(item); }
+  viewDesign(item: DesignRecord): void { this.activeDesignTab = 'info'; this.selectedDesign.set(item); }
 }

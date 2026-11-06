@@ -49,8 +49,8 @@
               <span class="tooltip-category">{{ hs.product.category }}</span>
               <h4 class="tooltip-name">{{ hs.product.name }}</h4>
               <div class="tooltip-price-container">
-                <span class="tooltip-currency">$</span>
-                <span class="tooltip-price-val">{{ hs.product.price }}</span>
+                <span class="tooltip-price-val">{{ hs.product.price | number:'1.0-0' }}</span>
+                <span class="tooltip-currency">₫</span>
               </div>
             </div>
             <div class="tooltip-arrow-indicator">
@@ -114,7 +114,7 @@
               <div class="product-row-info" (click)="redirectToProduct(hs.product.id, $event)">
                 <h4 class="product-row-name">{{ hs.product.name }}</h4>
                 <p class="product-row-desc">{{ hs.product.description }}</p>
-                <span class="product-row-price">${{ hs.product.price }}</span>
+                <span class="product-row-price">{{ hs.product.price | number:'1.0-0' }} ₫</span>
               </div>
 
               <!-- Actions -->

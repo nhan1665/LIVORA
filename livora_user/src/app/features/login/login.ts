@@ -32,7 +32,6 @@ export class Login {
   showSignUpConfirmPassword = false;
 
   // Sign up fields
-  signUpFullName = '';
   signUpEmail = '';
   signUpPhone = '';
   signUpPassword = '';
@@ -172,7 +171,6 @@ export class Login {
         email,
         phone: phone || undefined,
         password,
-        fullName: this.signUpFullName.trim() || undefined,
       });
 
       this.signUpSuccessMessage = 'Đăng ký tài khoản thành công! Đang chuyển sang màn hình đăng nhập...';

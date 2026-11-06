@@ -1,5 +1,6 @@
 const Category = require('../models/Category');
 const Product = require('../models/Product');
+const { logActivityInternal } = require('./activityLogController');
 const { sendSuccess, sendPaginated, sendError } = require('../utils/responseHelper');
 
 /**
@@ -157,6 +158,16 @@ const createCategory = async (req, res) => {
 
     await category.save();
 
+    logActivityInternal({
+      entityType: 'category',
+      entityId: category._id.toString(),
+      entityCode: category.code,
+      action: 'Thêm mới loại sản phẩm',
+      performedBy: 'Quản trị viên (Admin)',
+      role: 'admin',
+      details: `Khởi tạo danh mục ${category.name} (${category.code})`,
+    });
+
     return sendSuccess(res, {
       id: category._id.toString(),
       code: category.code,
@@ -196,6 +207,16 @@ const updateCategory = async (req, res) => {
 
     await category.save();
 
+    logActivityInternal({
+      entityType: 'category',
+      entityId: category._id.toString(),
+      entityCode: category.code,
+      action: 'Cập nhật thông tin loại sản phẩm',
+      performedBy: 'Quản trị viên (Admin)',
+      role: 'admin',
+      details: `Cập nhật thông tin danh mục ${category.name} (${category.code})`,
+    });
+
     return sendSuccess(res, {
       id: category._id.toString(),
       code: category.code,
@@ -226,6 +247,16 @@ const toggleCategory = async (req, res) => {
     category.isActive = !category.isActive;
     await category.save();
 
+    logActivityInternal({
+      entityType: 'category',
+      entityId: category._id.toString(),
+      entityCode: category.code,
+      action: `Đổi trạng thái hiển thị: ${category.isActive ? 'Kích hoạt' : 'Tạm dừng'}`,
+      performedBy: 'Quản trị viên (Admin)',
+      role: 'admin',
+      details: `Chuyển trạng thái danh mục ${category.name} sang ${category.isActive ? 'Đang hoạt động' : 'Tạm ẩn'}`,
+    });
+
     return sendSuccess(res, {
       id: category._id.toString(),
       isActive: category.isActive,
@@ -246,6 +277,16 @@ const deleteCategory = async (req, res) => {
     if (!category) {
       return sendError(res, 'Không tìm thấy loại sản phẩm.', 404);
     }
+
+    logActivityInternal({
+      entityType: 'category',
+      entityId: category._id.toString(),
+      entityCode: category.code,
+      action: 'Xóa loại sản phẩm',
+      performedBy: 'Quản trị viên (Admin)',
+      role: 'admin',
+      details: `Đã xóa danh mục ${category.name} (${category.code}) khỏi hệ thống`,
+    });
 
     await Category.findByIdAndDelete(req.params.id);
     return sendSuccess(res, null, 'Xóa loại sản phẩm thành công.');

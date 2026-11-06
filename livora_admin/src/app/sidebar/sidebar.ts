@@ -99,7 +99,9 @@ export class Sidebar {
       isOpen: true,
       children: [
         { title: 'Voucher', route: '/settings/vouchers' },
-        { title: 'Thiết lập vận chuyển', route: '/settings/shipping' }
+        { title: 'Thiết lập vận chuyển', route: '/settings/shipping' },
+        { title: 'Phân quyền', route: '/settings/permissions' },
+        { title: 'Cấu hình động', route: '/settings/system-config' }
       ]
     }
   ];

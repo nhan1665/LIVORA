@@ -1,6 +1,7 @@
 import { ChangeDetectorRef, Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { FormModal } from '../../shared/form-modal/form-modal';
+import { ActivityLogComponent } from '../../shared/activity-log/activity-log';
 import {
   Review as ReviewRecord,
   ReviewListQuery,
@@ -12,7 +13,7 @@ import { ReviewService } from './review.service';
 @Component({
   selector: 'app-review',
   standalone: true,
-  imports: [FormsModule, FormModal],
+  imports: [FormsModule, FormModal, ActivityLogComponent],
   templateUrl: './review.html',
   // Note: review styles live in interaction.css and are imported globally via styles.css
   // to stay below the 8 kB angular component style budget (team convention).
@@ -42,6 +43,7 @@ export class Review implements OnInit {
 
   readonly selectedReview = signal<ReviewRecord | null>(null);
   readonly isDetailModalOpen = signal(false);
+  readonly activeModalTab = signal<'detail' | 'history'>('detail');
   readonly isHideModalOpen = signal(false);
   hideReasonDraft = '';
   readonly isSubmitting = signal(false);
@@ -132,6 +134,7 @@ export class Review implements OnInit {
 
   openDetailModal(review: ReviewRecord): void {
     this.selectedReview.set(review);
+    this.activeModalTab.set('detail');
     this.isDetailModalOpen.set(true);
   }
 

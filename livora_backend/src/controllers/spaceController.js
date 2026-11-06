@@ -1,4 +1,5 @@
 const RoomDesign = require('../models/RoomDesign');
+const { logActivityInternal } = require('./activityLogController');
 const { sendSuccess, sendPaginated, sendError } = require('../utils/responseHelper');
 
 const getCleanCustomerCode = (cust, fallbackId) => {
@@ -305,6 +306,16 @@ const createRoomDesign = async (req, res) => {
 
     await design.save();
 
+    logActivityInternal({
+      entityType: 'space',
+      entityId: design._id.toString(),
+      entityCode: design.code,
+      action: design.isTemplate ? 'Thêm mới không gian thiết kế' : 'Lưu bản thiết kế 3D của khách hàng',
+      performedBy: design.isTemplate ? 'Quản trị viên (Admin)' : (design.customerName || 'Khách hàng'),
+      role: design.isTemplate ? 'admin' : 'customer',
+      details: `${design.isTemplate ? 'Tạo không gian mẫu' : 'Khách hàng thiết kế phòng'}: ${design.name} (${design.code})`,
+    });
+
     return sendSuccess(res, {
       id: design._id.toString(),
       code: design.code,
@@ -366,6 +377,16 @@ const updateRoomDesign = async (req, res) => {
 
     await design.save();
 
+    logActivityInternal({
+      entityType: 'space',
+      entityId: design._id.toString(),
+      entityCode: design.code,
+      action: 'Cập nhật không gian thiết kế',
+      performedBy: 'Quản trị viên (Admin)',
+      role: 'admin',
+      details: `Cập nhật thông tin kích thước và bố cục cho ${design.name} (${design.code})`,
+    });
+
     return sendSuccess(res, {
       id: design._id.toString(),
       name: design.name,
@@ -390,6 +411,16 @@ const toggleRoomDesign = async (req, res) => {
     design.isActive = !design.isActive;
     await design.save();
 
+    logActivityInternal({
+      entityType: 'space',
+      entityId: design._id.toString(),
+      entityCode: design.code,
+      action: `Đổi trạng thái: ${design.isActive ? 'Kích hoạt' : 'Tạm dừng'}`,
+      performedBy: 'Quản trị viên (Admin)',
+      role: 'admin',
+      details: `Chuyển trạng thái không gian ${design.name} sang ${design.isActive ? 'Đang hoạt động' : 'Tạm ẩn'}`,
+    });
+
     return sendSuccess(res, {
       id: design._id.toString(),
       isActive: design.isActive,
@@ -408,6 +439,16 @@ const deleteRoomDesign = async (req, res) => {
   try {
     const design = await RoomDesign.findById(req.params.id);
     if (!design) return sendError(res, 'Không tìm thấy không gian thiết kế.', 404);
+
+    logActivityInternal({
+      entityType: 'space',
+      entityId: design._id.toString(),
+      entityCode: design.code,
+      action: 'Xóa không gian thiết kế',
+      performedBy: 'Quản trị viên (Admin)',
+      role: 'admin',
+      details: `Đã xóa không gian ${design.name} (${design.code}) khỏi hệ thống`,
+    });
 
     await RoomDesign.findByIdAndDelete(req.params.id);
     return sendSuccess(res, null, 'Xóa không gian thiết kế thành công.');

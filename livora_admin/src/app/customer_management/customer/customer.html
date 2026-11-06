@@ -372,6 +372,18 @@
             </svg>
             <span>Lịch sử đơn hàng ({{ selectedCustomer()?.orders?.length || 0 }} đơn)</span>
           </button>
+
+          <button
+            type="button"
+            class="modal-tab-btn"
+            [class.active]="activeModalTab() === 'history'"
+            (click)="switchModalTab('history')"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 8v4l3 3m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0z" />
+            </svg>
+            <span>Lịch sử thao tác</span>
+          </button>
         </div>
 
         <!-- Modal Body Content -->
@@ -620,7 +632,7 @@
                 </table>
               </div>
             </section>
-          } @else {
+          } @else if (activeModalTab() === 'orders') {
             <!-- TAB 2: FULL ORDERS HISTORY TAB -->
             <section class="modal-section" aria-label="Toàn bộ lịch sử đơn hàng">
               <div class="section-title-bar">
@@ -658,6 +670,15 @@
                   </table>
                 }
               </div>
+            </section>
+          } @else if (activeModalTab() === 'history') {
+            <!-- TAB 3: ACTIVITY LOGS TAB -->
+            <section class="modal-section" style="padding: 16px 20px;">
+              <app-activity-log
+                entityType="customer"
+                [entityId]="selectedCustomer()!.id"
+                [entityCode]="selectedCustomer()!.code"
+              ></app-activity-log>
             </section>
           }
         </div>

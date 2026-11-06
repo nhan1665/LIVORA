@@ -1,4 +1,5 @@
 const Voucher = require('../models/Voucher');
+const { logActivityInternal } = require('./activityLogController');
 const { sendSuccess, sendPaginated, sendError } = require('../utils/responseHelper');
 
 const validVnd = (value) =>
@@ -262,6 +263,16 @@ const createVoucher = async (req, res) => {
       .populate('applicableCustomerIds', 'fullName email phone code')
       .lean();
 
+    logActivityInternal({
+      entityType: 'voucher',
+      entityId: voucher._id.toString(),
+      entityCode: voucher.code,
+      action: 'Tạo mã voucher khuyến mãi',
+      performedBy: 'Quản trị viên (Admin)',
+      role: 'admin',
+      details: `Phát hành mã ${voucher.code} (${voucher.title}) - Giảm ${voucher.discountType === 'percentage' ? voucher.discountValue + '%' : voucher.discountValue.toLocaleString('vi-VN') + ' đ'}, SL: ${voucher.quantity}`,
+    });
+
     return sendSuccess(res, formatVoucherData(populated), `Đã tạo voucher ${voucher.code} thành công.`, 201);
   } catch (error) {
     console.error('createVoucher error:', error);
@@ -357,6 +368,16 @@ const updateVoucher = async (req, res) => {
       .populate('applicableCustomerIds', 'fullName email phone code')
       .lean();
 
+    logActivityInternal({
+      entityType: 'voucher',
+      entityId: voucher._id.toString(),
+      entityCode: voucher.code,
+      action: 'Cập nhật thông tin voucher',
+      performedBy: 'Quản trị viên (Admin)',
+      role: 'admin',
+      details: `Điều chỉnh voucher ${voucher.code}: ${voucher.title}, hạn mức giảm: ${voucher.maxDiscountAmount ? voucher.maxDiscountAmount.toLocaleString('vi-VN') + ' đ' : 'Không giới hạn'}`,
+    });
+
     return sendSuccess(res, formatVoucherData(populated), `Đã cập nhật voucher ${voucher.code}.`);
   } catch (error) {
     console.error('updateVoucher error:', error);
@@ -383,6 +404,17 @@ const toggleVoucher = async (req, res) => {
     await voucher.save();
 
     const action = voucher.isActive ? 'kích hoạt' : 'tạm tắt';
+
+    logActivityInternal({
+      entityType: 'voucher',
+      entityId: voucher._id.toString(),
+      entityCode: voucher.code,
+      action: `Đổi trạng thái: ${voucher.isActive ? 'Đang hoạt động' : 'Tạm tắt'}`,
+      performedBy: 'Quản trị viên (Admin)',
+      role: 'admin',
+      details: `Đã ${action} áp dụng cho voucher ${voucher.code} (${voucher.title})`,
+    });
+
     const populated = await Voucher.findById(voucher._id)
       .populate('applicableCustomerIds', 'fullName email phone code')
       .lean();

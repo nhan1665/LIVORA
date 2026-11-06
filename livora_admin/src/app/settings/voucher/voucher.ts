@@ -2,6 +2,7 @@ import { ChangeDetectorRef, Component, OnInit, inject, signal } from '@angular/c
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { FormModal } from '../../shared/form-modal/form-modal';
+import { ActivityLogComponent } from '../../shared/activity-log/activity-log';
 import {
   Voucher as VoucherRecord,
   VoucherDiscountType,
@@ -40,7 +41,7 @@ export interface ImportReportData {
 @Component({
   selector: 'app-voucher',
   standalone: true,
-  imports: [FormsModule, FormModal],
+  imports: [FormsModule, FormModal, ActivityLogComponent],
   templateUrl: './voucher.html',
   // Note: voucher styles live in settings.css and are imported globally via styles.css
   // to stay below the 8 kB angular component style budget (team convention).
@@ -74,6 +75,7 @@ export class Voucher implements OnInit {
   readonly selectedVoucher = signal<VoucherRecord | null>(null);
   readonly isFormModalOpen = signal(false);
   readonly isDetailModalOpen = signal(false);
+  readonly activeDetailTab = signal<'detail' | 'history'>('detail');
   readonly isEditMode = signal(false);
   readonly editingVoucherId = signal<string | null>(null);
   readonly isSubmitting = signal(false);
@@ -361,6 +363,7 @@ export class Voucher implements OnInit {
 
   openDetailModal(voucher: VoucherRecord): void {
     this.selectedVoucher.set(voucher);
+    this.activeDetailTab.set('detail');
     this.isDetailModalOpen.set(true);
   }
 

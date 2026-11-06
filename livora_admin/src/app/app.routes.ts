@@ -15,6 +15,8 @@ import { Order } from './order_management/order/order';
 import { Refund } from './order_management/refund/refund';
 import { Voucher } from './settings/voucher/voucher';
 import { Shipping } from './settings/shipping/shipping';
+import { Permission } from './settings/permission/permission';
+import { SystemConfig } from './settings/system-config/system-config';
 
 export const routes: Routes = [
   // Auth (Giữ nguyên màn đăng nhập)
@@ -56,6 +58,8 @@ export const routes: Routes = [
   { path: 'settings', redirectTo: 'settings/vouchers', pathMatch: 'full' },
   { path: 'settings/vouchers', component: Voucher, title: 'Voucher - Livora Admin' },
   { path: 'settings/shipping', component: Shipping, title: 'Thiết lập vận chuyển - Livora Admin' },
+  { path: 'settings/permissions', component: Permission, title: 'Phân quyền - Livora Admin' },
+  { path: 'settings/system-config', component: SystemConfig, title: 'Cấu hình động - Livora Admin' },
 
   // Fallbacks
   { path: '', redirectTo: 'login', pathMatch: 'full' },

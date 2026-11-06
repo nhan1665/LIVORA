@@ -12,7 +12,7 @@ app-room{
 app-room .room-page{ max-width: 1600px; margin: 0 auto; }
 app-room .room-heading-row{ display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; margin: 0 0 23px; }
 app-room .eyebrow{ margin: 0 0 5px; color: #8a716a; font-size: 10px; font-weight: 700; letter-spacing: .12em; }
-app-room h1{ margin: 0; color: #573b3a; font-family: Georgia, 'Times New Roman', serif; font-size: clamp(27px, 2.35vw, 34px); font-weight: 600; line-height: 1.18; }
+app-room h1{ margin: 0; color: #573b3a; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: clamp(25px, 2.2vw, 30px); font-weight: 700; line-height: 1.2; letter-spacing: -0.01em; }
 app-room .heading-actions{ display: flex; align-items: center; gap: 10px; }
 app-room .button{ min-height: 40px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 0 15px; border: 1px solid transparent; border-radius: 8px; font-family: inherit; font-size: 12.5px; font-weight: 600; line-height: 1.2; cursor: pointer; transition: background-color .18s ease, border-color .18s ease, color .18s ease, box-shadow .18s ease; }
 app-room .button svg{ width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }

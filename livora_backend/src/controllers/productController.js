@@ -3,6 +3,7 @@ const Product = require('../models/Product');
 const Category = require('../models/Category');
 const Room = require('../models/Room');
 const Order = require('../models/Order');
+const { logActivityInternal } = require('./activityLogController');
 const { sendSuccess, sendPaginated, sendError } = require('../utils/responseHelper');
 
 const isValidObjectId = (id) => {
@@ -570,6 +571,16 @@ const createProduct = async (req, res) => {
 
     await product.save();
 
+    logActivityInternal({
+      entityType: 'product',
+      entityId: product._id.toString(),
+      entityCode: product.sku,
+      action: 'Thêm mới sản phẩm vào hệ thống',
+      performedBy: 'Quản trị viên (Admin)',
+      role: 'admin',
+      details: `Tên: ${product.name}, Giá: ${product.price.toLocaleString('vi-VN')} đ, Tồn: ${product.stockQuantity}`,
+    });
+
     return sendSuccess(res, {
       id: product._id.toString(),
       sku: product.sku,
@@ -681,6 +692,16 @@ const updateProduct = async (req, res) => {
 
     await product.save();
 
+    logActivityInternal({
+      entityType: 'product',
+      entityId: product._id.toString(),
+      entityCode: product.sku,
+      action: 'Cập nhật thông tin sản phẩm',
+      performedBy: 'Quản trị viên (Admin)',
+      role: 'admin',
+      details: `Cập nhật thông tin ${product.name}. Giá: ${product.price.toLocaleString('vi-VN')} đ, Tồn: ${product.stockQuantity}`,
+    });
+
     const isAct = product.status === 'active' || product.status === 'Đang kinh doanh';
     return sendSuccess(res, {
       id: product._id.toString(),
@@ -715,6 +736,17 @@ const toggleProduct = async (req, res) => {
     await product.save();
 
     const displayStatus = product.status === 'active' ? 'Đang kinh doanh' : 'ngưng kinh doanh';
+
+    logActivityInternal({
+      entityType: 'product',
+      entityId: product._id.toString(),
+      entityCode: product.sku,
+      action: `Thay đổi trạng thái kinh doanh: ${displayStatus}`,
+      performedBy: 'Quản trị viên (Admin)',
+      role: 'admin',
+      details: `Chuyển trạng thái sản phẩm ${product.name} sang ${displayStatus}`,
+    });
+
     return sendSuccess(res, {
       id: product._id.toString(),
       status: displayStatus,
@@ -735,6 +767,16 @@ const deleteProduct = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
     if (!product) return sendError(res, 'Không tìm thấy sản phẩm.', 404);
+
+    logActivityInternal({
+      entityType: 'product',
+      entityId: product._id.toString(),
+      entityCode: product.sku,
+      action: 'Xóa sản phẩm khỏi hệ thống',
+      performedBy: 'Quản trị viên (Admin)',
+      role: 'admin',
+      details: `Đã xóa sản phẩm ${product.name} (SKU: ${product.sku})`,
+    });
 
     await Product.findByIdAndDelete(req.params.id);
     return sendSuccess(res, null, 'Xóa sản phẩm thành công.');

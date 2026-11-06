@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const Contact = require('../models/Contact');
+const { logActivityInternal } = require('./activityLogController');
 const { sendSuccess, sendPaginated, sendError } = require('../utils/responseHelper');
 
 /**
@@ -114,6 +115,16 @@ const createContact = async (req, res) => {
 
     await contact.save();
 
+    logActivityInternal({
+      entityType: 'contact',
+      entityId: contact._id.toString(),
+      entityCode: contact.code,
+      action: 'Khách hàng gửi yêu cầu liên hệ / tư vấn',
+      performedBy: contact.fullName,
+      role: 'customer',
+      details: `Chủ đề: ${contact.subject}. SĐT: ${contact.phone}`,
+    });
+
     return sendSuccess(res, {
       id: contact._id.toString(),
       code: contact.code,
@@ -145,6 +156,16 @@ const resolveContact = async (req, res) => {
     }
     contact.resolvedAt = new Date();
     await contact.save();
+
+    logActivityInternal({
+      entityType: 'contact',
+      entityId: contact._id.toString(),
+      entityCode: contact.code,
+      action: 'Xác nhận: Đã liên hệ & phản hồi khách hàng',
+      performedBy: 'Quản trị viên (Admin)',
+      role: 'admin',
+      details: `CSKH đã liên hệ qua SĐT ${contact.phone} tư vấn cho khách hàng ${contact.fullName}`,
+    });
 
     return sendSuccess(res, {
       id: contact._id.toString(),

@@ -1,0 +1,310 @@
+<div class="system-config-page">
+  <!-- Page Header -->
+  <header class="page-head">
+    <div class="head-left">
+      <h1 class="page-title">Cấu hình động hệ thống</h1>
+      <p class="page-subtitle">
+        Thiết lập các thông số vận hành linh hoạt (thời gian giữ đơn, đổi trả, dung lượng 3D, phí ship...) của LIVORA
+      </p>
+    </div>
+    <div class="head-right">
+      <button
+        type="button"
+        class="btn btn-secondary"
+        (click)="resetAll()"
+        [disabled]="!hasChanges()"
+        title="Hoàn tác tất cả các thay đổi chưa lưu"
+      >
+        <span>Hoàn tác thay đổi</span>
+      </button>
+      <button
+        type="button"
+        class="btn btn-primary"
+        (click)="saveAll()"
+        [class.btn-pulse]="hasChanges()"
+        title="Lưu lại tất cả các thông số đã chỉnh sửa"
+      >
+        <span>Lưu tất cả thay đổi</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Filter & Search Toolbar -->
+  <section class="toolbar-card">
+    <div class="filter-row">
+      <!-- Search Input -->
+      <div class="filter-field search-field">
+        <label for="configSearch" class="filter-label">TÌM KIẾM CẤU HÌNH</label>
+        <div class="input-wrap">
+          <input
+            id="configSearch"
+            type="text"
+            class="filter-input"
+            placeholder="Tìm theo tên cấu hình, thông số, đơn vị..."
+            [ngModel]="searchKeyword()"
+            (ngModelChange)="searchKeyword.set($event)"
+          />
+        </div>
+      </div>
+
+      <!-- Category Filter -->
+      <div class="filter-field">
+        <label for="categorySelect" class="filter-label">PHÂN NHÓM CẤU HÌNH</label>
+        <div class="select-wrap">
+          <select
+            id="categorySelect"
+            class="filter-select"
+            [ngModel]="selectedCategory()"
+            (ngModelChange)="selectedCategory.set($event)"
+          >
+            @for (cat of categories; track cat) {
+              <option [value]="cat">{{ cat }}</option>
+            }
+          </select>
+        </div>
+      </div>
+
+      <!-- Quick Reset Button -->
+      <div class="filter-actions-right">
+        @if (searchKeyword() || selectedCategory() !== 'all') {
+          <button
+            type="button"
+            class="btn btn-secondary btn-sm"
+            (click)="searchKeyword.set(''); selectedCategory.set('all')"
+          >
+            <span>Đặt lại bộ lọc</span>
+          </button>
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- Summary Notice Banner -->
+  <div class="summary-banner" [class.banner-changed]="hasChanges()">
+    <div class="summary-stats">
+      <span>Tổng số thông số cấu hình: <strong>{{ configs().length }}</strong> mục</span>
+      <span class="stat-sep">•</span>
+      <span>Đang hiển thị: <strong>{{ filteredConfigs().length }}</strong> mục</span>
+      @if (hasChanges()) {
+        <span class="stat-sep">•</span>
+        <span class="changed-alert-text">Đang có <strong>{{ changedCount() }}</strong> thông số vừa thay đổi chưa lưu</span>
+      }
+    </div>
+    <div class="note-fixed-rule">
+      <span>* Quy định: Tên cấu hình &amp; Đơn vị là giá trị cố định của hệ thống; người dùng chỉ chỉnh sửa giá trị Thông số.</span>
+    </div>
+  </div>
+
+  <!-- Config Table Card (3 core fields as strictly required: Tên cấu hình, Thông số, Đơn vị) -->
+  <div class="table-card">
+    <div class="table-responsive">
+      <table class="config-table">
+        <thead>
+          <tr>
+            <th class="col-name">TÊN CẤU HÌNH</th>
+            <th class="col-value text-center">THÔNG SỐ</th>
+            <th class="col-unit text-center">ĐƠN VỊ</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of filteredConfigs(); track item.id) {
+            <tr class="config-row" [class.row-modified]="isItemChanged(item)" (click)="openDetail(item)" style="cursor: pointer;" title="Nhấp để xem chi tiết &amp; lịch sử">
+              <!-- 1. Tên cấu hình (Set cứng) -->
+              <td class="col-name">
+                <div class="config-title-group">
+                  <span class="config-name-text">{{ item.name }}</span>
+                  <div class="config-meta">
+                    <span class="config-cat-badge">{{ item.category }}</span>
+                    <code class="config-key-code">{{ item.key }}</code>
+                  </div>
+                  <small class="config-desc-text">{{ item.description }}</small>
+                </div>
+              </td>
+
+              <!-- 2. Thông số (Cho phép edit trực tiếp) -->
+              <td class="col-value text-center" (click)="$event.stopPropagation()">
+                <div class="value-input-box">
+                  <input
+                    type="number"
+                    class="config-value-input text-center"
+                    [class.input-changed]="isItemChanged(item)"
+                    [(ngModel)]="item.value"
+                    min="0"
+                    placeholder="Nhập thông số..."
+                  />
+                  @if (isItemChanged(item)) {
+                    <span class="original-hint" title="Giá trị ban đầu">Gốc: {{ item.originalValue }}</span>
+                  }
+                </div>
+              </td>
+
+              <!-- 3. Đơn vị (Set cứng) -->
+              <td class="col-unit text-center">
+                <span class="unit-badge">{{ item.unit }}</span>
+              </td>
+            </tr>
+          }
+
+          @if (filteredConfigs().length === 0) {
+            <tr>
+              <td colspan="3" class="empty-state">
+                <p>Không tìm thấy thông số cấu hình nào phù hợp với từ khóa "{{ searchKeyword() }}".</p>
+                <button type="button" class="btn btn-secondary btn-sm" (click)="searchKeyword.set(''); selectedCategory.set('all')">
+                  Xem tất cả cấu hình
+                </button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Table Footer -->
+    <footer class="table-footer">
+      <div class="footer-note">
+        <span>* Gợi ý: Thay đổi các thông số như thời gian giữ đơn, thời hạn đổi trả sẽ áp dụng ngay tức thì cho người dùng trên website LIVORA.</span>
+      </div>
+      <div class="footer-actions">
+        <button
+          type="button"
+          class="btn btn-secondary"
+          (click)="resetAll()"
+          [disabled]="!hasChanges()"
+        >
+          Hoàn tác thay đổi
+        </button>
+        <button
+          type="button"
+          class="btn btn-primary"
+          (click)="saveAll()"
+          [disabled]="!hasChanges()"
+        >
+          Lưu tất cả thay đổi
+        </button>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Detail & Activity Log Modal -->
+  @if (selectedConfig()) {
+    <app-form-modal
+      [isOpen]="true"
+      title="Chi tiết Cấu hình hệ thống"
+      subtitle="Thông tin cấu hình chi tiết &amp; nhật ký thay đổi thông số qua các phiên"
+      size="lg"
+      [showFooter]="false"
+      (close)="closeModal()"
+    >
+      <!-- Modal Navigation Tabs -->
+      <div class="modal-tab-nav">
+        <button
+          type="button"
+          class="tab-nav-btn"
+          [class.active]="activeModalTab() === 'info'"
+          (click)="activeModalTab.set('info')"
+        >
+          Thông tin cấu hình
+        </button>
+        <button
+          type="button"
+          class="tab-nav-btn"
+          [class.active]="activeModalTab() === 'history'"
+          (click)="activeModalTab.set('history')"
+        >
+          Lịch sử thao tác
+        </button>
+      </div>
+
+      <!-- Tab 1: Info -->
+      @if (activeModalTab() === 'info') {
+        <div class="modal-body-content">
+          <div class="detail-grid">
+            <div class="detail-item full-width">
+              <span class="detail-label">1. TÊN CẤU HÌNH (SET CỨNG)</span>
+              <span class="detail-val-strong">{{ selectedConfig()?.name }}</span>
+            </div>
+
+            <div class="detail-item">
+              <span class="detail-label">MÃ THAM CHIẾU HỆ THỐNG</span>
+              <code>{{ selectedConfig()?.key }}</code>
+            </div>
+
+            <div class="detail-item">
+              <span class="detail-label">NHÓM CHỨC NĂNG</span>
+              <span class="config-cat-badge">{{ selectedConfig()?.category }}</span>
+            </div>
+
+            <div class="detail-item">
+              <span class="detail-label">2. THÔNG SỐ HIỆN TẠI</span>
+              <div class="input-modal-wrap">
+                <input
+                  type="number"
+                  class="config-value-input"
+                  [(ngModel)]="selectedConfig()!.value"
+                  min="0"
+                />
+              </div>
+            </div>
+
+            <div class="detail-item">
+              <span class="detail-label">3. ĐƠN VỊ ĐO LƯỜNG (SET CỨNG)</span>
+              <span class="unit-badge">{{ selectedConfig()?.unit }}</span>
+            </div>
+
+            <div class="detail-item full-width">
+              <span class="detail-label">MÔ TẢ CÔNG NĂNG VẬN HÀNH</span>
+              <p class="detail-desc-box">{{ selectedConfig()?.description }}</p>
+            </div>
+
+            <div class="detail-item full-width">
+              <span class="detail-label">CÂU MINH HỌA HIỂN THỊ THỰC TẾ</span>
+              <p class="detail-example-box">
+                Ví dụ: <strong>{{ selectedConfig()?.exampleText }}</strong> (thay đổi giá trị <strong>{{ selectedConfig()?.value }}</strong> {{ selectedConfig()?.unit }})
+              </p>
+            </div>
+
+            <div class="detail-item">
+              <span class="detail-label">LẦN CẬP NHẬT GẦN NHẤT</span>
+              <span>{{ selectedConfig()?.updatedAt }}</span>
+            </div>
+
+            <div class="detail-item">
+              <span class="detail-label">NGƯỜI CẬP NHẬT</span>
+              <span>{{ selectedConfig()?.updatedBy }}</span>
+            </div>
+          </div>
+
+          <div class="modal-action-bar">
+            <button type="button" class="btn btn-secondary" (click)="closeModal()">Đóng</button>
+            <button
+              type="button"
+              class="btn btn-primary"
+              (click)="saveItem(selectedConfig()!); closeModal()"
+            >
+              Lưu thay đổi thông số này
+            </button>
+          </div>
+        </div>
+      }
+
+      <!-- Tab 2: Activity Log -->
+      @if (activeModalTab() === 'history') {
+        <div class="modal-body-content history-wrap">
+          <app-activity-log
+            entityType="system_config"
+            [entityId]="selectedConfig()?.key || selectedConfig()?.id || 'cfg-general'"
+            [entityCode]="selectedConfig()?.name || selectedConfig()?.key || ''"
+          ></app-activity-log>
+        </div>
+      }
+    </app-form-modal>
+  }
+
+  <!-- Toast Notification -->
+  @if (toastMessage()) {
+    <div class="toast-notification">
+      <span>{{ toastMessage() }}</span>
+    </div>
+  }
+</div>
+

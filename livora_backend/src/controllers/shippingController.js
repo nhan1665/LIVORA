@@ -1,4 +1,5 @@
 const Shipping = require('../models/Shipping');
+const { logActivityInternal } = require('./activityLogController');
 const { sendSuccess, sendPaginated, sendError } = require('../utils/responseHelper');
 
 const validVnd = (value) =>
@@ -144,6 +145,16 @@ const createShippingConfig = async (req, res) => {
 
     await shipping.save();
 
+    logActivityInternal({
+      entityType: 'shipping',
+      entityId: shipping._id.toString(),
+      entityCode: shipping.province,
+      action: 'Thêm cấu hình vận chuyển mới',
+      performedBy: 'Quản trị viên (Admin)',
+      role: 'admin',
+      details: `Thiết lập cước cho tuyến ${shipping.province} (${shipping.shippingMethod === 'express' ? 'Hỏa tốc' : 'Tiêu chuẩn'}): ${shipping.fee.toLocaleString('vi-VN')} đ`,
+    });
+
     return sendSuccess(res, {
       id: shipping._id.toString(),
       province: shipping.province,
@@ -276,6 +287,16 @@ const updateShippingConfig = async (req, res) => {
 
     await shipping.save();
 
+    logActivityInternal({
+      entityType: 'shipping',
+      entityId: shipping._id.toString(),
+      entityCode: shipping.province,
+      action: 'Cập nhật cấu hình cước vận chuyển',
+      performedBy: 'Quản trị viên (Admin)',
+      role: 'admin',
+      details: `Cập nhật tuyến ${shipping.province} (${shipping.shippingMethod === 'express' ? 'Hỏa tốc' : 'Tiêu chuẩn'}): cước ${shipping.fee.toLocaleString('vi-VN')} đ, dự kiến ${shipping.estimatedDeliveryTime}`,
+    });
+
     return sendSuccess(res, {
       id: shipping._id.toString(),
       province: shipping.province,
@@ -300,6 +321,16 @@ const toggleShippingConfig = async (req, res) => {
     shipping.isActive = !shipping.isActive;
     await shipping.save();
 
+    logActivityInternal({
+      entityType: 'shipping',
+      entityId: shipping._id.toString(),
+      entityCode: shipping.province,
+      action: `Đổi trạng thái: ${shipping.isActive ? 'Kích hoạt' : 'Tạm dừng'}`,
+      performedBy: 'Quản trị viên (Admin)',
+      role: 'admin',
+      details: `Chuyển trạng thái tuyến giao ${shipping.province} sang ${shipping.isActive ? 'Đang hoạt động' : 'Tạm tắt'}`,
+    });
+
     return sendSuccess(res, {
       id: shipping._id.toString(),
       isActive: shipping.isActive,
@@ -318,6 +349,16 @@ const deleteShippingConfig = async (req, res) => {
   try {
     const shipping = await Shipping.findById(req.params.id);
     if (!shipping) return sendError(res, 'Không tìm thấy cấu hình vận chuyển.', 404);
+
+    logActivityInternal({
+      entityType: 'shipping',
+      entityId: shipping._id.toString(),
+      entityCode: shipping.province,
+      action: 'Xóa cấu hình vận chuyển',
+      performedBy: 'Quản trị viên (Admin)',
+      role: 'admin',
+      details: `Đã xóa tuyến giao hàng ${shipping.province} (${shipping.shippingMethod}) khỏi hệ thống`,
+    });
 
     await Shipping.findByIdAndDelete(req.params.id);
     return sendSuccess(res, null, 'Xóa cấu hình vận chuyển thành công.');

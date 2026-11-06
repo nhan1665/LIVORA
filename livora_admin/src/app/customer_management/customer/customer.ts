@@ -12,11 +12,12 @@ import {
 } from './customer.model';
 import { CustomerService } from './customer.service';
 import { VIETNAM_PROVINCE_NAMES, getWardsForProvince } from '../../shared/data/vietnam-locations';
+import { ActivityLogComponent } from '../../shared/activity-log/activity-log';
 
 @Component({
   selector: 'app-customer',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ActivityLogComponent],
   templateUrl: './customer.html',
 })
 export class Customer implements OnInit {
@@ -52,7 +53,7 @@ export class Customer implements OnInit {
   // Detail Modal state
   readonly isDetailModalOpen = signal(false);
   readonly selectedCustomer = signal<CustomerRecord | null>(null);
-  readonly activeModalTab = signal<'detail' | 'orders'>('detail');
+  readonly activeModalTab = signal<'detail' | 'orders' | 'history'>('detail');
   readonly isEditMode = signal(false);
   readonly isSubmitting = signal(false);
 
@@ -178,7 +179,7 @@ export class Customer implements OnInit {
     this.selectedCustomer.set(null);
   }
 
-  switchModalTab(tab: 'detail' | 'orders'): void {
+  switchModalTab(tab: 'detail' | 'orders' | 'history'): void {
     this.activeModalTab.set(tab);
   }
 
@@ -346,7 +347,7 @@ export class Customer implements OnInit {
   }
 
   formatCurrency(value: number): string {
-    return new Intl.NumberFormat('vi-VN').format(value) + 'đ';
+    return new Intl.NumberFormat('vi-VN').format(value) + ' đ';
   }
 
   getPaginationPages(): (number | string)[] {

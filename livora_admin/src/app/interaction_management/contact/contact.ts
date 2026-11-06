@@ -2,6 +2,7 @@ import { ChangeDetectorRef, Component, OnInit, inject, signal } from '@angular/c
 import { FormsModule } from '@angular/forms';
 import { ConfirmDialog } from '../../shared/confirm-dialog/confirm-dialog';
 import { FormModal } from '../../shared/form-modal/form-modal';
+import { ActivityLogComponent } from '../../shared/activity-log/activity-log';
 import {
   Contact as ContactRecord,
   ContactListQuery,
@@ -14,7 +15,7 @@ import { ContactService } from './contact.service';
 @Component({
   selector: 'app-contact',
   standalone: true,
-  imports: [FormsModule, FormModal, ConfirmDialog],
+  imports: [FormsModule, FormModal, ConfirmDialog, ActivityLogComponent],
   templateUrl: './contact.html',
   // Note: contact styles live in interaction.css and are imported globally via styles.css
   // to stay below the 8 kB angular component style budget (team convention).
@@ -43,6 +44,7 @@ export class Contact implements OnInit {
 
   readonly selectedContact = signal<ContactRecord | null>(null);
   readonly isDetailModalOpen = signal(false);
+  readonly activeModalTab = signal<'detail' | 'history'>('detail');
   readonly isResolveConfirmOpen = signal(false);
   readonly isSubmitting = signal(false);
 
@@ -132,6 +134,7 @@ export class Contact implements OnInit {
 
   openDetailModal(contact: ContactRecord): void {
     this.selectedContact.set(contact);
+    this.activeModalTab.set('detail');
     this.isDetailModalOpen.set(true);
   }
 

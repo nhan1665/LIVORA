@@ -10,7 +10,6 @@
   <!-- Heading -->
   <header class="refund-heading">
     <div>
-      <p class="eyebrow">LIVORA ADMINISTRATION &bull; QUẢN LÝ ĐƠN HÀNG</p>
       <h1>Yêu cầu hoàn tiền</h1>
     </div>
     <div class="refund-heading-actions">
@@ -92,6 +91,35 @@
 >
   @if (selectedRefund) {
     <div class="refund-modal-container">
+      <!-- Navigation Tabs -->
+      <div style="display: flex; gap: 8px; border-bottom: 2px solid #ecdcdb; margin-bottom: 16px; padding-bottom: 4px;">
+        <button
+          type="button"
+          (click)="activeModalTab = 'detail'"
+          [style.background]="activeModalTab === 'detail' ? '#704b4a' : '#f5ebea'"
+          [style.color]="activeModalTab === 'detail' ? '#ffffff' : '#704b4a'"
+          style="padding: 8px 16px; border-radius: 6px; font-weight: 600; font-size: 13px; border: none; cursor: pointer; display: flex; align-items: center; gap: 6px;"
+        >
+          <span>Chi tiết yêu cầu hoàn tiền</span>
+        </button>
+        <button
+          type="button"
+          (click)="activeModalTab = 'history'"
+          [style.background]="activeModalTab === 'history' ? '#704b4a' : '#f5ebea'"
+          [style.color]="activeModalTab === 'history' ? '#ffffff' : '#704b4a'"
+          style="padding: 8px 16px; border-radius: 6px; font-weight: 600; font-size: 13px; border: none; cursor: pointer; display: flex; align-items: center; gap: 6px;"
+        >
+          <span>Lịch sử thao tác & duyệt</span>
+        </button>
+      </div>
+
+      @if (activeModalTab === 'history') {
+        <app-activity-log
+          entityType="refund"
+          [entityId]="selectedRefund._id"
+          [entityCode]="selectedRefund.refundCode"
+        ></app-activity-log>
+      } @else {
       <!-- Status Card -->
       <div class="refund-meta-banner">
         <div class="meta-col">
@@ -170,6 +198,7 @@
             <button type="button" class="btn-danger-confirm" (click)="submitReject()">Xác nhận từ chối</button>
           </div>
         </div>
+      }
       }
 
       <!-- Modal Footer Controls -->

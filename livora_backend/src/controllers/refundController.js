@@ -4,6 +4,7 @@ const Refund = require('../models/Refund');
 const Order = require('../models/Order');
 const Policy = require('../models/Policy');
 const Footer = require('../models/Footer');
+const { logActivityInternal } = require('./activityLogController');
 const { sendSuccess, sendPaginated, sendError } = require('../utils/responseHelper');
 
 /**
@@ -138,6 +139,16 @@ const createRefund = async (req, res) => {
 
     await refund.save();
 
+    logActivityInternal({
+      entityType: 'refund',
+      entityId: refund._id.toString(),
+      entityCode: refund.orderCode,
+      action: 'Khách hàng gửi yêu cầu hoàn tiền',
+      performedBy: refund.customerName,
+      role: 'customer',
+      details: `Yêu cầu hoàn ${refund.amount.toLocaleString('vi-VN')} đ cho đơn ${refund.orderCode}. Lý do: ${refund.reason}`,
+    });
+
     await Order.findByIdAndUpdate(order._id, {
       $push: {
         statusHistory: {
@@ -196,6 +207,18 @@ const updateRefundStatus = async (req, res) => {
     }
 
     await refund.save();
+
+    logActivityInternal({
+      entityType: 'refund',
+      entityId: refund._id.toString(),
+      entityCode: refund.orderCode,
+      action: status === 'completed' ? 'Phê duyệt & Hoàn tiền' : 'Từ chối yêu cầu hoàn tiền',
+      performedBy: processedBy || 'Quản trị viên (Admin)',
+      role: 'admin',
+      details: status === 'completed'
+        ? `Đã hoàn trả số tiền ${refund.amount.toLocaleString('vi-VN')} đ cho đơn ${refund.orderCode}`
+        : `Lý do từ chối: ${refund.rejectReason}`,
+    });
 
     return sendSuccess(res, {
       id: refund._id.toString(),

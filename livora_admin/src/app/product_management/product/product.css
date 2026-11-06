@@ -71,12 +71,12 @@ app-product .btn {
 }
 
 app-product .btn-primary {
-  background-color: #c95e38;
+  background-color: #704b4a;
   color: #ffffff;
 }
 
 app-product .btn-primary:hover {
-  background-color: #b24e2b;
+  background-color: #593c3b;
 }
 
 app-product .btn-secondary {
@@ -208,8 +208,8 @@ app-product .search-input {
 
 app-product .search-input:focus {
   background-color: #ffffff;
-  border-color: #c95e38;
-  box-shadow: 0 0 0 3px rgba(201, 94, 56, 0.12);
+  border-color: #704b4a;
+  box-shadow: 0 0 0 3px rgba(112, 75, 74, 0.15);
 }
 
 app-product .clear-btn {
@@ -253,7 +253,7 @@ app-product .select-control {
 }
 
 app-product .select-control:focus {
-  border-color: #c95e38;
+  border-color: #704b4a;
 }
 
 /* Products Table */
@@ -416,7 +416,7 @@ app-product .price-stack {
 app-product .effective-price {
   font-size: 14px;
   font-weight: 700;
-  color: #c95e38;
+  color: #704b4a;
 }
 
 app-product .original-price {
@@ -561,14 +561,111 @@ app-product .icon-btn svg {
 
 app-product .edit-btn:hover {
   background-color: #f5f3ef;
-  color: #c95e38;
-  border-color: #c95e38;
+  color: #704b4a;
+  border-color: #704b4a;
 }
 
 app-product .delete-btn:hover {
   background-color: #feebe8;
   color: #dc3545;
   border-color: #f5c6cb;
+}
+
+/* Synchronized Action Buttons */
+app-product .action-btn-group {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+app-product .btn-action-text {
+  background: transparent;
+  border: none;
+  font-size: 13px;
+  font-weight: 600;
+  color: #704b4a;
+  cursor: pointer;
+  padding: 4px 2px;
+  transition: color 0.12s ease;
+}
+
+app-product .btn-action-text:hover {
+  color: #593c3b;
+  text-decoration: underline;
+}
+
+app-product .btn-action-text.btn-action-delete {
+  color: #b91c1c;
+}
+
+app-product .btn-action-text.btn-action-delete:hover {
+  color: #991b1b;
+}
+
+/* Synchronized Filter Actions */
+app-product .filter-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+app-product .btn-filter {
+  height: 38px;
+  padding: 0 16px;
+  background: #704b4a;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+app-product .btn-filter:hover {
+  background: #593c3b;
+}
+
+app-product .btn-reset {
+  height: 38px;
+  padding: 0 14px;
+  background: #ffffff;
+  border: 1px solid #ded7cb;
+  border-radius: 8px;
+  color: #6a6057;
+  font-size: 13px;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+app-product .btn-reset:hover {
+  background: #f7f4ee;
+  border-color: #704b4a;
+  color: #704b4a;
+}
+
+/* Synchronized Metric & Empty Icons */
+app-product .metric-icon-wrap {
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f7f3ed;
+  color: #704b4a;
+}
+
+app-product .empty-icon-wrap {
+  margin-bottom: 12px;
 }
 
 /* Empty State */
@@ -648,9 +745,9 @@ app-product .page-btn:hover:not(:disabled) {
 }
 
 app-product .page-btn.active {
-  background-color: #c95e38;
+  background-color: #704b4a;
   color: #ffffff;
-  border-color: #c95e38;
+  border-color: #704b4a;
   font-weight: 600;
 }
 
@@ -754,8 +851,8 @@ app-product .tab-btn:hover {
 }
 
 app-product .tab-btn.active {
-  color: #c95e38;
-  border-bottom-color: #c95e38;
+  color: #704b4a;
+  border-bottom-color: #704b4a;
 }
 
 app-product .modal-body {
@@ -832,8 +929,8 @@ app-product .form-textarea {
 
 app-product .form-input:focus,
 app-product .form-textarea:focus {
-  border-color: #c95e38;
-  box-shadow: 0 0 0 3px rgba(201, 94, 56, 0.12);
+  border-color: #704b4a;
+  box-shadow: 0 0 0 3px rgba(112, 75, 74, 0.15);
 }
 
 app-product .field-hint {

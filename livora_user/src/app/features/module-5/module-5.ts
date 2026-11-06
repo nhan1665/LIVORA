@@ -633,7 +633,7 @@ export class Module5 implements OnInit {
   }
 
   formatCurrency(amount: number): string {
-    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount || 0);
+    return new Intl.NumberFormat('vi-VN').format(amount || 0) + ' ₫';
   }
 
   formatDate(dateStr: string): string {

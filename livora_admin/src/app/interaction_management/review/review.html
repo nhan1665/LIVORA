@@ -82,7 +82,7 @@
           </thead>
           <tbody>
             @for (item of reviews(); track item.id) {
-              <tr class="im-row">
+              <tr class="im-row" (click)="openDetailModal(item)" style="cursor: pointer;">
                 <td class="col-code">
                   <span class="code-badge">{{ item.code }}</span>
                 </td>
@@ -135,7 +135,7 @@
                     {{ item.status === 'visible' ? 'Hiển thị' : 'Đã ẩn' }}
                   </span>
                 </td>
-                <td class="col-actions">
+                <td class="col-actions" (click)="$event.stopPropagation()">
                   <div class="row-actions">
                     <button type="button" class="icon-btn" (click)="openDetailModal(item)" title="Xem chi tiết đánh giá" aria-label="Xem chi tiết đánh giá">
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -228,6 +228,35 @@
 >
   @if (selectedReview(); as detail) {
     <div class="review-detail">
+      <!-- Navigation Tabs -->
+      <div style="display: flex; gap: 8px; border-bottom: 2px solid #ecdcdb; margin-bottom: 16px; padding-bottom: 4px;">
+        <button
+          type="button"
+          (click)="activeModalTab.set('detail')"
+          [style.background]="activeModalTab() === 'detail' ? '#704b4a' : '#f5ebea'"
+          [style.color]="activeModalTab() === 'detail' ? '#ffffff' : '#704b4a'"
+          style="padding: 7px 14px; border-radius: 6px; font-weight: 600; font-size: 13px; border: none; cursor: pointer; display: flex; align-items: center; gap: 6px;"
+        >
+          <span>Chi tiết đánh giá</span>
+        </button>
+        <button
+          type="button"
+          (click)="activeModalTab.set('history')"
+          [style.background]="activeModalTab() === 'history' ? '#704b4a' : '#f5ebea'"
+          [style.color]="activeModalTab() === 'history' ? '#ffffff' : '#704b4a'"
+          style="padding: 7px 14px; border-radius: 6px; font-weight: 600; font-size: 13px; border: none; cursor: pointer; display: flex; align-items: center; gap: 6px;"
+        >
+          <span>Lịch sử thao tác & kiểm duyệt</span>
+        </button>
+      </div>
+
+      @if (activeModalTab() === 'history') {
+        <app-activity-log
+          entityType="review"
+          [entityId]="detail.id"
+          [entityCode]="detail.code"
+        ></app-activity-log>
+      } @else {
       <div class="review-detail-head">
         <img class="product-thumb" [src]="detail.productThumbnail" [alt]="detail.productName" />
         <div>
@@ -307,6 +336,7 @@
           <br />
           <span>Kiểm duyệt bởi {{ detail.moderatedBy || '—' }}{{ detail.moderatedAt ? ' • ' + formatDate(detail.moderatedAt) : '' }}</span>
         </div>
+      }
       }
 
       <div class="detail-actions">

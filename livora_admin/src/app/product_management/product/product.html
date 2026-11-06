@@ -2,11 +2,6 @@
   <!-- Page Header -->
   <header class="page-header">
     <div class="header-left">
-      <div class="breadcrumb">
-        <span>Sản phẩm</span>
-        <span class="sep">/</span>
-        <span class="current">Danh sách sản phẩm</span>
-      </div>
       <h1 class="page-title">Quản lý danh sách sản phẩm</h1>
       <p class="page-desc">Quản lý thông tin chi tiết, giá bán, tồn kho và file 3D AR toàn bộ sản phẩm trên hệ thống LIVORA</p>
     </div>
@@ -61,7 +56,13 @@
         <span class="metric-label">Tổng sản phẩm</span>
         <span class="metric-value">{{ metrics().totalProducts }}</span>
       </div>
-      <div class="metric-icon icon-total">📦</div>
+      <div class="metric-icon-wrap" aria-hidden="true">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+          <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+          <line x1="12" y1="22.08" x2="12" y2="12"></line>
+        </svg>
+      </div>
     </div>
 
     <div class="metric-card">
@@ -69,7 +70,12 @@
         <span class="metric-label">Đang kinh doanh</span>
         <span class="metric-value text-success">{{ metrics().activeProducts }}</span>
       </div>
-      <div class="metric-icon icon-active">🟢</div>
+      <div class="metric-icon-wrap" aria-hidden="true">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+          <polyline points="22 4 12 14.01 9 11.01"></polyline>
+        </svg>
+      </div>
     </div>
 
     <div class="metric-card">
@@ -77,7 +83,13 @@
         <span class="metric-label">Hết hàng</span>
         <span class="metric-value text-danger">{{ metrics().outOfStockProducts }}</span>
       </div>
-      <div class="metric-icon icon-danger">⚠️</div>
+      <div class="metric-icon-wrap" aria-hidden="true">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+      </div>
     </div>
 
     <div class="metric-card">
@@ -85,7 +97,13 @@
         <span class="metric-label">Có file 3D AR (.GLB)</span>
         <span class="metric-value text-teal">{{ metrics().has3DCount }}</span>
       </div>
-      <div class="metric-icon icon-3d">🧊</div>
+      <div class="metric-icon-wrap" aria-hidden="true">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+          <polyline points="2 17 12 22 22 17"></polyline>
+          <polyline points="2 12 12 17 22 12"></polyline>
+        </svg>
+      </div>
     </div>
   </section>
 
@@ -172,9 +190,20 @@
         </select>
       </div>
 
-      <button *ngIf="isFiltering()" type="button" class="btn btn-secondary btn-sm" (click)="resetFilters()">
-        <span>Đặt lại</span>
-      </button>
+      <div class="filter-actions">
+        <button type="button" class="btn btn-filter" (click)="onFilterChange()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
+          </svg>
+          <span>Lọc</span>
+        </button>
+        <button type="button" class="btn btn-reset" (click)="resetFilters()" title="Đặt lại bộ lọc">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
+          </svg>
+          <span>Đặt lại</span>
+        </button>
+      </div>
     </div>
   </section>
 
@@ -197,8 +226,8 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let item of products()" [class.row-selected]="isSelected(item.id)">
-            <td class="col-check">
+          <tr *ngFor="let item of products()" [class.row-selected]="isSelected(item.id)" (click)="openEditModal(item)" style="cursor: pointer;">
+            <td class="col-check" (click)="$event.stopPropagation()">
               <input type="checkbox" [checked]="isSelected(item.id)" (change)="toggleSelect(item.id)" aria-label="Chọn dòng" />
             </td>
 
@@ -270,17 +299,13 @@
               </button>
             </td>
 
-            <td class="col-actions text-right">
-              <div class="action-buttons">
-                <button type="button" class="icon-btn edit-btn" (click)="openEditModal(item)" title="Chỉnh sửa sản phẩm">
-                  <svg viewBox="0 0 20 20" fill="currentColor">
-                    <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-                  </svg>
+            <td class="col-actions text-right" (click)="$event.stopPropagation()">
+              <div class="action-btn-group">
+                <button type="button" class="btn-action-text" (click)="openEditModal(item)" title="Xem chi tiết & Chỉnh sửa">
+                  Chi tiết
                 </button>
-                <button type="button" class="icon-btn delete-btn" (click)="confirmDelete(item)" title="Xóa sản phẩm">
-                  <svg viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
-                  </svg>
+                <button type="button" class="btn-action-text btn-action-delete" (click)="confirmDelete(item)" title="Xóa sản phẩm">
+                  Xóa
                 </button>
               </div>
             </td>
@@ -290,7 +315,13 @@
           <tr *ngIf="products().length === 0">
             <td colspan="8" class="empty-cell">
               <div class="empty-state">
-                <div class="empty-icon">🛋️</div>
+                <div class="empty-icon-wrap" aria-hidden="true">
+                  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#704b4a" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                    <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                    <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                  </svg>
+                </div>
                 <h3>Không tìm thấy sản phẩm nào</h3>
                 <p>Vui lòng thử từ khóa tìm kiếm khác hoặc điều chỉnh lại các tiêu chí lọc.</p>
                 <button type="button" class="btn btn-secondary btn-sm" (click)="resetFilters()">Đặt lại bộ lọc</button>
@@ -376,6 +407,15 @@
           >
             3. Hình ảnh & Mô hình 3D (Tùy chọn)
           </button>
+          <button
+            *ngIf="isEditMode()"
+            type="button"
+            class="tab-btn"
+            [class.active]="activeModalTab() === 'history'"
+            (click)="setModalTab('history')"
+          >
+            4. Lịch sử thao tác & thay đổi
+          </button>
         </div>
 
         <!-- TAB 1: General Info & Pricing -->
@@ -401,7 +441,7 @@
                   title="Tự động sinh lại mã theo danh mục"
                   (click)="regenerateSku()"
                 >
-                  🔄 Tạo mã
+                  Tạo mã
                 </button>
               </div>
               <span class="field-hint">Công thức: [Mã loại]-SP-XXX (VD: GIUONG-SP001)</span>
@@ -585,7 +625,7 @@
           </div>
 
           <div class="form-row options-row">
-            <div class="form-group col-half">
+            <div class="form-group col-half" *ngIf="isEditMode()">
               <label class="form-label">Trạng thái kinh doanh</label>
               <div class="radio-inline-group">
                 <label class="radio-label">
@@ -609,7 +649,7 @@
               </div>
             </div>
 
-            <div class="form-group col-half">
+            <div class="form-group" [ngClass]="isEditMode() ? 'col-half' : 'col-full'">
               <label class="form-label">Sản phẩm nổi bật (Featured)</label>
               <label class="checkbox-container">
                 <input
@@ -734,7 +774,9 @@
 
           <div class="form-group ar-box">
             <div class="ar-box-header">
-              <div class="ar-icon">🧊</div>
+              <div class="ar-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+              </div>
               <div>
                 <label for="prod-glb" class="form-label">Mô hình 3D AR (.GLB URL) <span style="font-weight: normal; color: #64748b; font-size: 12px;">(Không bắt buộc - Tùy chọn)</span></label>
                 <p class="field-hint">Tùy chọn: Nhập liên kết file .GLB nếu có mô hình 3D AR. Nếu để trống, sản phẩm hiển thị ảnh thông thường.</p>
@@ -749,6 +791,15 @@
               placeholder="Tùy chọn: Nhập URL file .glb nếu có hoặc để trống"
             />
           </div>
+        </div>
+
+        <!-- TAB 4: Lịch sử thao tác & thay đổi -->
+        <div *ngIf="activeModalTab() === 'history'" class="tab-content" style="padding: 12px 4px;">
+          <app-activity-log
+            entityType="product"
+            [entityId]="editingProductId() || formDraft.sku || 'sp-current'"
+            [entityCode]="formDraft.sku"
+          ></app-activity-log>
         </div>
 
         <div *ngIf="errorMessage()" class="alert-error">

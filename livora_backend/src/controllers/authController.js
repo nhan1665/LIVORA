@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 const Staff = require('../models/Staff');
 const Employee = require('../models/Employee');
 const Customer = require('../models/Customer');
+const { logActivityInternal } = require('./activityLogController');
 const { sendSuccess, sendError } = require('../utils/responseHelper');
 
 const JWT_SECRET = process.env.JWT_SECRET;
@@ -188,6 +189,16 @@ const customerRegister = async (req, res) => {
 
     await newCustomer.save();
 
+    logActivityInternal({
+      entityType: 'customer',
+      entityId: newCustomer._id.toString(),
+      entityCode: newCustomer.code,
+      action: 'Khách hàng đăng ký tài khoản thành viên',
+      performedBy: newCustomer.fullName,
+      role: 'customer',
+      details: `Đăng ký thành viên Livora qua website với email: ${newCustomer.email}`,
+    });
+
     const token = generateToken({ id: newCustomer._id, role: 'customer', email: newCustomer.email });
 
     return sendSuccess(res, {
@@ -247,6 +258,16 @@ const customerLogin = async (req, res) => {
 
     customer.lastActiveAt = new Date();
     await customer.save();
+
+    logActivityInternal({
+      entityType: 'customer',
+      entityId: customer._id.toString(),
+      entityCode: customer.code,
+      action: 'Đăng nhập vào hệ thống',
+      performedBy: customer.fullName,
+      role: 'customer',
+      details: 'Đăng nhập thành công trên ứng dụng web',
+    });
 
     const token = generateToken({ id: customer._id, role: 'customer', email: customer.email });
 
