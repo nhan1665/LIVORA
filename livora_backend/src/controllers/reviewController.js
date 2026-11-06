@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const Review = require('../models/Review');
 const Product = require('../models/Product');
 const Order = require('../models/Order');
+const { logActivityInternal } = require('./activityLogController');
 const { sendSuccess, sendPaginated, sendError } = require('../utils/responseHelper');
 
 /**
@@ -300,6 +301,16 @@ const createReview = async (req, res) => {
       });
     }
 
+    logActivityInternal({
+      entityType: 'review',
+      entityId: review._id.toString(),
+      entityCode: review.code,
+      action: 'Khách hàng gửi đánh giá sản phẩm',
+      performedBy: reviewData.customerName,
+      role: 'customer',
+      details: `Đánh giá ${reviewData.rating} sao cho ${reviewData.productName}: "${reviewData.comment.slice(0, 100)}"`,
+    });
+
     return sendSuccess(
       res,
       {
@@ -364,6 +375,18 @@ const updateReviewStatus = async (req, res) => {
     const message = targetStatus === 'visible'
       ? `Đã hiển thị lại đánh giá ${review.code} trên website.`
       : `Đã ẩn đánh giá ${review.code} khỏi giao diện website.`;
+
+    logActivityInternal({
+      entityType: 'review',
+      entityId: review._id.toString(),
+      entityCode: review.code,
+      action: targetStatus === 'visible' ? 'Phê duyệt & Hiển thị đánh giá' : 'Ẩn đánh giá khỏi hệ thống',
+      performedBy: moderatedBy || 'Quản trị viên (Admin)',
+      role: 'admin',
+      details: targetStatus === 'visible'
+        ? `Công khai đánh giá của khách ${review.customerName} cho ${review.productName}`
+        : `Lý do ẩn: ${review.hiddenReason}`,
+    });
 
     return sendSuccess(
       res,

@@ -16,6 +16,7 @@ import { DataTable, TableColumn, TableActionEvent, BadgeInfo } from '../../share
 import { FilterBar, FilterSelectOption } from '../../shared/filter-bar/filter-bar';
 import { FormModal } from '../../shared/form-modal/form-modal';
 import { ConfirmDialog } from '../../shared/confirm-dialog/confirm-dialog';
+import { ActivityLogComponent } from '../../shared/activity-log/activity-log';
 
 @Component({
   selector: 'app-order',
@@ -27,6 +28,7 @@ import { ConfirmDialog } from '../../shared/confirm-dialog/confirm-dialog';
     FilterBar,
     FormModal,
     ConfirmDialog,
+    ActivityLogComponent,
   ],
   templateUrl: './order.html',
 })
@@ -36,6 +38,7 @@ export class OrderComponent implements OnInit {
   currentPage: number = 1;
   pageSize: number = 10;
   loading: boolean = false;
+  activeDetailTab: 'info' | 'history' = 'info';
 
   // Search & Filter
   keyword: string = '';
@@ -342,6 +345,7 @@ export class OrderComponent implements OnInit {
 
   openDetail(order: Order): void {
     this.selectedOrder = this.orderService.getOrderById(order._id) || order;
+    this.activeDetailTab = 'info';
     this.isDetailOpen = true;
   }
 

@@ -9,11 +9,12 @@ import {
   ProductCategory,
 } from './category.model';
 import { CategoryService } from './category.service';
+import { ActivityLogComponent } from '../../shared/activity-log/activity-log';
 
 @Component({
   selector: 'app-category',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ActivityLogComponent],
   templateUrl: './category.html',
   // Note: category.css is imported globally in styles.css to stay well below the 8kB angular component style budget
 })
@@ -44,6 +45,7 @@ export class Category implements OnInit {
 
   // Modal State
   readonly isModalOpen = signal(false);
+  activeModalTab: 'form' | 'history' = 'form';
   readonly isEditMode = signal(false);
   readonly editingCategoryId = signal<string | null>(null);
   readonly isSubmitting = signal(false);
@@ -189,6 +191,7 @@ export class Category implements OnInit {
 
   // Modal Open/Close
   openCreateModal(): void {
+    this.activeModalTab = 'form';
     this.isEditMode.set(false);
     this.editingCategoryId.set(null);
     this.errorMessage.set('');
@@ -205,6 +208,7 @@ export class Category implements OnInit {
   }
 
   openEditModal(cat: ProductCategory): void {
+    this.activeModalTab = 'form';
     this.isEditMode.set(true);
     this.editingCategoryId.set(cat.id);
     this.errorMessage.set('');

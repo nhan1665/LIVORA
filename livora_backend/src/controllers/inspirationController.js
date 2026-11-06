@@ -1,4 +1,5 @@
 const Inspiration = require('../models/Inspiration');
+const { logActivityInternal } = require('./activityLogController');
 const { sendSuccess, sendPaginated, sendError } = require('../utils/responseHelper');
 
 /**
@@ -146,6 +147,16 @@ const createInspiration = async (req, res) => {
 
     await inspiration.save();
 
+    logActivityInternal({
+      entityType: 'inspiration',
+      entityId: inspiration._id.toString(),
+      entityCode: inspiration.code,
+      action: 'Thêm mới phối cảnh cảm hứng',
+      performedBy: 'Quản trị viên (Admin)',
+      role: 'admin',
+      details: `Khởi tạo concept ${inspiration.title} (${inspiration.code}) với ${inspiration.taggedProducts?.length || 0} điểm ghim sản phẩm`,
+    });
+
     return sendSuccess(res, {
       id: inspiration._id.toString(),
       code: inspiration.code,
@@ -178,6 +189,16 @@ const updateInspiration = async (req, res) => {
 
     await inspiration.save();
 
+    logActivityInternal({
+      entityType: 'inspiration',
+      entityId: inspiration._id.toString(),
+      entityCode: inspiration.code,
+      action: 'Cập nhật thông tin cảm hứng & tọa độ ghim',
+      performedBy: 'Quản trị viên (Admin)',
+      role: 'admin',
+      details: `Cập nhật concept ${inspiration.title} (${inspiration.code}), gắn ${inspiration.taggedProducts?.length || 0} sản phẩm`,
+    });
+
     return sendSuccess(res, {
       id: inspiration._id.toString(),
       title: inspiration.title,
@@ -201,6 +222,16 @@ const toggleInspiration = async (req, res) => {
     inspiration.status = inspiration.status === 'published' ? 'hidden' : 'published';
     await inspiration.save();
 
+    logActivityInternal({
+      entityType: 'inspiration',
+      entityId: inspiration._id.toString(),
+      entityCode: inspiration.code,
+      action: `Đổi trạng thái hiển thị: ${inspiration.status === 'published' ? 'Công khai' : 'Ẩn'}`,
+      performedBy: 'Quản trị viên (Admin)',
+      role: 'admin',
+      details: `Chuyển trạng thái concept ${inspiration.title} sang ${inspiration.status}`,
+    });
+
     return sendSuccess(res, {
       id: inspiration._id.toString(),
       status: inspiration.status,
@@ -219,6 +250,16 @@ const deleteInspiration = async (req, res) => {
   try {
     const inspiration = await Inspiration.findById(req.params.id);
     if (!inspiration) return sendError(res, 'Không tìm thấy cảm hứng.', 404);
+
+    logActivityInternal({
+      entityType: 'inspiration',
+      entityId: inspiration._id.toString(),
+      entityCode: inspiration.code,
+      action: 'Xóa phối cảnh cảm hứng',
+      performedBy: 'Quản trị viên (Admin)',
+      role: 'admin',
+      details: `Đã xóa concept ${inspiration.title} (${inspiration.code}) khỏi hệ thống`,
+    });
 
     await Inspiration.findByIdAndDelete(req.params.id);
     return sendSuccess(res, null, 'Xóa cảm hứng thành công.');

@@ -1,5 +1,6 @@
 const Customer = require('../models/Customer');
 const Order = require('../models/Order');
+const { logActivityInternal } = require('./activityLogController');
 const { sendSuccess, sendPaginated, sendError } = require('../utils/responseHelper');
 
 const getCleanCustomerCode = (c) => {
@@ -197,6 +198,16 @@ const createCustomer = async (req, res) => {
 
     await customer.save();
 
+    logActivityInternal({
+      entityType: 'customer',
+      entityId: customer._id.toString(),
+      entityCode: customer.code,
+      action: 'Tạo hồ sơ khách hàng mới',
+      performedBy: 'Quản trị viên (Admin)',
+      role: 'admin',
+      details: `Đăng ký hồ sơ cho khách hàng ${customer.fullName} - SĐT: ${customer.phone}`,
+    });
+
     return sendSuccess(res, {
       id: customer._id.toString(),
       code: customer.code,
@@ -231,6 +242,16 @@ const updateCustomer = async (req, res) => {
 
     await customer.save();
 
+    logActivityInternal({
+      entityType: 'customer',
+      entityId: customer._id.toString(),
+      entityCode: customer.code,
+      action: customer.status === 'active' ? 'Mở khóa tài khoản khách hàng' : 'Khóa tài khoản khách hàng',
+      performedBy: 'Quản trị viên (Admin)',
+      role: 'admin',
+      details: `Thay đổi trạng thái tài khoản ${customer.fullName} sang: ${customer.status}`,
+    });
+
     return sendSuccess(res, {
       id: customer._id.toString(),
       fullName: customer.fullName,
@@ -256,6 +277,16 @@ const toggleCustomer = async (req, res) => {
     customer.status = customer.status === 'active' ? 'locked' : 'active';
     customer.isActive = customer.status === 'active';
     await customer.save();
+
+    logActivityInternal({
+      entityType: 'customer',
+      entityId: customer._id.toString(),
+      entityCode: customer.code,
+      action: customer.status === 'active' ? 'Mở khóa tài khoản khách hàng' : 'Khóa tài khoản khách hàng',
+      performedBy: 'Quản trị viên (Admin)',
+      role: 'admin',
+      details: `Thay đổi trạng thái tài khoản ${customer.fullName} sang: ${customer.status}`,
+    });
 
     return sendSuccess(res, {
       id: customer._id.toString(),

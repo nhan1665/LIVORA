@@ -10,7 +10,6 @@
   <!-- Header -->
   <header class="order-heading">
     <div>
-      <p class="eyebrow">LIVORA ADMINISTRATION &bull; QUẢN LÝ ĐƠN HÀNG</p>
       <h1>Danh sách đơn hàng</h1>
     </div>
     <div class="order-actions">
@@ -110,6 +109,36 @@
 >
   @if (selectedOrder) {
     <div class="detail-container">
+      <!-- Modal Navigation Tabs -->
+      <div style="display: flex; gap: 8px; border-bottom: 2px solid #ecdcdb; margin-bottom: 18px; padding-bottom: 4px;">
+        <button
+          type="button"
+          (click)="activeDetailTab = 'info'"
+          [style.background]="activeDetailTab === 'info' ? '#704b4a' : '#f5ebea'"
+          [style.color]="activeDetailTab === 'info' ? '#ffffff' : '#704b4a'"
+          style="padding: 8px 16px; border-radius: 6px; font-weight: 600; font-size: 13px; border: none; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.2s;"
+        >
+          <span>Thông tin đơn hàng</span>
+        </button>
+        <button
+          type="button"
+          (click)="activeDetailTab = 'history'"
+          [style.background]="activeDetailTab === 'history' ? '#704b4a' : '#f5ebea'"
+          [style.color]="activeDetailTab === 'history' ? '#ffffff' : '#704b4a'"
+          style="padding: 8px 16px; border-radius: 6px; font-weight: 600; font-size: 13px; border: none; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.2s;"
+        >
+          <span>Lịch sử thao tác & thay đổi</span>
+        </button>
+      </div>
+
+      @if (activeDetailTab === 'history') {
+        <app-activity-log
+          entityType="order"
+          [entityId]="selectedOrder._id"
+          [entityCode]="selectedOrder.orderCode"
+          [initialLogs]="selectedOrder.history"
+        ></app-activity-log>
+      } @else {
       <!-- Top Status Summary -->
       <div class="detail-header-card">
         <div class="meta-item">
@@ -315,6 +344,7 @@
           </button>
         }
       </div>
+      }
     </div>
   }
 </app-form-modal>

@@ -88,7 +88,7 @@
           </thead>
           <tbody>
             @for (item of contacts(); track item.id) {
-              <tr class="im-row">
+              <tr class="im-row" (click)="openDetailModal(item)" style="cursor: pointer;">
                 <td class="col-code">
                   <span class="code-badge">{{ item.code }}</span>
                 </td>
@@ -112,7 +112,7 @@
                     {{ statusLabel(item.status) }}
                   </span>
                 </td>
-                <td class="col-actions">
+                <td class="col-actions" (click)="$event.stopPropagation()">
                   <div class="row-actions">
                     <button type="button" class="btn-detail" (click)="openDetailModal(item)">Chi tiết</button>
                     @if (item.status === 'new') {
@@ -180,6 +180,35 @@
 >
   @if (selectedContact(); as detail) {
     <div class="detail-body">
+      <!-- Navigation Tabs -->
+      <div style="display: flex; gap: 8px; border-bottom: 2px solid #ecdcdb; margin-bottom: 16px; padding-bottom: 4px;">
+        <button
+          type="button"
+          (click)="activeModalTab.set('detail')"
+          [style.background]="activeModalTab() === 'detail' ? '#704b4a' : '#f5ebea'"
+          [style.color]="activeModalTab() === 'detail' ? '#ffffff' : '#704b4a'"
+          style="padding: 7px 14px; border-radius: 6px; font-weight: 600; font-size: 13px; border: none; cursor: pointer; display: flex; align-items: center; gap: 6px;"
+        >
+          <span>Nội dung liên hệ</span>
+        </button>
+        <button
+          type="button"
+          (click)="activeModalTab.set('history')"
+          [style.background]="activeModalTab() === 'history' ? '#704b4a' : '#f5ebea'"
+          [style.color]="activeModalTab() === 'history' ? '#ffffff' : '#704b4a'"
+          style="padding: 7px 14px; border-radius: 6px; font-weight: 600; font-size: 13px; border: none; cursor: pointer; display: flex; align-items: center; gap: 6px;"
+        >
+          <span>Lịch sử thao tác</span>
+        </button>
+      </div>
+
+      @if (activeModalTab() === 'history') {
+        <app-activity-log
+          entityType="contact"
+          [entityId]="detail.id"
+          [entityCode]="detail.code"
+        ></app-activity-log>
+      } @else {
       <dl class="detail-grid">
         <div class="detail-item">
           <dt>Mã liên hệ</dt>
@@ -239,6 +268,7 @@
         Hỗ trợ khách hàng được thực hiện ngoài hệ thống (Zalo / điện thoại); sau khi hoàn tất, nhân viên cập nhật
         trạng thái bằng thao tác "Đã liên hệ".
       </p>
+      }
 
       <div class="detail-actions">
         <button type="button" class="btn-detail" (click)="closeDetailModal()">Đóng</button>

@@ -103,7 +103,7 @@
           </thead>
           <tbody>
             @for (item of configs(); track item.id) {
-              <tr class="im-row">
+              <tr class="im-row" (click)="openEditModal(item)" style="cursor: pointer;">
                 <td class="col-method">
                   <span class="method-pill" [class.method-standard]="item.shippingMethod === 'standard'" [class.method-express]="item.shippingMethod === 'express'">
                     @if (item.shippingMethod === 'standard') {
@@ -152,7 +152,7 @@
                   </span>
                 </td>
                 <td class="col-updated">{{ formatDate(item.updatedAt) }}</td>
-                <td class="col-actions">
+                <td class="col-actions" (click)="$event.stopPropagation()">
                   <div class="row-actions">
                     <button type="button" class="icon-btn" (click)="openEditModal(item)" title="Chỉnh sửa cấu hình" aria-label="Chỉnh sửa cấu hình">
                       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -224,12 +224,43 @@
   [title]="isEditMode() ? 'Chỉnh sửa Cấu hình vận chuyển' : 'Thêm mới Cấu hình vận chuyển'"
   [subtitle]="isEditMode() ? '' : 'ATELIER LOGISTICS · Thiết lập tuyến'"
   size="lg"
+  [showFooter]="activeModalTab === 'form'"
   [submitText]="isEditMode() ? 'Lưu thay đổi' : 'Lưu cấu hình vận chuyển'"
   cancelText="Hủy bỏ"
   [isSubmitting]="isSubmitting()"
   (close)="closeFormModal()"
   (submit)="saveConfig()"
 >
+  <div style="display: flex; gap: 8px; border-bottom: 2px solid #ecdcdb; margin-bottom: 16px; padding-bottom: 4px;">
+    <button
+      type="button"
+      (click)="activeModalTab = 'form'"
+      [style.background]="activeModalTab === 'form' ? '#704b4a' : '#f5ebea'"
+      [style.color]="activeModalTab === 'form' ? '#ffffff' : '#704b4a'"
+      style="padding: 7px 14px; border-radius: 6px; font-weight: 600; font-size: 13px; border: none; cursor: pointer; display: flex; align-items: center; gap: 6px;"
+    >
+      <span>Cấu hình vận chuyển</span>
+    </button>
+    @if (isEditMode()) {
+      <button
+        type="button"
+        (click)="activeModalTab = 'history'"
+        [style.background]="activeModalTab === 'history' ? '#704b4a' : '#f5ebea'"
+        [style.color]="activeModalTab === 'history' ? '#ffffff' : '#704b4a'"
+        style="padding: 7px 14px; border-radius: 6px; font-weight: 600; font-size: 13px; border: none; cursor: pointer; display: flex; align-items: center; gap: 6px;"
+      >
+        <span>Lịch sử thao tác</span>
+      </button>
+    }
+  </div>
+
+  @if (activeModalTab === 'history') {
+    <app-activity-log
+      entityType="shipping"
+      [entityId]="editingConfigId() || formDraft.province"
+      [entityCode]="formDraft.province"
+    ></app-activity-log>
+  } @else {
   <div class="shipping-form">
     @if (formError()) {
       <div class="form-error-banner" role="alert">{{ formError() }}</div>
@@ -355,6 +386,7 @@
       </div>
     </div>
   </div>
+  }
 
   <span modal-footer-extra class="voucher-policy-note">
     Cấu hình sẽ được cập nhật tức thời với ứng dụng Web &amp; Mobile LIVORA

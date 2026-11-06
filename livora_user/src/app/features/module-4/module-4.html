@@ -203,7 +203,7 @@
 
                 <div class="saved-items-preview">
                   @for (item of design.items.slice(0, 5); track item.placedId) {
-                    <img [src]="item.image" [alt]="item.name" [title]="item.name + ' - $' + item.price">
+                    <img [src]="item.image" [alt]="item.name" [title]="item.name + ' - ' + (item.price | number:'1.0-0') + ' ₫'">
                   }
                   @if (design.items.length > 5) {
                     <span class="saved-more-badge">+{{ design.items.length - 5 }}</span>

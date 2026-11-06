@@ -1,9 +1,10 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectorRef, Component, DestroyRef, inject, signal } from '@angular/core';
+import { ChangeDetectorRef, Component, DestroyRef, ViewChild, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule, NgForm } from '@angular/forms';
 import { ConfirmDialog } from '../../shared/confirm-dialog/confirm-dialog';
 import { FormModal } from '../../shared/form-modal/form-modal';
+import { ActivityLogComponent } from '../../shared/activity-log/activity-log';
 import { Room as RoomRecord } from '../room/room.model';
 import { RoomService } from '../room/room.service';
 import { EligibleProductService } from './eligible-product.service';
@@ -12,8 +13,10 @@ import { InspirationService } from './inspiration.service';
 
 type Mode = 'create' | 'edit' | 'view';
 
-@Component({ selector: 'app-inspiration', standalone: true, imports: [CommonModule, FormsModule, FormModal, ConfirmDialog], templateUrl: './inspiration.html' })
+@Component({ selector: 'app-inspiration', standalone: true, imports: [CommonModule, FormsModule, FormModal, ConfirmDialog, ActivityLogComponent], templateUrl: './inspiration.html' })
 export class Inspiration {
+  @ViewChild('inspirationForm') inspirationForm?: NgForm;
+  activeModalTab: 'form' | 'history' = 'form';
   private readonly service = inject(InspirationService);
   private readonly roomService = inject(RoomService);
   readonly products = inject(EligibleProductService);
@@ -58,8 +61,8 @@ export class Inspiration {
   changePage(page: number): void { if (page >= 1 && page <= this.pages()) { this.page.set(page); this.load(); } }
   roomName(id: string): string { return this.rooms().find((room) => room.id === id)?.name ?? 'Phòng không còn tồn tại'; }
   availableProducts() { return this.products.forRoom(this.form.roomId); }
-  openCreate(): void { this.mode = 'create'; this.editing = null; this.form = this.blank(); this.formError.set(''); this.imageError.set(''); this.modalOpen.set(true); }
-  open(item: InspirationRecord, mode: Mode): void { this.mode = mode; this.editing = item; this.form = { code: item.code, title: item.title, roomId: item.roomId, style: item.style, content: item.content, thumbnail: item.thumbnail, taggedProducts: item.taggedProducts.map((pin) => ({ ...pin })), status: item.status }; this.formError.set(''); this.imageError.set(''); this.modalOpen.set(true); }
+  openCreate(): void { this.mode = 'create'; this.editing = null; this.form = this.blank(); this.formError.set(''); this.imageError.set(''); this.activeModalTab = 'form'; this.modalOpen.set(true); }
+  open(item: InspirationRecord, mode: Mode): void { this.mode = mode; this.editing = item; this.form = { code: item.code, title: item.title, roomId: item.roomId, style: item.style, content: item.content, thumbnail: item.thumbnail, taggedProducts: item.taggedProducts.map((pin) => ({ ...pin })), status: item.status }; this.formError.set(''); this.imageError.set(''); this.activeModalTab = 'form'; this.modalOpen.set(true); }
   close(): void { if (this.saving()) return; this.modalOpen.set(false); }
   addPin(x = 50, y = 50): void { if (this.mode !== 'view') { this.form = { ...this.form, taggedProducts: [...this.form.taggedProducts, { productId: '', xPercent: x, yPercent: y, note: '' }] }; this.formError.set(''); this.cdr.markForCheck(); } }
   removePin(index: number): void { this.form = { ...this.form, taggedProducts: this.form.taggedProducts.filter((_, position) => position !== index) }; this.cdr.markForCheck(); }
@@ -72,10 +75,11 @@ export class Inspiration {
     reader.onerror = () => { this.imageError.set('Không đọc được ảnh. Hãy chọn lại.'); this.cdr.markForCheck(); };
     reader.readAsDataURL(file);
   }
-  save(form: NgForm): void {
+  save(formRef?: NgForm): void {
     if (this.mode === 'view' || this.saving()) return;
-    form.control.markAllAsTouched();
-    if (form.invalid || !this.form.thumbnail) { this.formError.set('Nhập đầy đủ mã, tiêu đề, phòng, mô tả và ảnh phối cảnh.'); return; }
+    const form = formRef || this.inspirationForm;
+    form?.control.markAllAsTouched();
+    if (!form || form.invalid || !this.form.thumbnail) { this.formError.set('Nhập đầy đủ mã, tiêu đề, phòng, mô tả và ảnh phối cảnh.'); return; }
     this.saving.set(true); this.formError.set('');
     this.service.save(this.form, this.editing?.id).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: () => { this.saving.set(false); this.modalOpen.set(false); this.notice.set(this.editing ? 'Đã lưu thay đổi cảm hứng.' : 'Đã thêm cảm hứng.'); this.load(); },

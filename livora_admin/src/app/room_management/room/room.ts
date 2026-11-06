@@ -1,9 +1,10 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectorRef, Component, DestroyRef, inject, signal } from '@angular/core';
+import { ChangeDetectorRef, Component, DestroyRef, ViewChild, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule, NgForm } from '@angular/forms';
 import { ConfirmDialog } from '../../shared/confirm-dialog/confirm-dialog';
 import { FormModal } from '../../shared/form-modal/form-modal';
+import { ActivityLogComponent } from '../../shared/activity-log/activity-log';
 import { RoomService } from './room.service';
 import {
   Room as RoomRecord,
@@ -19,7 +20,7 @@ type RoomModalMode = 'create' | 'edit' | 'view';
 @Component({
   selector: 'app-room',
   standalone: true,
-  imports: [CommonModule, FormsModule, FormModal, ConfirmDialog],
+  imports: [CommonModule, FormsModule, FormModal, ConfirmDialog, ActivityLogComponent],
   templateUrl: './room.html',
 })
 export class Room {
@@ -48,6 +49,8 @@ export class Room {
   statusDraft: RoomStatusFilter = 'all';
   modalMode: RoomModalMode = 'create';
   editingRoom: RoomRecord | null = null;
+  activeModalTab: 'form' | 'history' = 'form';
+  @ViewChild('roomForm') roomForm?: NgForm;
   form: RoomDraft = this.emptyDraft();
   hasUnsavedChanges = false;
 
@@ -194,11 +197,12 @@ export class Room {
     this.hasUnsavedChanges = true;
   }
 
-  saveRoom(formRef: NgForm): void {
+  saveRoom(formRef?: NgForm): void {
     if (this.modalMode === 'view') return;
+    const form = formRef || this.roomForm;
     this.formError.set('');
-    if (formRef.invalid || !this.isCodeValid(this.form.code) || !this.form.thumbnail) {
-      formRef.control.markAllAsTouched();
+    if (!form || form.invalid || !this.isCodeValid(this.form.code) || !this.form.thumbnail) {
+      form?.control.markAllAsTouched();
       if (!this.form.thumbnail) this.imageError.set('Vui lòng chọn ảnh đại diện cho phòng.');
       return;
     }

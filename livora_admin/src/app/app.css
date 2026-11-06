@@ -43,6 +43,11 @@
   transition: color 0.15s ease;
 }
 
+.breadcrumb-module {
+  color: #776a66;
+  font-weight: 500;
+}
+
 .breadcrumb-link:hover {
   color: #593c3b;
 }

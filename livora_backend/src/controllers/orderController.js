@@ -3,6 +3,7 @@ const Order = require('../models/Order');
 const Product = require('../models/Product');
 const Voucher = require('../models/Voucher');
 const Customer = require('../models/Customer');
+const { logActivityInternal } = require('./activityLogController');
 const { sendSuccess, sendPaginated, sendError } = require('../utils/responseHelper');
 
 /**
@@ -377,6 +378,16 @@ const createOrder = async (req, res) => {
 
     await newOrder.save();
 
+    logActivityInternal({
+      entityType: 'order',
+      entityId: newOrder._id.toString(),
+      entityCode: newOrder.orderCode,
+      action: 'Khách hàng tạo mới đơn hàng qua Website',
+      performedBy: cName.trim(),
+      role: linkedCustomer ? 'customer' : 'customer',
+      details: `Tổng tiền: ${totalAmount.toLocaleString('vi-VN')} đ, PT thanh toán: ${mappedPaymentMethod.toUpperCase()}`,
+    });
+
     if (linkedCustomer) {
       await Customer.findByIdAndUpdate(linkedCustomer._id, {
         $inc: { totalOrders: 1, accumulatedSpent: totalAmount },
@@ -429,6 +440,17 @@ const updateOrderStatus = async (req, res) => {
     }
 
     await order.save();
+
+    logActivityInternal({
+      entityType: 'order',
+      entityId: order._id.toString(),
+      entityCode: order.orderCode,
+      action: `Chuyển trạng thái đơn hàng sang "${status}"`,
+      performedBy: 'Quản trị viên (Admin)',
+      role: 'admin',
+      details: `Cập nhật trạng thái xử lý đơn hàng thành công.${status === 'delivered' ? ' Thanh toán tự động chuyển thành: Đã thanh toán.' : ''}`,
+    });
+
     return sendSuccess(res, formatOrderForResponse(order), 'Cập nhật trạng thái thành công.');
   } catch (error) {
     console.error('updateOrderStatus error:', error);
@@ -498,6 +520,16 @@ const cancelOrder = async (req, res) => {
         }
       }
     }
+
+    logActivityInternal({
+      entityType: 'order',
+      entityId: order._id.toString(),
+      entityCode: order.orderCode,
+      action: 'Hủy đơn hàng',
+      performedBy: 'Quản trị viên (Admin)',
+      role: 'admin',
+      details: `Lý do hủy: ${reason.trim()}. Tồn kho và số lượng đã bán được tự động hoàn lại.`,
+    });
 
     return sendSuccess(res, formatOrderForResponse(order), 'Hủy đơn hàng thành công.');
   } catch (error) {

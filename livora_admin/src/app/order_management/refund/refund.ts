@@ -11,6 +11,7 @@ import { DataTable, TableColumn, TableActionEvent, BadgeInfo } from '../../share
 import { FilterBar, FilterSelectOption } from '../../shared/filter-bar/filter-bar';
 import { FormModal } from '../../shared/form-modal/form-modal';
 import { ConfirmDialog } from '../../shared/confirm-dialog/confirm-dialog';
+import { ActivityLogComponent } from '../../shared/activity-log/activity-log';
 
 @Component({
   selector: 'app-refund',
@@ -22,6 +23,7 @@ import { ConfirmDialog } from '../../shared/confirm-dialog/confirm-dialog';
     FilterBar,
     FormModal,
     ConfirmDialog,
+    ActivityLogComponent,
   ],
   templateUrl: './refund.html',
 })
@@ -31,6 +33,7 @@ export class RefundComponent implements OnInit {
   currentPage: number = 1;
   pageSize: number = 10;
   loading: boolean = false;
+  activeModalTab: 'detail' | 'history' = 'detail';
 
   keyword: string = '';
   statusFilter: string = 'all';
@@ -208,6 +211,7 @@ export class RefundComponent implements OnInit {
 
   openProcessModal(refund: Refund): void {
     this.selectedRefund = this.refundService.getRefundById(refund._id) || refund;
+    this.activeModalTab = 'detail';
     this.rejectReasonInput = '';
     this.isRejectMode = false;
     this.isModalOpen = true;

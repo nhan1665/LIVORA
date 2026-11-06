@@ -110,13 +110,6 @@
             }
 
             <div class="input-group">
-                <input type="text" placeholder="Họ và tên (tùy chọn)" [(ngModel)]="signUpFullName" name="signUpFullName" (keyup.enter)="doRegister($event)">
-                <span class="icon">
-                    <i class="bi bi-person"></i>
-                </span>
-            </div>
-
-            <div class="input-group">
                 <input type="email" placeholder="Email" [(ngModel)]="signUpEmail" name="signUpEmail" (keyup.enter)="doRegister($event)">
                 <span class="icon">
                     <i class="bi bi-envelope"></i>

@@ -1,5 +1,6 @@
 const Room = require('../models/Room');
 const Product = require('../models/Product');
+const { logActivityInternal } = require('./activityLogController');
 const { sendSuccess, sendPaginated, sendError } = require('../utils/responseHelper');
 
 /**
@@ -155,6 +156,16 @@ const createRoom = async (req, res) => {
 
     await room.save();
 
+    logActivityInternal({
+      entityType: 'room',
+      entityId: room._id.toString(),
+      entityCode: room.code,
+      action: 'Thêm mới phòng kiến trúc',
+      performedBy: 'Quản trị viên (Admin)',
+      role: 'admin',
+      details: `Khởi tạo phân loại phòng ${room.name} (${room.code})`,
+    });
+
     return sendSuccess(res, {
       id: room._id.toString(),
       code: room.code,
@@ -194,6 +205,16 @@ const updateRoom = async (req, res) => {
 
     await room.save();
 
+    logActivityInternal({
+      entityType: 'room',
+      entityId: room._id.toString(),
+      entityCode: room.code,
+      action: 'Cập nhật thông tin phòng',
+      performedBy: 'Quản trị viên (Admin)',
+      role: 'admin',
+      details: `Cập nhật thông tin phân loại phòng ${room.name} (${room.code})`,
+    });
+
     return sendSuccess(res, {
       id: room._id.toString(),
       code: room.code,
@@ -224,6 +245,16 @@ const toggleRoom = async (req, res) => {
     room.isActive = !room.isActive;
     await room.save();
 
+    logActivityInternal({
+      entityType: 'room',
+      entityId: room._id.toString(),
+      entityCode: room.code,
+      action: `Đổi trạng thái phòng: ${room.isActive ? 'Kích hoạt' : 'Tạm dừng'}`,
+      performedBy: 'Quản trị viên (Admin)',
+      role: 'admin',
+      details: `Chuyển trạng thái phòng ${room.name} sang ${room.isActive ? 'Đang hoạt động' : 'Tạm ẩn'}`,
+    });
+
     return sendSuccess(res, {
       id: room._id.toString(),
       isActive: room.isActive,
@@ -244,6 +275,16 @@ const deleteRoom = async (req, res) => {
     if (!room) {
       return sendError(res, 'Không tìm thấy phòng.', 404);
     }
+
+    logActivityInternal({
+      entityType: 'room',
+      entityId: room._id.toString(),
+      entityCode: room.code,
+      action: 'Xóa phòng kiến trúc',
+      performedBy: 'Quản trị viên (Admin)',
+      role: 'admin',
+      details: `Đã xóa phòng ${room.name} (${room.code}) khỏi hệ thống`,
+    });
 
     await Room.findByIdAndDelete(req.params.id);
     return sendSuccess(res, null, 'Xóa phòng thành công.');

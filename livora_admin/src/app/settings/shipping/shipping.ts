@@ -1,6 +1,7 @@
 import { ChangeDetectorRef, Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { FormModal } from '../../shared/form-modal/form-modal';
+import { ActivityLogComponent } from '../../shared/activity-log/activity-log';
 import {
   ShippingConfig as ShippingRecord,
   ShippingDraft,
@@ -25,7 +26,7 @@ export interface ShippingImportReportData {
 @Component({
   selector: 'app-shipping',
   standalone: true,
-  imports: [FormsModule, FormModal],
+  imports: [FormsModule, FormModal, ActivityLogComponent],
   templateUrl: './shipping.html',
   // Note: shipping styles live in settings.css and are imported globally via styles.css
   // to stay below the 8 kB angular component style budget (team convention).
@@ -57,6 +58,7 @@ export class Shipping implements OnInit {
 
   readonly selectedConfig = signal<ShippingRecord | null>(null);
   readonly isFormModalOpen = signal(false);
+  activeModalTab: 'form' | 'history' = 'form';
   readonly isEditMode = signal(false);
   readonly editingConfigId = signal<string | null>(null);
   readonly isSubmitting = signal(false);
@@ -161,6 +163,7 @@ export class Shipping implements OnInit {
   }
 
   openCreateModal(): void {
+    this.activeModalTab = 'form';
     this.isEditMode.set(false);
     this.editingConfigId.set(null);
     this.formError.set('');
@@ -169,6 +172,7 @@ export class Shipping implements OnInit {
   }
 
   openEditModal(config: ShippingRecord): void {
+    this.activeModalTab = 'form';
     this.isEditMode.set(true);
     this.editingConfigId.set(config.id);
     this.formError.set('');

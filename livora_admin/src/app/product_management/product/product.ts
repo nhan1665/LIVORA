@@ -15,11 +15,12 @@ import { ProductService } from './product.service';
 import { CategoryService } from '../category/category.service';
 import { RoomService } from '../../room_management/room/room.service';
 import { ExcelService } from '../../shared/services/excel.service';
+import { ActivityLogComponent } from '../../shared/activity-log/activity-log';
 
 @Component({
   selector: 'app-product',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ActivityLogComponent],
   templateUrl: './product.html',
   // Note: product.css is imported globally in styles.css to stay well below the 8kB angular component style budget
 })
@@ -70,7 +71,7 @@ export class Product implements OnInit {
   readonly editingProductId = signal<string | null>(null);
   readonly isSubmitting = signal(false);
   readonly errorMessage = signal('');
-  readonly activeModalTab = signal<'general' | 'dimensions' | 'media'>('general');
+  readonly activeModalTab = signal<'general' | 'dimensions' | 'media' | 'history'>('general');
 
   // Input helpers for array values
   materialsInput = '';
@@ -444,10 +445,8 @@ export class Product implements OnInit {
   }
 
   formatCurrency(val: number): string {
-    return new Intl.NumberFormat('vi-VN', {
-      style: 'currency',
-      currency: 'VND',
-    }).format(val);
+    if (!val && val !== 0) return '0 đ';
+    return new Intl.NumberFormat('vi-VN').format(val) + ' đ';
   }
 
   openCreateModal(): void {
@@ -964,7 +963,7 @@ export class Product implements OnInit {
     }
   }
 
-  setModalTab(tab: 'general' | 'dimensions' | 'media'): void {
+  setModalTab(tab: 'general' | 'dimensions' | 'media' | 'history'): void {
     this.activeModalTab.set(tab);
   }
 

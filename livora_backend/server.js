@@ -48,6 +48,7 @@ const dashboardRoutes = require('./src/routes/dashboardRoutes');
 const homepageRoutes = require('./src/routes/homepageRoutes');
 const employeeRoutes = require('./src/routes/employeeRoutes');
 const checkoutRoutes = require('./src/routes/checkoutRoutes');
+const activityLogRoutes = require('./src/routes/activityLogRoutes');
 const requireAdmin = require('./src/middleware/requireAdmin');
 
 app.use('/api/auth', authRoutes);
@@ -67,6 +68,7 @@ app.use('/api/vouchers', voucherRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/homepage', homepageRoutes);
 app.use('/api/checkout', checkoutRoutes);
+app.use('/api/activity-logs', activityLogRoutes);
 
 // Historical database maintenance endpoints are unavailable during normal operation.
 app.use(['/api/drop-staffs', '/api/inspect-schema', '/api/seed'], (req, res, next) => {

@@ -71,12 +71,12 @@ app-category .btn {
 }
 
 app-category .btn-primary {
-  background-color: #c95e38;
+  background-color: #704b4a;
   color: #ffffff;
 }
 
 app-category .btn-primary:hover {
-  background-color: #b24e2b;
+  background-color: #593c3b;
 }
 
 app-category .btn-secondary {
@@ -147,8 +147,8 @@ app-category .search-input {
 
 app-category .search-input:focus {
   background-color: #ffffff;
-  border-color: #c95e38;
-  box-shadow: 0 0 0 3px rgba(201, 94, 56, 0.12);
+  border-color: #704b4a;
+  box-shadow: 0 0 0 3px rgba(112, 75, 74, 0.15);
 }
 
 app-category .clear-btn {
@@ -192,7 +192,7 @@ app-category .select-control {
 }
 
 app-category .select-control:focus {
-  border-color: #c95e38;
+  border-color: #704b4a;
 }
 
 app-category .summary-badge {
@@ -211,7 +211,7 @@ app-category .summary-badge .dot {
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background-color: #c95e38;
+  background-color: #704b4a;
 }
 
 /* Table Card */
@@ -417,14 +417,99 @@ app-category .icon-btn svg {
 
 app-category .edit-btn:hover {
   background-color: #f5f3ef;
-  color: #c95e38;
-  border-color: #c95e38;
+  color: #704b4a;
+  border-color: #704b4a;
 }
 
 app-category .delete-btn:hover {
   background-color: #feebe8;
   color: #dc3545;
   border-color: #f5c6cb;
+}
+
+/* Synchronized Action Buttons */
+app-category .action-btn-group {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+app-category .btn-action-text {
+  background: transparent;
+  border: none;
+  font-size: 13px;
+  font-weight: 600;
+  color: #704b4a;
+  cursor: pointer;
+  padding: 4px 2px;
+  transition: color 0.12s ease;
+}
+
+app-category .btn-action-text:hover {
+  color: #593c3b;
+  text-decoration: underline;
+}
+
+app-category .btn-action-text.btn-action-delete {
+  color: #b91c1c;
+}
+
+app-category .btn-action-text.btn-action-delete:hover {
+  color: #991b1b;
+}
+
+/* Synchronized Filter Actions */
+app-category .filter-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+app-category .btn-filter {
+  height: 38px;
+  padding: 0 16px;
+  background: #704b4a;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+app-category .btn-filter:hover {
+  background: #593c3b;
+}
+
+app-category .btn-reset {
+  height: 38px;
+  padding: 0 14px;
+  background: #ffffff;
+  border: 1px solid #ded7cb;
+  border-radius: 8px;
+  color: #6a6057;
+  font-size: 13px;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+app-category .btn-reset:hover {
+  background: #f7f4ee;
+  border-color: #704b4a;
+  color: #704b4a;
+}
+
+app-category .empty-icon-wrap {
+  margin-bottom: 12px;
 }
 
 /* Empty State */
@@ -504,9 +589,9 @@ app-category .page-btn:hover:not(:disabled) {
 }
 
 app-category .page-btn.active {
-  background-color: #c95e38;
+  background-color: #704b4a;
   color: #ffffff;
-  border-color: #c95e38;
+  border-color: #704b4a;
   font-weight: 600;
 }
 
@@ -635,8 +720,8 @@ app-category .form-textarea {
 
 app-category .form-input:focus,
 app-category .form-textarea:focus {
-  border-color: #c95e38;
-  box-shadow: 0 0 0 3px rgba(201, 94, 56, 0.12);
+  border-color: #704b4a;
+  box-shadow: 0 0 0 3px rgba(112, 75, 74, 0.15);
 }
 
 app-category .field-hint {

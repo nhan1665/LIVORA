@@ -1,0 +1,81 @@
+<div class="activity-log-wrapper">
+  <!-- Toolbar: Action Count & Refresh Button -->
+  <div class="activity-header">
+    <div class="header-left">
+      <span class="activity-title">LỊCH SỬ THAO TÁC & THAY ĐỔI TRẠNG THÁI</span>
+      <span class="count-pill">{{ logs().length }} lượt ghi nhận</span>
+    </div>
+    <div class="header-right">
+      <button type="button" class="btn-refresh" (click)="fetchLogs()" [disabled]="loading()" title="Tải lại lịch sử">
+        <span>Làm mới</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  @if (loading() && logs().length === 0) {
+    <div class="loading-state">
+      <div class="loader-spinner"></div>
+      <span>Đang tải dữ liệu lịch sử thao tác...</span>
+    </div>
+  }
+
+  <!-- Empty State -->
+  @if (!loading() && logs().length === 0) {
+    <div class="empty-state">
+      <h4>Chưa có lịch sử thao tác nào</h4>
+      <p>Các hành động của người dùng và hệ thống sẽ tự động được ghi lại tại đây.</p>
+    </div>
+  }
+
+  <!-- Logs Table -->
+  @if (logs().length > 0) {
+    <div class="table-responsive">
+      <table class="activity-table">
+        <thead>
+          <tr>
+            <th class="col-time">THỜI GIAN</th>
+            <th class="col-actor">NGƯỜI THAO TÁC</th>
+            <th class="col-action">HÀNH ĐỘNG</th>
+            <th class="col-details">CHI TIẾT / GHI CHÚ</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (log of logs(); track log._id || $index) {
+            <tr>
+              <!-- Thời gian -->
+              <td class="col-time">
+                <div class="time-wrapper">
+                  <span class="time-main">{{ formatDate(log.createdAt) }}</span>
+                </div>
+              </td>
+
+              <!-- Người thao tác -->
+              <td class="col-actor">
+                <div class="actor-wrapper">
+                  <span class="actor-role-badge" [class]="getRoleBadge(log.role).cssClass">
+                    <span>{{ getRoleBadge(log.role).label }}</span>
+                  </span>
+                  <strong class="actor-name">{{ log.performedBy || 'Hệ thống' }}</strong>
+                </div>
+              </td>
+
+              <!-- Hành động -->
+              <td class="col-action">
+                <div class="action-text-wrapper">
+                  <span class="action-title">{{ log.action }}</span>
+                </div>
+              </td>
+
+              <!-- Chi tiết -->
+              <td class="col-details">
+                <span class="details-text">{{ log.details || '—' }}</span>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>
+

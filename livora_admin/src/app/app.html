@@ -7,8 +7,12 @@
       <header class="admin-topbar">
         <nav class="topbar-breadcrumb" aria-label="Breadcrumb">
           <a routerLink="/dashboard" class="breadcrumb-link">Dashboard</a>
+          @if (currentBreadcrumb().module) {
+            <span class="breadcrumb-separator">&gt;</span>
+            <span class="breadcrumb-module">{{ currentBreadcrumb().module }}</span>
+          }
           <span class="breadcrumb-separator">&gt;</span>
-          <span class="breadcrumb-current">{{ currentPageTitle() }}</span>
+          <span class="breadcrumb-current">{{ currentBreadcrumb().page }}</span>
         </nav>
         <div class="topbar-right">
           <button type="button" class="notification-btn" title="Thông báo">
