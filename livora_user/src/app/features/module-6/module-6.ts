@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
+import { environment } from '../../../environments/environment';
 
 export interface TrackingItem {
   name: string;
@@ -138,7 +139,7 @@ export class Module6 implements OnInit {
 
     // 2. Tra cứu từ Backend MongoDB API
     try {
-      const res = await fetch(`http://localhost:5000/api/orders?search=${encodeURIComponent(term)}&pageSize=50`);
+      const res = await fetch(`${environment.apiBaseUrl}/orders?search=${encodeURIComponent(term)}&pageSize=50`);
       if (res.ok) {
         const data = await res.json();
         const apiOrders = data.data?.orders || data.data || [];
@@ -229,50 +230,44 @@ export class Module6 implements OnInit {
       : 'Khách hàng vãng lai xác thực OTP yêu cầu hủy đơn');
 
     try {
-      // 2. Gửi request Hủy đơn lên Backend
-      let apiSuccess = false;
-      if (this.orderInfo.id) {
-        try {
-          const res = await fetch(`http://localhost:5000/api/orders/${this.orderInfo.id}/cancel`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ reason }),
-          });
-          const resData = await res.json();
-          if (resData.success) {
-            apiSuccess = true;
-          }
-        } catch (apiErr) {
-          console.warn('[Module 6] Backend cancel API error:', apiErr);
-        }
+      // 2. Gửi request Hủy đơn lên Backend. Chỉ báo thành công khi backend xác nhận,
+      //    để trạng thái bên Admin luôn khớp với những gì khách nhìn thấy.
+      const orderRef = this.orderInfo.id || this.orderInfo.code;
+      const token = this.authService.token;
+      const res = await fetch(`${environment.apiBaseUrl}/orders/${encodeURIComponent(orderRef)}/cancel`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        // Guests prove ownership with the phone number the order was placed with.
+        body: JSON.stringify({ reason, phone: this.orderInfo.customer?.phone || '' }),
+      });
+      const resData = await res.json().catch(() => ({}));
+      if (!res.ok || !resData.success) {
+        this.otpError = resData.message || 'Không thể hủy đơn hàng. Vui lòng thử lại sau.';
+        return;
       }
 
-      // 3. Đồng bộ cập nhật vào LocalStorage
+      // 3. Đồng bộ bản lưu cục bộ (nếu có) với kết quả từ backend
       try {
         const storedOrders = JSON.parse(localStorage.getItem('livora_user_orders') || '[]');
-        const updated = storedOrders.map((o: any) => {
-          if (o.orderCode === this.orderInfo?.code || o.id === this.orderInfo?.id || o._id === this.orderInfo?.id) {
-            return {
-              ...o,
-              orderStatus: 'cancelled',
-              cancelReason: reason,
-              updatedAt: new Date().toISOString(),
-            };
-          }
-          return o;
-        });
+        const updated = storedOrders.map((o: any) =>
+          o.orderCode === this.orderInfo?.code
+            ? { ...o, orderStatus: 'cancelled', cancelReason: reason, updatedAt: new Date().toISOString() }
+            : o
+        );
         localStorage.setItem('livora_user_orders', JSON.stringify(updated));
       } catch (localErr) {
         console.warn('[Module 6] LocalStorage update error:', localErr);
       }
 
-      // 4. Cập nhật state hiển thị trên giao diện ngay lập tức
+      // 4. Cập nhật state hiển thị trên giao diện
       this.orderInfo.status = 'cancelled';
       this.orderInfo.statusDisplay = 'Đã hủy';
       this.orderInfo.cancelReason = reason;
       this.orderInfo.canCancel = false;
 
-      // Cập nhật trong danh sách nếu có
       const itemInList = this.ordersList.find((o) => o.code === this.orderInfo?.code);
       if (itemInList) {
         itemInList.status = 'cancelled';

@@ -1,10 +1,47 @@
 const mongoose = require('mongoose');
+const jwt = require('jsonwebtoken');
+const Employee = require('../models/Employee');
 const Order = require('../models/Order');
 const Product = require('../models/Product');
 const Voucher = require('../models/Voucher');
 const Customer = require('../models/Customer');
 const { logActivityInternal } = require('./activityLogController');
 const { sendSuccess, sendPaginated, sendError } = require('../utils/responseHelper');
+
+const digitsOnly = (value) => String(value || '').replace(/\D/g, '');
+
+/**
+ * Work out who is cancelling an order. Admins use their staff token, signed-in customers
+ * their own customer token, and guests must supply the phone number the order was placed with.
+ * Returns null when the caller has no right to cancel this order.
+ */
+const resolveCancelActor = async (req, order) => {
+  const header = typeof req.get === 'function' ? req.get('authorization') : req.headers?.authorization;
+  const token = /^Bearer\s+(.+)$/i.exec(header || '')?.[1];
+  if (token) {
+    try {
+      const claims = jwt.verify(token, process.env.JWT_SECRET);
+      if (claims.role === 'customer') {
+        if (order.customerId && String(order.customerId) === String(claims.id)) {
+          return { role: 'customer', name: order.customerInfo?.fullName || 'Khách hàng' };
+        }
+      } else if (mongoose.isValidObjectId(claims.id)) {
+        const employee = await Employee.findById(claims.id).lean();
+        if (employee) return { role: 'admin', name: employee.fullName || employee.code || 'Quản trị viên' };
+      }
+    } catch (_) {
+      // Invalid/expired token: fall through to the guest phone check.
+    }
+  }
+
+  const phone = digitsOnly(req.body?.phone);
+  if (phone && phone === digitsOnly(order.customerInfo?.phone)) {
+    return { role: 'customer', name: order.customerInfo?.fullName || 'Khách vãng lai' };
+  }
+  return null;
+};
+
+const CUSTOMER_CANCELLABLE_STATUSES = ['pending', 'confirmed', 'processing'];
 
 /**
  * Helper to map an Order document to frontend-friendly structure
@@ -470,7 +507,10 @@ const cancelOrder = async (req, res) => {
       return sendError(res, 'Vui lòng cung cấp lý do hủy đơn hàng.', 400);
     }
 
-    const order = await Order.findById(req.params.id);
+    const ref = String(req.params.id || '').trim();
+    const order = mongoose.isValidObjectId(ref)
+      ? await Order.findById(ref)
+      : await Order.findOne({ orderCode: ref.toUpperCase() });
     if (!order) return sendError(res, 'Không tìm thấy đơn hàng.', 404);
 
     if (order.orderStatus === 'delivered') {
@@ -478,6 +518,14 @@ const cancelOrder = async (req, res) => {
     }
     if (order.orderStatus === 'cancelled') {
       return sendError(res, 'Đơn hàng đã được hủy trước đó.', 409);
+    }
+
+    const actor = await resolveCancelActor(req, order);
+    if (!actor) {
+      return sendError(res, 'Bạn không có quyền hủy đơn hàng này. Vui lòng đăng nhập đúng tài khoản hoặc dùng số điện thoại đặt hàng.', 403);
+    }
+    if (actor.role !== 'admin' && !CUSTOMER_CANCELLABLE_STATUSES.includes(order.orderStatus)) {
+      return sendError(res, 'Đơn hàng đã chuyển sang khâu giao hàng, không thể tự hủy. Vui lòng liên hệ CSKH.', 400);
     }
 
     if (order.checkoutRequestHash) {
@@ -525,9 +573,9 @@ const cancelOrder = async (req, res) => {
       entityType: 'order',
       entityId: order._id.toString(),
       entityCode: order.orderCode,
-      action: 'Hủy đơn hàng',
-      performedBy: 'Quản trị viên (Admin)',
-      role: 'admin',
+      action: actor.role === 'admin' ? 'Hủy đơn hàng' : 'Khách hàng hủy đơn hàng',
+      performedBy: actor.name,
+      role: actor.role,
       details: `Lý do hủy: ${reason.trim()}. Tồn kho và số lượng đã bán được tự động hoàn lại.`,
     });
 

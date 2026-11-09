@@ -328,27 +328,35 @@ export class RoomProductDetail implements OnInit, OnDestroy {
   toastMessage: string = '';
   private toastTimeout: any;
 
-  buyNow() {
-    this.addToCart();
-    this.router.navigate(['/cart']);
-  }
-
-  addToCart() {
-    if (!this.product) return;
-    this.cartService.addToCart({
+  private cartPayload() {
+    return {
       id: this.product.id,
       name: this.product.name,
       price: this.currentPrice,
       originalPrice: this.product.originalPrice,
       image: this.mainImage || this.product.images?.[0] || '',
+      productId: this.product.id,
       size: this.selectedSize,
       color: this.selectedColor,
       articleNumber: this.product.articleNumber,
       category: this.product.type
-    });
+    };
+  }
+
+  /** "Mua ngay": go straight to checkout with this product only (guests allowed). */
+  buyNow() {
+    if (!this.product) return;
+    this.cartService.buyNow(this.cartPayload());
+  }
+
+  addToCart() {
+    if (!this.product) return;
+    // Guests are redirected to login by the cart service; only confirm when the item was really added.
+    if (!this.cartService.addToCart(this.cartPayload())) return;
 
     this.toastMessage = `Đã thêm "${this.product.name}" vào giỏ hàng!`;
     this.showToast = true;
+    this.cdr.detectChanges();
 
     if (this.toastTimeout) clearTimeout(this.toastTimeout);
     this.toastTimeout = setTimeout(() => {

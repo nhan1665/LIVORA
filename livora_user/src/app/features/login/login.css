@@ -1,4 +1,5 @@
 .login-container {
+    position: relative;
     min-height: 100vh;
     display: flex;
     justify-content: center;
@@ -264,4 +265,93 @@
 
 .register-link a:hover {
     text-decoration: underline;
+}
+/* Back to storefront */
+.back-home-link {
+    position: absolute;
+    top: 24px;
+    left: 24px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.75);
+    color: #3b3534;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    transition: background 0.2s;
+}
+
+.back-home-link:hover {
+    background: #fff;
+}
+
+/* Feedback messages */
+.form-alert {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    text-align: left;
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 14px;
+    line-height: 1.45;
+    margin-bottom: 16px;
+    border: 1px solid transparent;
+}
+
+.form-alert i {
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.form-alert-error {
+    color: #b42318;
+    background: #fef3f2;
+    border-color: #fecdca;
+}
+
+.form-alert-success {
+    color: #1e6b34;
+    background: #ecfdf3;
+    border-color: #abefc6;
+}
+
+.form-alert-info {
+    color: #4a3b38;
+    background: #fdf6ec;
+    border-color: #f1dcbc;
+}
+
+/* Loading state */
+.btn-login:disabled {
+    opacity: 0.75;
+    cursor: wait;
+    transform: none;
+}
+
+.btn-spinner {
+    width: 16px;
+    height: 16px;
+    margin-right: 10px;
+    border: 2px solid rgba(255, 255, 255, 0.45);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: btn-spin 0.8s linear infinite;
+}
+
+@keyframes btn-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@media (max-width: 480px) {
+    .back-home-link {
+        top: 12px;
+        left: 12px;
+    }
 }

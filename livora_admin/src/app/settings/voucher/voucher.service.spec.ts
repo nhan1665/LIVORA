@@ -29,7 +29,7 @@ describe('VoucherService', () => {
     endDate: '2025-11-30T23:59:59',
     isActive: true,
     ...overrides,
-  });
+  }) as VoucherDraft;
 
   beforeEach(() => {
     TestBed.configureTestingModule({

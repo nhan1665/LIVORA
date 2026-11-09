@@ -56,7 +56,6 @@ export class Product implements OnInit {
   statusDraft: ProductStatusFilter = 'all';
   has3DDraft: Product3DFilter = 'all';
   sortDraft: ProductSortOption = 'newest';
-  private hasAutoSeeded = false;
 
   // Active filters applied to query
   activeSearch = '';
@@ -297,14 +296,6 @@ export class Product implements OnInit {
 
     this.productService.queryProducts(query).subscribe({
       next: (res: ProductListResponse) => {
-        if (res.totalItems < 50 && !this.activeSearch && this.activeCategory === 'all' && !this.hasAutoSeeded) {
-          this.hasAutoSeeded = true;
-          this.productService.seedMockProducts().subscribe({
-            next: () => this.loadData(),
-            error: () => {}
-          });
-          return;
-        }
         this.products.set(res.items);
         this.totalItems.set(res.totalItems);
         this.totalPages.set(res.totalPages);
@@ -1001,6 +992,23 @@ export class Product implements OnInit {
     if (this.formDraft.price <= 0) {
       this.activeModalTab.set('general');
       this.errorMessage.set('Giá bán sản phẩm phải lớn hơn 0.');
+      return;
+    }
+    const stock = Number(this.formDraft.stockQuantity);
+    if (this.formDraft.stockQuantity === null || this.formDraft.stockQuantity === undefined || (this.formDraft.stockQuantity as any) === '' || !Number.isInteger(stock) || stock < 0) {
+      this.activeModalTab.set('general');
+      this.errorMessage.set('Vui lòng nhập Số lượng tồn kho (số nguyên ≥ 0) ở tab "1. Thông tin chung & Giá".');
+      return;
+    }
+    this.formDraft.stockQuantity = stock;
+    if (!this.formDraft.roomIds || this.formDraft.roomIds.length === 0) {
+      this.activeModalTab.set('general');
+      this.errorMessage.set('Vui lòng chọn ít nhất 1 phòng để sản phẩm hiển thị bên web khách hàng.');
+      return;
+    }
+    if (!this.formDraft.thumbnail || !this.formDraft.thumbnail.trim()) {
+      this.activeModalTab.set('media');
+      this.errorMessage.set('Vui lòng thêm Ảnh đại diện sản phẩm ở tab "3. Hình ảnh & Mô hình 3D".');
       return;
     }
 

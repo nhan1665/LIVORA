@@ -63,6 +63,8 @@ export class ProductService {
     if (params.sort) {
       httpParams = httpParams.set('sort', params.sort);
     }
+    // The storefront only sells products the admin marked "Đang kinh doanh".
+    httpParams = httpParams.set('status', 'active');
     httpParams = httpParams.set('page', (params.page || 1).toString());
     httpParams = httpParams.set('pageSize', (params.pageSize || 50).toString());
 
@@ -117,12 +119,4 @@ export class ProductService {
     );
   }
 
-  /**
-   * Đồng bộ lại dữ liệu 50 sản phẩm chuẩn xác và hình ảnh đẹp từ backend
-   */
-  syncMockProducts(): Observable<any> {
-    return this.http.get<any>(`${this.apiUrl}/seed-mock-products`).pipe(
-      catchError(() => of(null))
-    );
-  }
 }

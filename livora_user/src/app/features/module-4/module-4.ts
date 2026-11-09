@@ -433,21 +433,30 @@ export class Module4 implements OnInit, OnDestroy {
     this.showToastNotification('Đã xóa thiết kế khỏi danh sách.');
   }
 
+  /** "Đặt mua": check out every product of the saved design straight away. */
   addDesignToCart(design: SavedDesign, event: Event): void {
     event.stopPropagation();
-    design.items.forEach((item) => {
-      this.cartService.addToCart({
-        id: item.id,
-        name: item.name,
-        description: item.desc,
-        price: item.price,
-        image: item.image,
-        productId: item.id,
-        roomName: design.spaceName,
-        categoryName: item.category
-      });
-    });
-    this.showToastNotification(`Đã thêm ${design.items.length} sản phẩm từ thiết kế vào giỏ hàng!`);
+    const products = (design.items || []).map((item) => ({
+      id: item.id,
+      name: item.name,
+      description: item.desc,
+      price: item.price,
+      image: item.image,
+      productId: item.id,
+      roomName: design.spaceName,
+      categoryName: item.category
+    }));
+    if (!products.length) {
+      this.showToastNotification('Thiết kế này chưa có sản phẩm nào để đặt mua.');
+      return;
+    }
+    this.closePlannerForNavigation();
+    this.cartService.buyNow(products);
+  }
+
+  private closePlannerForNavigation(): void {
+    this.showSelectSizeModal = false;
+    this.plannerOpen.set(false);
   }
 
   // ============ Room Selection & Planner Open ============
@@ -534,24 +543,22 @@ export class Module4 implements OnInit, OnDestroy {
   }
 
   goCheckout(): void {
-    this.showSelectSizeModal = false;
-    this.plannerOpen.set(false);
-    
-    const placedItems = this.placed();
-    placedItems.forEach(item => {
-      this.cartService.addToCart({
-        id: item.id,
-        name: item.name,
-        description: item.desc,
-        price: item.price,
-        image: item.image,
-        productId: item.id,
-        roomName: this.activeRoom()?.name || 'Phòng khách',
-        categoryName: item.category
-      });
-    });
-
-    this.router.navigate(['/cart']);
+    const products = this.placed().map(item => ({
+      id: item.id,
+      name: item.name,
+      description: item.desc,
+      price: item.price,
+      image: item.image,
+      productId: item.id,
+      roomName: this.activeRoom()?.name || 'Phòng khách',
+      categoryName: item.category
+    }));
+    if (!products.length) {
+      this.showToastNotification('Hãy thêm ít nhất 1 sản phẩm vào không gian trước khi đặt mua.');
+      return;
+    }
+    this.closePlannerForNavigation();
+    this.cartService.buyNow(products);
   }
 
   trackId = (_: number, p: PlannerProduct) => p.id;

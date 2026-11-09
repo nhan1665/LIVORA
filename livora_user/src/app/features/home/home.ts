@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { RouterLink, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { InspirationService, InspirationItem } from '../../services/inspiration.service';
@@ -37,6 +37,7 @@ export class Home implements OnInit, OnDestroy {
   public readonly authService = inject(AuthService);
   private readonly http = inject(HttpClient);
   private readonly cdr = inject(ChangeDetectorRef);
+  private readonly route = inject(ActivatedRoute);
 
   banners: HomeBannerItem[] = [];
   activeBannerIndex = 0;
@@ -70,6 +71,12 @@ export class Home implements OnInit, OnDestroy {
   contactErrorMessage = '';
 
   ngOnInit(): void {
+    // Footer "Liên hệ chúng tôi" links to /home#contact-section; banners and products above load
+    // asynchronously, so scroll again once the page has had a moment to lay out.
+    this.route.fragment.subscribe((fragment) => {
+      if (fragment !== 'contact-section') return;
+      setTimeout(() => document.getElementById(fragment)?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 300);
+    });
     this.loadBanners();
     this.loadBrandStory();
     this.loadInspirations();

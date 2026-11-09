@@ -144,33 +144,59 @@ export class Module3 implements OnInit, OnDestroy {
 
   redirectToProduct(prodId: string, event: Event) {
     event.stopPropagation();
+    // Read the room before closing the modal: closeRoomModal() clears selectedRoom.
+    const catLower = (this.selectedRoom?.category || '').toLowerCase();
     this.closeRoomModal();
 
     let roomName = 'bedroom';
-    let categoryName = 'beds';
-    let productId = prodId;
-
-    const catLower = (this.selectedRoom?.category || '').toLowerCase();
     if (catLower.includes('khách') || catLower.includes('living')) roomName = 'living-room';
     else if (catLower.includes('bếp') || catLower.includes('kitchen')) roomName = 'kitchen';
     else if (catLower.includes('tắm') || catLower.includes('bathroom')) roomName = 'bathroom';
     else if (catLower.includes('ăn') || catLower.includes('dining')) roomName = 'dining-room';
-    else roomName = 'bedroom';
 
-    this.router.navigate(['/rooms', roomName, categoryName, productId]);
+    this.router.navigate(['/rooms', roomName, 'all', prodId]);
   }
 
-  addToCart(prod: Product, event: Event) {
-    event.stopPropagation();
-
-    this.cartService.addToCart({
+  private toCartItem(prod: Product) {
+    return {
       id: prod.id,
+      productId: prod.id,
       name: prod.name,
       description: prod.description,
       price: prod.price,
       image: prod.image
-    });
+    };
+  }
 
+  addToCart(prod: Product, event: Event) {
+    event.stopPropagation();
+    if (!this.cartService.addToCart(this.toCartItem(prod))) {
+      // Guest: the cart service is taking them to the login page.
+      this.closeRoomModal();
+      return;
+    }
     this.showToastNotification(`Đã thêm ${prod.name} vào giỏ hàng!`);
+  }
+
+  buyNow(prod: Product, event: Event) {
+    event.stopPropagation();
+    this.closeRoomModal();
+    this.cartService.buyNow(this.toCartItem(prod));
+  }
+
+  addAllToCart(event: Event) {
+    event.stopPropagation();
+    const products = (this.selectedRoom?.hotspots || []).map(h => h.product).filter(p => this.isPurchasable(p));
+    if (!products.length) return;
+    if (!this.cartService.addManyToCart(products.map(p => this.toCartItem(p)))) {
+      this.closeRoomModal();
+      return;
+    }
+    this.showToastNotification(`Đã thêm ${products.length} sản phẩm của không gian vào giỏ hàng!`);
+  }
+
+  /** Tagged products without a real product id cannot be ordered. */
+  isPurchasable(prod: Product): boolean {
+    return /^[0-9a-fA-F]{24}$/.test(prod.id) && prod.price > 0;
   }
 }

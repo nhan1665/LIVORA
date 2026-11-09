@@ -163,7 +163,7 @@
       <!-- Form Footer Navigation -->
       <div class="form-navigation-row">
         <a routerLink="/cart" class="back-link">
-          <i class="bi bi-chevron-left"></i> Giỏ hàng
+          <i class="bi bi-chevron-left"></i> {{ cartService.isBuyNow() ? 'Xem giỏ hàng' : 'Giỏ hàng' }}
         </a>
 
         <button 
@@ -205,8 +205,9 @@
           <input type="text" placeholder="Mã giảm giá" class="promo-box-input" [(ngModel)]="promoInput" />
           <button (click)="applyPromo()" class="btn-use-promo">ÁP DỤNG</button>
         </div>
-        <p *ngIf="promoMessage" [class.error-msg]="promoError" class="checkout-promo-msg">
+        <p *ngIf="promoMessage" [class.error-msg]="promoError" class="checkout-promo-msg" role="status">
           {{ promoMessage }}
+          <a *ngIf="promoNeedsLogin" routerLink="/login" [queryParams]="{ returnUrl: '/payment' }" class="login-link">Đăng nhập ngay</a>
         </p>
 
         <div class="summary-divider"></div>

@@ -1,4 +1,5 @@
 const fs = require('fs');
+const mongoose = require('mongoose');
 const path = require('path');
 const Refund = require('../models/Refund');
 const Order = require('../models/Order');
@@ -55,6 +56,12 @@ const getRefunds = async (req, res) => {
       .limit(limit)
       .lean();
 
+    const orderIds = refunds.map((r) => r.orderId).filter(Boolean);
+    const linkedOrders = orderIds.length
+      ? await Order.find({ _id: { $in: orderIds } }).select('_id totalAmount orderStatus paymentStatus').lean()
+      : [];
+    const orderById = new Map(linkedOrders.map((o) => [o._id.toString(), o]));
+
     const items = refunds.map((r) => ({
       id: r._id.toString(),
       orderId: r.orderId ? r.orderId.toString() : '',
@@ -63,6 +70,8 @@ const getRefunds = async (req, res) => {
       customerName: r.customerName || '',
       customerPhone: r.customerPhone || '',
       amount: r.amount || 0,
+      orderTotalAmount: orderById.get(r.orderId?.toString())?.totalAmount ?? null,
+      orderExists: orderById.has(r.orderId?.toString()),
       reason: r.reason || '',
       refundType: r.refundType || 'full',
       status: r.status,
@@ -72,15 +81,18 @@ const getRefunds = async (req, res) => {
       updatedAt: r.updatedAt,
     }));
 
-    return sendPaginated(res, items, {
-      total: totalItems,
+    // sendPaginated takes a single object: { items, page, pageSize, totalItems, totalPages, ...extra }.
+    return sendPaginated(res, {
+      items,
       page: currentPage,
-      limit,
+      pageSize: limit,
+      totalItems,
       totalPages,
-    }, {
-      pending: pendingCount,
-      completed: completedCount,
-      totalRefundedAmount: disbursedCapital,
+      stats: {
+        pending: pendingCount,
+        completed: completedCount,
+        totalRefundedAmount: disbursedCapital,
+      },
     });
   } catch (error) {
     console.error('getRefunds error:', error);
@@ -105,8 +117,9 @@ const createRefund = async (req, res) => {
       return sendError(res, 'Không tìm thấy đơn hàng với mã đã cung cấp.', 404);
     }
 
-    const orderPhone = order.shippingAddress?.phone || order.customerPhone || '';
-    if (orderPhone.replace(/\D/g, '') !== phone.replace(/\D/g, '')) {
+    // Order stores the buyer's contact under customerInfo (see models/Order.js).
+    const orderPhone = order.customerInfo?.phone || '';
+    if (!orderPhone || orderPhone.replace(/\D/g, '') !== String(phone).replace(/\D/g, '')) {
       return sendError(res, 'Số điện thoại không khớp với thông tin đơn hàng.', 400);
     }
 
@@ -123,13 +136,17 @@ const createRefund = async (req, res) => {
       return sendError(res, 'Đơn hàng này đang có một yêu cầu hoàn tiền chờ xử lý.', 400);
     }
 
-    const refundAmount = refundType === 'full' ? order.finalAmount : Math.round(order.finalAmount * 0.5);
+    if (!['full', 'partial'].includes(refundType)) {
+      return sendError(res, 'Loại hoàn tiền không hợp lệ.', 400);
+    }
+    const orderTotal = Number(order.totalAmount) || 0;
+    const refundAmount = refundType === 'full' ? orderTotal : Math.round(orderTotal * 0.5);
 
     const refund = new Refund({
       orderId: order._id,
       orderCode: order.orderCode,
       userId: order.customerId || null,
-      customerName: order.shippingAddress?.fullName || 'Khách hàng',
+      customerName: order.customerInfo?.fullName || 'Khách hàng',
       customerPhone: phone,
       amount: refundAmount,
       reason: reason.trim(),
@@ -185,27 +202,34 @@ const updateRefundStatus = async (req, res) => {
       return sendError(res, 'Trạng thái hoàn tiền không hợp lệ.', 400);
     }
 
+    if (!mongoose.isValidObjectId(req.params.id)) {
+      return sendError(res, 'Không tìm thấy yêu cầu hoàn tiền.', 404);
+    }
     const refund = await Refund.findById(req.params.id);
     if (!refund) return sendError(res, 'Không tìm thấy yêu cầu hoàn tiền.', 404);
+    if (refund.status !== 'pending') {
+      return sendError(res, 'Yêu cầu hoàn tiền này đã được xử lý trước đó.', 409);
+    }
+
+    if (status === 'rejected') {
+      if (!rejectReason || !String(rejectReason).trim()) {
+        return sendError(res, 'Vui lòng cung cấp lý do từ chối yêu cầu hoàn tiền.', 400);
+      }
+      refund.rejectReason = String(rejectReason).trim();
+    } else {
+      const order = await Order.findById(refund.orderId);
+      if (!order) {
+        return sendError(res, 'Đơn hàng liên kết không tồn tại trong hệ thống.', 404);
+      }
+      if (refund.amount > (Number(order.totalAmount) || 0)) {
+        return sendError(res, 'Số tiền hoàn vượt quá giá trị đơn hàng.', 400);
+      }
+      order.paymentStatus = 'refunded';
+      await order.save();
+    }
 
     refund.status = status;
     refund.processedBy = processedBy;
-    if (status === 'rejected') {
-      refund.rejectReason = rejectReason || 'Không đủ điều kiện hoàn trả.';
-    } else {
-      await Order.findByIdAndUpdate(refund.orderId, {
-        $set: { paymentStatus: 'refunded' },
-        $push: {
-          statusHistory: {
-            status: 'refunded',
-            timestamp: new Date(),
-            note: `Đã hoàn tiền: ${refund.amount.toLocaleString()} VNĐ`,
-            actor: processedBy,
-          },
-        },
-      });
-    }
-
     await refund.save();
 
     logActivityInternal({
@@ -224,6 +248,8 @@ const updateRefundStatus = async (req, res) => {
       id: refund._id.toString(),
       status: refund.status,
       rejectReason: refund.rejectReason,
+      processedBy: refund.processedBy,
+      updatedAt: refund.updatedAt,
     }, `Đã ${status === 'completed' ? 'chấp thuận' : 'từ chối'} hoàn tiền.`);
   } catch (error) {
     console.error('updateRefundStatus error:', error);

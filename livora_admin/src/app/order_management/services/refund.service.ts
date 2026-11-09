@@ -1,264 +1,175 @@
 import { Injectable } from '@angular/core';
 import { Refund, RefundFilterParams, ProcessRefundRequest } from '../models/refund.model';
-import { OrderService } from './order.service';
+import { environment } from '../../../environments/environment';
 
-const REFUND_STORAGE_KEY = 'livora_admin_refunds';
+/** Old builds cached hardcoded demo refunds here; they pointed at orders that never existed. */
+const LEGACY_REFUND_STORAGE_KEY = 'livora_admin_refunds';
 
+export interface RefundStats {
+  total: number;
+  pending: number;
+  completed: number;
+  totalRefundedAmount: number;
+}
+
+export interface RefundListResult {
+  refunds: Refund[];
+  total: number;
+  page: number;
+  pageSize: number;
+  stats: RefundStats;
+}
+
+/**
+ * Refund requests live only in the backend (`/api/refunds`). Every list and every
+ * approve/reject goes through the API so the admin never acts on stale or mock data.
+ */
 @Injectable({
   providedIn: 'root',
 })
 export class RefundService {
-  private initialRefunds: Refund[] = [
-    {
-      _id: 'ref-001',
-      refundCode: 'REF-260301-01',
-      orderId: 'ord-004',
-      orderCode: 'LIV-260303-771',
-      customerId: 'cust-004',
-      customerName: 'Đỗ Phạm Minh Tân',
-      contactPhone: '0903112233',
-      refundType: 'full',
-      refundAmount: 4960000,
-      orderTotalAmount: 4960000,
-      reason: 'Khách hàng đổi ý muốn chọn mẫu tủ khác có kích thước lớn hơn, hủy đơn trước khi giao.',
-      refundMethod: 'Banking',
-      status: 'completed',
-      processedBy: 'Admin Kế toán',
-      createdAt: '2026-10-07T08:30:00Z',
-      completedAt: '2026-10-07T09:00:00Z',
-    },
-    {
-      _id: 'ref-002',
-      refundCode: 'REF-260302-02',
-      orderId: 'ord-001',
-      orderCode: 'LIV-260301-889',
-      customerId: 'cust-001',
-      customerName: 'Dương Trọng Nhân',
-      contactPhone: '0562173125',
-      refundType: 'partial',
-      refundAmount: 500000,
-      orderTotalAmount: 1850000,
-      reason: 'Sản phẩm trầy xước nhẹ góc chân giường trong quá trình bốc dỡ, thỏa thuận đền bù hỗ trợ.',
-      refundMethod: 'Banking',
-      status: 'pending',
-      createdAt: '2026-10-09T09:30:00Z',
-    },
-  ];
+  private readonly apiUrl = `${environment.apiBaseUrl}/refunds`;
+  private cache = new Map<string, Refund>();
 
-  private refunds: Refund[] = [];
-
-  constructor(private orderService: OrderService) {
-    this.loadState();
-    this.syncFromBackend();
-  }
-
-  private syncFromBackend(): void {
-    if (typeof fetch !== 'undefined') {
-      fetch('http://localhost:5000/api/refunds?pageSize=50')
-        .then(res => res.json())
-        .then(json => {
-          if (json && json.success && Array.isArray(json.data) && json.data.length > 0) {
-            const backendRefunds: Refund[] = json.data.map((r: any) => ({
-              _id: r.id || r._id,
-              refundCode: r.orderCode ? `REF-${r.orderCode}` : `REF-${r.id.slice(-6)}`,
-              orderId: r.orderId,
-              orderCode: r.orderCode,
-              customerId: r.userId || 'guest',
-              customerName: r.customerName || 'Khách hàng',
-              contactPhone: r.customerPhone || '',
-              refundType: r.refundType || 'full',
-              refundAmount: r.amount || 0,
-              orderTotalAmount: r.amount || 0,
-              reason: r.reason || '',
-              refundMethod: 'Banking',
-              status: r.status || 'pending',
-              processedBy: r.processedBy || '',
-              rejectReason: r.rejectReason || '',
-              createdAt: r.createdAt,
-            }));
-
-            const map = new Map<string, Refund>();
-            backendRefunds.forEach(r => map.set(r._id, r));
-            this.refunds.forEach(r => {
-              if (!map.has(r._id)) map.set(r._id, r);
-            });
-            this.refunds = Array.from(map.values()).sort(
-              (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-            );
-            this.saveRefunds();
-          }
-        })
-        .catch(() => {});
-    }
-  }
-
-  private loadState(): void {
+  constructor() {
     try {
-      const stored = localStorage.getItem(REFUND_STORAGE_KEY);
-      if (stored) {
-        this.refunds = JSON.parse(stored);
-      } else {
-        this.refunds = [...this.initialRefunds];
-        this.saveRefunds();
-      }
-    } catch {
-      this.refunds = [...this.initialRefunds];
-    }
-  }
-
-  private saveRefunds(): void {
-    try {
-      localStorage.setItem(REFUND_STORAGE_KEY, JSON.stringify(this.refunds));
+      localStorage.removeItem(LEGACY_REFUND_STORAGE_KEY);
     } catch {
       // ignore
     }
   }
 
-  listRefunds(params: RefundFilterParams = {}): {
-    refunds: Refund[];
-    total: number;
-    page: number;
-    pageSize: number;
-  } {
-    let result = [...this.refunds];
+  private authHeaders(json = false): Record<string, string> {
+    const headers: Record<string, string> = {};
+    if (json) headers['Content-Type'] = 'application/json';
+    const token = localStorage.getItem('livora_admin_token');
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    return headers;
+  }
 
-    if (params.keyword && params.keyword.trim()) {
-      const kw = params.keyword.trim().toLowerCase();
-      result = result.filter(
-        r =>
-          r.refundCode.toLowerCase().includes(kw) ||
-          r.orderCode.toLowerCase().includes(kw) ||
-          r.customerName.toLowerCase().includes(kw) ||
-          r.contactPhone.toLowerCase().includes(kw)
-      );
+  private async request(url: string, init: RequestInit = {}): Promise<any> {
+    let res: Response;
+    try {
+      res = await fetch(url, init);
+    } catch {
+      throw new Error('Không thể kết nối đến máy chủ. Vui lòng kiểm tra backend.');
     }
-
-    if (params.status && params.status !== 'all') {
-      result = result.filter(r => r.status === params.status);
+    let body: any = null;
+    try {
+      body = await res.json();
+    } catch {
+      // non-JSON body
     }
+    if (!res.ok || !body?.success) {
+      throw new Error(body?.message || `Yêu cầu thất bại (${res.status}).`);
+    }
+    return body;
+  }
 
-    result.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  private mapRefund(r: any): Refund {
+    return {
+      _id: r.id || r._id,
+      refundCode: r.orderCode ? `REF-${r.orderCode}` : `REF-${String(r.id || r._id).slice(-6)}`,
+      orderId: r.orderId,
+      orderCode: r.orderCode,
+      customerId: r.userId || 'guest',
+      customerName: r.customerName || 'Khách hàng',
+      contactPhone: r.customerPhone || '',
+      refundType: r.refundType || 'full',
+      refundAmount: r.amount || 0,
+      orderTotalAmount: r.orderTotalAmount ?? r.amount ?? 0,
+      reason: r.reason || '',
+      refundMethod: 'Banking',
+      status: r.status || 'pending',
+      processedBy: r.processedBy || '',
+      rejectReason: r.rejectReason || '',
+      createdAt: r.createdAt,
+      completedAt: r.status === 'completed' ? r.updatedAt : undefined,
+    };
+  }
 
-    const total = result.length;
+  async listRefunds(params: RefundFilterParams = {}): Promise<RefundListResult> {
     const page = params.page && params.page > 0 ? params.page : 1;
     const pageSize = params.pageSize && params.pageSize > 0 ? params.pageSize : 10;
-    const startIndex = (page - 1) * pageSize;
-    const paginated = result.slice(startIndex, startIndex + pageSize);
+    const query = new URLSearchParams({
+      page: String(page),
+      pageSize: String(pageSize),
+      status: params.status || 'all',
+      search: (params.keyword || '').trim(),
+    });
 
+    const body = await this.request(`${this.apiUrl}?${query}`, { headers: this.authHeaders(), cache: 'no-store' });
+    const refunds: Refund[] = (body.data || []).map((r: any) => this.mapRefund(r));
+    refunds.forEach(r => this.cache.set(r._id, r));
+
+    const total = body.pagination?.totalItems ?? refunds.length;
     return {
-      refunds: paginated,
+      refunds,
       total,
-      page,
-      pageSize,
+      page: body.pagination?.page ?? page,
+      pageSize: body.pagination?.pageSize ?? pageSize,
+      stats: {
+        total,
+        pending: body.stats?.pending ?? 0,
+        completed: body.stats?.completed ?? 0,
+        totalRefundedAmount: body.stats?.totalRefundedAmount ?? 0,
+      },
     };
   }
 
   getRefundById(id: string): Refund | undefined {
-    return this.refunds.find(r => r._id === id);
+    return this.cache.get(id);
   }
 
-  processRefund(request: ProcessRefundRequest): { success: boolean; message: string; refund?: Refund } {
+  async processRefund(request: ProcessRefundRequest): Promise<{ success: boolean; message: string; refund?: Refund }> {
     const refund = this.getRefundById(request.refundId);
     if (!refund) {
       return { success: false, message: 'Không tìm thấy hồ sơ hoàn tiền cần xử lý.' };
     }
-
-    if (refund.status === 'completed' || refund.status === 'rejected') {
-      return { success: false, message: `Hồ sơ này đã ở trạng thái "${refund.status}", không thể xử lý lại.` };
+    if (refund.status !== 'pending') {
+      return { success: false, message: 'Hồ sơ này đã được xử lý, không thể xử lý lại.' };
+    }
+    if (!request.approved && !request.rejectReason?.trim()) {
+      return { success: false, message: 'Vui lòng cung cấp lý do từ chối yêu cầu hoàn tiền.' };
     }
 
-    if (request.approved) {
-      // Verify order exists
-      const linkedOrder = this.orderService.getOrderById(refund.orderId);
-      if (!linkedOrder) {
-        return { success: false, message: 'Đơn hàng liên kết không tồn tại trong hệ thống.' };
-      }
+    const staffName = request.staffName || 'Admin Kế toán';
+    try {
+      const body = await this.request(`${this.apiUrl}/${refund._id}/status`, {
+        method: 'PATCH',
+        headers: this.authHeaders(true),
+        body: JSON.stringify(
+          request.approved
+            ? { status: 'completed', processedBy: staffName }
+            : { status: 'rejected', rejectReason: request.rejectReason!.trim(), processedBy: staffName }
+        ),
+      });
 
-      if (refund.refundAmount > linkedOrder.totalAmount) {
-        return {
-          success: false,
-          message: `Số tiền hoàn (${refund.refundAmount.toLocaleString()}đ) không được vượt quá giá trị đơn hàng (${linkedOrder.totalAmount.toLocaleString()}đ).`,
-        };
-      }
-
-      refund.status = 'completed';
-      refund.completedAt = new Date().toISOString();
-      refund.processedBy = request.staffName || 'Admin Kế toán';
-
-      // Synchronize linked order paymentStatus
-      this.orderService.updatePaymentStatus(refund.orderId, 'refunded');
-
-      this.saveRefunds();
-
-      if (typeof fetch !== 'undefined') {
-        fetch(`http://localhost:5000/api/refunds/${refund._id}/status`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ status: 'completed', processedBy: request.staffName || 'Admin Kế toán' }),
-        }).catch(() => {});
-      }
+      const updated: Refund = {
+        ...refund,
+        status: body.data?.status || (request.approved ? 'completed' : 'rejected'),
+        rejectReason: body.data?.rejectReason || refund.rejectReason,
+        processedBy: body.data?.processedBy || staffName,
+        completedAt: request.approved ? body.data?.updatedAt || new Date().toISOString() : refund.completedAt,
+      };
+      this.cache.set(updated._id, updated);
 
       return {
         success: true,
-        message: `Phê duyệt và thực hiện hoàn tiền ${refund.refundAmount.toLocaleString()}đ thành công. Đơn hàng đã được cập nhật sang trạng thái "Đã hoàn tiền".`,
-        refund,
+        message: request.approved
+          ? `Phê duyệt và hoàn tiền ${updated.refundAmount.toLocaleString()}đ thành công. Đơn hàng đã chuyển sang "Đã hoàn tiền".`
+          : 'Đã từ chối yêu cầu hoàn tiền thành công.',
+        refund: updated,
       };
-    } else {
-      if (!request.rejectReason || !request.rejectReason.trim()) {
-        return { success: false, message: 'Vui lòng cung cấp lý do từ chối yêu cầu hoàn tiền.' };
-      }
-
-      refund.status = 'rejected';
-      refund.rejectReason = request.rejectReason.trim();
-      refund.processedBy = request.staffName || 'Admin Kế toán';
-
-      this.saveRefunds();
-
-      if (typeof fetch !== 'undefined') {
-        fetch(`http://localhost:5000/api/refunds/${refund._id}/status`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            status: 'rejected',
-            rejectReason: request.rejectReason.trim(),
-            processedBy: request.staffName || 'Admin Kế toán',
-          }),
-        }).catch(() => {});
-      }
-
-      return {
-        success: true,
-        message: 'Đã từ chối yêu cầu hoàn tiền thành công.',
-        refund,
-      };
+    } catch (err) {
+      return { success: false, message: err instanceof Error ? err.message : 'Không thể xử lý yêu cầu hoàn tiền.' };
     }
-  }
-
-  getStats(): { total: number; pending: number; completed: number; totalRefundedAmount: number } {
-    let pending = 0;
-    let completed = 0;
-    let totalRefundedAmount = 0;
-
-    for (const r of this.refunds) {
-      if (r.status === 'pending') pending++;
-      if (r.status === 'completed') {
-        completed++;
-        totalRefundedAmount += r.refundAmount;
-      }
-    }
-
-    return {
-      total: this.refunds.length,
-      pending,
-      completed,
-      totalRefundedAmount,
-    };
   }
 
   // ====== QUẢN LÝ FILE CHÍNH SÁCH MUA HÀNG ======
   async getPolicy(): Promise<any> {
     try {
-      const res = await fetch('http://localhost:5000/api/refunds/policy');
+      const res = await fetch(`${this.apiUrl}/policy`);
       const data = await res.json();
       if (data && data.success) {
         if (data.data) {
@@ -279,13 +190,12 @@ export class RefundService {
   }
 
   async updatePolicy(payload: { fileName: string; fileSize?: string; fileData?: string; updatedBy?: string }): Promise<any> {
-    const res = await fetch('http://localhost:5000/api/refunds/policy', {
+    const data = await this.request(`${this.apiUrl}/policy`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
+      headers: this.authHeaders(true),
+      body: JSON.stringify(payload),
     });
-    const data = await res.json();
-    if (data && data.success && data.data) {
+    if (data.data) {
       localStorage.setItem('livora_refund_policy', JSON.stringify(data.data));
       return data.data;
     }

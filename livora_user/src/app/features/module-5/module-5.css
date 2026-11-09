@@ -1,3 +1,19 @@
+/* The global stylesheet gives every h1-h6 the serif "Playfair Display"; on the profile page that
+   mixed two fonts in one form (customer name, section titles, order names). Keep it all Inter. */
+.profile-page-container h1,
+.profile-page-container h2,
+.profile-page-container h3,
+.profile-page-container h4,
+.profile-page-container h5,
+.profile-page-container h6,
+.profile-page-container legend,
+.profile-page-container button,
+.profile-page-container input,
+.profile-page-container select,
+.profile-page-container textarea {
+  font-family: 'Inter', sans-serif;
+}
+
 .profile-page-container {
   display: flex;
   max-width: 1200px;
@@ -65,7 +81,9 @@
 
 .profile-name {
   text-align: center;
-  font-size: 25px;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  font-size: 22px;
   font-weight: 700;
   color: #6B4949;
   margin-bottom: 30px;
@@ -124,7 +142,8 @@
 }
 
 .section-title {
-  font-size: 30px;
+  font-size: 24px;
+  letter-spacing: 0.5px;
   font-weight: 700;
   color: #6B4949;
   margin-left: 20px;
