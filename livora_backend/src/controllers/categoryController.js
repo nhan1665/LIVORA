@@ -146,8 +146,19 @@ const createCategory = async (req, res) => {
       return sendError(res, `Slug [${autoSlug}] đã tồn tại. Vui lòng chọn slug khác.`, 400);
     }
 
+    let finalCode = code && code.trim() ? code.trim().toUpperCase() : '';
+    if (!finalCode) {
+      const count = await Category.countDocuments();
+      let nextNum = count + 1;
+      finalCode = `CAT-${String(nextNum).padStart(3, '0')}`;
+      while (await Category.findOne({ code: finalCode })) {
+        nextNum++;
+        finalCode = `CAT-${String(nextNum).padStart(3, '0')}`;
+      }
+    }
+
     const category = new Category({
-      code: code ? code.trim().toUpperCase() : `CAT-${autoSlug.toUpperCase()}`,
+      code: finalCode,
       name: name.trim(),
       slug: autoSlug,
       description: description || '',

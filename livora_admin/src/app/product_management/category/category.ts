@@ -189,6 +189,15 @@ export class Category implements OnInit {
     });
   }
 
+  private calculateNextCategoryCode(): string {
+    const maxNum = this.categories().reduce((max, c) => {
+      const match = c.code?.match(/CAT-(\d+)/i) || c.code?.match(/(\d+)/);
+      return match ? Math.max(max, parseInt(match[1], 10)) : max;
+    }, 0);
+    const next = Math.max(maxNum, this.totalItems()) + 1;
+    return `CAT-${String(next).padStart(3, '0')}`;
+  }
+
   // Modal Open/Close
   openCreateModal(): void {
     this.activeModalTab = 'form';
@@ -196,7 +205,7 @@ export class Category implements OnInit {
     this.editingCategoryId.set(null);
     this.errorMessage.set('');
     this.formDraft = {
-      code: '',
+      code: this.calculateNextCategoryCode(),
       name: '',
       slug: '',
       displayOrder: this.totalItems() + 1,

@@ -5,7 +5,11 @@
     @if (isForgot) {
     <div class="login-card slide-right">
         <h2 class="login-title">QUÊN MẬT KHẨU</h2>
-        <p class="login-subtitle">Nhập email hoặc số điện thoại<br>để đặt lại mật khẩu.</p>
+        @if (forgotStep === 1) {
+            <p class="login-subtitle">Nhập email hoặc số điện thoại<br>để nhận mã xác thực OTP.</p>
+        } @else {
+            <p class="login-subtitle">Nhập mã OTP và thiết lập mật khẩu mới<br>cho tài khoản {{ resetEmail }}.</p>
+        }
 
         <div class="login-form">
             @if (errorMessage) {
@@ -15,20 +19,54 @@
             }
             @if (resetSuccessMessage) {
             <div class="success-message"
-                style="color: #4CAF50; font-size: 0.95em; margin-bottom: 15px; text-align: center; font-weight: 600;">
-                {{ resetSuccessMessage }}
+                style="color: #2e7d32; background: rgba(232, 245, 233, 0.9); border: 1px solid #c8e6c9; padding: 10px 14px; border-radius: 8px; font-size: 0.9em; margin-bottom: 18px; text-align: left; font-weight: 500; line-height: 1.4;">
+                <i class="bi bi-info-circle-fill" style="margin-right: 5px;"></i>{{ resetSuccessMessage }}
             </div>
             }
-            <div class="input-group" style="margin-bottom: 20px;">
-                <input type="text" placeholder="Email / Số điện thoại" [(ngModel)]="resetEmail" name="resetEmail">
-                <span class="icon">
-                    <i class="bi bi-envelope"></i>
-                </span>
-            </div>
 
-            <button type="button" class="btn-login" (click)="doResetPassword($event)">Đặt lại mật khẩu</button>
+            @if (forgotStep === 1) {
+                <div class="input-group" style="margin-bottom: 20px;">
+                    <input type="text" placeholder="Email / Số điện thoại" [(ngModel)]="resetEmail" name="resetEmail" (keyup.enter)="onRequestUserOtp($event)">
+                    <span class="icon">
+                        <i class="bi bi-envelope"></i>
+                    </span>
+                </div>
 
-            <p class="register-link" style="margin-top: 24px;">
+                <button type="button" class="btn-login" (click)="onRequestUserOtp($event)" [disabled]="submitting">
+                    {{ submitting ? 'Đang gửi mã...' : 'Gửi mã xác thực (OTP)' }}
+                </button>
+            } @else {
+                <div class="input-group" style="margin-bottom: 18px;">
+                    <input type="text" placeholder="Nhập 6 số OTP (VD: 123456)" [(ngModel)]="resetOtp" name="resetOtp" maxlength="6">
+                    <span class="icon">
+                        <i class="bi bi-key"></i>
+                    </span>
+                </div>
+
+                <div class="input-group" style="margin-bottom: 18px; position: relative;">
+                    <input [type]="showResetPassword ? 'text' : 'password'" placeholder="Mật khẩu mới (tối thiểu 6 ký tự)" [(ngModel)]="newPassword" name="newPassword" style="padding-right: 40px;">
+                    <span class="eye-icon" (click)="showResetPassword = !showResetPassword" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #888; z-index: 10;">
+                        <i class="bi" [class.bi-eye]="!showResetPassword" [class.bi-eye-slash]="showResetPassword"></i>
+                    </span>
+                </div>
+
+                <div class="input-group" style="margin-bottom: 22px;">
+                    <input [type]="showResetPassword ? 'text' : 'password'" placeholder="Xác nhận mật khẩu mới" [(ngModel)]="confirmNewPassword" name="confirmNewPassword">
+                    <span class="icon">
+                        <i class="bi bi-shield-lock"></i>
+                    </span>
+                </div>
+
+                <button type="button" class="btn-login" (click)="onConfirmResetPassword($event)" [disabled]="submitting">
+                    {{ submitting ? 'Đang xử lý...' : 'Xác nhận đặt lại mật khẩu' }}
+                </button>
+
+                <button type="button" style="background: transparent; border: none; color: #6B4949; font-size: 14px; text-decoration: underline; cursor: pointer; margin-top: 8px; margin-bottom: 10px;" (click)="forgotStep = 1">
+                    ← Thay đổi thông tin nhận mã
+                </button>
+            }
+
+            <p class="register-link" style="margin-top: 14px;">
                 Đã nhớ mật khẩu?
                 <a href="#" style="color: #6B4949;" (click)="showLoginForm($event)">Đăng nhập ngay</a>
             </p>

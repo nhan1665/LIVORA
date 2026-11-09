@@ -214,8 +214,17 @@ const createRoomDesign = async (req, res) => {
       return sendError(res, 'Tên không gian thiết kế là bắt buộc.', 400);
     }
 
-    const count = await RoomDesign.countDocuments();
-    const code = reqCode || `KG-${String(count + 1).padStart(4, '0')}`;
+    let finalCode = reqCode && reqCode.trim() ? reqCode.trim().toUpperCase() : '';
+    if (!finalCode) {
+      const count = await RoomDesign.countDocuments();
+      let nextNum = count + 1;
+      finalCode = `KG-${String(nextNum).padStart(3, '0')}`;
+      while (await RoomDesign.findOne({ code: finalCode })) {
+        nextNum++;
+        finalCode = `KG-${String(nextNum).padStart(3, '0')}`;
+      }
+    }
+    const code = finalCode;
 
     const parsedDims = dimensions || {
       length: Number(lengthM) || 6,

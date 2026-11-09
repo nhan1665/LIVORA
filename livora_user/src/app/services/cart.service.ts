@@ -18,6 +18,7 @@ export interface CartItem {
   color?: string;
   articleNumber?: string;
   category?: string;
+  selected?: boolean;
 }
 
 /** Pre-fix builds kept a single cart for every visitor of the browser; it leaked across accounts. */
@@ -140,8 +141,23 @@ export class CartService {
     return this._cartItems().reduce((count, item) => count + item.quantity, 0);
   });
 
+  readonly selectedItems = computed(() => {
+    const buyNow = this._buyNowItems();
+    if (buyNow !== null) return buyNow;
+    return this._cartItems().filter(item => item.selected !== false);
+  });
+
+  readonly selectedItemsCount = computed(() => {
+    return this.selectedItems().reduce((count, item) => count + item.quantity, 0);
+  });
+
+  readonly isAllSelected = computed(() => {
+    const items = this._cartItems();
+    return items.length > 0 && items.every(item => item.selected !== false);
+  });
+
   readonly subtotal = computed(() => {
-    return this.items().reduce((total, item) => total + (item.price * item.quantity), 0);
+    return this.selectedItems().reduce((total, item) => total + (item.price * item.quantity), 0);
   });
 
   readonly shippingFee = computed(() => {
@@ -173,9 +189,9 @@ export class CartService {
     const current = this._cartItems();
     const existing = current.find(item => item.id === product.id);
     if (existing) {
-      this._cartItems.set(current.map(item => item.id === product.id ? { ...item, quantity: item.quantity + quantity } : item));
+      this._cartItems.set(current.map(item => item.id === product.id ? { ...item, quantity: item.quantity + quantity, selected: true } : item));
     } else {
-      this._cartItems.set([...current, { ...product, quantity }]);
+      this._cartItems.set([...current, { ...product, quantity, selected: true }]);
     }
     return true;
   }
@@ -250,6 +266,33 @@ export class CartService {
     this.serverQuote.set(null);
   }
 
+  toggleItemSelection(id: string, selected?: boolean): void {
+    this.serverQuote.set(null);
+    this._cartItems.set(
+      this._cartItems().map(item => {
+        if (item.id === id) {
+          const nextVal = selected !== undefined ? selected : item.selected === false;
+          return { ...item, selected: nextVal };
+        }
+        return item;
+      })
+    );
+  }
+
+  toggleSelectAll(selected: boolean): void {
+    this.serverQuote.set(null);
+    this._cartItems.set(
+      this._cartItems().map(item => ({ ...item, selected }))
+    );
+  }
+
+  removeSelectedItems(): void {
+    this.serverQuote.set(null);
+    this._cartItems.set(
+      this._cartItems().filter(item => item.selected === false)
+    );
+  }
+
   private resetCheckoutState() {
     this.orderNote.set('');
     this.clearDiscount();
@@ -265,7 +308,8 @@ export class CartService {
     if (this._buyNowItems() !== null) {
       this._buyNowItems.set(null);
     } else {
-      this._cartItems.set([]);
+      // Chỉ xóa những sản phẩm vừa được đặt mua, giữ lại các sản phẩm chưa tick trong giỏ hàng
+      this._cartItems.set(this._cartItems().filter(item => item.selected === false));
     }
     this.resetCheckoutState();
   }

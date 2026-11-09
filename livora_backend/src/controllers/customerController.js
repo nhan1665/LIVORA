@@ -176,7 +176,12 @@ const createCustomer = async (req, res) => {
     }
 
     const count = await Customer.countDocuments();
-    const code = `KH-${String(count + 1).padStart(4, '0')}`;
+    let codeNum = count + 1;
+    let code = `KH-${String(codeNum).padStart(4, '0')}`;
+    while (await Customer.findOne({ code })) {
+      codeNum++;
+      code = `KH-${String(codeNum).padStart(4, '0')}`;
+    }
 
     const customer = new Customer({
       code,

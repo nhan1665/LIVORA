@@ -28,7 +28,7 @@ export class Module5 implements OnInit {
   activeFilter = 'all';
   reviewFilter: 'not_reviewed' | 'reviewed' = 'not_reviewed';
   showLogoutConfirm = false;
-  profileForm = { fullName: '', phone: '', birthDate: '', gender: '' };
+  profileForm = { fullName: '', phone: '', email: '', birthDate: '', gender: '' };
   profileError = '';
   profileSuccess = '';
   profileLoading = false;
@@ -87,10 +87,11 @@ export class Module5 implements OnInit {
     }
   }
 
-  private setProfileForm(user: { fullName: string; phone: string; birthDate?: string | null; gender?: string }): void {
+  private setProfileForm(user: { fullName: string; phone: string; email?: string; birthDate?: string | null; gender?: string }): void {
     this.profileForm = {
       fullName: user.fullName || '',
       phone: user.phone || '',
+      email: (user as any).email || '',
       birthDate: user.birthDate ? user.birthDate.slice(0, 10) : '',
       gender: user.gender || '',
     };
@@ -138,9 +139,15 @@ export class Module5 implements OnInit {
   async saveProfile(): Promise<void> {
     const fullName = this.profileForm.fullName.trim();
     const phone = this.profileForm.phone.trim();
+    const email = (this.profileForm.email || '').trim().toLowerCase();
 
     if (fullName.length > 120) {
       this.profileError = 'Họ tên không được vượt quá 120 ký tự.';
+      return;
+    }
+
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      this.profileError = 'Định dạng email không hợp lệ.';
       return;
     }
 
@@ -158,6 +165,7 @@ export class Module5 implements OnInit {
       const user = await this.authService.updateProfile({
         fullName,
         phone,
+        email,
         birthDate: this.profileForm.birthDate || null,
         gender: this.profileForm.gender,
       });

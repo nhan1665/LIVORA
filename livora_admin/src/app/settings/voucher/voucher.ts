@@ -315,11 +315,21 @@ export class Voucher implements OnInit {
     return pages;
   }
 
+  private calculateNextVoucherCode(): string {
+    const list = this.vouchers();
+    const maxNum = list.reduce((max, v) => {
+      const match = v.code?.match(/VC-(\d+)/i) || v.code?.match(/VOUCHER-(\d+)/i) || v.code?.match(/(\d+)/);
+      return match ? Math.max(max, parseInt(match[1], 10)) : max;
+    }, 0);
+    const next = Math.max(maxNum, this.totalItems()) + 1;
+    return `VC-${String(next).padStart(3, '0')}`;
+  }
+
   openCreateModal(): void {
     this.isEditMode.set(false);
     this.editingVoucherId.set(null);
     this.formError.set('');
-    this.formDraft = this.emptyDraft();
+    this.formDraft = { ...this.emptyDraft(), code: this.calculateNextVoucherCode() };
     this.selectedCustomerIds.clear();
     this.customerSearchText = '';
     this.customerOrderFilter = 'all';

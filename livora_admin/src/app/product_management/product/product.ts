@@ -469,7 +469,15 @@ export class Product implements OnInit {
     this.colorsInput = '';
     this.imagesInput = '';
 
+    if (this.availableCategories.length > 0) {
+      this.formDraft.categoryId = this.availableCategories[0].id;
+      this.generateSkuForSelectedCategory();
+    }
+
     this.loadCategories(() => {
+      if (!this.formDraft.sku) {
+        this.generateSkuForSelectedCategory();
+      }
       this.cdr.markForCheck();
     });
     this.loadRooms(() => {
@@ -1017,10 +1025,7 @@ export class Product implements OnInit {
       .map((s) => s.trim())
       .filter((s) => s.length > 0);
 
-    this.formDraft.colors = this.colorsInput
-      .split(',')
-      .map((s) => s.trim())
-      .filter((s) => s.length > 0);
+    this.formDraft.colors = [];
 
     const parsedImages = this.imagesInput
       .split(',')

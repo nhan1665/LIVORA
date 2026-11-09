@@ -124,6 +124,9 @@ export class Payment implements OnInit, OnDestroy {
       this.router.navigate(['/cart']);
       return;
     }
+    if (this.cartService.selectedItems().length === 0) {
+      this.cartService.toggleSelectAll(true);
+    }
 
     this.shippingOptions = [...this.defaultShippingOptions];
     this.selectedShippingId = this.defaultShippingOptions[0].id;
@@ -363,7 +366,7 @@ export class Payment implements OnInit, OnDestroy {
   }
 
   private checkoutItems() {
-    return this.cartService.items().map((item) => ({
+    return this.cartService.selectedItems().map((item) => ({
       productId: item.productId || item.id,
       quantity: item.quantity,
       price: item.price,
@@ -573,7 +576,7 @@ export class Payment implements OnInit, OnDestroy {
         district: this.selectedDistrict,
         ward: this.selectedWard,
       },
-      items: this.cartService.items().map(it => ({
+      items: this.cartService.selectedItems().map(it => ({
         productId: it.productId || it.id,
         name: it.name,
         productName: it.name,

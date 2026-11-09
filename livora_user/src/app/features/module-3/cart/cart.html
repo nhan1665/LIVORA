@@ -23,7 +23,40 @@
 
       <!-- Cart Items Card -->
       <div class="cart-card item-list-card">
-        <div *ngFor="let item of cartService.items()" class="cart-item-row">
+        <!-- Select All Header Bar -->
+        <div class="cart-select-all-header">
+          <label class="custom-checkbox-label select-all-label">
+            <input
+              type="checkbox"
+              class="cart-checkbox"
+              [checked]="cartService.isAllSelected()"
+              (change)="toggleSelectAll($event)"
+            />
+            <span class="select-all-text">Chọn tất cả ({{ cartService.items().length }} sản phẩm)</span>
+          </label>
+
+          <button
+            *ngIf="cartService.selectedItemsCount() > 0"
+            type="button"
+            class="btn-delete-selected"
+            (click)="removeSelected()"
+            title="Xóa các sản phẩm đã tick chọn">
+            <i class="bi bi-trash3"></i> Xóa đã chọn ({{ cartService.selectedItemsCount() }})
+          </button>
+        </div>
+
+        <div *ngFor="let item of cartService.items()" class="cart-item-row" [class.item-unselected]="item.selected === false">
+          <!-- Checkbox tick từng sản phẩm -->
+          <label class="custom-checkbox-label item-check-label">
+            <input
+              type="checkbox"
+              class="cart-checkbox"
+              [checked]="item.selected !== false"
+              (change)="toggleSelection(item.id)"
+              [attr.aria-label]="'Chọn sản phẩm ' + item.name"
+            />
+          </label>
+
           <!-- Delete button -->
           <button (click)="removeItem(item.id)" class="btn-delete" aria-label="Xóa sản phẩm">
             <i class="bi bi-x"></i>
@@ -87,7 +120,7 @@
 
         <div class="summary-row-container">
           <div class="summary-row">
-            <span>Tạm tính</span>
+            <span>Tạm tính ({{ cartService.selectedItemsCount() }} sản phẩm)</span>
             <span class="price-val">{{ cartService.subtotal() | number:'1.0-0' }} ₫</span>
           </div>
 
@@ -122,9 +155,16 @@
         </div>
 
         <!-- Action Button -->
-        <button (click)="checkout()" class="btn-checkout">
-          THANH TOÁN
+        <button
+          (click)="checkout()"
+          class="btn-checkout"
+          [disabled]="cartService.selectedItemsCount() === 0"
+          [class.btn-checkout-disabled]="cartService.selectedItemsCount() === 0">
+          THANH TOÁN ({{ cartService.selectedItemsCount() }})
         </button>
+        <p *ngIf="cartService.selectedItemsCount() === 0" class="no-selection-warning">
+          <i class="bi bi-info-circle"></i> Vui lòng tick chọn ít nhất 1 sản phẩm để thanh toán.
+        </p>
       </div>
     </div>
   </div>

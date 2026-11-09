@@ -17,7 +17,12 @@ export class Login {
 
   isLogin = true;
   isForgot = false;
+  forgotStep: 1 | 2 = 1;
   resetEmail = '';
+  resetOtp = '';
+  newPassword = '';
+  confirmNewPassword = '';
+  showResetPassword = false;
   resetSuccessMessage = '';
 
   username = '';
@@ -77,8 +82,12 @@ export class Login {
     event.preventDefault();
     this.isForgot = true;
     this.isLogin = false;
+    this.forgotStep = 1;
     this.resetSuccessMessage = '';
     this.resetEmail = '';
+    this.resetOtp = '';
+    this.newPassword = '';
+    this.confirmNewPassword = '';
     this.errorMessage = '';
     this.cdr.detectChanges();
   }
@@ -87,20 +96,80 @@ export class Login {
     event.preventDefault();
     this.isForgot = false;
     this.isLogin = true;
+    this.forgotStep = 1;
     this.errorMessage = '';
     this.signUpErrorMessage = '';
     this.loginSuccessMessage = '';
     this.cdr.detectChanges();
   }
 
-  doResetPassword(event: Event) {
-    event.preventDefault();
+  async onRequestUserOtp(event?: Event) {
+    if (event) event.preventDefault();
     if (!this.resetEmail.trim()) {
-      this.errorMessage = 'Vui lòng nhập email hoặc số điện thoại.';
+      this.errorMessage = 'Vui lòng nhập Email hoặc Số điện thoại.';
+      this.cdr.detectChanges();
       return;
     }
-    this.errorMessage = 'Khôi phục mật khẩu hiện chưa khả dụng. Vui lòng liên hệ quản trị viên.';
+    this.submitting = true;
+    this.errorMessage = '';
+    this.resetSuccessMessage = '';
     this.cdr.detectChanges();
+
+    try {
+      const res = await this.authService.forgotPassword(this.resetEmail.trim());
+      this.resetSuccessMessage = res.message || 'Mã xác thực OTP đã được gửi đến bạn.';
+      if (res.data?.otp) {
+        this.resetOtp = res.data.otp;
+      }
+      this.forgotStep = 2;
+    } catch (err: any) {
+      this.errorMessage = err.message || 'Không tìm thấy tài khoản với thông tin đã nhập.';
+    } finally {
+      this.submitting = false;
+      this.cdr.detectChanges();
+    }
+  }
+
+  async onConfirmResetPassword(event?: Event) {
+    if (event) event.preventDefault();
+    if (!this.resetOtp.trim()) {
+      this.errorMessage = 'Vui lòng nhập mã OTP xác thực.';
+      this.cdr.detectChanges();
+      return;
+    }
+    if (!this.newPassword || this.newPassword.length < 6) {
+      this.errorMessage = 'Mật khẩu mới phải có tối thiểu 6 ký tự.';
+      this.cdr.detectChanges();
+      return;
+    }
+    if (this.newPassword !== this.confirmNewPassword) {
+      this.errorMessage = 'Mật khẩu xác nhận không trùng khớp.';
+      this.cdr.detectChanges();
+      return;
+    }
+
+    this.submitting = true;
+    this.errorMessage = '';
+    this.cdr.detectChanges();
+
+    try {
+      await this.authService.resetPassword(this.resetEmail.trim(), this.resetOtp.trim(), this.newPassword);
+      this.loginSuccessMessage = 'Đặt lại mật khẩu thành công! Bạn có thể đăng nhập bằng mật khẩu mới.';
+      this.username = this.resetEmail.trim();
+      this.password = this.newPassword;
+      this.isForgot = false;
+      this.isLogin = true;
+      this.forgotStep = 1;
+    } catch (err: any) {
+      this.errorMessage = err.message || 'Không thể đặt lại mật khẩu. Vui lòng thử lại.';
+    } finally {
+      this.submitting = false;
+      this.cdr.detectChanges();
+    }
+  }
+
+  doResetPassword(event: Event) {
+    this.onRequestUserOtp(event);
   }
 
   toggleForm(event: Event) {

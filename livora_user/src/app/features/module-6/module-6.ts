@@ -17,6 +17,7 @@ export interface TrackingItem {
 export interface TrackingOrder {
   id: string;
   code: string;
+  customerId?: string;
   status: string;
   statusDisplay: string;
   date: string;
@@ -55,6 +56,69 @@ export class Module6 implements OnInit {
 
   get currentUser() {
     return this.authService.currentUser();
+  }
+
+  /**
+   * Chuẩn hóa chuỗi số điện thoại chỉ gồm các chữ số (loại bỏ khoảng trắng, dấu, mã +84 -> 0)
+   */
+  private normalizePhone(phone: string | null | undefined): string {
+    if (!phone) return '';
+    const digits = String(phone).replace(/\D/g, '');
+    if (digits.startsWith('84') && digits.length === 11) {
+      return '0' + digits.slice(2);
+    }
+    return digits;
+  }
+
+  /**
+   * Kiểm tra đơn hàng đang xem có thuộc về chính tài khoản đang đăng nhập hay không:
+   * ĐIỀU KIỆN TIÊN QUYẾT ĐỂ ĐƯỢC MIỄN OTP:
+   * 1. Người dùng PHẢI đang đăng nhập (isLoggedIn).
+   * 2. Tài khoản đang đăng nhập PHẢI có số điện thoại (currentUser.phone).
+   * 3. Số điện thoại của tài khoản đang đăng nhập PHẢI TRÙNG KHỚP với số điện thoại đặt đơn hàng:
+   *    (userPhone === orderPhone).
+   * 4. Nếu người dùng nhập số điện thoại khác vào ô tìm kiếm thì BẮT BUỘC OTP.
+   * 5. Nếu đơn hàng có customerId thì customerId đó không được khác với tài khoản đang đăng nhập.
+   *
+   * => Nếu tìm kiếm số điện thoại khác với số của tài khoản đang đăng nhập,
+   *    hoặc đơn hàng có SĐT khác, hệ thống BẮT BUỘC YÊU CẦU MÃ OTP!
+   */
+  get isOrderOwnedByCurrentUser(): boolean {
+    if (!this.isLoggedIn || !this.currentUser || !this.orderInfo) {
+      return false;
+    }
+
+    const userPhone = this.normalizePhone(this.currentUser.phone);
+    const orderPhone = this.normalizePhone(this.orderInfo.customer?.phone);
+
+    // BẮT BUỘC: Phải có SĐT tài khoản và SĐT tài khoản phải TRÙNG KHỚP với SĐT của đơn hàng
+    if (!userPhone || !orderPhone || userPhone !== orderPhone) {
+      return false;
+    }
+
+    // Nếu người dùng nhập SĐT tìm kiếm khác với SĐT tài khoản -> Yêu cầu OTP
+    const searchedPhone = this.normalizePhone(this.phoneNumber);
+    if (searchedPhone && searchedPhone.length >= 9 && searchedPhone !== userPhone) {
+      return false;
+    }
+
+    // Nếu đơn hàng đã gắn customerId thì phải trùng khớp với tài khoản hiện tại
+    const currentUserId = String(this.currentUser.id || '').trim();
+    const orderCustomerId = String(this.orderInfo.customerId || '').trim();
+    if (orderCustomerId && currentUserId && orderCustomerId !== currentUserId) {
+      return false;
+    }
+
+    return true;
+  }
+
+  /**
+   * Đơn hàng này có yêu cầu mã OTP để hủy hay không:
+   * CHỈ MIỄN OTP khi người dùng đã đăng nhập VÀ đơn hàng thuộc chính tài khoản đó.
+   * Nếu chưa đăng nhập HOẶC đơn hàng của tài khoản khác / số điện thoại khác -> BẮT BUỘC OTP!
+   */
+  get requiresOtpForCancel(): boolean {
+    return !this.isOrderOwnedByCurrentUser;
   }
 
   phoneNumber: string = '';
@@ -177,21 +241,20 @@ export class Module6 implements OnInit {
   }
 
   // ====== QUY TRÌNH HỦY ĐƠN HÀNG ======
-  openCancelModal(): void {
+  async openCancelModal(): Promise<void> {
     if (!this.orderInfo || !this.orderInfo.canCancel) return;
 
     this.otpInput = '';
     this.otpError = '';
     this.cancelReason = 'Đổi ý không muốn mua nữa';
+    this.showCancelModal = true;
 
-    // Chỉ tài khoản vãng lai (chưa đăng nhập) mới cần sinh và gửi mã OTP (tiết kiệm chi phí)
-    if (!this.isLoggedIn) {
-      this.currentOtp = Math.floor(100000 + Math.random() * 900000).toString();
+    // Chỉ cần OTP khi đơn hàng không thuộc về chính tài khoản đang đăng nhập
+    if (this.requiresOtpForCancel) {
+      await this.fetchCancelOtp();
     } else {
       this.currentOtp = '';
     }
-
-    this.showCancelModal = true;
   }
 
   closeCancelModal(): void {
@@ -200,24 +263,46 @@ export class Module6 implements OnInit {
     this.otpError = '';
   }
 
-  autoFillOtp(): void {
-    this.otpInput = this.currentOtp;
-    this.otpError = '';
-  }
-
-  resendOtp(): void {
-    this.currentOtp = Math.floor(100000 + Math.random() * 900000).toString();
+  async resendOtp(): Promise<void> {
     this.otpInput = '';
     this.otpError = '';
+    await this.fetchCancelOtp();
+  }
+
+  private async fetchCancelOtp(): Promise<void> {
+    if (!this.orderInfo) return;
+    try {
+      const orderRef = this.orderInfo.id || this.orderInfo.code;
+      const res = await fetch(`${environment.apiBaseUrl}/orders/${encodeURIComponent(orderRef)}/request-cancel-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.success && data.data?.otp) {
+        this.currentOtp = String(data.data.otp);
+      } else {
+        this.currentOtp = Math.floor(100000 + Math.random() * 900000).toString();
+      }
+    } catch {
+      this.currentOtp = Math.floor(100000 + Math.random() * 900000).toString();
+    }
+
+    // Xuất mã OTP ra console trên localhost (F12 Developer Tools)
+    console.log(
+      `%c[LIVORA LOCALHOST OTP]%c Đơn hàng #${this.orderInfo?.code} (SĐT: ${this.orderInfo?.customer?.phone}) -> Mã OTP: %c${this.currentOtp}`,
+      'background: #704b4a; color: #fff; font-weight: bold; padding: 4px 8px; border-radius: 4px;',
+      'color: #334155; font-weight: bold; padding-left: 6px;',
+      'background: #fef08a; color: #854d0e; font-weight: bold; font-size: 15px; padding: 2px 6px; border-radius: 4px;'
+    );
   }
 
   async confirmCancelOrder(): Promise<void> {
     if (!this.orderInfo) return;
 
-    // 1. Kiểm tra mã OTP: CHỈ BẮT BUỘC VỚI TÀI KHOẢN VÃNG LAI (chưa đăng nhập)
-    if (!this.isLoggedIn) {
-      if (this.otpInput.trim() !== this.currentOtp) {
-        this.otpError = 'Mã OTP không chính xác. Vui lòng kiểm tra lại mã đã được cung cấp!';
+    // 1. Kiểm tra mã OTP: Bắt buộc khi tài khoản chưa đăng nhập hoặc đơn hàng thuộc tài khoản khác
+    if (this.requiresOtpForCancel) {
+      if (!this.otpInput.trim() || this.otpInput.trim() !== this.currentOtp) {
+        this.otpError = 'Mã OTP không chính xác. Vui lòng kiểm tra mã được xuất tại Localhost terminal/console!';
         return;
       }
     }
@@ -225,23 +310,26 @@ export class Module6 implements OnInit {
     this.cancelling = true;
     this.otpError = '';
 
-    const reason = this.cancelReason.trim() || (this.isLoggedIn
-      ? 'Khách hàng đã đăng nhập yêu cầu hủy đơn'
-      : 'Khách hàng vãng lai xác thực OTP yêu cầu hủy đơn');
+    const reason = this.cancelReason.trim() || (this.isOrderOwnedByCurrentUser
+      ? 'Chủ tài khoản đã đăng nhập yêu cầu hủy đơn'
+      : 'Khách hàng xác thực OTP yêu cầu hủy đơn');
 
     try {
-      // 2. Gửi request Hủy đơn lên Backend. Chỉ báo thành công khi backend xác nhận,
-      //    để trạng thái bên Admin luôn khớp với những gì khách nhìn thấy.
+      // 2. Gửi request Hủy đơn lên Backend.
+      // Chỉ gửi kèm Token tài khoản nếu đơn hàng thực sự thuộc sở hữu của tài khoản đó.
       const orderRef = this.orderInfo.id || this.orderInfo.code;
-      const token = this.authService.token;
+      const token = this.isOrderOwnedByCurrentUser ? this.authService.token : null;
       const res = await fetch(`${environment.apiBaseUrl}/orders/${encodeURIComponent(orderRef)}/cancel`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
-        // Guests prove ownership with the phone number the order was placed with.
-        body: JSON.stringify({ reason, phone: this.orderInfo.customer?.phone || '' }),
+        body: JSON.stringify({
+          reason,
+          phone: this.orderInfo.customer?.phone || '',
+          otp: this.requiresOtpForCancel ? this.otpInput.trim() : undefined,
+        }),
       });
       const resData = await res.json().catch(() => ({}));
       if (!res.ok || !resData.success) {
@@ -334,9 +422,15 @@ export class Module6 implements OnInit {
       }
     }
 
+    const rawCustId = o.customerId
+      ? (typeof o.customerId === 'object' ? (o.customerId._id || o.customerId.id) : o.customerId)
+      : (o.userId || '');
+    const customerId = rawCustId ? String(rawCustId).trim() : '';
+
     return {
       id: o.id || o._id || '',
       code: o.orderCode || o.code || 'ORD-LIV',
+      customerId,
       status: rawStatus,
       statusDisplay,
       date: dateDisplay,

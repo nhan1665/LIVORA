@@ -336,8 +336,8 @@ export class RoomProductDetail implements OnInit, OnDestroy {
       originalPrice: this.product.originalPrice,
       image: this.mainImage || this.product.images?.[0] || '',
       productId: this.product.id,
-      size: this.selectedSize,
-      color: this.selectedColor,
+      size: '',
+      color: '',
       articleNumber: this.product.articleNumber,
       category: this.product.type
     };

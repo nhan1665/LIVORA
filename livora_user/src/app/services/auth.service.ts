@@ -35,6 +35,7 @@ export interface CustomerUser {
 export interface ProfileUpdate {
   fullName?: string;
   phone?: string;
+  email?: string;
   birthDate?: string | null;
   gender?: string;
   avatar?: string;
@@ -137,6 +138,44 @@ export class AuthService {
     });
     await this.parseResponse(response);
     return true;
+  }
+
+  async forgotPassword(contact: string): Promise<any> {
+    const response = await this.fetchWithTimeout(`${this.apiUrl}/forgot-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contact: contact.trim() }),
+    });
+    const text = await response.text();
+    let result: any = null;
+    try {
+      result = text ? JSON.parse(text) : {};
+    } catch {
+      throw new Error(`Máy chủ phản hồi không đúng định dạng JSON (${response.status}).`);
+    }
+    if (!response.ok || !result.success) {
+      throw new Error(result.message || 'Không thể gửi mã xác thực.');
+    }
+    return result;
+  }
+
+  async resetPassword(contact: string, otpCode: string, newPassword: string): Promise<any> {
+    const response = await this.fetchWithTimeout(`${this.apiUrl}/reset-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contact: contact.trim(), otpCode: otpCode.trim(), newPassword }),
+    });
+    const text = await response.text();
+    let result: any = null;
+    try {
+      result = text ? JSON.parse(text) : {};
+    } catch {
+      throw new Error(`Máy chủ phản hồi không đúng định dạng JSON (${response.status}).`);
+    }
+    if (!response.ok || !result.success) {
+      throw new Error(result.message || 'Không thể đặt lại mật khẩu.');
+    }
+    return result;
   }
 
   async refreshProfile(): Promise<CustomerUser> {
