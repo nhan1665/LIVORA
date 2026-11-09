@@ -102,8 +102,25 @@ export class Cart implements OnInit {
     });
   }
 
+  toggleSelection(id: string) {
+    this.cartService.toggleItemSelection(id);
+  }
+
+  toggleSelectAll(event: Event) {
+    const input = event.target as HTMLInputElement;
+    this.cartService.toggleSelectAll(input.checked);
+  }
+
+  removeSelected() {
+    const count = this.cartService.selectedItemsCount();
+    if (count === 0) return;
+    if (confirm(`Bạn có chắc muốn xóa ${count} sản phẩm đã chọn khỏi giỏ hàng?`)) {
+      this.cartService.removeSelectedItems();
+    }
+  }
+
   checkout() {
-    if (this.cartService.items().length > 0) {
+    if (this.cartService.selectedItems().length > 0) {
       this.router.navigate(['/payment']);
     }
   }

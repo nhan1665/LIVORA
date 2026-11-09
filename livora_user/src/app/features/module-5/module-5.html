@@ -79,7 +79,7 @@
                         Email
                     </div>
                     <div class="form-input">
-                        <input type="email" [value]="authService.currentUser()?.email || ''" readonly>
+                        <input type="email" name="profileEmail" [(ngModel)]="profileForm.email" [readonly]="!isEditingPersonal" placeholder="Nhập địa chỉ email..." required>
                     </div>
                 </div>
 

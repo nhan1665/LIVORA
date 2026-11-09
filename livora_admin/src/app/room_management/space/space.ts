@@ -103,7 +103,16 @@ export class Space {
   area(item: SpaceRecord | SpaceDraft): string { return (item.lengthM * item.widthM).toFixed(1); }
   volume(): string { return (this.form.lengthM * this.form.widthM * this.form.heightM).toFixed(1); }
   selectedFileSize(): string { const bytes = this.form.modelFile?.size ?? 0; return bytes < 1024 ? `${bytes} B` : bytes < 1024 * 1024 ? `${(bytes / 1024).toFixed(1)} KB` : `${(bytes / 1024 / 1024).toFixed(1)} MB`; }
-  openCreate(): void { this.mode = 'create'; this.editing = null; this.form = this.blank(); this.formError.set(''); this.fileError.set(''); this.activeModalTab = 'form'; this.modalOpen.set(true); }
+  calculateNextSpaceCode(): string {
+    const list = this.allSpaces().length ? this.allSpaces() : this.spaces();
+    const maxNum = list.reduce((max, s) => {
+      const match = s.code?.match(/KG-(\d+)/i) || s.code?.match(/(\d+)/);
+      return match ? Math.max(max, parseInt(match[1], 10)) : max;
+    }, 0);
+    const next = Math.max(maxNum, this.spaceCount(), this.total()) + 1;
+    return `KG-${String(next).padStart(3, '0')}`;
+  }
+  openCreate(): void { this.mode = 'create'; this.editing = null; this.form = { ...this.blank(), code: this.calculateNextSpaceCode() }; this.formError.set(''); this.fileError.set(''); this.activeModalTab = 'form'; this.modalOpen.set(true); }
   open(item: SpaceRecord, mode: Mode): void { this.mode = mode; this.editing = item; this.form = {code: item.code, name: item.name, roomId: item.roomId, description: item.description, lengthM: item.lengthM, widthM: item.widthM, heightM: item.heightM, modelFile: item.modelFile ? {...item.modelFile} : null, isActive: item.isActive}; this.formError.set(''); this.fileError.set(''); this.activeModalTab = 'form'; this.modalOpen.set(true); }
   close(): void { if (!this.saving()) this.modalOpen.set(false); }
   async selectFile(event: Event): Promise<void> {

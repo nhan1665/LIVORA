@@ -8,6 +8,8 @@ const {
   staffResetPassword,
   customerRegister,
   customerLogin,
+  customerForgotPassword,
+  customerResetPassword,
 } = require('../controllers/authController');
 
 router.post('/admin/login', staffLogin);
@@ -15,6 +17,8 @@ router.post('/admin/forgot-password', staffForgotPassword);
 router.post('/admin/reset-password', staffResetPassword);
 router.post('/customer/register', customerRegister);
 router.post('/customer/login', customerLogin);
+router.post('/customer/forgot-password', customerForgotPassword);
+router.post('/customer/reset-password', customerResetPassword);
 router.get('/customer/me', requireCustomer, getMyProfile);
 router.patch('/customer/me', requireCustomer, updateMyProfile);
 

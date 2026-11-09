@@ -60,37 +60,6 @@
         }
       </div>
 
-      <div class="mb-6">
-        <p class="text-sm font-bold mb-2">Chọn màu: <span class="font-normal">{{ selectedColor }}</span></p>
-        <div class="flex gap-2">
-          @for (color of product.colors; track color.name) {
-            <button (click)="selectColor(color.name)"
-                    class="w-12 h-12 border-2 p-0.5 cursor-pointer hover:border-gray-400 transition-colors focus:outline-none"
-                    [class.border-gray-900]="selectedColor === color.name"
-                    [class.border-transparent]="selectedColor !== color.name">
-              <img [src]="color.image" [alt]="color.name" class="w-full h-full object-cover">
-            </button>
-          }
-        </div>
-      </div>
-
-      <div class="mb-8">
-        <p class="text-sm font-bold mb-3">Chọn kích thước</p>
-        <div class="grid grid-cols-3 gap-2">
-          @for (sizeOpt of getProductSizes(); track sizeOpt.name) {
-            <button (click)="selectSize(sizeOpt.name)"
-                    class="border-2 py-3 px-1 text-[10px] font-bold cursor-pointer hover:border-gray-900 transition-colors"
-                    [class.border-black]="selectedSize === sizeOpt.name"
-                    [class.border-gray-200]="selectedSize !== sizeOpt.name">
-              {{ sizeOpt.name }}
-              @if (sizeOpt.premium > 0) {
-                <br> +{{ sizeOpt.premium | number:'1.0-0' }} ₫
-              }
-            </button>
-          }
-        </div>
-      </div>
-
       <div class="space-y-3 mb-8">
         <button (click)="buyNow()" class="w-full bg-[#0058A3] text-white font-bold py-4 rounded-full hover:bg-[#004f93] transition-colors cursor-pointer">
           Mua ngay

@@ -73,11 +73,21 @@ const createEmployee = async (req, res) => {
   try {
     const { code, username, fullName, email, phone, password, role } = req.body;
 
-    if (!code || !email || !password) {
-      return sendError(res, 'Vui lòng cung cấp mã NV, email và mật khẩu.', 400);
+    let cleanCode = code ? code.trim().toUpperCase() : '';
+    if (!cleanCode) {
+      const count = await Employee.countDocuments();
+      let nextNum = count + 1;
+      cleanCode = `NV-${String(nextNum).padStart(3, '0')}`;
+      while (await Employee.findOne({ code: cleanCode })) {
+        nextNum++;
+        cleanCode = `NV-${String(nextNum).padStart(3, '0')}`;
+      }
     }
 
-    const cleanCode = code.trim().toUpperCase();
+    if (!email || !password) {
+      return sendError(res, 'Vui lòng cung cấp email và mật khẩu.', 400);
+    }
+
     const cleanUsername = (username || cleanCode).trim();
     const cleanEmail = email.trim().toLowerCase();
 

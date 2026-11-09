@@ -7,6 +7,7 @@ const {
   createOrder,
   updateOrderStatus,
   cancelOrder,
+  requestCancelOtp,
 } = require('../controllers/orderController');
 
 // Public route: Customers and users can create orders
@@ -25,6 +26,9 @@ router.get('/', (req, res, next) => {
 
 // Admin management routes
 router.patch('/:id/status', requireAdmin, updateOrderStatus);
+
+// Request OTP to cancel order (prints to Localhost terminal/console)
+router.post('/:id/request-cancel-otp', requestCancelOtp);
 
 // Order cancellation: Allows customer/guest to cancel via OTP tracking or admin
 router.patch('/:id/cancel', cancelOrder);

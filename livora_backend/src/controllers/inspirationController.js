@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const Inspiration = require('../models/Inspiration');
 const { logActivityInternal } = require('./activityLogController');
 const { sendSuccess, sendPaginated, sendError } = require('../utils/responseHelper');
@@ -120,7 +121,7 @@ const getInspirations = async (req, res) => {
  */
 const createInspiration = async (req, res) => {
   try {
-    const { title, slug, roomId, style, thumbnail, content, taggedProducts, status } = req.body;
+    const { code: reqCode, title, slug, roomId, style, thumbnail, content, taggedProducts, status } = req.body;
 
     if (!title || !title.trim() || !thumbnail) {
       return sendError(res, 'Tiêu đề và ảnh cảm hứng là bắt buộc.', 400);
@@ -130,8 +131,17 @@ const createInspiration = async (req, res) => {
       ? slug.trim().toLowerCase()
       : title.trim().toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-');
 
-    const count = await Inspiration.countDocuments();
-    const code = `INS-${String(count + 1).padStart(4, '0')}`;
+    let finalCode = reqCode && reqCode.trim() ? reqCode.trim().toUpperCase() : '';
+    if (!finalCode) {
+      const count = await Inspiration.countDocuments();
+      let nextNum = count + 1;
+      finalCode = `INS-${String(nextNum).padStart(3, '0')}`;
+      while (await Inspiration.findOne({ code: finalCode })) {
+        nextNum++;
+        finalCode = `INS-${String(nextNum).padStart(3, '0')}`;
+      }
+    }
+    const code = finalCode;
 
     const inspiration = new Inspiration({
       code,
@@ -178,13 +188,18 @@ const updateInspiration = async (req, res) => {
     if (!inspiration) return sendError(res, 'Không tìm thấy cảm hứng.', 404);
 
     const b = req.body;
+    if (b.code) inspiration.code = b.code.trim().toUpperCase();
     if (b.title) inspiration.title = b.title.trim();
     if (b.slug) inspiration.slug = b.slug.trim().toLowerCase();
     if (b.roomId !== undefined) inspiration.roomId = b.roomId || null;
     if (b.style) inspiration.style = b.style.trim();
     if (b.thumbnail) inspiration.thumbnail = b.thumbnail.trim();
     if (b.content !== undefined) inspiration.content = b.content;
-    if (b.taggedProducts !== undefined) inspiration.taggedProducts = b.taggedProducts;
+    if (b.taggedProducts !== undefined) {
+      inspiration.taggedProducts = (b.taggedProducts || []).filter(
+        (tp) => tp && tp.productId && mongoose.Types.ObjectId.isValid(tp.productId)
+      );
+    }
     if (b.status) inspiration.status = b.status;
 
     await inspiration.save();

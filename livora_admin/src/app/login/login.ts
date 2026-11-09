@@ -173,6 +173,9 @@ export class Login {
     ).subscribe({
       next: (res) => {
         this.successMessage = res.message || `Mã xác thực 6 chữ số đã được gửi đến ${contact}.`;
+        if (res.data?.otp) {
+          this.otpCode = res.data.otp;
+        }
         this.viewMode = 'FORGOT_STEP_2';
         this.cdr.detectChanges();
       },

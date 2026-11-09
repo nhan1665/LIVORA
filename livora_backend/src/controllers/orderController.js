@@ -11,9 +11,11 @@ const { sendSuccess, sendPaginated, sendError } = require('../utils/responseHelp
 const digitsOnly = (value) => String(value || '').replace(/\D/g, '');
 
 /**
- * Work out who is cancelling an order. Admins use their staff token, signed-in customers
- * their own customer token, and guests must supply the phone number the order was placed with.
- * Returns null when the caller has no right to cancel this order.
+ * Work out who is cancelling an order.
+ * - Admin: Always authorized to cancel directly without OTP.
+ * - Logged-in Customer: Authorized to cancel directly without OTP ONLY IF their registered
+ *   phone number matches the phone number placed on the order AND their customerId matches.
+ * - Otherwise (Guest, or different phone number, or different account): Returns null, requiring OTP verification.
  */
 const resolveCancelActor = async (req, order) => {
   const header = typeof req.get === 'function' ? req.get('authorization') : req.headers?.authorization;
@@ -22,22 +24,39 @@ const resolveCancelActor = async (req, order) => {
     try {
       const claims = jwt.verify(token, process.env.JWT_SECRET);
       if (claims.role === 'customer') {
-        if (order.customerId && String(order.customerId) === String(claims.id)) {
-          return { role: 'customer', name: order.customerInfo?.fullName || 'Khách hàng' };
+        if (mongoose.isValidObjectId(claims.id)) {
+          const cust = await Customer.findById(claims.id).lean();
+          if (cust) {
+            const custPhone = digitsOnly(cust.phone);
+            const orderPhone = digitsOnly(order.customerInfo?.phone);
+            const isPhoneMatch = custPhone && orderPhone && custPhone === orderPhone;
+            const isIdMatch = !order.customerId || String(order.customerId) === String(claims.id);
+
+            // BẮT BUỘC: Khách hàng chỉ được miễn OTP khi SỐ ĐIỆN THOẠI tài khoản khớp với SĐT đơn hàng
+            if (isPhoneMatch && isIdMatch) {
+              return {
+                role: 'customer',
+                name: cust.fullName || order.customerInfo?.fullName || 'Khách hàng',
+                isVerifiedOwner: true,
+              };
+            }
+          }
         }
       } else if (mongoose.isValidObjectId(claims.id)) {
         const employee = await Employee.findById(claims.id).lean();
-        if (employee) return { role: 'admin', name: employee.fullName || employee.code || 'Quản trị viên' };
+        if (employee) {
+          return {
+            role: 'admin',
+            name: employee.fullName || employee.code || 'Quản trị viên',
+            isVerifiedOwner: true,
+          };
+        }
       }
     } catch (_) {
-      // Invalid/expired token: fall through to the guest phone check.
+      // Invalid/expired token
     }
   }
 
-  const phone = digitsOnly(req.body?.phone);
-  if (phone && phone === digitsOnly(order.customerInfo?.phone)) {
-    return { role: 'customer', name: order.customerInfo?.fullName || 'Khách vãng lai' };
-  }
   return null;
 };
 
@@ -332,10 +351,11 @@ const createOrder = async (req, res) => {
     const count = await Order.countDocuments();
     const today = new Date();
     const dateStr = `${String(today.getFullYear()).slice(-2)}${String(today.getMonth() + 1).padStart(2, '0')}`;
-    let orderCode = `ORD-${dateStr}-${String(count + 1).padStart(3, '0')}`;
-    const existingOrder = await Order.findOne({ orderCode });
-    if (existingOrder) {
-      orderCode = `ORD-${dateStr}-${String(count + 1).padStart(3, '0')}-${Math.floor(100 + Math.random() * 900)}`;
+    let nextNum = count + 1;
+    let orderCode = `ORD-${dateStr}-${String(nextNum).padStart(3, '0')}`;
+    while (await Order.findOne({ orderCode })) {
+      nextNum++;
+      orderCode = `ORD-${dateStr}-${String(nextNum).padStart(3, '0')}`;
     }
 
     let linkedCustomer = null;
@@ -495,6 +515,50 @@ const updateOrderStatus = async (req, res) => {
   }
 };
 
+const orderCancelOtpStore = new Map();
+
+/**
+ * @desc    Request OTP for canceling order (printed to Localhost terminal/console)
+ * @route   POST /api/orders/:id/request-cancel-otp
+ */
+const requestCancelOtp = async (req, res) => {
+  try {
+    const ref = String(req.params.id || '').trim();
+    const order = mongoose.isValidObjectId(ref)
+      ? await Order.findById(ref)
+      : await Order.findOne({ orderCode: ref.toUpperCase() });
+    if (!order) return sendError(res, 'Không tìm thấy đơn hàng.', 404);
+
+    if (order.orderStatus === 'delivered' || order.orderStatus === 'cancelled') {
+      return sendError(res, 'Đơn hàng không ở trạng thái có thể hủy.', 400);
+    }
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    orderCancelOtpStore.set(order.orderCode, {
+      otp,
+      phone: digitsOnly(order.customerInfo?.phone),
+      createdAt: Date.now(),
+      expiresAt: Date.now() + 10 * 60 * 1000,
+    });
+
+    console.log('\n======================================================');
+    console.log(`🔑 [LOCALHOST OTP] MÃ XÁC THỰC HỦY ĐƠN HÀNG #${order.orderCode}`);
+    console.log(`📱 Số điện thoại nhận: ${order.customerInfo?.phone || 'Khách hàng'}`);
+    console.log(`👉 MÃ OTP: >>> ${otp} <<< (Hết hạn sau 10 phút)`);
+    console.log('======================================================\n');
+
+    return sendSuccess(res, {
+      orderCode: order.orderCode,
+      otp,
+      phone: order.customerInfo?.phone || '',
+      message: 'Mã OTP đã được tạo và xuất hiện trên localhost console/terminal.',
+    }, 'Mã OTP đã được tạo thành công.');
+  } catch (error) {
+    console.error('requestCancelOtp error:', error);
+    return sendError(res, 'Không thể tạo mã OTP.', 500);
+  }
+};
+
 /**
  * @desc    Cancel order
  * @route   PATCH /api/orders/:id/cancel
@@ -502,7 +566,7 @@ const updateOrderStatus = async (req, res) => {
 const cancelOrder = async (req, res) => {
   let session;
   try {
-    const { reason = '' } = req.body;
+    const { reason = '', otp = '' } = req.body;
     if (!reason || !reason.trim()) {
       return sendError(res, 'Vui lòng cung cấp lý do hủy đơn hàng.', 400);
     }
@@ -520,11 +584,36 @@ const cancelOrder = async (req, res) => {
       return sendError(res, 'Đơn hàng đã được hủy trước đó.', 409);
     }
 
+    // Xác định người thực hiện hủy đơn
     const actor = await resolveCancelActor(req, order);
-    if (!actor) {
-      return sendError(res, 'Bạn không có quyền hủy đơn hàng này. Vui lòng đăng nhập đúng tài khoản hoặc dùng số điện thoại đặt hàng.', 403);
+    const isAdmin = actor && actor.role === 'admin';
+    const isOwnerCustomer = actor && actor.role === 'customer' && actor.isVerifiedOwner;
+
+    // BẮT BUỘC OTP: Nếu không phải Quản trị viên và không phải Chủ tài khoản (trùng khớp cả tài khoản & số điện thoại)
+    if (!isAdmin && !isOwnerCustomer) {
+      if (!otp || !String(otp).trim()) {
+        return sendError(
+          res,
+          'Đơn hàng không thuộc số điện thoại của tài khoản đang đăng nhập hoặc bạn chưa đăng nhập. Vui lòng nhập mã OTP để xác thực hủy đơn.',
+          403
+        );
+      }
+      const stored = orderCancelOtpStore.get(order.orderCode);
+      if (!stored || stored.otp !== String(otp).trim() || stored.expiresAt < Date.now()) {
+        return sendError(
+          res,
+          'Mã OTP không chính xác hoặc đã hết hạn. Vui lòng lấy lại mã trên localhost!',
+          400
+        );
+      }
+      orderCancelOtpStore.delete(order.orderCode);
     }
-    if (actor.role !== 'admin' && !CUSTOMER_CANCELLABLE_STATUSES.includes(order.orderStatus)) {
+
+    const cancelActor = actor || {
+      role: 'customer',
+      name: order.customerInfo?.fullName || 'Khách hàng xác thực OTP',
+    };
+    if (cancelActor.role !== 'admin' && !CUSTOMER_CANCELLABLE_STATUSES.includes(order.orderStatus)) {
       return sendError(res, 'Đơn hàng đã chuyển sang khâu giao hàng, không thể tự hủy. Vui lòng liên hệ CSKH.', 400);
     }
 
@@ -573,9 +662,9 @@ const cancelOrder = async (req, res) => {
       entityType: 'order',
       entityId: order._id.toString(),
       entityCode: order.orderCode,
-      action: actor.role === 'admin' ? 'Hủy đơn hàng' : 'Khách hàng hủy đơn hàng',
-      performedBy: actor.name,
-      role: actor.role,
+      action: cancelActor.role === 'admin' ? 'Hủy đơn hàng' : 'Khách hàng hủy đơn hàng',
+      performedBy: cancelActor.name,
+      role: cancelActor.role,
       details: `Lý do hủy: ${reason.trim()}. Tồn kho và số lượng đã bán được tự động hoàn lại.`,
     });
 
@@ -594,4 +683,5 @@ module.exports = {
   createOrder,
   updateOrderStatus,
   cancelOrder,
+  requestCancelOtp,
 };

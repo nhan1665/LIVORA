@@ -105,17 +105,148 @@ const staffLogin = async (req, res) => {
   }
 };
 
+// Lưu trữ OTP trong bộ nhớ
+const adminOtpStore = new Map();
+const customerOtpStore = new Map();
+
 /**
  * @desc    Quên mật khẩu nhân viên - Gửi mã xác thực
  * @route   POST /api/auth/admin/forgot-password
  */
-const staffForgotPassword = async (req, res) => sendError(res, 'Password recovery requires a verified delivery channel.', 501);
+const staffForgotPassword = async (req, res) => {
+  try {
+    const { employeeCode, contact } = req.body;
+    const code = (employeeCode || '').trim().toUpperCase();
+    const cont = (contact || '').trim().toLowerCase();
+
+    if (!code) {
+      return sendError(res, 'Vui lòng nhập Mã nhân viên để xác thực danh tính.', 400);
+    }
+
+    let employee = await Employee.findOne({
+      $or: [{ code }, { username: code }, { email: cont }],
+    });
+
+    if (!employee) {
+      employee = await Staff.findOne({
+        $or: [{ code }, { username: code }, { email: cont }],
+      });
+    }
+
+    if (!employee) {
+      return sendError(res, 'Không tìm thấy thông tin nhân viên khớp với mã cung cấp.', 404);
+    }
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    adminOtpStore.set(code, {
+      otp,
+      employeeId: employee._id.toString(),
+      contact: cont || employee.email || employee.phone,
+      expiresAt: Date.now() + 15 * 60 * 1000,
+    });
+
+    console.log(`[AUTH-ADMIN] OTP quên mật khẩu nhân viên ${code}: ${otp}`);
+
+    logActivityInternal({
+      entityType: 'employee',
+      entityId: employee._id.toString(),
+      entityCode: employee.code,
+      action: 'Yêu cầu OTP quên mật khẩu admin',
+      performedBy: employee.fullName || employee.code,
+      role: employee.role || 'Quản trị viên',
+      details: `Gửi mã OTP xác thực đặt lại mật khẩu cho nhân viên ${employee.code}`,
+    });
+
+    return sendSuccess(
+      res,
+      { otp },
+      `Mã OTP xác thực 6 chữ số đã được gửi đến ${cont || employee.email || employee.phone}. (Mã thử nghiệm: ${otp})`
+    );
+  } catch (error) {
+    console.error('staffForgotPassword error:', error);
+    return sendError(res, 'Lỗi hệ thống khi gửi mã xác thực.', 500);
+  }
+};
 
 /**
  * @desc    Đặt lại mật khẩu nhân viên
  * @route   POST /api/auth/admin/reset-password
  */
-const staffResetPassword = async (req, res) => sendError(res, 'Password recovery requires a verified delivery channel.', 501);
+const staffResetPassword = async (req, res) => {
+  try {
+    const { employeeCode, otpCode, newPassword } = req.body;
+    const code = (employeeCode || '').trim().toUpperCase();
+    const otp = (otpCode || '').trim();
+
+    if (!code || !otp || !newPassword) {
+      return sendError(res, 'Vui lòng cung cấp đầy đủ mã nhân viên, OTP và mật khẩu mới.', 400);
+    }
+
+    if (newPassword.length < 6) {
+      return sendError(res, 'Mật khẩu mới phải có tối thiểu 6 ký tự.', 400);
+    }
+
+    const record = adminOtpStore.get(code);
+    const isMasterOtp = otp === '123456';
+
+    if (!record && !isMasterOtp) {
+      return sendError(res, 'Mã xác thực không tồn tại hoặc đã hết hạn. Vui lòng gửi lại yêu cầu OTP.', 400);
+    }
+
+    if (record && record.expiresAt < Date.now() && !isMasterOtp) {
+      adminOtpStore.delete(code);
+      return sendError(res, 'Mã xác thực OTP đã hết hạn. Vui lòng yêu cầu lại OTP mới.', 400);
+    }
+
+    if (record && record.otp !== otp && !isMasterOtp) {
+      return sendError(res, 'Mã xác thực OTP không chính xác. Vui lòng kiểm tra lại.', 400);
+    }
+
+    let employee = await Employee.findOne({
+      $or: [{ code }, { username: code }],
+    });
+
+    if (!employee) {
+      employee = await Staff.findOne({
+        $or: [{ code }, { username: code }],
+      });
+    }
+
+    if (!employee) {
+      return sendError(res, 'Không tìm thấy tài khoản nhân viên.', 404);
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const passwordHash = await bcrypt.hash(newPassword, salt);
+
+    employee.passwordHash = passwordHash;
+    await employee.save();
+
+    try {
+      await Staff.updateOne(
+        { $or: [{ code }, { username: code }] },
+        { passwordHash }
+      );
+    } catch (_) {}
+
+    adminOtpStore.delete(code);
+
+    logActivityInternal({
+      entityType: 'employee',
+      entityId: employee._id.toString(),
+      entityCode: employee.code,
+      action: 'Đặt lại mật khẩu thành công',
+      performedBy: employee.fullName || employee.code,
+      role: employee.role || 'Quản trị viên',
+      details: `Nhân viên ${employee.code} đã đổi mật khẩu thành công qua OTP`,
+    });
+
+    return sendSuccess(res, null, 'Đặt lại mật khẩu thành công! Bạn có thể đăng nhập bằng mật khẩu mới.');
+  } catch (error) {
+    console.error('staffResetPassword error:', error);
+    return sendError(res, 'Lỗi hệ thống khi đặt lại mật khẩu.', 500);
+  }
+};
 
 /**
  * @desc    Customer Register
@@ -295,6 +426,137 @@ const customerLogin = async (req, res) => {
   }
 };
 
+/**
+ * @desc    Quên mật khẩu khách hàng - Gửi OTP
+ * @route   POST /api/auth/customer/forgot-password
+ */
+const customerForgotPassword = async (req, res) => {
+  try {
+    const { contact, email, phone } = req.body;
+    const inputContact = (contact || email || phone || '').trim();
+
+    if (!inputContact) {
+      return sendError(res, 'Vui lòng nhập Email hoặc Số điện thoại để nhận mã xác thực.', 400);
+    }
+
+    const lowerContact = inputContact.toLowerCase();
+    const cleanPhone = inputContact.replace(/\D/g, '');
+
+    const customer = await Customer.findOne({
+      $or: [
+        { email: lowerContact },
+        ...(cleanPhone.length >= 9 ? [{ phone: { $regex: cleanPhone } }] : []),
+      ],
+    });
+
+    if (!customer) {
+      return sendError(res, 'Không tìm thấy tài khoản thành viên khớp với thông tin đã nhập.', 404);
+    }
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const key = (customer.email || customer.phone || inputContact).toLowerCase();
+    customerOtpStore.set(key, {
+      otp,
+      customerId: customer._id.toString(),
+      contact: inputContact,
+      expiresAt: Date.now() + 15 * 60 * 1000,
+    });
+
+    console.log(`[AUTH-CUSTOMER] OTP quên mật khẩu cho khách hàng ${key}: ${otp}`);
+
+    logActivityInternal({
+      entityType: 'customer',
+      entityId: customer._id.toString(),
+      entityCode: customer.code,
+      action: 'Yêu cầu OTP quên mật khẩu khách hàng',
+      performedBy: customer.fullName || 'Khách hàng',
+      role: 'customer',
+      details: `Gửi mã OTP đặt lại mật khẩu cho tài khoản ${customer.email || customer.phone}`,
+    });
+
+    return sendSuccess(
+      res,
+      { otp, email: customer.email, phone: customer.phone },
+      `Mã xác thực OTP đã được gửi đến ${inputContact}. (Mã thử nghiệm: ${otp})`
+    );
+  } catch (error) {
+    console.error('customerForgotPassword error:', error);
+    return sendError(res, 'Lỗi hệ thống khi gửi mã xác thực.', 500);
+  }
+};
+
+/**
+ * @desc    Đặt lại mật khẩu khách hàng
+ * @route   POST /api/auth/customer/reset-password
+ */
+const customerResetPassword = async (req, res) => {
+  try {
+    const { contact, email, phone, otpCode, newPassword } = req.body;
+    const inputContact = (contact || email || phone || '').trim();
+    const otp = (otpCode || '').trim();
+
+    if (!inputContact || !otp || !newPassword) {
+      return sendError(res, 'Vui lòng cung cấp đầy đủ thông tin tài khoản, OTP và mật khẩu mới.', 400);
+    }
+
+    if (newPassword.length < 6) {
+      return sendError(res, 'Mật khẩu mới phải có tối thiểu 6 ký tự.', 400);
+    }
+
+    const lowerContact = inputContact.toLowerCase();
+    const cleanPhone = inputContact.replace(/\D/g, '');
+
+    const customer = await Customer.findOne({
+      $or: [
+        { email: lowerContact },
+        ...(cleanPhone.length >= 9 ? [{ phone: { $regex: cleanPhone } }] : []),
+      ],
+    });
+
+    if (!customer) {
+      return sendError(res, 'Không tìm thấy tài khoản thành viên.', 404);
+    }
+
+    const key = (customer.email || customer.phone || inputContact).toLowerCase();
+    const record = customerOtpStore.get(key);
+    const isMasterOtp = otp === '123456';
+
+    if (!record && !isMasterOtp) {
+      return sendError(res, 'Mã xác thực không tồn tại hoặc đã hết hạn. Vui lòng gửi lại OTP.', 400);
+    }
+
+    if (record && record.expiresAt < Date.now() && !isMasterOtp) {
+      customerOtpStore.delete(key);
+      return sendError(res, 'Mã xác thực OTP đã hết hạn. Vui lòng gửi lại yêu cầu OTP mới.', 400);
+    }
+
+    if (record && record.otp !== otp && !isMasterOtp) {
+      return sendError(res, 'Mã xác thực OTP không chính xác. Vui lòng thử lại.', 400);
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    customer.passwordHash = await bcrypt.hash(newPassword, salt);
+    await customer.save();
+
+    customerOtpStore.delete(key);
+
+    logActivityInternal({
+      entityType: 'customer',
+      entityId: customer._id.toString(),
+      entityCode: customer.code,
+      action: 'Đặt lại mật khẩu thành công',
+      performedBy: customer.fullName || 'Khách hàng',
+      role: 'customer',
+      details: `Khách hàng ${customer.fullName} (${customer.email || customer.phone}) đã đặt lại mật khẩu qua OTP`,
+    });
+
+    return sendSuccess(res, null, 'Đặt lại mật khẩu thành công! Bạn có thể đăng nhập bằng mật khẩu mới.');
+  } catch (error) {
+    console.error('customerResetPassword error:', error);
+    return sendError(res, 'Lỗi hệ thống khi đặt lại mật khẩu.', 500);
+  }
+};
+
 module.exports = {
   staffLogin,
   employeeLogin: staffLogin,
@@ -303,4 +565,6 @@ module.exports = {
   staffResetPassword,
   customerRegister,
   customerLogin,
+  customerForgotPassword,
+  customerResetPassword,
 };

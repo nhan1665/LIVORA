@@ -291,7 +291,6 @@
             <thead>
               <tr>
                 <th>Sản phẩm</th>
-                <th>Màu sắc</th>
                 <th class="text-right">Đơn giá</th>
                 <th class="text-center">Số lượng</th>
                 <th class="text-right">Thành tiền</th>
@@ -309,7 +308,6 @@
                       </div>
                     </div>
                   </td>
-                  <td>{{ item.color || 'Tiêu chuẩn' }}</td>
                   <td class="text-right">{{ item.price.toLocaleString('vi-VN') }} đ</td>
                   <td class="text-center">{{ item.quantity }}</td>
                   <td class="text-right font-semibold">{{ item.subtotal.toLocaleString('vi-VN') }} đ</td>
@@ -458,11 +456,6 @@
           </select>
         </div>
 
-        <div class="form-group">
-          <label>Màu sắc</label>
-          <input type="text" [(ngModel)]="selectedColor" placeholder="Màu sắc..." />
-        </div>
-
         <div class="form-group flex-small">
           <label>Số lượng</label>
           <input type="number" min="1" [(ngModel)]="selectedQuantity" />
@@ -481,7 +474,6 @@
           <thead>
             <tr>
               <th>Sản phẩm</th>
-              <th>Màu sắc</th>
               <th class="text-right">Đơn giá</th>
               <th class="text-center">SL</th>
               <th class="text-right">Thành tiền</th>
@@ -495,7 +487,6 @@
                   <strong>{{ item.productName }}</strong>
                   <small>{{ item.sku }}</small>
                 </td>
-                <td>{{ item.color }}</td>
                 <td class="text-right">{{ item.price.toLocaleString('vi-VN') }} đ</td>
                 <td class="text-center">{{ item.quantity }}</td>
                 <td class="text-right font-semibold">{{ (item.price * item.quantity).toLocaleString('vi-VN') }} đ</td>

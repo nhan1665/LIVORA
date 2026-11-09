@@ -98,10 +98,19 @@ export class Room {
     this.loadRooms();
   }
 
+  private calculateNextRoomCode(): string {
+    const maxNum = this.rooms().reduce((max, r) => {
+      const match = r.code?.match(/RM-(\d+)/i) || r.code?.match(/(\d+)/);
+      return match ? Math.max(max, parseInt(match[1], 10)) : max;
+    }, 0);
+    const next = Math.max(maxNum, this.totalItems()) + 1;
+    return `RM-${String(next).padStart(3, '0')}`;
+  }
+
   openCreateModal(): void {
     this.modalMode = 'create';
     this.editingRoom = null;
-    this.form = this.emptyDraft();
+    this.form = { ...this.emptyDraft(), code: this.calculateNextRoomCode() };
     this.formError.set('');
     this.imageError.set('');
     this.hasUnsavedChanges = false;

@@ -216,7 +216,7 @@ export class OrderComponent implements OnInit {
     sku: string;
     price: number;
     quantity: number;
-    color: string;
+    color?: string;
     thumbnail: string;
   }[] = [];
   voucherCodeInput: string = '';
@@ -461,9 +461,7 @@ export class OrderComponent implements OnInit {
 
     if (this.availableProducts.length > 0) {
       this.selectedProductId = this.availableProducts[0].productId;
-      this.selectedColor = this.availableProducts[0].availableColors?.[0] || 'Tiêu chuẩn';
-      // Tự động thêm sản phẩm mặc định đầu tiên vào đơn để danh sách không bị trống
-      this.addProductToOrder();
+      this.selectedColor = '';
     }
 
     this.isCreateOpen = true;
@@ -535,12 +533,7 @@ export class OrderComponent implements OnInit {
   }
 
   onProductSelectChange(): void {
-    const prod = this.availableProducts.find(p => p.productId === this.selectedProductId);
-    if (prod && prod.availableColors && prod.availableColors.length > 0) {
-      this.selectedColor = prod.availableColors[0];
-    } else {
-      this.selectedColor = 'Tiêu chuẩn';
-    }
+    // Nội thất 1 mẫu chuẩn, không có biến thể màu sắc
   }
 
   addProductToOrder(): void {
@@ -564,7 +557,7 @@ export class OrderComponent implements OnInit {
     }
 
     const existingIdx = this.orderItemsToCreate.findIndex(
-      i => i.productId === prod.productId && i.color === this.selectedColor
+      i => i.productId === prod.productId
     );
 
     if (existingIdx >= 0) {
@@ -581,7 +574,6 @@ export class OrderComponent implements OnInit {
         sku: prod.sku,
         price: prod.price,
         quantity: this.selectedQuantity,
-        color: this.selectedColor,
         thumbnail: prod.thumbnail,
       });
     }
@@ -614,13 +606,6 @@ export class OrderComponent implements OnInit {
 
   async submitCreateOrder(): Promise<void> {
     this.createFormError = '';
-
-    // Nếu danh sách sản phẩm trống, tự động thêm sản phẩm đang chọn trong thanh chọn
-    if (this.orderItemsToCreate.length === 0) {
-      if (this.selectedProductId) {
-        this.addProductToOrder();
-      }
-    }
 
     if (this.orderItemsToCreate.length === 0) {
       this.createFormError = 'Vui lòng chọn ít nhất một sản phẩm vào đơn hàng.';
@@ -656,12 +641,10 @@ export class OrderComponent implements OnInit {
             phone: this.customerPhone.trim().replace(/[\s\-\.]/g, ''),
             email: this.customerEmail.trim(),
             address: [this.customerAddress.trim(), this.customerWard.trim(), this.customerProvince.trim()].filter(Boolean).join(', '),
-
           },
           items: this.orderItemsToCreate.map(i => ({
             productId: i.productId,
             quantity: i.quantity,
-            color: i.color,
           })),
           voucherCode: this.voucherCodeInput,
           paymentMethod: this.paymentMethodInput,

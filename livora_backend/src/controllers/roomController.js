@@ -144,8 +144,19 @@ const createRoom = async (req, res) => {
       return sendError(res, `Slug [${autoSlug}] đã tồn tại. Vui lòng chọn slug khác.`, 400);
     }
 
+    let finalCode = code && code.trim() ? code.trim().toUpperCase() : '';
+    if (!finalCode) {
+      const count = await Room.countDocuments();
+      let nextNum = count + 1;
+      finalCode = `RM-${String(nextNum).padStart(3, '0')}`;
+      while (await Room.findOne({ code: finalCode })) {
+        nextNum++;
+        finalCode = `RM-${String(nextNum).padStart(3, '0')}`;
+      }
+    }
+
     const room = new Room({
-      code: code ? code.trim().toUpperCase() : `RM-${autoSlug.toUpperCase()}`,
+      code: finalCode,
       name: name.trim(),
       slug: autoSlug,
       description: description || '',

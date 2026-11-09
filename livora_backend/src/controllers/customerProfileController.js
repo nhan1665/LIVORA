@@ -46,6 +46,18 @@ const updateMyProfile = async (req, res) => {
       customer.phone = phone;
     }
 
+    if ('email' in body) {
+      const email = (body.email || '').trim().toLowerCase();
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        return sendError(res, 'Định dạng email không hợp lệ.', 400);
+      }
+      const duplicate = await Customer.exists({ _id: { $ne: customer._id }, email });
+      if (duplicate) {
+        return sendError(res, 'Email này đã được sử dụng bởi một tài khoản khác.', 409);
+      }
+      customer.email = email;
+    }
+
     if ('birthDate' in body) {
       const input = body.birthDate;
       const parsed = input === null || input === '' ? null : new Date(input);

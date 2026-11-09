@@ -60,9 +60,38 @@ export class Inspiration {
   reset(): void { this.search = ''; this.roomFilter = ''; this.status = 'all'; this.apply(); }
   changePage(page: number): void { if (page >= 1 && page <= this.pages()) { this.page.set(page); this.load(); } }
   roomName(id: string): string { return this.rooms().find((room) => room.id === id)?.name ?? 'Phòng không còn tồn tại'; }
-  availableProducts() { return this.products.forRoom(this.form.roomId); }
-  openCreate(): void { this.mode = 'create'; this.editing = null; this.form = this.blank(); this.formError.set(''); this.imageError.set(''); this.activeModalTab = 'form'; this.modalOpen.set(true); }
-  open(item: InspirationRecord, mode: Mode): void { this.mode = mode; this.editing = item; this.form = { code: item.code, title: item.title, roomId: item.roomId, style: item.style, content: item.content, thumbnail: item.thumbnail, taggedProducts: item.taggedProducts.map((pin) => ({ ...pin })), status: item.status }; this.formError.set(''); this.imageError.set(''); this.activeModalTab = 'form'; this.modalOpen.set(true); }
+  availableProducts(currentProductId?: string) { return this.products.forRoom(this.form.roomId, currentProductId); }
+  calculateNextInspirationCode(): string {
+    const maxNum = this.items().reduce((max, item) => {
+      const match = item.code?.match(/INS-(\d+)/i) || item.code?.match(/(\d+)/);
+      return match ? Math.max(max, parseInt(match[1], 10)) : max;
+    }, 0);
+    const next = Math.max(maxNum, this.total()) + 1;
+    return `INS-${String(next).padStart(3, '0')}`;
+  }
+  openCreate(): void { this.mode = 'create'; this.editing = null; this.form = { ...this.blank(), code: this.calculateNextInspirationCode() }; this.formError.set(''); this.imageError.set(''); this.activeModalTab = 'form'; this.modalOpen.set(true); }
+  open(item: InspirationRecord, mode: Mode): void {
+    this.mode = mode;
+    this.editing = item;
+    const sanitizedPins = (item.taggedProducts || [])
+      .filter((pin) => pin && pin.productId)
+      .map((pin) => ({ ...pin }));
+
+    this.form = {
+      code: item.code || '',
+      title: item.title || '',
+      roomId: item.roomId || (this.rooms().length > 0 ? this.rooms()[0].id : ''),
+      style: item.style || '',
+      content: item.content || '',
+      thumbnail: item.thumbnail || '',
+      taggedProducts: sanitizedPins,
+      status: item.status || 'published',
+    };
+    this.formError.set('');
+    this.imageError.set('');
+    this.activeModalTab = 'form';
+    this.modalOpen.set(true);
+  }
   close(): void { if (this.saving()) return; this.modalOpen.set(false); }
   addPin(x = 50, y = 50): void { if (this.mode !== 'view') { this.form = { ...this.form, taggedProducts: [...this.form.taggedProducts, { productId: '', xPercent: x, yPercent: y, note: '' }] }; this.formError.set(''); this.cdr.markForCheck(); } }
   removePin(index: number): void { this.form = { ...this.form, taggedProducts: this.form.taggedProducts.filter((_, position) => position !== index) }; this.cdr.markForCheck(); }
@@ -77,13 +106,72 @@ export class Inspiration {
   }
   save(formRef?: NgForm): void {
     if (this.mode === 'view' || this.saving()) return;
-    const form = formRef || this.inspirationForm;
-    form?.control.markAllAsTouched();
-    if (!form || form.invalid || !this.form.thumbnail) { this.formError.set('Nhập đầy đủ mã, tiêu đề, phòng, mô tả và ảnh phối cảnh.'); return; }
-    this.saving.set(true); this.formError.set('');
+    this.formError.set('');
+
+    const code = (this.form.code || '').trim().toUpperCase();
+    const title = (this.form.title || '').trim();
+    const roomId = this.form.roomId || (this.rooms().length > 0 ? this.rooms()[0].id : '');
+    const content = (this.form.content || '').trim();
+    const thumbnail = (this.form.thumbnail || '').trim();
+
+    if (!code) {
+      this.formError.set('Vui lòng nhập mã cảm hứng.');
+      return;
+    }
+    if (!title) {
+      this.formError.set('Vui lòng nhập tiêu đề cảm hứng.');
+      return;
+    }
+    if (!roomId) {
+      this.formError.set('Vui lòng chọn phòng cho cảm hứng.');
+      return;
+    }
+    if (!content) {
+      this.formError.set('Vui lòng nhập mô tả concept nội thất.');
+      return;
+    }
+    if (!thumbnail) {
+      this.formError.set('Vui lòng chọn hoặc tải lên ảnh phối cảnh không gian.');
+      return;
+    }
+
+    // Kiểm tra các điểm ghim (Hotspots) nếu có
+    const validPins: typeof this.form.taggedProducts = [];
+    if (this.form.taggedProducts && this.form.taggedProducts.length > 0) {
+      for (let i = 0; i < this.form.taggedProducts.length; i++) {
+        const pin = this.form.taggedProducts[i];
+        if (!pin.productId) {
+          this.formError.set(`Vui lòng chọn sản phẩm cho điểm ghim #${i + 1} hoặc nhấn nút "×" để xóa điểm ghim này.`);
+          return;
+        }
+        validPins.push({
+          productId: pin.productId,
+          xPercent: Math.max(0, Math.min(100, Number(pin.xPercent) || 50)),
+          yPercent: Math.max(0, Math.min(100, Number(pin.yPercent) || 50)),
+          note: pin.note || '',
+        });
+      }
+    }
+
+    this.form.code = code;
+    this.form.title = title;
+    this.form.roomId = roomId;
+    this.form.content = content;
+    this.form.thumbnail = thumbnail;
+    this.form.taggedProducts = validPins;
+
+    this.saving.set(true);
     this.service.save(this.form, this.editing?.id).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: () => { this.saving.set(false); this.modalOpen.set(false); this.notice.set(this.editing ? 'Đã lưu thay đổi cảm hứng.' : 'Đã thêm cảm hứng.'); this.load(); },
-      error: (error: Error) => { this.saving.set(false); this.formError.set(error.message); },
+      next: () => {
+        this.saving.set(false);
+        this.modalOpen.set(false);
+        this.notice.set(this.editing ? 'Đã lưu thay đổi cảm hứng thành công.' : 'Đã thêm cảm hứng mới thành công.');
+        this.load();
+      },
+      error: (error: Error) => {
+        this.saving.set(false);
+        this.formError.set(error.message || 'Không thể lưu cảm hứng. Vui lòng thử lại.');
+      },
     });
   }
   requestStatus(item: InspirationRecord): void { this.pending.set(item); }

@@ -166,7 +166,6 @@
           </div>
           <div class="item-details">
             <h4>{{ item.name }}</h4>
-            <p *ngIf="item.color">Phân loại / Màu: {{ item.color }}</p>
           </div>
           <div class="item-qty">x{{ item.quantity }}</div>
           <div class="item-price">{{ (item.price * item.quantity) | number:'1.0-0' }} ₫</div>
@@ -179,11 +178,11 @@
           <button type="button" class="btn-cancel-order" (click)="openCancelModal()">
             <i class="bi bi-x-circle"></i> Hủy đơn hàng
           </button>
-          <span class="cancel-hint" *ngIf="isLoggedIn">
-            * Bạn có thể hủy đơn hàng khi đơn chưa được chuyển sang khâu giao hàng. Vì bạn đã đăng nhập, bạn có thể hủy trực tiếp mà không cần gửi mã OTP.
+          <span class="cancel-hint" *ngIf="isOrderOwnedByCurrentUser">
+            * Bạn có thể hủy đơn hàng khi đơn chưa được chuyển sang khâu giao hàng. Vì đơn hàng thuộc chính tài khoản của bạn, bạn có thể hủy trực tiếp mà không cần gửi mã OTP.
           </span>
-          <span class="cancel-hint" *ngIf="!isLoggedIn">
-            * Bạn có thể hủy đơn hàng khi đơn chưa được chuyển sang khâu giao hàng. Vì là tài khoản vãng lai, hệ thống sẽ xác thực mã OTP gửi về SĐT của bạn để bảo mật.
+          <span class="cancel-hint" *ngIf="requiresOtpForCancel">
+            * Bạn có thể hủy đơn hàng khi đơn chưa được chuyển sang khâu giao hàng. Hệ thống sẽ xác thực mã OTP gửi về số điện thoại đặt hàng ({{ orderInfo.customer.phone }}) để bảo mật.
           </span>
         </div>
 
@@ -204,81 +203,77 @@
     <div class="modal-card cancel-modal-box">
       <div class="modal-head">
         <h3 class="modal-title">
-          {{ isLoggedIn ? 'Xác nhận hủy đơn hàng' : 'Xác thực OTP hủy đơn hàng' }} #{{ orderInfo?.code }}
+          {{ isOrderOwnedByCurrentUser ? 'Xác nhận hủy đơn hàng' : 'Xác thực OTP hủy đơn hàng' }} #{{ orderInfo?.code }}
         </h3>
         <button type="button" class="btn-close-modal" (click)="closeCancelModal()">&times;</button>
       </div>
 
       <div class="modal-body">
-        <!-- Thông báo cho tài khoản ĐÃ ĐĂNG NHẬP (Không cần gửi OTP) -->
-        <div *ngIf="isLoggedIn" class="logged-in-cancel-notice" style="display: flex; align-items: flex-start; gap: 12px; padding: 14px 16px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; margin-bottom: 18px;">
+        <!-- Thông báo TH1: Đơn hàng thuộc CHÍNH TÀI KHOẢN ĐANG ĐĂNG NHẬP (Miễn OTP) -->
+        <div *ngIf="isOrderOwnedByCurrentUser" class="logged-in-cancel-notice" style="display: flex; align-items: flex-start; gap: 12px; padding: 14px 16px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; margin-bottom: 18px;">
           <i class="bi bi-shield-check" style="font-size: 22px; color: #16a34a; line-height: 1;"></i>
           <div style="font-size: 13.5px; color: #166534; line-height: 1.5;">
-            Tài khoản đã đăng nhập: <strong>{{ currentUser?.fullName || orderInfo?.customer?.name }}</strong> ({{ currentUser?.phone || orderInfo?.customer?.phone }}).
+            Tài khoản sở hữu: <strong>{{ currentUser?.fullName || orderInfo?.customer?.name }}</strong> ({{ currentUser?.phone || orderInfo?.customer?.phone }}).
             <br/>
-            Bạn được quyền <strong>hủy đơn hàng trực tiếp ngay lập tức</strong> mà không cần tốn phí gửi mã OTP.
+            Đơn hàng #{{ orderInfo?.code }} thuộc chính tài khoản của bạn. Bạn được quyền <strong>hủy đơn hàng trực tiếp ngay lập tức</strong> mà không cần mã OTP.
           </div>
         </div>
 
-        <!-- Thông báo cho TÀI KHOẢN VÃNG LAI (Bắt buộc xác thực OTP) -->
-        <ng-container *ngIf="!isLoggedIn">
-          <div class="guest-cancel-notice" style="display: flex; align-items: flex-start; gap: 12px; padding: 14px 16px; background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; margin-bottom: 16px;">
-            <i class="bi bi-shield-lock" style="font-size: 20px; color: #d97706; line-height: 1;"></i>
-            <div style="font-size: 13px; color: #92400e; line-height: 1.5;">
-              Bạn đang tra cứu đơn hàng với tư cách <strong>Tài khoản vãng lai</strong>. Để bảo vệ quyền sở hữu đơn hàng, hệ thống bắt buộc xác thực mã OTP trước khi hủy.
-            </div>
+        <!-- Thông báo TH2: ĐÃ ĐĂNG NHẬP NHƯNG ĐƠN HÀNG THUỘC SỐ ĐIỆN THOẠI KHÁC (Bắt buộc OTP) -->
+        <div *ngIf="isLoggedIn && !isOrderOwnedByCurrentUser" class="guest-cancel-notice" style="display: flex; align-items: flex-start; gap: 12px; padding: 14px 16px; background: #fff7ed; border: 1px solid #fed7aa; border-radius: 8px; margin-bottom: 16px;">
+          <i class="bi bi-shield-exclamation" style="font-size: 22px; color: #ea580c; line-height: 1;"></i>
+          <div style="font-size: 13px; color: #9a3412; line-height: 1.5;">
+            Cảnh báo bảo mật: Bạn đang đăng nhập tài khoản <strong>{{ currentUser?.fullName || currentUser?.phone }}</strong> (SĐT: <strong>{{ currentUser?.phone || 'Chưa cập nhật' }}</strong>), nhưng đơn hàng #{{ orderInfo?.code }} được đặt với số điện thoại <strong>{{ orderInfo?.customer?.phone }}</strong>.
+            <br/>
+            Vì số điện thoại đơn hàng khác với số của tài khoản đang đăng nhập, hệ thống <strong>bắt buộc xác thực mã OTP</strong> gửi tới số điện thoại đặt hàng (<strong>{{ orderInfo?.customer?.phone }}</strong>) để xác nhận quyền hủy đơn.
           </div>
+        </div>
 
-          <p class="modal-desc">
+        <!-- Thông báo TH3: TÀI KHOẢN VÃNG LAI (CHƯA ĐĂNG NHẬP) (Bắt buộc OTP) -->
+        <div *ngIf="!isLoggedIn" class="guest-cancel-notice" style="display: flex; align-items: flex-start; gap: 12px; padding: 14px 16px; background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; margin-bottom: 16px;">
+          <i class="bi bi-shield-lock" style="font-size: 20px; color: #d97706; line-height: 1;"></i>
+          <div style="font-size: 13px; color: #92400e; line-height: 1.5;">
+            Bạn đang tra cứu đơn hàng với tư cách <strong>Tài khoản vãng lai</strong>. Để bảo vệ quyền sở hữu đơn hàng, hệ thống bắt buộc xác thực mã OTP trước khi hủy.
+          </div>
+        </div>
+
+        <!-- KHUNG OTP & Ô NHẬP MÃ (CHỈ HIỆN KHI BẮT BUỘC OTP: VÃNG LAI HOẶC ĐƠN KHÁC TÀI KHOẢN) -->
+        <ng-container *ngIf="requiresOtpForCancel">
+          <p class="modal-desc" style="margin-bottom: 16px;">
             Mã xác thực OTP gồm 6 chữ số đã được gửi tới số điện thoại đặt hàng:
             <strong class="phone-highlight">{{ orderInfo?.customer?.phone }}</strong>.
           </p>
 
-          <!-- ====== KHUNG GIẢ LẬP MÃ OTP KIỂM THỬ ====== -->
-          <div class="otp-simulation-box">
-            <div class="simulation-header">
-              <span class="simulation-badge">
-                <i class="bi bi-shield-check"></i> GIẢ LẬP KIỂM THỬ OTP (TESTING)
-              </span>
-              <button type="button" class="btn-resend-otp" (click)="resendOtp()" title="Tạo mã mới">
-                <i class="bi bi-arrow-clockwise"></i> Gửi lại mã khác
+          <!-- Ô nhập OTP sạch sẽ, chuyên nghiệp -->
+          <div class="form-group-cancel" style="margin-bottom: 18px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <label class="form-label" for="otpInput" style="margin-bottom: 0;">Nhập mã OTP xác thực (6 số):</label>
+              <button type="button" class="btn-resend-link" (click)="resendOtp()" style="background: none; border: none; color: #704b4a; font-size: 13px; font-weight: 600; cursor: pointer; text-decoration: underline; padding: 0;">
+                <i class="bi bi-arrow-clockwise"></i> Gửi lại mã OTP
               </button>
             </div>
-            <p class="simulation-text">
-              Hệ thống LIVORA đã mô phỏng gửi mã OTP đến số điện thoại trên:
-            </p>
-            <div class="simulation-code-row">
-              <span class="simulation-otp-code">{{ currentOtp }}</span>
-              <button type="button" class="btn-auto-fill" (click)="autoFillOtp()">
-                <i class="bi bi-box-arrow-in-down-left"></i> Nhập nhanh mã này
-              </button>
-            </div>
-            <span class="simulation-note">
-              * Tính năng giả lập OTP giúp bạn dễ dàng kiểm thử trực tiếp trên giao diện mà không cần chờ SMS thực tế.
-            </span>
+            <input
+              id="otpInput"
+              type="text"
+              maxlength="6"
+              class="otp-input-field"
+              placeholder="Nhập mã xác thực 6 chữ số..."
+              [(ngModel)]="otpInput"
+              (keyup.enter)="confirmCancelOrder()"
+              autocomplete="one-time-code"
+            />
+            <small style="display: block; color: #64748b; font-size: 12px; margin-top: 6px; font-style: italic;">
+              * Mã OTP thử nghiệm đang xuất hiện tại Terminal Backend &amp; Console F12 của localhost.
+            </small>
           </div>
         </ng-container>
 
-        <!-- Lý do hủy đơn (áp dụng cho cả 2 loại tài khoản) -->
+        <!-- Lý do hủy đơn (áp dụng cho tất cả trường hợp) -->
         <div class="form-group-cancel">
           <label class="form-label" for="cancelReasonSelect">Lý do hủy đơn hàng:</label>
           <select id="cancelReasonSelect" class="form-select-cancel" [(ngModel)]="cancelReason">
             <option *ngFor="let r of cancelReasonsList" [value]="r">{{ r }}</option>
           </select>
-        </div>
-
-        <!-- Ô nhập OTP (CHỈ HIỂN THỊ KHI LÀ TÀI KHOẢN VÃNG LAI) -->
-        <div *ngIf="!isLoggedIn" class="form-group-cancel">
-          <label class="form-label" for="otpInput">Nhập mã OTP xác thực (6 số):</label>
-          <input
-            id="otpInput"
-            type="text"
-            maxlength="6"
-            class="otp-input-field"
-            placeholder="Ví dụ: {{ currentOtp }}"
-            [(ngModel)]="otpInput"
-            (keyup.enter)="confirmCancelOrder()"
-          />
         </div>
 
         <div *ngIf="otpError" class="otp-error-message">
@@ -291,7 +286,7 @@
           Quay lại
         </button>
         <button type="button" class="btn-confirm-cancel" (click)="confirmCancelOrder()" [disabled]="cancelling">
-          {{ cancelling ? 'Đang xử lý hủy đơn...' : (isLoggedIn ? 'Xác nhận hủy đơn hàng' : 'Xác thực OTP & Hủy đơn hàng') }}
+          {{ cancelling ? 'Đang xử lý hủy đơn...' : (isOrderOwnedByCurrentUser ? 'Xác nhận hủy đơn hàng' : 'Xác thực OTP & Hủy đơn hàng') }}
         </button>
       </div>
     </div>

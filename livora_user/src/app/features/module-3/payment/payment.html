@@ -183,7 +183,7 @@
 
         <!-- Items list preview -->
         <div class="summary-items-list">
-          <div *ngFor="let item of cartService.items()" class="summary-item-row">
+          <div *ngFor="let item of cartService.selectedItems()" class="summary-item-row">
             <div class="summary-item-img-box">
               <img [src]="item.image" [alt]="item.name" class="summary-item-img" />
               <span class="summary-item-badge">{{ item.quantity }}</span>
