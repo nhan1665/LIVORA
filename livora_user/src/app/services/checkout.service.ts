@@ -29,6 +29,14 @@ export interface CheckoutOrderResult {
   paymentStatus: string;
 }
 
+/** Error from the checkout API that keeps the HTTP status (401 = voucher needs a signed-in customer). */
+export class CheckoutApiError extends Error {
+  constructor(message: string, readonly status: number) {
+    super(message);
+    this.name = 'CheckoutApiError';
+  }
+}
+
 @Injectable({ providedIn: 'root' })
 export class CheckoutService {
   private readonly auth = inject(AuthService);
@@ -51,8 +59,10 @@ export class CheckoutService {
       },
       body: JSON.stringify(body),
     });
-    const result = await response.json();
-    if (!response.ok || !result.success) throw new Error(result.message || 'Không thể kết nối với máy chủ.');
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok || !result.success) {
+      throw new CheckoutApiError(result.message || 'Không thể kết nối với máy chủ.', response.status);
+    }
     return result.data as T;
   }
 

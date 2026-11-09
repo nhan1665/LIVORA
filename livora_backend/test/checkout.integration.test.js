@@ -85,14 +85,19 @@ test('checkout uses persisted VND prices, voucher and shipping, then creates one
       const secondVoucherUse = response();
       await createCheckoutOrder({ ...req, body: { ...req.body, requestKey: crypto.randomUUID() } }, secondVoucherUse);
       assert.equal(secondVoucherUse.statusCode, 409);
+      const strangerCancel = response();
+      await cancelOrder({ params: { id: String(order._id) }, body: { reason: 'Not mine', phone: '0000000000' },
+        get: () => '' }, strangerCancel);
+      assert.equal(strangerCancel.statusCode, 403);
+      assert.equal((await Order.findById(order._id)).orderStatus, 'pending');
       const cancelled = response();
-      await cancelOrder({ params: { id: String(order._id) }, body: { reason: 'Test cancellation' } }, cancelled);
+      await cancelOrder({ params: { id: String(order._id) }, body: { reason: 'Test cancellation' }, get: req.get }, cancelled);
       assert.equal(cancelled.statusCode, 200, JSON.stringify(cancelled.body));
       assert.equal((await Product.findById(product._id)).stockQuantity, 2);
       assert.equal((await Voucher.findById(voucher._id)).usedCount, 0);
       assert.equal((await Customer.findById(customer._id)).totalOrders, 0);
       const cancelAgain = response();
-      await cancelOrder({ params: { id: String(order._id) }, body: { reason: 'Again' } }, cancelAgain);
+      await cancelOrder({ params: { id: String(order._id) }, body: { reason: 'Again' }, get: req.get }, cancelAgain);
       assert.equal(cancelAgain.statusCode, 409);
 
       // Admin writes reject fractional VND, and the checkout boundary also
@@ -133,7 +138,7 @@ test('checkout uses persisted VND prices, voucher and shipping, then creates one
       console.error = () => {};
       try {
         await cancelOrder({ params: { id: String(bankRecord._id) },
-          body: { reason: 'Missing-product reconciliation test' } }, missingProductCancel);
+          body: { reason: 'Missing-product reconciliation test' }, get: req.get }, missingProductCancel);
       } finally {
         console.error = originalError;
       }

@@ -117,13 +117,6 @@ export class RoomProductList implements OnInit {
   }
 
   ngOnInit() {
-    // 0. Đồng bộ lại dữ liệu 50 sản phẩm và 10 không gian với hình ảnh liên quan chuẩn đẹp
-    this.productService.syncMockProducts().subscribe({
-      next: () => {
-        this.loadProductsForCurrentSelection();
-      }
-    });
-
     // 1. Tải danh sách không gian phòng từ Database
     this.productService.getRooms().subscribe({
       next: (rooms) => {

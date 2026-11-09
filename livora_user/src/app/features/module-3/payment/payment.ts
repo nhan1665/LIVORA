@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { CartService, CartItem } from '../../../services/cart.service';
 import { FormsModule } from '@angular/forms';
-import { CheckoutService, ShippingOption } from '../../../services/checkout.service';
+import { CheckoutService, ShippingOption, CheckoutApiError } from '../../../services/checkout.service';
 import { AuthService } from '../../../services/auth.service';
 import { VIETNAM_PROVINCE_NAMES, getWardsForProvince } from '../../../shared/data/vietnam-locations';
 import { environment } from '../../../../environments/environment';
@@ -96,6 +96,8 @@ export class Payment implements OnInit, OnDestroy {
   promoInput = '';
   promoMessage = '';
   promoError = false;
+  /** The last voucher was refused because the visitor is not signed in. */
+  promoNeedsLogin = false;
 
   // Validation
   showValidationErrors = false;
@@ -430,10 +432,28 @@ export class Payment implements OnInit, OnDestroy {
         this.cartService.discountCode()
       );
       this.cartService.serverQuote.set(quote);
-      this.promoMessage = quote.voucherCode ? 'Áp dụng mã giảm giá thành công.' : '';
-      this.promoError = false;
+      if (quote.voucherCode) {
+        this.promoMessage = 'Áp dụng mã giảm giá thành công.';
+        this.promoError = false;
+        this.promoNeedsLogin = false;
+      } else if (!this.promoError) {
+        this.promoMessage = '';
+      }
       return true;
-    } catch {
+    } catch (err) {
+      const voucherCode = this.cartService.discountCode();
+      if (voucherCode) {
+        // The quote was refused because of the voucher: tell the customer why, drop the code,
+        // and re-price without it so the total on screen matches what will be charged.
+        this.promoError = true;
+        this.promoNeedsLogin = err instanceof CheckoutApiError && err.status === 401;
+        this.promoMessage = this.promoNeedsLogin
+          ? `Mã "${voucherCode}" chỉ áp dụng cho khách hàng đã đăng nhập. Vui lòng đăng nhập để sử dụng mã giảm giá.`
+          : (err instanceof Error && err.message) || `Không thể áp dụng mã "${voucherCode}".`;
+        this.cartService.clearDiscount();
+        this.loadingQuote = false;
+        return this.refreshQuote();
+      }
       // Graceful fallback to client-side pricing
       return true;
     } finally {
@@ -447,7 +467,16 @@ export class Payment implements OnInit, OnDestroy {
   }
 
   async applyPromo(): Promise<void> {
-    this.cartService.applyDiscountCode(this.promoInput);
+    this.promoMessage = '';
+    this.promoError = false;
+    this.promoNeedsLogin = false;
+    if (!this.cartService.applyDiscountCode(this.promoInput)) {
+      this.cartService.clearDiscount();
+      this.promoMessage = 'Vui lòng nhập mã giảm giá.';
+      this.promoError = true;
+      await this.refreshQuote();
+      return;
+    }
     this.requestKey = '';
     if (!this.selectedShippingId && this.shippingOptions.length) {
       this.selectedShippingId = this.shippingOptions[0].id;
@@ -573,15 +602,13 @@ export class Payment implements OnInit, OnDestroy {
         body: JSON.stringify(orderPayload),
       });
 
-      const resData = await response.json();
-      if (resData.success && resData.data?.orderCode) {
-        this.orderNumber = resData.data.orderCode;
-        this.confirmedTotal = resData.data.finalAmount || finalAmount;
-      } else {
-        const randomNum = Math.floor(100000 + Math.random() * 900000);
-        this.orderNumber = `ORD-LIV-${randomNum}`;
-        this.confirmedTotal = finalAmount;
+      const resData = await response.json().catch(() => ({}));
+      if (!response.ok || !resData.success || !resData.data?.orderCode) {
+        // Never show a made-up order code: the order does not exist unless the backend saved it.
+        throw new Error(resData.message || 'Không thể tạo đơn hàng. Vui lòng thử lại.');
       }
+      this.orderNumber = resData.data.orderCode;
+      this.confirmedTotal = resData.data.finalAmount || finalAmount;
 
       // ====== RULE 1: GHI LOG VÀO WEB USER ======
       const logEntry = {

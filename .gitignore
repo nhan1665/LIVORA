@@ -15,3 +15,6 @@
 .env
 .env.*
 !.env.example
+
+# Runtime uploads (admin-uploaded policy files etc.) must not be committed
+livora_backend/public/uploads/

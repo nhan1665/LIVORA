@@ -25,6 +25,8 @@ export class Login {
   submitting = false;
   errorMessage = '';
   loginSuccessMessage = '';
+  /** Why the visitor was sent here (e.g. tried to add to cart while signed out). */
+  infoMessage = '';
   returnUrl = '/home';
 
   showPassword = false;
@@ -49,9 +51,12 @@ export class Login {
         this.isForgot = false;
       }
 
-      if (params['returnUrl']) {
+      if (params['returnUrl'] && String(params['returnUrl']).startsWith('/') && !String(params['returnUrl']).startsWith('//')) {
         this.returnUrl = params['returnUrl'];
       }
+      this.infoMessage = params['reason'] === 'cart'
+        ? 'Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng. Sau khi đăng nhập bạn sẽ được đưa về trang trước đó.'
+        : '';
       this.cdr.detectChanges();
     });
   }
@@ -178,6 +183,7 @@ export class Login {
 
       setTimeout(() => {
         this.isLogin = true;
+        this.isForgot = false;
         this.username = email;
         this.password = '';
         this.errorMessage = '';

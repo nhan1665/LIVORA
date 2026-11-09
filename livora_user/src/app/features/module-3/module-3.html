@@ -87,6 +87,16 @@
       <!-- Left side: Room Interior Image View -->
       <div class="modal-left-pane">
         <img [src]="selectedRoom.image" [alt]="selectedRoom.name" class="modal-room-image" />
+        <button
+          *ngFor="let hs of selectedRoom.hotspots; let i = index"
+          type="button"
+          class="room-hotspot-pin"
+          [style.top.%]="hs.top"
+          [style.left.%]="hs.left"
+          [title]="hs.product.name + ' - ' + (hs.product.price | number:'1.0-0') + ' ₫'"
+          [attr.aria-label]="'Xem ' + hs.product.name"
+          (click)="redirectToProduct(hs.product.id, $event)"
+        >{{ i + 1 }}</button>
       </div>
 
       <!-- Right side: Vertically Scrollable list of featured products -->
@@ -101,7 +111,17 @@
         </div>
 
         <div class="sidebar-scroll-content">
-          <h3 class="list-heading">Sản phẩm nổi bật trong không gian này</h3>
+          <div class="list-heading-row">
+            <h3 class="list-heading">Sản phẩm nổi bật trong không gian này</h3>
+            <button
+              *ngIf="selectedRoom.hotspots && selectedRoom.hotspots.length"
+              type="button"
+              class="btn-add-all-cart"
+              (click)="addAllToCart($event)"
+            >
+              <i class="bi bi-bag-plus"></i> Thêm tất cả vào giỏ
+            </button>
+          </div>
 
           <div class="featured-products-list">
             <div *ngFor="let hs of selectedRoom.hotspots" class="featured-product-row">
@@ -122,8 +142,21 @@
                 <button class="btn-view-detail" (click)="redirectToProduct(hs.product.id, $event)">
                   Chi tiết
                 </button>
-                <button class="btn-add-cart-icon" (click)="addToCart(hs.product, $event)" title="Thêm vào giỏ hàng">
-                  <i class="bi bi-cart-plus"></i>
+                <button
+                  class="btn-add-cart-icon"
+                  (click)="addToCart(hs.product, $event)"
+                  [disabled]="!isPurchasable(hs.product)"
+                  title="Thêm vào giỏ hàng"
+                >
+                  <i class="bi bi-cart-plus"></i> Thêm vào giỏ
+                </button>
+                <button
+                  class="btn-buy-now"
+                  (click)="buyNow(hs.product, $event)"
+                  [disabled]="!isPurchasable(hs.product)"
+                  title="Mua ngay sản phẩm này"
+                >
+                  Mua ngay
                 </button>
               </div>
             </div>

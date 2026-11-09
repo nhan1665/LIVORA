@@ -1,4 +1,7 @@
 <div class="login-container">
+    <a href="/home" class="back-home-link" (click)="goToHome($event)">
+        <i class="bi bi-arrow-left"></i> Quay về trang chủ LIVORA
+    </a>
     @if (isForgot) {
     <div class="login-card slide-right">
         <h2 class="login-title">QUÊN MẬT KHẨU</h2>
@@ -6,9 +9,8 @@
 
         <div class="login-form">
             @if (errorMessage) {
-            <div class="error-message"
-                style="color: #d9534f; font-size: 0.9em; margin-bottom: 15px; text-align: center;">
-                {{ errorMessage }}
+            <div class="form-alert form-alert-error" role="alert">
+                <i class="bi bi-exclamation-circle-fill"></i><span>{{ errorMessage }}</span>
             </div>
             }
             @if (resetSuccessMessage) {
@@ -39,29 +41,29 @@
 
         <div class="login-form">
             @if (loginSuccessMessage) {
-            <div class="success-message"
-                style="color: #2e7d32; background: #e8f5e9; border: 1px solid #c8e6c9; border-radius: 6px; padding: 10px 14px; font-size: 0.9em; margin-bottom: 15px; text-align: center; font-weight: 500;">
-                <i class="bi bi-check-circle-fill" style="margin-right: 5px;"></i>{{ loginSuccessMessage }}
+            <div class="form-alert form-alert-success" role="status">
+                <i class="bi bi-check-circle-fill"></i><span>{{ loginSuccessMessage }}</span>
+            </div>
+            }
+            @if (infoMessage && !loginSuccessMessage) {
+            <div class="form-alert form-alert-info" role="status">
+                <i class="bi bi-info-circle-fill"></i><span>{{ infoMessage }}</span>
             </div>
             }
             @if (errorMessage) {
-            <div class="error-message"
-                style="color: #d9534f; font-size: 0.9em; margin-bottom: 15px; text-align: center;">
-                {{ errorMessage }}
+            <div class="form-alert form-alert-error" role="alert">
+                <i class="bi bi-exclamation-circle-fill"></i><span>{{ errorMessage }}</span>
             </div>
             }
             <div class="input-group">
-                <input type="text" placeholder="Email / Số điện thoại" [(ngModel)]="username" name="username" (keyup.enter)="doLogin($event)">
+                <input type="text" placeholder="Email / Số điện thoại" [(ngModel)]="username" name="username" autocomplete="username" (keyup.enter)="doLogin($event)">
                 <span class="icon">
-                    <i class="bi bi-telephone"></i>
+                    <i class="bi bi-person"></i>
                 </span>
             </div>
 
             <div class="input-group" style="margin-bottom: 5px; position: relative;">
                 <input [type]="showPassword ? 'text' : 'password'" placeholder="Mật khẩu" [(ngModel)]="password" name="password" (keyup.enter)="doLogin($event)" style="padding-right: 40px;">
-                <span class="icon">
-                    <i class="bi bi-lock"></i>
-                </span>
                 <span class="eye-icon" (click)="togglePasswordVisibility()" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #888; z-index: 10;">
                     <i class="bi" [class.bi-eye]="!showPassword" [class.bi-eye-slash]="showPassword"></i>
                 </span>
@@ -77,7 +79,13 @@
                 <a href="#" (click)="showForgotForm($event)" class="forgot-password">Quên mật khẩu</a>
             </div>
 
-            <button type="button" class="btn-login" (click)="doLogin($event)">Đăng nhập</button>
+            <button type="button" class="btn-login" (click)="doLogin($event)" [disabled]="submitting">
+                @if (submitting) {
+                <span class="btn-spinner" aria-hidden="true"></span> Đang đăng nhập...
+                } @else {
+                Đăng nhập
+                }
+            </button>
 
             <button type="button" class="btn-google" (click)="blockAction($event)">
                 <img class="google-logo" src="google-icon.png" alt="Google Logo">
@@ -97,15 +105,13 @@
 
         <div class="login-form">
             @if (signUpErrorMessage) {
-            <div class="error-message"
-                style="color: #d9534f; font-size: 0.9em; margin-bottom: 15px; text-align: center;">
-                {{ signUpErrorMessage }}
+            <div class="form-alert form-alert-error" role="alert">
+                <i class="bi bi-exclamation-circle-fill"></i><span>{{ signUpErrorMessage }}</span>
             </div>
             }
             @if (signUpSuccessMessage) {
-            <div class="success-message"
-                style="color: #4CAF50; font-size: 0.95em; margin-bottom: 15px; text-align: center; font-weight: 600;">
-                {{ signUpSuccessMessage }}
+            <div class="form-alert form-alert-success" role="status">
+                <i class="bi bi-check-circle-fill"></i><span>{{ signUpSuccessMessage }}</span>
             </div>
             }
 
@@ -125,9 +131,6 @@
 
             <div class="input-group" style="position: relative;">
                 <input [type]="showSignUpPassword ? 'text' : 'password'" placeholder="Mật khẩu (tối thiểu 6 ký tự)" [(ngModel)]="signUpPassword" name="signUpPassword" (keyup.enter)="doRegister($event)" style="padding-right: 40px;">
-                <span class="icon">
-                    <i class="bi bi-lock"></i>
-                </span>
                 <span class="eye-icon" (click)="toggleSignUpPasswordVisibility()" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #888; z-index: 10;">
                     <i class="bi" [class.bi-eye]="!showSignUpPassword" [class.bi-eye-slash]="showSignUpPassword"></i>
                 </span>
@@ -135,16 +138,17 @@
 
             <div class="input-group" style="position: relative;">
                 <input [type]="showSignUpConfirmPassword ? 'text' : 'password'" placeholder="Xác nhận mật khẩu" [(ngModel)]="signUpConfirmPassword" name="signUpConfirmPassword" (keyup.enter)="doRegister($event)" style="padding-right: 40px;">
-                <span class="icon">
-                    <i class="bi bi-lock"></i>
-                </span>
                 <span class="eye-icon" (click)="toggleSignUpConfirmPasswordVisibility()" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #888; z-index: 10;">
                     <i class="bi" [class.bi-eye]="!showSignUpConfirmPassword" [class.bi-eye-slash]="showSignUpConfirmPassword"></i>
                 </span>
             </div>
 
             <button type="button" class="btn-login" (click)="doRegister($event)" [disabled]="submitting">
-                {{ submitting ? 'Đang tạo tài khoản...' : 'Đăng ký tài khoản' }}
+                @if (submitting) {
+                <span class="btn-spinner" aria-hidden="true"></span> Đang tạo tài khoản...
+                } @else {
+                Đăng ký tài khoản
+                }
             </button>
 
             <button type="button" class="btn-google" (click)="blockAction($event)">

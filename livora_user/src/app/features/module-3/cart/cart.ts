@@ -26,6 +26,8 @@ export class Cart implements OnInit {
   promoError = false;
 
   ngOnInit(): void {
+    // Coming back from a "Mua ngay" checkout: show the saved cart again.
+    this.cartService.cancelBuyNow();
     this.loadRecommendations();
   }
 

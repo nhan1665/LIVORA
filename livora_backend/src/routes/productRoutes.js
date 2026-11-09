@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const requireAdmin = require('../middleware/requireAdmin');
 const {
   getProducts,
   getProductById,
@@ -69,7 +70,12 @@ router.get('/debug/force-sync-sold', async (req, res) => {
   }
 });
 
-router.get('/seed-mock-products', async (req, res) => {
+// Force-reseeding overwrites admin edits (rooms, stock, images) and re-links customer designs,
+// so it is a maintenance tool only: disabled unless ENABLE_UNSAFE_DB_TOOLS=true, and admin-only.
+router.get('/seed-mock-products', (req, res, next) => {
+  if (process.env.ENABLE_UNSAFE_DB_TOOLS !== 'true') return res.sendStatus(404);
+  return requireAdmin(req, res, next);
+}, async (req, res) => {
   try {
     const seedMockSpacesAndProducts = require('../config/seedSpacesAndProducts');
     const result = await seedMockSpacesAndProducts(true);

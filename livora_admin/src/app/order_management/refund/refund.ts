@@ -164,18 +164,27 @@ export class RefundComponent implements OnInit {
     this.loadRefunds();
   }
 
-  loadRefunds(): void {
+  async loadRefunds(): Promise<void> {
     this.loading = true;
-    const res = this.refundService.listRefunds({
-      keyword: this.keyword,
-      status: this.statusFilter,
-      page: this.currentPage,
-      pageSize: this.pageSize,
-    });
-    this.refunds = res.refunds;
-    this.totalItems = res.total;
-    this.stats = this.refundService.getStats();
-    this.loading = false;
+    this.cdr.markForCheck();
+    try {
+      const res = await this.refundService.listRefunds({
+        keyword: this.keyword,
+        status: this.statusFilter,
+        page: this.currentPage,
+        pageSize: this.pageSize,
+      });
+      this.refunds = res.refunds;
+      this.totalItems = res.total;
+      this.stats = res.stats;
+    } catch (err) {
+      this.refunds = [];
+      this.totalItems = 0;
+      this.showNotice(err instanceof Error ? err.message : 'Không thể tải danh sách hoàn tiền.', 'error');
+    } finally {
+      this.loading = false;
+      this.cdr.detectChanges();
+    }
   }
 
   onFilter(event: { search: string; status: string }): void {
@@ -228,9 +237,9 @@ export class RefundComponent implements OnInit {
     this.isApproveConfirmOpen = true;
   }
 
-  confirmApprove(): void {
+  async confirmApprove(): Promise<void> {
     if (!this.selectedRefund) return;
-    const res = this.refundService.processRefund({
+    const res = await this.refundService.processRefund({
       refundId: this.selectedRefund._id,
       approved: true,
       staffName: 'Admin Kế toán',
@@ -238,13 +247,14 @@ export class RefundComponent implements OnInit {
 
     if (res.success) {
       this.showNotice(res.message, 'success');
-      this.loadRefunds();
       this.selectedRefund = res.refund || null;
+      await this.loadRefunds();
     } else {
       this.showNotice(res.message, 'error');
     }
 
     this.isApproveConfirmOpen = false;
+    this.cdr.detectChanges();
   }
 
   cancelApproveConfirm(): void {
@@ -255,14 +265,14 @@ export class RefundComponent implements OnInit {
     this.isRejectMode = !this.isRejectMode;
   }
 
-  submitReject(): void {
+  async submitReject(): Promise<void> {
     if (!this.selectedRefund) return;
     if (!this.rejectReasonInput.trim()) {
       this.showNotice('Vui lòng nhập lý do từ chối yêu cầu hoàn tiền.', 'error');
       return;
     }
 
-    const res = this.refundService.processRefund({
+    const res = await this.refundService.processRefund({
       refundId: this.selectedRefund._id,
       approved: false,
       rejectReason: this.rejectReasonInput.trim(),
@@ -271,12 +281,13 @@ export class RefundComponent implements OnInit {
 
     if (res.success) {
       this.showNotice(res.message, 'success');
-      this.loadRefunds();
       this.selectedRefund = res.refund || null;
       this.isRejectMode = false;
+      await this.loadRefunds();
     } else {
       this.showNotice(res.message, 'error');
     }
+    this.cdr.detectChanges();
   }
 
   // ====== QUẢN LÝ CHÍNH SÁCH HOÀN TIỀN ======

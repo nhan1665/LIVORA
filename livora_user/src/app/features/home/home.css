@@ -622,6 +622,7 @@
    CONTACT US SECTION (QUẢN LÝ TƯƠNG TÁC)
    ============================================= */
 .contact-home-section {
+  scroll-margin-top: 80px;
   padding: 90px 24px;
   background: linear-gradient(180deg, #FAF8F5 0%, #F5EFE6 100%);
   border-top: 1px solid rgba(197, 168, 128, 0.25);
