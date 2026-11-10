@@ -10,6 +10,7 @@
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  min-width: 0;
   overflow-x: clip;
 }
 
@@ -50,6 +51,7 @@
 
 .breadcrumb-link:hover {
   color: #593c3b;
+  text-decoration: underline;
 }
 
 .breadcrumb-separator {
@@ -88,14 +90,307 @@
   border-color: #dfd4c9;
 }
 
-.notification-dot {
+.notification-btn.active {
+  background-color: #593c3b;
+  color: #ffffff;
+  border-color: #593c3b;
+}
+
+.notification-wrapper {
+  position: relative;
+}
+
+.notification-badge {
   position: absolute;
-  top: 7px;
-  right: 8px;
-  width: 6px;
-  height: 6px;
+  top: -5px;
+  right: -5px;
+  background-color: #dc2626;
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 700;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  border: 2px solid #ffffff;
+  box-shadow: 0 2px 5px rgba(220, 38, 38, 0.35);
+  animation: pulseBadge 2s infinite;
+}
+
+@keyframes pulseBadge {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+.notification-popover {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: -10px;
+  width: 390px;
+  max-width: 90vw;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12), 0 1px 4px rgba(0, 0, 0, 0.05);
+  border: 1px solid #ebe5dc;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: popoverFadeIn 0.18s ease-out;
+}
+
+@keyframes popoverFadeIn {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.notif-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 13px 16px;
+  border-bottom: 1px solid #f2ede6;
+  background: #fdfcfb;
+}
+
+.notif-title-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.notif-title {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #2c2828;
+}
+
+.notif-role-tag {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 10px;
+  background: #f5ebe6;
+  color: #735048;
+}
+
+.btn-mark-all {
+  background: none;
+  border: none;
+  color: #0284c7;
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 3px 6px;
+  border-radius: 4px;
+  transition: all 0.15s ease;
+}
+
+.btn-mark-all:hover {
+  background: #f0f9ff;
+  text-decoration: underline;
+}
+
+.notif-tabs {
+  display: flex;
+  padding: 8px 16px;
+  gap: 8px;
+  border-bottom: 1px solid #f2ede6;
+  background: #ffffff;
+}
+
+.notif-tab {
+  background: #f7f4ee;
+  border: 1px solid transparent;
+  color: #6a6057;
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.notif-tab.active {
+  background: #593c3b;
+  color: #ffffff;
+}
+
+.notif-list {
+  max-height: 380px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.notif-empty {
+  padding: 36px 20px;
+  text-align: center;
+  color: #8c8278;
+  font-size: 13px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.notif-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid #f6f3ed;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  position: relative;
+}
+
+.notif-item:hover {
+  background: #faf7f2;
+}
+
+.notif-item.unread {
+  background: #fcfbf8;
+}
+
+.notif-icon-col {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.notif-icon-col[data-type="refund"] {
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.notif-icon-col[data-type="contact"] {
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.notif-icon-col[data-type="review"] {
+  background: #fefce8;
+  color: #a16207;
+}
+
+.notif-icon-col[data-type="order"] {
+  background: #faf5ff;
+  color: #7e22ce;
+}
+
+.notif-icon-col[data-type="content"],
+.notif-icon-col[data-type="system"] {
+  background: #f3f4f6;
+  color: #4b5563;
+}
+
+.notif-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.notif-item-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.notif-item-title {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #2c2828;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.notif-badge-pill {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 8px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.notif-badge-pill[data-type="refund"] {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.notif-badge-pill[data-type="contact"] {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.notif-badge-pill[data-type="review"] {
+  background: #fef9c3;
+  color: #854d0e;
+}
+
+.notif-badge-pill[data-type="order"] {
+  background: #f3e8ff;
+  color: #6b21a8;
+}
+
+.notif-badge-pill[data-type="content"],
+.notif-badge-pill[data-type="system"] {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+.notif-item-msg {
+  font-size: 11.5px;
+  color: #6a6057;
+  line-height: 1.4;
+  margin-bottom: 6px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.notif-item-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.notif-time {
+  font-size: 10.5px;
+  color: #9c9288;
+}
+
+.notif-action-hint {
+  font-size: 10.5px;
+  color: #593c3b;
+  font-weight: 600;
+}
+
+.notif-unread-dot {
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
-  background-color: #b96a6a;
+  background: #0284c7;
+  flex-shrink: 0;
+  margin-top: 6px;
+}
+
+.notification-dot {
+  display: none;
 }
 
 .topbar-user {
@@ -109,6 +404,31 @@
   flex-direction: column;
   text-align: right;
   line-height: 1.25;
+}
+
+.user-meta.clickable {
+  cursor: pointer;
+  padding: 4px 10px;
+  border-radius: 8px;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.user-meta.clickable:hover {
+  background-color: #f7f4ee;
+}
+
+.user-meta.clickable:hover .user-name {
+  color: #593c3b;
+}
+
+.user-meta.clickable:hover .user-role svg {
+  transform: translateX(2px);
+  color: #593c3b;
+}
+
+.user-role svg {
+  transition: transform 0.15s ease, color 0.15s ease;
 }
 
 .user-name {
@@ -149,5 +469,6 @@
 
 .admin-content {
   flex: 1;
-  padding: 28px;
+  padding: 20px 24px;
+  min-width: 0;
 }

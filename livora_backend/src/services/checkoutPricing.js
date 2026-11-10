@@ -65,9 +65,12 @@ async function loadItems(requestedItems, session) {
       product = await query;
     }
 
-    if (product && (!product.isActive || !['active', 'Đang kinh doanh'].includes(product.status) || product.stockQuantity < quantity)) {
-      throw new CheckoutError('Sản phẩm không còn khả dụng hoặc đã hết hàng.', 409);
+    if (product && (!product.isActive || !['active', 'Đang kinh doanh'].includes(product.status))) {
+      throw new CheckoutError('Sản phẩm đã tạm ngừng kinh doanh.', 409);
     }
+
+    const currentStock = product ? (Number(product.stockQuantity) || 0) : 10;
+    const isOutOfStock = currentStock <= 0 || currentStock < quantity;
 
     const fallbackPrice = Math.max(0, Math.round(Number(item?.price || item?.unitPrice) || 500000));
     const unitPrice = product ? requireVnd(product.salePrice ?? product.price, 'Giá sản phẩm') : requireVnd(fallbackPrice, 'Giá sản phẩm');
@@ -79,6 +82,8 @@ async function loadItems(requestedItems, session) {
       quantity,
       unitPrice,
       subtotal: lineSubtotal,
+      isOutOfStock,
+      availableStock: currentStock,
     });
   }
   return items;

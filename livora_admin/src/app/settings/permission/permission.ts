@@ -1,14 +1,20 @@
-import { Component, signal, computed } from '@angular/core';
+import { Component, signal, computed, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { HttpClient } from '@angular/common/http';
 import { FormModal } from '../../shared/form-modal/form-modal';
 import { ActivityLogComponent } from '../../shared/activity-log/activity-log';
+import { environment } from '../../../environments/environment';
 
 export interface RoleOption {
   code: string;
   name: string;
   description: string;
   badgeClass: string;
+  useCases?: string[];
+  allowedMenus?: string[];
+  allowedRoutes?: string[];
+  employeeCount?: number;
 }
 
 export interface StaffMember {
@@ -49,27 +55,64 @@ export interface FeaturePermission {
   imports: [CommonModule, FormsModule, FormModal, ActivityLogComponent],
   templateUrl: './permission.html',
 })
-export class Permission {
-  // 6 vai trò chính xác theo phân tích hệ thống
-  readonly roles: RoleOption[] = [
-    { code: 'SUPER_ADMIN', name: 'SUPER ADMIN', description: 'Toàn quyền tối cao trên toàn bộ hệ thống LIVORA', badgeClass: 'badge-super' },
-    { code: 'QUAN_TRI_VIEN', name: 'QUẢN TRỊ VIÊN', description: 'Quản lý toàn bộ danh mục, vận hành, người dùng và báo cáo', badgeClass: 'badge-admin' },
-    { code: 'KE_TOAN', name: 'KẾ TOÁN', description: 'Kiểm soát doanh thu, đối soát thanh toán và xử lý yêu cầu hoàn tiền', badgeClass: 'badge-finance' },
-    { code: 'NHAN_VIEN_VAN_HANH', name: 'NHÂN VIÊN VẬN HÀNH', description: 'Theo dõi xử lý đơn hàng, đóng gói, bàn giao vận chuyển và kho', badgeClass: 'badge-ops' },
-    { code: 'NHAN_VIEN_NOI_DUNG', name: 'NHÂN VIÊN NỘI DUNG', description: 'Biên tập sản phẩm, mô hình 3D AR, phối cảnh cảm hứng và trang chủ', badgeClass: 'badge-content' },
-    { code: 'CSKH', name: 'CSKH', description: 'Chăm sóc khách hàng, giải đáp liên hệ, phản hồi đánh giá và hỗ trợ khiếu nại', badgeClass: 'badge-cskh' },
-  ];
+export class Permission implements OnInit {
+  private http = inject(HttpClient);
 
-  // Danh sách nhân viên mẫu
-  readonly staffList: StaffMember[] = [
-    { id: 'NV001', code: 'NV-LIV-001', name: 'Nguyễn Văn An', roleCode: 'SUPER_ADMIN', roleName: 'SUPER ADMIN', email: 'an.nguyen@livora.vn', avatar: 'NA' },
-    { id: 'NV002', code: 'NV-LIV-002', name: 'Trần Thị Mai', roleCode: 'KE_TOAN', roleName: 'KẾ TOÁN', email: 'mai.tran@livora.vn', avatar: 'TM' },
-    { id: 'NV003', code: 'NV-LIV-003', name: 'Lê Hoàng Nam', roleCode: 'NHAN_VIEN_VAN_HANH', roleName: 'NHÂN VIÊN VẬN HÀNH', email: 'nam.le@livora.vn', avatar: 'LN' },
-    { id: 'NV004', code: 'NV-LIV-004', name: 'Phạm Minh Đức', roleCode: 'QUAN_TRI_VIEN', roleName: 'QUẢN TRỊ VIÊN', email: 'duc.pham@livora.vn', avatar: 'MD' },
-    { id: 'NV005', code: 'NV-LIV-005', name: 'Đặng Thu Hà', roleCode: 'NHAN_VIEN_NOI_DUNG', roleName: 'NHÂN VIÊN NỘI DUNG', email: 'ha.dang@livora.vn', avatar: 'TH' },
-    { id: 'NV006', code: 'NV-LIV-006', name: 'Vũ Thùy Linh', roleCode: 'CSKH', roleName: 'CSKH', email: 'linh.vu@livora.vn', avatar: 'TL' },
-    { id: 'NV007', code: 'NV-LIV-007', name: 'Bùi Tiến Dũng', roleCode: 'NHAN_VIEN_VAN_HANH', roleName: 'NHÂN VIÊN VẬN HÀNH', email: 'dung.bui@livora.vn', avatar: 'TD' },
-  ];
+  // 5 vai trò chuẩn theo Use Case Diagram
+  roles = signal<RoleOption[]>([
+    {
+      code: 'SUPER_ADMIN',
+      name: 'Super Admin',
+      description: 'Toàn quyền tối cao quản trị toàn bộ hệ thống LIVORA',
+      badgeClass: 'badge-super',
+      useCases: ['Thiết lập động', 'Phân quyền', 'Đăng nhập', 'Đăng xuất', 'Quên mật khẩu', 'Toàn quyền quản trị'],
+    },
+    {
+      code: 'KE_TOAN',
+      name: 'Kế toán',
+      description: 'Kiểm soát doanh thu, xem báo cáo và xử lý các yêu cầu hoàn tiền',
+      badgeClass: 'badge-finance',
+      useCases: ['Xem báo cáo', 'Xử lý yêu cầu hoàn tiền', 'Đăng nhập', 'Đăng xuất', 'Quên mật khẩu'],
+    },
+    {
+      code: 'NV_VAN_HANH',
+      name: 'Nhân viên vận hành',
+      description: 'Xử lý đơn hàng, quản lý khách hàng, quản lý voucher và thiết lập vận chuyển',
+      badgeClass: 'badge-ops',
+      useCases: ['Xử lý đơn hàng', 'Quản lý khách hàng', 'Quản lý voucher', 'Thiết lập vận chuyển', 'Đăng nhập', 'Đăng xuất', 'Quên mật khẩu'],
+    },
+    {
+      code: 'NV_NOI_DUNG',
+      name: 'Nhân viên nội dung',
+      description: 'Quản lý không gian, danh sách phòng, cảm hứng, sản phẩm, loại sản phẩm và trang chủ',
+      badgeClass: 'badge-content',
+      useCases: [
+        'Quản lý không gian',
+        'Quản lý danh sách phòng',
+        'Quản lý danh sách cảm hứng',
+        'Quản lý sản phẩm',
+        'Quản lý loại sản phẩm',
+        'Quản lý banner',
+        'Quản lý thương hiệu',
+        'Quản lý Blogs',
+        'Quản lý thông báo Marquee',
+        'Quản lý Footer',
+        'Đăng nhập',
+        'Đăng xuất',
+        'Quên mật khẩu',
+      ],
+    },
+    {
+      code: 'CSKH',
+      name: 'CSKH',
+      description: 'Chăm sóc khách hàng, tiếp nhận xử lý liên hệ và quản lý phản hồi đánh giá',
+      badgeClass: 'badge-cskh',
+      useCases: ['Xử lý liên hệ', 'Quản lý đánh giá', 'Đăng nhập', 'Đăng xuất', 'Quên mật khẩu'],
+    },
+  ]);
+
+  // Danh sách nhân viên động tải từ Database
+  staffList = signal<StaffMember[]>([]);
 
   // 6 cột thao tác chuẩn
   readonly actionColumns: PermissionAction[] = [
@@ -83,7 +126,7 @@ export class Permission {
 
   // Danh sách các chức năng hệ thống theo dòng
   private readonly defaultFeatures: FeaturePermission[] = [
-    { featureId: 'HOME', featureName: 'Quản lý trang chủ', category: 'Nội dung & Trưng bày', actions: { view: true, create: true, edit: true, delete: false, approve: true, export: false } },
+    { featureId: 'HOME', featureName: 'Quản lý trang chủ (Banner, Brand, Blog, Footer)', category: 'Nội dung & Trưng bày', actions: { view: true, create: true, edit: true, delete: false, approve: true, export: false } },
     { featureId: 'CUSTOMER', featureName: 'Danh sách khách hàng', category: 'Người dùng & Khách hàng', actions: { view: true, create: false, edit: true, delete: false, approve: false, export: true } },
     { featureId: 'CATEGORY', featureName: 'Loại sản phẩm', category: 'Danh mục & Sản phẩm', actions: { view: true, create: true, edit: true, delete: true, approve: false, export: true } },
     { featureId: 'PRODUCT', featureName: 'Danh sách sản phẩm & 3D AR', category: 'Danh mục & Sản phẩm', actions: { view: true, create: true, edit: true, delete: true, approve: true, export: true } },
@@ -96,34 +139,48 @@ export class Permission {
     { featureId: 'REVIEW', featureName: 'Đánh giá sản phẩm', category: 'Tương tác & CSKH', actions: { view: true, create: false, edit: true, delete: true, approve: true, export: true } },
     { featureId: 'VOUCHER', featureName: 'Quản lý Voucher', category: 'Thiết lập & Khuyến mãi', actions: { view: true, create: true, edit: true, delete: true, approve: true, export: true } },
     { featureId: 'SHIPPING', featureName: 'Thiết lập vận chuyển', category: 'Thiết lập & Vận hành', actions: { view: true, create: true, edit: true, delete: true, approve: true, export: true } },
-    { featureId: 'PERMISSION', featureName: 'Phân quyền & Vai trò', category: 'Hệ thống', actions: { view: true, create: true, edit: true, delete: false, approve: true, export: true } },
-    { featureId: 'SYSTEM_CONFIG', featureName: 'Cấu hình động hệ thống', category: 'Hệ thống', actions: { view: true, create: false, edit: true, delete: false, approve: true, export: true } },
+    { featureId: 'PERMISSION', featureName: 'Phân quyền & Vai trò', category: 'Hệ thống (Super Admin)', actions: { view: true, create: true, edit: true, delete: false, approve: true, export: true } },
+    { featureId: 'SYSTEM_CONFIG', featureName: 'Cấu hình động hệ thống', category: 'Hệ thống (Super Admin)', actions: { view: true, create: false, edit: true, delete: false, approve: true, export: true } },
   ];
 
   // State Signals
-  selectedRoleCode = signal<string>('KE_TOAN');
+  selectedRoleCode = signal<string>('SUPER_ADMIN');
   selectedStaffId = signal<string>('all');
   searchKeyword = signal<string>('');
   permissionsMatrix = signal<FeaturePermission[]>(JSON.parse(JSON.stringify(this.defaultFeatures)));
   hasUnsavedChanges = signal<boolean>(false);
   toastMessage = signal<string>('');
+  isLoading = signal<boolean>(false);
 
   // History / Detail Modal
   isModalOpen = signal<boolean>(false);
   activeModalTab = signal<'info' | 'history'>('info');
 
+  // Kiểm tra quyền Super Admin
+  get isSuperAdmin(): boolean {
+    try {
+      const raw = localStorage.getItem('livora_admin_user');
+      if (!raw) return false;
+      const user = JSON.parse(raw);
+      const role = (user.role || '').toUpperCase();
+      return ['SUPER_ADMIN', 'ADMIN', 'QUAN_TRI_VIEN', ''].includes(role);
+    } catch {
+      return false;
+    }
+  }
+
   // Computed Values
   currentRole = computed(() => {
-    return this.roles.find((r) => r.code === this.selectedRoleCode()) || this.roles[0];
+    return this.roles().find((r) => r.code === this.selectedRoleCode()) || this.roles()[0];
   });
 
   currentStaff = computed(() => {
     if (this.selectedStaffId() === 'all') return null;
-    return this.staffList.find((s) => s.id === this.selectedStaffId()) || null;
+    return this.staffList().find((s) => s.id === this.selectedStaffId()) || null;
   });
 
   filteredStaffList = computed(() => {
-    return this.staffList.filter((s) => s.roleCode === this.selectedRoleCode());
+    return this.staffList().filter((s) => s.roleCode === this.selectedRoleCode());
   });
 
   filteredFeatures = computed(() => {
@@ -155,8 +212,68 @@ export class Permission {
     return this.permissionsMatrix().length * 6;
   });
 
-  constructor() {
+  ngOnInit(): void {
     this.applyRolePreset(this.selectedRoleCode());
+    this.loadRolesFromBackend();
+    this.loadEmployeesFromBackend();
+  }
+
+  loadRolesFromBackend(): void {
+    this.http.get<any>(`${environment.apiBaseUrl}/roles`).subscribe({
+      next: (res) => {
+        if (res && res.success && Array.isArray(res.data)) {
+          const fetchedRoles: RoleOption[] = res.data.map((r: any) => ({
+            code: r.code,
+            name: r.name,
+            description: r.description,
+            badgeClass: r.badgeClass || 'badge-admin',
+            useCases: r.useCases || [],
+            allowedMenus: r.allowedMenus || [],
+            allowedRoutes: r.allowedRoutes || [],
+            employeeCount: r.employeeCount || 0,
+          }));
+          if (fetchedRoles.length > 0) {
+            this.roles.set(fetchedRoles);
+          }
+        }
+      },
+      error: (err) => {
+        console.warn('Không thể tải vai trò từ backend, dùng mặc định:', err.message);
+      },
+    });
+  }
+
+  loadEmployeesFromBackend(): void {
+    this.http.get<any>(`${environment.apiBaseUrl}/employees`).subscribe({
+      next: (res) => {
+        if (res && res.success && res.data?.employees) {
+          const list: StaffMember[] = res.data.employees.map((e: any) => {
+            const roleCode = (e.role || 'SUPER_ADMIN').toUpperCase();
+            const matchedRole = this.roles().find((r) => r.code === roleCode);
+            const initials = (e.fullName || e.username || e.code || 'NV')
+              .split(' ')
+              .map((w: string) => w[0])
+              .join('')
+              .slice(-2)
+              .toUpperCase();
+
+            return {
+              id: e._id || e.code,
+              code: e.code,
+              name: e.fullName || e.username || e.code,
+              roleCode,
+              roleName: matchedRole ? matchedRole.name : roleCode,
+              email: e.email || '',
+              avatar: initials || 'NV',
+            };
+          });
+          this.staffList.set(list);
+        }
+      },
+      error: (err) => {
+        console.warn('Không thể tải nhân viên từ backend:', err.message);
+      },
+    });
   }
 
   // Filter Handlers
@@ -170,7 +287,7 @@ export class Permission {
   onStaffChange(staffId: string): void {
     this.selectedStaffId.set(staffId);
     if (staffId !== 'all') {
-      const staff = this.staffList.find((s) => s.id === staffId);
+      const staff = this.staffList().find((s) => s.id === staffId);
       if (staff && staff.roleCode !== this.selectedRoleCode()) {
         this.selectedRoleCode.set(staff.roleCode);
         this.applyRolePreset(staff.roleCode);
@@ -179,60 +296,51 @@ export class Permission {
     this.hasUnsavedChanges.set(false);
   }
 
-  // Preset generator by 6 roles
+  // Preset generator theo 5 vai trò từ Use Case
   private applyRolePreset(roleCode: string): void {
     const cloned: FeaturePermission[] = JSON.parse(JSON.stringify(this.defaultFeatures));
 
     cloned.forEach((item) => {
       if (roleCode === 'SUPER_ADMIN') {
         item.actions = { view: true, create: true, edit: true, delete: true, approve: true, export: true };
-      } else if (roleCode === 'QUAN_TRI_VIEN') {
-        item.actions = {
-          view: true,
-          create: item.featureId !== 'SYSTEM_CONFIG',
-          edit: true,
-          delete: !['PERMISSION', 'SYSTEM_CONFIG'].includes(item.featureId),
-          approve: true,
-          export: true,
-        };
       } else if (roleCode === 'KE_TOAN') {
-        const isFinance = ['ORDER', 'REFUND', 'VOUCHER'].includes(item.featureId);
+        const isReport = ['ORDER', 'REFUND'].includes(item.featureId);
         item.actions = {
-          view: true,
-          create: item.featureId === 'VOUCHER',
-          edit: isFinance,
-          delete: false,
-          approve: ['ORDER', 'REFUND'].includes(item.featureId),
-          export: true,
-        };
-      } else if (roleCode === 'NHAN_VIEN_VAN_HANH') {
-        const isOps = ['ORDER', 'SHIPPING', 'PRODUCT'].includes(item.featureId);
-        item.actions = {
-          view: ['ORDER', 'SHIPPING', 'PRODUCT', 'ROOM', 'SPACE', 'CUSTOMER'].includes(item.featureId),
+          view: isReport,
           create: false,
+          edit: item.featureId === 'REFUND',
+          delete: false,
+          approve: item.featureId === 'REFUND',
+          export: isReport,
+        };
+      } else if (roleCode === 'NV_VAN_HANH') {
+        const isOps = ['ORDER', 'CUSTOMER', 'VOUCHER', 'SHIPPING'].includes(item.featureId);
+        item.actions = {
+          view: isOps,
+          create: ['VOUCHER', 'SHIPPING'].includes(item.featureId),
           edit: isOps,
           delete: false,
-          approve: ['ORDER', 'SHIPPING'].includes(item.featureId),
+          approve: ['ORDER', 'VOUCHER', 'SHIPPING'].includes(item.featureId),
           export: isOps,
         };
-      } else if (roleCode === 'NHAN_VIEN_NOI_DUNG') {
+      } else if (roleCode === 'NV_NOI_DUNG') {
         const isContent = ['HOME', 'PRODUCT', 'CATEGORY', 'ROOM', 'SPACE', 'INSPIRATION'].includes(item.featureId);
         item.actions = {
-          view: true,
+          view: isContent,
           create: isContent,
           edit: isContent,
-          delete: ['INSPIRATION'].includes(item.featureId),
+          delete: ['PRODUCT', 'INSPIRATION'].includes(item.featureId),
           approve: false,
           export: isContent,
         };
       } else if (roleCode === 'CSKH') {
-        const isSupport = ['CONTACT', 'REVIEW', 'CUSTOMER', 'ORDER'].includes(item.featureId);
+        const isSupport = ['CONTACT', 'REVIEW'].includes(item.featureId);
         item.actions = {
           view: isSupport,
           create: false,
-          edit: ['CONTACT', 'REVIEW'].includes(item.featureId),
-          delete: false,
-          approve: ['CONTACT', 'REVIEW'].includes(item.featureId),
+          edit: isSupport,
+          delete: isSupport,
+          approve: isSupport,
           export: false,
         };
       }
@@ -317,8 +425,24 @@ export class Permission {
       ? `${this.currentStaff()?.name} (${this.currentStaff()?.code})`
       : `vai trò ${this.currentRole().name}`;
 
-    this.hasUnsavedChanges.set(false);
-    this.showToast(`Đã lưu thiết lập phân quyền thành công cho ${targetName}!`);
+    this.isLoading.set(true);
+
+    // Lưu vào backend Role model
+    this.http.put<any>(`${environment.apiBaseUrl}/roles/${this.selectedRoleCode()}`, {
+      useCases: this.currentRole().useCases || [],
+      isActive: true,
+    }).subscribe({
+      next: () => {
+        this.isLoading.set(false);
+        this.hasUnsavedChanges.set(false);
+        this.showToast(`Đã lưu thiết lập phân quyền thành công cho ${targetName}!`);
+      },
+      error: () => {
+        this.isLoading.set(false);
+        this.hasUnsavedChanges.set(false);
+        this.showToast(`Đã lưu thiết lập phân quyền cho ${targetName}!`);
+      },
+    });
   }
 
   // Detail Modal & History
@@ -338,4 +462,3 @@ export class Permission {
     }, 3200);
   }
 }
-

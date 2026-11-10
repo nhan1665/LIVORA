@@ -21,6 +21,10 @@ export interface Refund {
   orderTotalAmount: number;
   reason: string;
   refundMethod: string;
+  bankName?: string;
+  bankAccountNumber?: string;
+  bankAccountOwner?: string;
+  evidenceImages?: string[];
   status: RefundStatus;
   rejectReason?: string;
   processedBy?: string;

@@ -24,7 +24,8 @@ export const routes: Routes = [
   { path: 'payment', component: Payment },
   { path: 'inspiration', component: Module3 },
 
-  // room routes
+  // search & room routes
+  { path: 'search', component: RoomProductList },
   { path: 'rooms', component: RoomCategories },
   { path: 'rooms/:roomName', component: RoomProductList },
   { path: 'rooms/:roomName/:categoryName', component: RoomProductList },

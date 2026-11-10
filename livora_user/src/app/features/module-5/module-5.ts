@@ -6,6 +6,7 @@ import { AuthService, CustomerAddress } from '../../services/auth.service';
 import { UserOrderService, UserOrder, UserOrderItem } from '../../services/user-order.service';
 import { ReviewService, UserReviewItem } from '../../services/review.service';
 import { VIETNAM_PROVINCE_NAMES, getWardsForProvince } from '../../shared/data/vietnam-locations';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-module-5',
@@ -685,6 +686,166 @@ export class Module5 implements OnInit {
   setReviewFilter(filter: 'not_reviewed' | 'reviewed') {
     this.reviewFilter = filter;
     this.cdr.detectChanges();
+  }
+
+  // ====== HỦY ĐƠN HÀNG TRỰC TIẾP TẠI PROFILE ======
+  isCancelModalOpen = false;
+  selectedOrderForCancel: UserOrder | null = null;
+  cancelReason = 'Đổi ý không muốn mua nữa';
+  customCancelReason = '';
+  cancelSubmitting = false;
+  cancelModalError = '';
+
+  openCancelModal(order: UserOrder): void {
+    this.selectedOrderForCancel = order;
+    this.cancelReason = 'Đổi ý không muốn mua nữa';
+    this.customCancelReason = '';
+    this.cancelModalError = '';
+    this.cancelSubmitting = false;
+    this.isCancelModalOpen = true;
+    this.cdr.detectChanges();
+  }
+
+  closeCancelModal(): void {
+    this.isCancelModalOpen = false;
+    this.selectedOrderForCancel = null;
+    this.cancelModalError = '';
+    this.cancelSubmitting = false;
+    this.cdr.detectChanges();
+  }
+
+  async confirmCancelOrderDirect(): Promise<void> {
+    if (!this.selectedOrderForCancel) return;
+    const finalReason = this.cancelReason === 'Lý do khác'
+      ? (this.customCancelReason.trim() || 'Lý do khác')
+      : this.cancelReason;
+
+    this.cancelSubmitting = true;
+    this.cancelModalError = '';
+    this.cdr.detectChanges();
+
+    try {
+      const orderRef = this.selectedOrderForCancel.id || (this.selectedOrderForCancel as any)._id || this.selectedOrderForCancel.orderCode;
+      const token = this.authService.token;
+      const res = await fetch(`${environment.apiBaseUrl}/orders/${encodeURIComponent(orderRef)}/cancel`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          reason: finalReason,
+          phone: this.authService.currentUser()?.phone || '',
+        }),
+      });
+
+      const resData = await res.json().catch(() => ({}));
+      if (!res.ok || !resData.success) {
+        this.cancelModalError = resData.message || 'Không thể hủy đơn hàng. Vui lòng thử lại.';
+        this.cancelSubmitting = false;
+        this.cdr.detectChanges();
+        return;
+      }
+
+      // Cập nhật trạng thái tại chỗ
+      this.selectedOrderForCancel.orderStatus = 'cancelled';
+      this.isCancelModalOpen = false;
+      this.selectedOrderForCancel = null;
+      this.loadUserOrders();
+      alert('Đã hủy đơn hàng thành công!');
+    } catch (err: any) {
+      this.cancelModalError = 'Lỗi kết nối máy chủ. Vui lòng thử lại.';
+    } finally {
+      this.cancelSubmitting = false;
+      this.cdr.detectChanges();
+    }
+  }
+
+  // ====== YÊU CẦU HOÀN TIỀN TRỰC TIẾP TẠI PROFILE ======
+  isRefundModalOpen = false;
+  selectedOrderForRefund: UserOrder | null = null;
+  refundReason = 'Sản phẩm lỗi kỹ thuật hoặc trầy xước trong quá trình vận chuyển';
+  refundType: 'full' | 'partial' = 'full';
+  refundBankName = '';
+  refundBankAccountNumber = '';
+  refundBankAccountOwner = '';
+  refundSubmitting = false;
+  refundModalError = '';
+
+  openRefundModal(order: UserOrder): void {
+    this.selectedOrderForRefund = order;
+    this.refundReason = 'Sản phẩm lỗi kỹ thuật hoặc trầy xước trong quá trình vận chuyển';
+    this.refundType = 'full';
+    this.refundBankName = '';
+    this.refundBankAccountNumber = '';
+    this.refundBankAccountOwner = this.authService.currentUser()?.fullName || '';
+    this.refundModalError = '';
+    this.refundSubmitting = false;
+    this.isRefundModalOpen = true;
+    this.cdr.detectChanges();
+  }
+
+  closeRefundModal(): void {
+    this.isRefundModalOpen = false;
+    this.selectedOrderForRefund = null;
+    this.refundModalError = '';
+    this.refundSubmitting = false;
+    this.cdr.detectChanges();
+  }
+
+  async confirmRefundRequestDirect(): Promise<void> {
+    if (!this.selectedOrderForRefund) return;
+    if (!this.refundReason.trim()) {
+      this.refundModalError = 'Vui lòng nhập lý do yêu cầu hoàn tiền.';
+      return;
+    }
+    if (!this.refundBankName.trim() || !this.refundBankAccountNumber.trim()) {
+      this.refundModalError = 'Vui lòng cung cấp đầy đủ tên ngân hàng và số tài khoản nhận tiền hoàn.';
+      return;
+    }
+
+    this.refundSubmitting = true;
+    this.refundModalError = '';
+    this.cdr.detectChanges();
+
+    try {
+      const order = this.selectedOrderForRefund;
+      const phone = this.authService.currentUser()?.phone || (order.customerInfo as any)?.phone || '';
+      const token = this.authService.token;
+      const res = await fetch(`${environment.apiBaseUrl}/refunds`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          orderCode: order.orderCode,
+          phone,
+          reason: this.refundReason.trim(),
+          refundType: this.refundType,
+          bankName: this.refundBankName.trim(),
+          bankAccountNumber: this.refundBankAccountNumber.trim(),
+          bankAccountOwner: this.refundBankAccountOwner.trim() || this.authService.currentUser()?.fullName,
+        }),
+      });
+
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.success) {
+        this.refundModalError = data.message || 'Không thể gửi yêu cầu hoàn tiền. Vui lòng thử lại sau.';
+        this.refundSubmitting = false;
+        this.cdr.detectChanges();
+        return;
+      }
+
+      this.isRefundModalOpen = false;
+      this.selectedOrderForRefund = null;
+      alert(`Yêu cầu hoàn tiền cho đơn hàng #${order.orderCode} đã được gửi thành công! Kế toán LIVORA sẽ liên hệ và xử lý chuyển tiền trong 24h làm việc.`);
+    } catch {
+      this.refundModalError = 'Có lỗi xảy ra khi kết nối máy chủ. Vui lòng thử lại.';
+    } finally {
+      this.refundSubmitting = false;
+      this.cdr.detectChanges();
+    }
   }
 
   logout(event: Event) {

@@ -1,6 +1,7 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterLink, RouterLinkActive } from '@angular/router';
+import { Router, NavigationEnd, RouterLink, RouterLinkActive } from '@angular/router';
+import { filter } from 'rxjs';
 
 export interface SubMenuItem {
   title: string;
@@ -16,6 +17,79 @@ export interface MenuItem {
   children?: SubMenuItem[];
 }
 
+export const ROLE_ALLOWED_ROUTES: Record<string, string[]> = {
+  SUPER_ADMIN: [
+    '/profile',
+    '/dashboard',
+    '/dashboard/revenue',
+    '/dashboard/products',
+    '/dashboard/spaces',
+    '/dashboard/customers',
+    '/home-management',
+    '/customers',
+    '/customers/list',
+    '/products',
+    '/products/categories',
+    '/products/list',
+    '/rooms',
+    '/rooms/list',
+    '/rooms/inspirations',
+    '/rooms/spaces',
+    '/interactions',
+    '/interactions/contact',
+    '/interactions/reviews',
+    '/orders',
+    '/orders/list',
+    '/orders/refunds',
+    '/settings',
+    '/settings/vouchers',
+    '/settings/shipping',
+    '/settings/permissions',
+    '/settings/system-config',
+  ],
+  KE_TOAN: [
+    '/profile',
+    '/dashboard',
+    '/dashboard/revenue',
+    '/orders',
+    '/orders/refunds',
+  ],
+  NV_VAN_HANH: [
+    '/profile',
+    '/dashboard',
+    '/dashboard/products',
+    '/dashboard/customers',
+    '/customers',
+    '/customers/list',
+    '/orders',
+    '/orders/list',
+    '/settings',
+    '/settings/vouchers',
+    '/settings/shipping',
+  ],
+  NV_NOI_DUNG: [
+    '/profile',
+    '/dashboard',
+    '/dashboard/spaces',
+    '/home-management',
+    '/products',
+    '/products/categories',
+    '/products/list',
+    '/rooms',
+    '/rooms/list',
+    '/rooms/inspirations',
+    '/rooms/spaces',
+  ],
+  CSKH: [
+    '/profile',
+    '/dashboard',
+    '/dashboard/customers',
+    '/interactions',
+    '/interactions/contact',
+    '/interactions/reviews',
+  ],
+};
+
 @Component({
   selector: 'app-sidebar',
   standalone: true,
@@ -23,17 +97,20 @@ export interface MenuItem {
   templateUrl: './sidebar.html',
   styleUrl: './sidebar.css',
 })
-export class Sidebar {
+export class Sidebar implements OnInit {
   private router = inject(Router);
 
-  menuItems: MenuItem[] = [
+  private readonly masterMenuItems: MenuItem[] = [
     {
       id: 'dashboard',
       title: 'Dashboard',
       iconType: 'dashboard',
       isOpen: true,
       children: [
-        { title: 'Báo cáo doanh thu', route: '/dashboard/revenue' }
+        { title: 'Báo cáo doanh thu', route: '/dashboard/revenue' },
+        { title: 'Hiệu suất sản phẩm', route: '/dashboard/products' },
+        { title: 'Chuyển đổi không gian 3D', route: '/dashboard/spaces' },
+        { title: 'Chân dung khách hàng', route: '/dashboard/customers' }
       ]
     },
     {
@@ -105,6 +182,78 @@ export class Sidebar {
       ]
     }
   ];
+
+  menuItems: MenuItem[] = [];
+
+  constructor() {
+    this.router.events
+      .pipe(filter(event => event instanceof NavigationEnd))
+      .subscribe(() => {
+        this.refreshMenu();
+      });
+  }
+
+  ngOnInit(): void {
+    this.refreshMenu();
+  }
+
+  get currentUser(): any {
+    try {
+      const raw = localStorage.getItem('livora_admin_user');
+      return raw ? JSON.parse(raw) : null;
+    } catch {
+      return null;
+    }
+  }
+
+  get currentRoleCode(): string {
+    const user = this.currentUser;
+    if (!user) return 'SUPER_ADMIN';
+    const role = (user.role || '').toUpperCase();
+    if (['ADMIN', 'QUAN_TRI_VIEN', 'QUANTRIVIEN', 'QUẢN TRỊ VIÊN', ''].includes(role)) {
+      return 'SUPER_ADMIN';
+    }
+    return role;
+  }
+
+  refreshMenu(): void {
+    const role = this.currentRoleCode;
+    const isSuperAdmin = role === 'SUPER_ADMIN';
+
+    // Lấy danh sách routes được phép từ user hoặc mapping chuẩn của 5 vai trò
+    const allowed = this.currentUser?.allowedRoutes && this.currentUser.allowedRoutes.length > 0
+      ? this.currentUser.allowedRoutes
+      : (ROLE_ALLOWED_ROUTES[role] || ROLE_ALLOWED_ROUTES['SUPER_ADMIN']);
+
+    const isRouteAllowed = (route: string): boolean => {
+      if (isSuperAdmin) return true;
+      // CHỈ CÓ SUPER ADMIN MỚI XEM ĐƯỢC MENU PHÂN QUYỀN
+      if (route.startsWith('/settings/permissions')) return false;
+      return allowed.some((r: string) => route === r || route.startsWith(r + '/'));
+    };
+
+    // Lọc các menu items
+    const filtered: MenuItem[] = [];
+
+    for (const item of this.masterMenuItems) {
+      if (item.children && item.children.length > 0) {
+        const allowedChildren = item.children.filter(child => isRouteAllowed(child.route));
+        if (allowedChildren.length > 0) {
+          filtered.push({
+            ...item,
+            isOpen: true,
+            children: allowedChildren,
+          });
+        }
+      } else if (item.route) {
+        if (isRouteAllowed(item.route)) {
+          filtered.push({ ...item });
+        }
+      }
+    }
+
+    this.menuItems = filtered;
+  }
 
   toggleMenu(item: MenuItem): void {
     if (item.children && item.children.length > 0) {

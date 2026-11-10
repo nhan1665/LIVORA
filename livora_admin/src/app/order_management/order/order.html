@@ -223,6 +223,17 @@
             <p>{{ selectedOrder.cancelReason || 'Không có lý do chi tiết.' }}</p>
           </div>
         }
+
+        @if (selectedOrder.notes && selectedOrder.notes.includes('HẾT HÀNG')) {
+          <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 12px 16px; margin-top: 12px; display: flex; align-items: flex-start; gap: 12px;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; margin-top: 2px;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            <div style="font-size: 13px; color: #991b1b; line-height: 1.5;">
+              <strong>CẢNH BÁO TỒN KHO:</strong> {{ selectedOrder.notes }}
+              <br/>
+              <em>NV Vận hành vui lòng: <strong>1. Tăng tồn kho sản phẩm</strong> (nếu xưởng còn hàng) rồi bấm chuyển tiếp trạng thái, HOẶC <strong>2. Bấm "Hủy đơn hàng"</strong> để thông báo cho khách.</em>
+            </div>
+          </div>
+        }
       </div>
 
       <!-- Customer & Shipping Info -->
@@ -329,6 +340,17 @@
             (click)="promptCancelOrder(selectedOrder)"
           >
             Hủy đơn hàng
+          </button>
+        }
+
+        @if (selectedOrder.orderStatus === 'delivered') {
+          <button
+            type="button"
+            class="btn-primary"
+            style="background: #704b4a; color: #ffffff; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 600; font-size: 13.5px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 6px rgba(112, 75, 74, 0.25);"
+            (click)="promptAdminRefund(selectedOrder)"
+          >
+            <i class="bi bi-arrow-counterclockwise"></i> Hủy đơn / Yêu cầu hoàn tiền
           </button>
         }
 
@@ -588,3 +610,79 @@
   (confirm)="confirmAdvanceStatus()"
   (cancel)="cancelAdvanceStatus()"
 ></app-confirm-dialog>
+
+<!-- ================= ADMIN REFUND / CANCEL DELIVERED MODAL ================= -->
+<app-form-modal
+  [isOpen]="isAdminRefundOpen"
+  title="Hủy đơn & Yêu cầu hoàn tiền (Đơn đã hoàn thành)"
+  [subtitle]="refundTargetOrder ? ('Đơn hàng #' + refundTargetOrder.orderCode + ' - Khách hàng: ' + refundTargetOrder.customerInfo.name) : ''"
+  size="md"
+  submitText="Xác nhận gửi yêu cầu hoàn tiền"
+  cancelText="Đóng"
+  [isSubmitting]="isSubmittingRefund"
+  (submit)="confirmAdminRefund()"
+  (close)="closeAdminRefundModal()"
+>
+  @if (refundTargetOrder) {
+    <div style="display: flex; flex-direction: column; gap: 16px;">
+      <div style="background: #faf6f5; border: 1px solid #ecdcdb; border-radius: 8px; padding: 12px 14px; font-size: 13px; color: #593c3b; line-height: 1.5;">
+        <strong>LƯU Ý QUẢN TRỊ:</strong> Đơn hàng này đang ở trạng thái <strong>ĐÃ GIAO / ĐÃ HOÀN THÀNH</strong>. Thao tác này sẽ ghi nhận hủy đơn đổi trả hàng và tự động chuyển yêu cầu hoàn tiền sang bộ phận Kế toán để thực hiện chi trả tiền cho khách hàng.
+      </div>
+
+      <div>
+        <label style="display: block; font-weight: 600; font-size: 13px; color: #374151; margin-bottom: 6px;">
+          Lý do hủy đơn & hoàn tiền <span style="color: #704b4a;">*</span>
+        </label>
+        <textarea
+          [(ngModel)]="adminRefundReason"
+          rows="3"
+          placeholder="Nhập lý do chi tiết (VD: Khách hàng đổi trả sản phẩm lỗi, trầy xước sau khi nhận...)"
+          style="width: 100%; border: 1px solid #d1d5db; border-radius: 6px; padding: 8px 12px; font-size: 13.5px;"
+        ></textarea>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+        <div>
+          <label style="display: block; font-weight: 600; font-size: 13px; color: #374151; margin-bottom: 6px;">
+            Số tiền hoàn lại (VNĐ) <span style="color: #dc2626;">*</span>
+          </label>
+          <input
+            type="number"
+            [(ngModel)]="adminRefundAmount"
+            style="width: 100%; border: 1px solid #d1d5db; border-radius: 6px; padding: 8px 12px; font-size: 13.5px;"
+          />
+        </div>
+        <div>
+          <label style="display: block; font-weight: 600; font-size: 13px; color: #374151; margin-bottom: 6px;">
+            Hình thức hoàn
+          </label>
+          <select
+            [(ngModel)]="adminRefundType"
+            style="width: 100%; border: 1px solid #d1d5db; border-radius: 6px; padding: 8px 12px; font-size: 13.5px;"
+          >
+            <option value="full">Hoàn toàn bộ (100%)</option>
+            <option value="partial">Hoàn một phần</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px 14px;">
+        <h5 style="font-size: 13px; font-weight: 700; color: #1f2937; margin-bottom: 10px;">THÔNG TIN NGÂN HÀNG NHẬN TIỀN CỦA KHÁCH:</h5>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+          <div>
+            <label style="display: block; font-size: 12px; color: #6b7280; margin-bottom: 4px;">Ngân hàng:</label>
+            <input type="text" [(ngModel)]="adminRefundBankName" placeholder="VD: Vietcombank, MBBank..." style="width: 100%; border: 1px solid #d1d5db; border-radius: 4px; padding: 6px 10px; font-size: 13px;" />
+          </div>
+          <div>
+            <label style="display: block; font-size: 12px; color: #6b7280; margin-bottom: 4px;">Số tài khoản:</label>
+            <input type="text" [(ngModel)]="adminRefundBankAccountNumber" placeholder="Số TK ngân hàng..." style="width: 100%; border: 1px solid #d1d5db; border-radius: 4px; padding: 6px 10px; font-size: 13px;" />
+          </div>
+        </div>
+        <div>
+          <label style="display: block; font-size: 12px; color: #6b7280; margin-bottom: 4px;">Chủ tài khoản:</label>
+          <input type="text" [(ngModel)]="adminRefundBankAccountOwner" placeholder="Tên chủ tài khoản..." style="width: 100%; border: 1px solid #d1d5db; border-radius: 4px; padding: 6px 10px; font-size: 13px;" />
+        </div>
+      </div>
+    </div>
+  }
+</app-form-modal>

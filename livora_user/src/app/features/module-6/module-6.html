@@ -187,11 +187,21 @@
         </div>
 
         <div *ngIf="orderInfo.status === 'delivered'" class="status-notice-badge success">
-          <i class="bi bi-check2-circle"></i> Đơn hàng đã giao thành công
+          <i class="bi bi-check2-circle"></i> Đơn hàng đã giao thành công (Đã hoàn thành)
         </div>
 
         <div *ngIf="orderInfo.status === 'cancelled'" class="status-notice-badge cancelled">
           <i class="bi bi-info-circle"></i> Đơn hàng đã được hủy
+        </div>
+
+        <!-- Nút Hủy Đơn / Yêu Cầu Hoàn Tiền (Màu nâu LIVORA đồng bộ) -->
+        <div *ngIf="canRequestRefund" class="refund-action-wrapper" style="margin-top: 14px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
+          <button type="button" class="btn-refund-order" (click)="openRefundModal()" style="background: #704b4a; color: #ffffff; border: none; padding: 11px 22px; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 3px 8px rgba(112, 75, 74, 0.25);">
+            <i class="bi bi-arrow-counterclockwise"></i> Hủy đơn / Yêu cầu hoàn tiền
+          </button>
+          <span style="font-size: 13px; color: #704b4a; line-height: 1.4;">
+            * Đơn hàng đã hoàn thành / đã thanh toán: Khách hàng có quyền bấm <strong>"Hủy đơn / Yêu cầu hoàn tiền"</strong> để trả hàng hoàn tiền theo đúng chính sách LIVORA.
+          </span>
         </div>
       </div>
 
@@ -290,6 +300,80 @@
         </button>
       </div>
     </div>
+  </div>
+
+  <!-- ====== MODAL YÊU CẦU HOÀN TIỀN ====== -->
+  <div *ngIf="showRefundModal" class="modal-backdrop">
+    <div class="modal-card refund-modal-box" style="max-width: 520px; width: 90%; background: #ffffff; border-radius: 14px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.15);">
+      <div class="modal-head" style="padding: 16px 20px; background: #faf8f5; border-bottom: 1px solid #ebe5dc; display: flex; justify-content: space-between; align-items: center;">
+        <h3 class="modal-title" style="margin: 0; font-size: 17px; font-weight: 700; color: #2e2626;">
+          Yêu cầu hoàn tiền đơn hàng #{{ orderInfo?.code }}
+        </h3>
+        <button type="button" class="btn-close-modal" (click)="closeRefundModal()" style="border: none; background: none; font-size: 24px; cursor: pointer; color: #796e65;">&times;</button>
+      </div>
+
+      <div class="modal-body" style="padding: 20px; display: flex; flex-direction: column; gap: 14px;">
+        <div style="background: #fefce8; border: 1px solid #fef08a; padding: 12px 14px; border-radius: 8px; font-size: 13px; color: #854d0e; line-height: 1.4;">
+          <i class="bi bi-info-circle-fill" style="color: #ca8a04;"></i>
+          Số tiền yêu cầu hoàn: <strong>{{ orderInfo?.total | number:'1.0-0' }} ₫</strong> (Thực tế hoàn theo thỏa thuận &amp; chính sách đổi trả).
+        </div>
+
+        <div>
+          <label style="display: block; font-size: 13px; font-weight: 600; color: #3f3630; margin-bottom: 6px;">Lý do hoàn tiền *</label>
+          <textarea [(ngModel)]="refundReason" rows="3" style="width: 100%; border: 1px solid #ded7cb; border-radius: 8px; padding: 10px; font-size: 13px; color: #2e2626; box-sizing: border-box;" placeholder="Vui lòng mô tả chi tiết lỗi sản phẩm hoặc lý do yêu cầu hoàn..."></textarea>
+        </div>
+
+        <div>
+          <label style="display: block; font-size: 13px; font-weight: 600; color: #3f3630; margin-bottom: 6px;">Loại hoàn tiền *</label>
+          <div style="display: flex; gap: 16px;">
+            <label style="display: flex; align-items: center; gap: 6px; font-size: 13px; cursor: pointer;">
+              <input type="radio" name="refundType" value="full" [(ngModel)]="refundType" /> Hoàn toàn phần (100%)
+            </label>
+            <label style="display: flex; align-items: center; gap: 6px; font-size: 13px; cursor: pointer;">
+              <input type="radio" name="refundType" value="partial" [(ngModel)]="refundType" /> Hoàn một phần (50%)
+            </label>
+          </div>
+        </div>
+
+        <div style="border-top: 1px dashed #e5dad6; padding-top: 12px;">
+          <h4 style="margin: 0 0 10px 0; font-size: 14px; font-weight: 700; color: #593c3b;">Thông tin tài khoản nhận tiền hoàn</h4>
+          <div style="display: flex; flex-direction: column; gap: 10px;">
+            <div>
+              <label style="display: block; font-size: 12px; color: #796e65; margin-bottom: 4px;">Ngân hàng thụ hưởng *</label>
+              <input type="text" [(ngModel)]="refundBankName" placeholder="VD: Vietcombank, MB Bank, Techcombank..." style="width: 100%; height: 38px; border: 1px solid #ded7cb; border-radius: 6px; padding: 0 12px; font-size: 13px; box-sizing: border-box;" />
+            </div>
+            <div>
+              <label style="display: block; font-size: 12px; color: #796e65; margin-bottom: 4px;">Số tài khoản (STK) *</label>
+              <input type="text" [(ngModel)]="refundBankAccountNumber" placeholder="Nhập số tài khoản ngân hàng" style="width: 100%; height: 38px; border: 1px solid #ded7cb; border-radius: 6px; padding: 0 12px; font-size: 13px; box-sizing: border-box;" />
+            </div>
+            <div>
+              <label style="display: block; font-size: 12px; color: #796e65; margin-bottom: 4px;">Tên chủ tài khoản (Không dấu) *</label>
+              <input type="text" [(ngModel)]="refundBankAccountOwner" placeholder="NGUYEN VAN A" style="width: 100%; height: 38px; border: 1px solid #ded7cb; border-radius: 6px; padding: 0 12px; font-size: 13px; text-transform: uppercase; box-sizing: border-box;" />
+            </div>
+          </div>
+        </div>
+
+        <div *ngIf="refundError" style="background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; padding: 10px 12px; border-radius: 6px; font-size: 12.5px;">
+          <i class="bi bi-exclamation-triangle-fill"></i> {{ refundError }}
+        </div>
+      </div>
+
+      <div class="modal-footer" style="padding: 14px 20px; background: #faf8f5; border-top: 1px solid #ebe5dc; display: flex; justify-content: flex-end; gap: 10px;">
+        <button type="button" (click)="closeRefundModal()" [disabled]="submittingRefund" style="height: 38px; padding: 0 16px; border: 1px solid #ded7cb; border-radius: 6px; background: #fff; color: #593c3b; font-weight: 600; font-size: 13px; cursor: pointer;">
+          Hủy bỏ
+        </button>
+        <button type="button" (click)="submitRefundRequest()" [disabled]="submittingRefund" style="height: 38px; padding: 0 20px; border: none; border-radius: 6px; background: #593c3b; color: #fff; font-weight: 600; font-size: 13px; cursor: pointer;">
+          {{ submittingRefund ? 'Đang gửi...' : 'Gửi Yêu Cầu Hoàn Tiền' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast thông báo hoàn tiền thành công -->
+  <div *ngIf="refundSuccessToast" class="cancel-toast-toast" style="position: fixed; bottom: 24px; right: 24px; background: #15803d; color: #ffffff; padding: 14px 20px; border-radius: 8px; box-shadow: 0 4px 14px rgba(0,0,0,0.2); font-size: 13.5px; z-index: 9999; display: flex; align-items: center; gap: 10px;">
+    <i class="bi bi-check-circle-fill" style="font-size: 18px;"></i>
+    <span>{{ refundSuccessToast }}</span>
+    <button type="button" (click)="refundSuccessToast = ''" style="border: none; background: none; color: #fff; font-size: 18px; margin-left: 10px; cursor: pointer;">&times;</button>
   </div>
 
 </main>

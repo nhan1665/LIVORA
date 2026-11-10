@@ -6,6 +6,7 @@ const {
   staffLogin,
   staffForgotPassword,
   staffResetPassword,
+  staffChangePassword,
   customerRegister,
   customerLogin,
   customerForgotPassword,
@@ -15,6 +16,7 @@ const {
 router.post('/admin/login', staffLogin);
 router.post('/admin/forgot-password', staffForgotPassword);
 router.post('/admin/reset-password', staffResetPassword);
+router.post('/admin/change-password', staffChangePassword);
 router.post('/customer/register', customerRegister);
 router.post('/customer/login', customerLogin);
 router.post('/customer/forgot-password', customerForgotPassword);

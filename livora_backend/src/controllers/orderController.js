@@ -5,6 +5,8 @@ const Order = require('../models/Order');
 const Product = require('../models/Product');
 const Voucher = require('../models/Voucher');
 const Customer = require('../models/Customer');
+const Refund = require('../models/Refund');
+const { createNotification } = require('./notificationController');
 const { logActivityInternal } = require('./activityLogController');
 const { sendSuccess, sendPaginated, sendError } = require('../utils/responseHelper');
 
@@ -667,6 +669,39 @@ const cancelOrder = async (req, res) => {
       role: cancelActor.role,
       details: `Lý do hủy: ${reason.trim()}. Tồn kho và số lượng đã bán được tự động hoàn lại.`,
     });
+
+    // TỰ ĐỘNG TẠO YÊU CẦU HOÀN TIỀN NẾU ĐƠN HÀNG ĐÃ THANH TOÁN
+    if (order.paymentStatus === 'paid') {
+      try {
+        const existingPending = await Refund.findOne({ orderId: order._id, status: 'pending' });
+        if (!existingPending) {
+          const autoRefund = new Refund({
+            orderId: order._id,
+            orderCode: order.orderCode,
+            userId: order.customerId || null,
+            customerName: order.customerInfo?.fullName || 'Khách hàng',
+            customerPhone: order.customerInfo?.phone || '',
+            amount: Number(order.totalAmount) || 0,
+            reason: `Đơn đã thanh toán bị hủy: ${reason.trim()}`,
+            refundType: 'full',
+            status: 'pending',
+          });
+          await autoRefund.save();
+
+          createNotification({
+            title: `💰 Yêu cầu hoàn tiền đơn hủy: #${order.orderCode}`,
+            message: `Đơn hàng #${order.orderCode} (trị giá ${Number(order.totalAmount || 0).toLocaleString('vi-VN')} đ) đã thanh toán nhưng bị hủy (${reason.trim()}). Cần Kế toán xử lý hoàn tiền cho khách.`,
+            type: 'refund',
+            targetRoles: ['KE_TOAN', 'SUPER_ADMIN'],
+            link: '/orders/refunds',
+            entityId: autoRefund._id,
+            entityCode: order.orderCode,
+          }).catch(() => {});
+        }
+      } catch (refundErr) {
+        console.warn('Auto create refund error:', refundErr.message);
+      }
+    }
 
     return sendSuccess(res, formatOrderForResponse(order), 'Hủy đơn hàng thành công.');
   } catch (error) {

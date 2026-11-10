@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const Contact = require('../models/Contact');
 const { logActivityInternal } = require('./activityLogController');
+const { createNotification } = require('./notificationController');
 const { sendSuccess, sendPaginated, sendError } = require('../utils/responseHelper');
 
 /**
@@ -115,6 +116,16 @@ const createContact = async (req, res) => {
 
     await contact.save();
 
+    createNotification({
+      title: `Liên hệ tư vấn mới: ${contact.fullName}`,
+      message: `Khách hàng ${contact.fullName} (${contact.phone}) vừa gửi tin nhắn: "${contact.message.slice(0, 80)}...". Cần CSKH phản hồi.`,
+      type: 'contact',
+      targetRoles: ['CSKH', 'SUPER_ADMIN'],
+      link: '/interactions/contact',
+      entityId: contact._id,
+      entityCode: contact.code,
+    }).catch(() => {});
+
     logActivityInternal({
       entityType: 'contact',
       entityId: contact._id.toString(),
@@ -156,6 +167,16 @@ const resolveContact = async (req, res) => {
     }
     contact.resolvedAt = new Date();
     await contact.save();
+
+    createNotification({
+      title: `Liên hệ tư vấn mới: ${contact.fullName}`,
+      message: `Khách hàng ${contact.fullName} (${contact.phone}) vừa gửi tin nhắn: "${contact.message.slice(0, 80)}...". Cần CSKH phản hồi.`,
+      type: 'contact',
+      targetRoles: ['CSKH', 'SUPER_ADMIN'],
+      link: '/interactions/contact',
+      entityId: contact._id,
+      entityCode: contact.code,
+    }).catch(() => {});
 
     logActivityInternal({
       entityType: 'contact',

@@ -57,47 +57,47 @@
                     <div class="form-label">
                         <i class="bi bi-person-fill"></i>
                         Họ và tên
-                    </div>
+        </div>
                     <div class="form-input">
                         <input type="text" name="profileFullName" placeholder="Nhập họ và tên..." [(ngModel)]="profileForm.fullName" [readonly]="!isEditingPersonal" maxlength="120">
-                    </div>
-                </div>
+        </div>
+    </div>
 
                 <div class="form-row">
                     <div class="form-label">
                         <i class="bi bi-telephone-fill"></i>
                         Số điện thoại
-                    </div>
+        </div>
                     <div class="form-input">
                         <input type="tel" name="profilePhone" [(ngModel)]="profileForm.phone" [readonly]="!isEditingPersonal" required>
-                    </div>
-                </div>
+        </div>
+    </div>
 
                 <div class="form-row">
                     <div class="form-label">
                         <i class="bi bi-envelope-fill"></i>
                         Email
-                    </div>
+        </div>
                     <div class="form-input">
                         <input type="email" name="profileEmail" [(ngModel)]="profileForm.email" [readonly]="!isEditingPersonal" placeholder="Nhập địa chỉ email..." required>
-                    </div>
-                </div>
+        </div>
+    </div>
 
                 <div class="form-row">
                     <div class="form-label">
                         <i class="bi bi-calendar-event-fill"></i>
                         Ngày sinh
-                    </div>
+        </div>
                     <div class="form-input">
                         <input type="date" name="profileBirthDate" [(ngModel)]="profileForm.birthDate" [readonly]="!isEditingPersonal">
-                    </div>
-                </div>
+        </div>
+    </div>
 
                 <div class="form-row">
                     <div class="form-label">
                         <i class="bi bi-info-circle-fill"></i>
                         Giới tính
-                    </div>
+        </div>
                     <div class="form-input radio-group">
                         <label class="radio-label">
                             <input type="radio" name="profileGender" value="Nam" [(ngModel)]="profileForm.gender" [disabled]="!isEditingPersonal">
@@ -109,18 +109,18 @@
                             <span class="radio-custom"></span>
                             Nữ
                         </label>
-                    </div>
-                </div>
+        </div>
+    </div>
 
                 <div class="form-actions" *ngIf="isEditingPersonal">
                     <button class="btn-cancel" (click)="cancelProfileEdit()" [disabled]="profileSaving">Hủy</button>
                     <button class="btn-save" (click)="saveProfile()" [disabled]="profileSaving">{{ profileSaving ? 'Đang lưu...' : 'Lưu' }}</button>
-                </div>
+    </div>
                 <div class="form-actions" *ngIf="!isEditingPersonal">
                     <button class="btn-save" (click)="startProfileEdit()" [disabled]="profileLoading">
                         <i class="bi bi-pencil-square" style="margin-right: 5px;"></i> Chỉnh sửa
                     </button>
-                </div>
+    </div>
             </fieldset>
 
             <!-- Section: Delivery Address -->
@@ -137,21 +137,21 @@
 
                     <div *ngIf="addressError" style="color: #d9534f; font-size: 13px; margin-bottom: 12px;">
                         {{ addressError }}
-                    </div>
+        </div>
 
                     <div class="form-row">
                         <div class="form-label">Tên người nhận</div>
                         <div class="form-input">
                             <input type="text" placeholder="Nhập tên người nhận" [(ngModel)]="addressForm.recipientName" name="addrRecipientName">
-                        </div>
-                    </div>
+            </div>
+        </div>
 
                     <div class="form-row">
                         <div class="form-label">Số điện thoại</div>
                         <div class="form-input">
                             <input type="tel" placeholder="Nhập số điện thoại" [(ngModel)]="addressForm.recipientPhone" name="addrRecipientPhone">
-                        </div>
-                    </div>
+            </div>
+        </div>
 
                     <div class="form-row">
                         <div class="form-label">Tỉnh / Thành phố</div>
@@ -160,8 +160,8 @@
                                 <option value="" disabled selected>-- Chọn Tỉnh / Thành phố --</option>
                                 <option *ngFor="let prov of provinces" [value]="prov">{{ prov }}</option>
                             </select>
-                        </div>
-                    </div>
+            </div>
+        </div>
 
                     <div class="form-row">
                         <div class="form-label">Phường / Xã</div>
@@ -170,15 +170,15 @@
                                 <option value="" disabled selected>{{ addressForm.province ? '-- Chọn Phường / Xã --' : 'Vui lòng chọn Tỉnh trước' }}</option>
                                 <option *ngFor="let ward of availableAddressWards" [value]="ward">{{ ward }}</option>
                             </select>
-                        </div>
-                    </div>
+            </div>
+        </div>
 
                     <div class="form-row">
                         <div class="form-label">Địa chỉ cụ thể</div>
                         <div class="form-input">
                             <input type="text" placeholder="Số nhà, tên tòa nhà, tên đường..." [(ngModel)]="addressForm.addressLine" name="addrLine">
-                        </div>
-                    </div>
+            </div>
+        </div>
 
                     <div class="form-row">
                         <div class="form-label">Cài đặt</div>
@@ -187,16 +187,16 @@
                                 <input type="checkbox" [(ngModel)]="addressForm.isDefault" name="addrIsDefault">
                                 Đặt làm địa chỉ mặc định
                             </label>
-                        </div>
-                    </div>
+            </div>
+        </div>
 
                     <div class="form-actions" style="margin-top: 20px;">
                         <button class="btn-cancel" (click)="isAddingAddress = false" [disabled]="addressSaving">Hủy</button>
                         <button class="btn-save" (click)="saveNewAddress()" [disabled]="addressSaving">
                             {{ addressSaving ? 'Đang lưu...' : 'Lưu địa chỉ' }}
                         </button>
-                    </div>
-                </div>
+        </div>
+    </div>
 
                 <!-- Dynamic Address List -->
                 <div class="address-list">
@@ -210,29 +210,28 @@
                                     <span class="radio-custom"></span>
                                     {{ addr.isDefault ? 'Mặc định' : 'Đặt làm mặc định' }}
                                 </label>
-                            </div>
+                </div>
                             <div class="address-info-right" style="display: flex; align-items: center; justify-content: space-between; gap: 15px;">
                                 <div class="address-text">
                                     {{ addr.addressLine || addr.street }}
                                     <span *ngIf="addr.ward">, {{ addr.ward }}</span>
                                     <span *ngIf="addr.district">, {{ addr.district }}</span>
                                     <span *ngIf="addr.province">, {{ addr.province }}</span>
-                                </div>
+                    </div>
                                 <button type="button" class="btn-delete-addr" (click)="deleteAddress(idx)" title="Xóa địa chỉ"
                                     style="background: #fdf2f2; border: 1px solid #fecaca; color: #dc2626; border-radius: 4px; padding: 6px 10px; cursor: pointer; font-size: 12px; display: inline-flex; align-items: center; gap: 4px;">
                                     <i class="bi bi-trash"></i> Xóa
                                 </button>
-                            </div>
-                        </div>
+                </div>
+            </div>
                     </ng-container>
                     <ng-template #noAddresses>
                         <p style="color: #888; font-size: 13.5px; padding: 12px 0;">
                             Bạn chưa có địa chỉ giao hàng nào. Vui lòng nhấn <strong>"Thêm địa chỉ"</strong> ở trên để bổ sung.
                         </p>
                     </ng-template>
-                </div>
+    </div>
             </fieldset>
-        </div>
 
         <!-- TAB 2: LỊCH SỬ ĐƠN HÀNG THẬT TỪ DATABASE -->
         <div *ngIf="activeTab === 'history'" class="history-container">
@@ -242,12 +241,12 @@
                 <button class="filter-btn" [class.active]="activeFilter === 'delivering'" (click)="setFilter('delivering')">Đang giao</button>
                 <button class="filter-btn" [class.active]="activeFilter === 'delivered'" (click)="setFilter('delivered')">Đã hoàn thành</button>
                 <button class="filter-btn" [class.active]="activeFilter === 'cancelled'" (click)="setFilter('cancelled')">Đã hủy</button>
-            </div>
+</div>
 
             <div *ngIf="loadingOrders" style="text-align: center; padding: 40px; color: #666;">
                 <div class="spinner-border text-primary" role="status"></div>
                 <p style="margin-top: 10px;">Đang tải danh sách đơn hàng của bạn...</p>
-            </div>
+</div>
 
             <div class="order-list" *ngIf="!loadingOrders">
                 <div *ngIf="filteredOrders.length === 0" style="text-align: center; padding: 50px 20px; color: #888;">
@@ -256,7 +255,7 @@
                     <a routerLink="/rooms" style="display: inline-block; margin-top: 10px; background: #0058a3; color: #fff; padding: 8px 20px; border-radius: 20px; text-decoration: none; font-weight: 500;">
                         Khám phá sản phẩm
                     </a>
-                </div>
+    </div>
 
                 <div class="order-card-wrapper" *ngFor="let order of filteredOrders" style="background: #fff; border: 1px solid #e5e5e5; border-radius: 8px; margin-bottom: 20px; padding: 18px 20px;">
                     <!-- Order Header -->
@@ -264,7 +263,7 @@
                         <div>
                             <span style="font-weight: 700; color: #111; font-size: 15px;">Mã đơn: {{ order.orderCode }}</span>
                             <span style="color: #888; font-size: 13px; margin-left: 12px;">Ngày đặt: {{ formatDate(order.createdAt) }}</span>
-                        </div>
+            </div>
                         <div>
                             <span
                                 style="font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 12px;"
@@ -275,22 +274,22 @@
                             >
                                 {{ getOrderStatusText(order.orderStatus) }}
                             </span>
-                        </div>
-                    </div>
+            </div>
+        </div>
 
                     <!-- Order Items List -->
                     <div *ngFor="let item of order.items" class="order-item" style="border: none; padding: 10px 0; border-bottom: 1px dashed #f5f5f5;">
                         <div class="order-image-wrapper" style="width: 70px; height: 70px; border-radius: 6px; overflow: hidden; background: #f9f9f9;">
                             <img [src]="item.thumbnail || item.image || 'item.png'" [alt]="item.productName || item.name" class="order-image" style="width: 100%; height: 100%; object-fit: cover;">
-                        </div>
+            </div>
                         <div class="order-content" style="flex: 1; padding-left: 15px;">
                             <h4 class="order-title" style="font-size: 14.5px; font-weight: 600; margin-bottom: 4px;">{{ item.productName || item.name }}</h4>
                             <div class="order-meta" style="color: #666; font-size: 13px;">
                                 <span *ngIf="item.color">Màu: {{ item.color }} • </span>
                                 <span>Số lượng: {{ item.quantity }}</span>
                                 <span style="margin-left: 10px; color: #111; font-weight: 600;">{{ formatCurrency(item.unitPrice || item.price) }}</span>
-                            </div>
-                        </div>
+                </div>
+            </div>
 
                         <!-- Action cho từng sản phẩm trong đơn đã hoàn thành -->
                         <div class="order-right" style="display: flex; flex-direction: column; align-items: flex-end; justify-content: center;">
@@ -311,21 +310,48 @@
                                 >
                                     <i class="bi bi-check-circle-fill"></i> Đã đánh giá
                                 </span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Order Footer -->
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px; padding-top: 10px;">
-                        <span style="color: #666; font-size: 13px;">Hình thức thanh toán: {{ order.paymentMethod }}</span>
-                        <div style="font-size: 15px;">
-                            <span style="color: #555;">Tổng tiền: </span>
-                            <span style="font-size: 18px; font-weight: 700; color: #b91c1c;">{{ formatCurrency(order.finalAmount || order.totalAmount) }}</span>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>
+
+                    <!-- Order Footer -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px; padding-top: 10px; border-top: 1px solid #f0f0f0; flex-wrap: wrap; gap: 12px;">
+                        <div style="display: flex; align-items: center; gap: 14px;">
+                            <span style="color: #666; font-size: 13px;">Hình thức thanh toán: {{ order.paymentMethod }}</span>
+                            <a [routerLink]="['/order-tracking']" [queryParams]="{ code: order.orderCode }" style="font-size: 13px; color: #0058a3; text-decoration: underline; font-weight: 500; display: inline-flex; align-items: center; gap: 4px;">
+                                <i class="bi bi-search"></i> Tra cứu chi tiết
+                            </a>
+            </div>
+                        <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
+                            <div style="font-size: 15px;">
+                                <span style="color: #555;">Tổng tiền: </span>
+                                <span style="font-size: 18px; font-weight: 700; color: #b91c1c;">{{ formatCurrency(order.finalAmount || order.totalAmount) }}</span>
+                </div>
+
+                            <!-- Nút Hủy đơn / Yêu cầu hoàn tiền khi đơn ĐÃ HOÀN THÀNH (Bật popup trực tiếp, không nhảy trang) -->
+                            <button
+                                *ngIf="order.orderStatus === 'delivered'"
+                                type="button"
+                                (click)="openRefundModal(order)"
+                                style="background: #704b4a; color: #ffffff; padding: 7px 16px; border-radius: 6px; font-size: 13px; font-weight: 600; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 6px rgba(112, 75, 74, 0.25);"
+                                title="Yêu cầu hoàn tiền / Đổi trả cho đơn hàng đã hoàn thành"
+                            >
+                                <i class="bi bi-arrow-counterclockwise"></i> Hủy đơn / Yêu cầu hoàn tiền
+                            </button>
+
+                            <!-- Nút Hủy đơn hàng khi đơn chưa giao (Bật popup trực tiếp, không nhảy trang) -->
+                            <button
+                                *ngIf="order.orderStatus === 'pending' || order.orderStatus === 'confirmed'"
+                                type="button"
+                                (click)="openCancelModal(order)"
+                                style="background: #f5ebea; color: #704b4a; border: 1px solid #d4b8b6; padding: 7px 16px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;"
+                            >
+                                <i class="bi bi-x-circle"></i> Hủy đơn hàng
+                            </button>
+            </div>
+        </div>
+    </div>
+</div>
 
         <!-- TAB 3: ĐÁNH GIÁ SẢN PHẨM -->
         <div *ngIf="activeTab === 'reviews'" class="history-container">
@@ -336,25 +362,25 @@
                 <button class="filter-btn" [class.active]="reviewFilter === 'reviewed'" (click)="setReviewFilter('reviewed')">
                     Đã đánh giá ({{ reviewedItems.length }})
                 </button>
-            </div>
+</div>
 
             <!-- Danh sách sản phẩm CHƯA đánh giá từ các đơn hàng đã hoàn thành -->
             <div class="order-list" *ngIf="reviewFilter === 'not_reviewed'">
                 <div *ngIf="unreviewedItems.length === 0" style="text-align: center; padding: 50px 20px; color: #888;">
                     <i class="bi bi-check2-circle" style="font-size: 48px; color: #16a34a;"></i>
                     <p style="margin-top: 12px; font-size: 15px;">Tuyệt vời! Bạn không có sản phẩm nào chưa được đánh giá.</p>
-                </div>
+    </div>
 
                 <div class="order-item" *ngFor="let entry of unreviewedItems" style="background: #fff; border: 1px solid #e5e5e5; border-radius: 8px; margin-bottom: 14px; padding: 16px;">
                     <div class="order-image-wrapper" style="width: 80px; height: 80px; border-radius: 6px; overflow: hidden; background: #f9f9f9;">
                         <img [src]="entry.item.thumbnail || entry.item.image || 'item.png'" [alt]="entry.item.productName || entry.item.name" class="order-image" style="width: 100%; height: 100%; object-fit: cover;">
-                    </div>
+        </div>
                     <div class="order-content" style="flex: 1; padding-left: 15px;">
                         <h4 class="order-title" style="font-size: 15px; font-weight: 600; margin-bottom: 4px;">{{ entry.item.productName || entry.item.name }}</h4>
                         <div class="order-meta" style="color: #666; font-size: 13px;">
                             <p>Đơn hàng: <strong>{{ entry.order.orderCode }}</strong> • Ngày giao: {{ formatDate(entry.order.createdAt) }}</p>
-                        </div>
-                    </div>
+            </div>
+        </div>
                     <div class="order-right" style="display: flex; align-items: center;">
                         <div class="order-actions">
                             <button
@@ -365,22 +391,22 @@
                             >
                                 <i class="bi bi-star-fill" style="margin-right: 6px; color: #facc15;"></i> Viết đánh giá
                             </button>
-                        </div>
-                    </div>
-                </div>
             </div>
+        </div>
+    </div>
+</div>
 
             <!-- Danh sách sản phẩm ĐÃ đánh giá -->
             <div class="order-list" *ngIf="reviewFilter === 'reviewed'">
                 <div *ngIf="reviewedItems.length === 0" style="text-align: center; padding: 50px 20px; color: #888;">
                     <i class="bi bi-chat-square-text" style="font-size: 48px; color: #ccc;"></i>
                     <p style="margin-top: 12px; font-size: 15px;">Bạn chưa có đánh giá nào.</p>
-                </div>
+    </div>
 
                 <div class="order-item" *ngFor="let rev of reviewedItems" style="background: #fff; border: 1px solid #e5e5e5; border-radius: 8px; margin-bottom: 14px; padding: 18px; align-items: flex-start;">
                     <div class="order-image-wrapper" style="width: 80px; height: 80px; border-radius: 6px; overflow: hidden; background: #f9f9f9; flex-shrink: 0;">
                         <img [src]="rev.productThumbnail || 'item.png'" [alt]="rev.productName" class="order-image" style="width: 100%; height: 100%; object-fit: cover;">
-                    </div>
+        </div>
                     <div class="order-content" style="flex: 1; padding-left: 15px;">
                         <h4 class="order-title" style="font-size: 15px; font-weight: 600; margin-bottom: 4px;">{{ rev.productName }}</h4>
                         <!-- Stars -->
@@ -389,7 +415,7 @@
                                 <i class="bi" [ngClass]="s <= rev.rating ? 'bi-star-fill' : 'bi-star'" style="font-size: 14px;"></i>
                             </ng-container>
                             <span style="color: #666; font-size: 12px; margin-left: 6px;">{{ rev.rating }}/5 sao • {{ formatDate(rev.createdAt) }}</span>
-                        </div>
+            </div>
                         <p style="color: #333; font-size: 13.5px; line-height: 1.5; margin-top: 6px; background: #fdfbf7; padding: 8px 12px; border-radius: 6px; border-left: 3px solid #0058a3;">
                             "{{ rev.comment }}"
                         </p>
@@ -397,11 +423,11 @@
                         <!-- Attached Images and Videos in reviewed item -->
                         <div *ngIf="rev.images && rev.images.length > 0" style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px;">
                             <img *ngFor="let img of rev.images" [src]="img" alt="Ảnh thực tế" style="width: 60px; height: 60px; object-fit: cover; border-radius: 4px; border: 1px solid #e5e7eb;">
-                        </div>
+            </div>
                         <div *ngIf="rev.videos && rev.videos.length > 0" style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px;">
                             <video *ngFor="let vid of rev.videos" [src]="vid" controls style="width: 140px; height: 80px; object-fit: cover; border-radius: 4px; border: 1px solid #e5e7eb; background: #000;"></video>
-                        </div>
-                    </div>
+            </div>
+        </div>
                     <div class="order-right" style="display: flex; align-items: center; flex-shrink: 0; margin-left: 10px;">
                         <span
                             style="font-size: 12px; font-weight: 600; padding: 4px 8px; border-radius: 12px;"
@@ -412,10 +438,9 @@
                         >
                             {{ rev.status === 'visible' ? 'Đang hiển thị' : 'Đã ẩn' }}
                         </span>
-                    </div>
-                </div>
-            </div>
         </div>
+    </div>
+</div>
 
     </main>
 
@@ -426,17 +451,17 @@
                 <div>
                     <h3 style="font-size: 18px; font-weight: 700; color: #111; margin: 0;">Đánh giá sản phẩm</h3>
                     <p style="font-size: 12px; color: #666; margin: 4px 0 0 0;">Đơn hàng: {{ reviewingTarget?.orderCode }}</p>
-                </div>
+    </div>
                 <button type="button" (click)="closeReviewModal()" style="background: none; border: none; font-size: 18px; cursor: pointer; color: #888;">✕</button>
-            </div>
+</div>
 
             <!-- Product preview in modal -->
             <div style="display: flex; gap: 12px; align-items: center; background: #faf9f7; padding: 10px 12px; border-radius: 8px; margin-bottom: 18px;">
                 <img [src]="reviewingTarget?.productThumbnail || 'item.png'" [alt]="reviewingTarget?.productName" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px; border: 1px solid #e5e5e5;">
                 <div style="font-size: 13.5px; font-weight: 600; color: #222;">
                     {{ reviewingTarget?.productName }}
-                </div>
-            </div>
+    </div>
+</div>
 
             <!-- Star Rating Input -->
             <div style="margin-bottom: 18px;">
@@ -454,8 +479,8 @@
                     <span style="font-size: 13px; font-weight: 600; color: #f59e0b; margin-left: 8px;">
                         {{ reviewRating === 5 ? 'Tuyệt vời (5/5)' : (reviewRating === 4 ? 'Tốt (4/5)' : (reviewRating === 3 ? 'Bình thường (3/5)' : (reviewRating === 2 ? 'Tệ (2/5)' : 'Rất tệ (1/5)'))) }}
                     </span>
-                </div>
-            </div>
+    </div>
+</div>
 
             <!-- Comment Textarea -->
             <div style="margin-bottom: 18px;">
@@ -469,7 +494,7 @@
                     placeholder="Hãy chia sẻ trải nghiệm sử dụng sản phẩm: chất lượng, hoàn thiện, thiết kế..."
                     style="width: 100%; border: 1px solid #d1d5db; border-radius: 6px; padding: 10px; font-size: 13.5px; box-sizing: border-box; outline: none; font-family: inherit;"
                 ></textarea>
-            </div>
+</div>
 
             <!-- Upload Hình ảnh & Video (Không bắt buộc) -->
             <div style="margin-bottom: 18px;">
@@ -489,28 +514,28 @@
                         <span>Thêm video (tối đa 1)</span>
                         <input type="file" accept="video/*" (change)="onVideoFileSelected($event)" style="display: none;">
                     </label>
-                </div>
+    </div>
 
                 <!-- Preview ảnh đã chọn -->
                 <div *ngIf="reviewImages.length > 0" style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px;">
                     <div *ngFor="let img of reviewImages; let idx = index" style="position: relative; width: 64px; height: 64px; border-radius: 6px; overflow: hidden; border: 1px solid #cbd5e1;">
                         <img [src]="img" alt="Ảnh review" style="width: 100%; height: 100%; object-fit: cover;">
                         <button type="button" (click)="removeReviewImage(idx)" style="position: absolute; top: 2px; right: 2px; background: rgba(0,0,0,0.65); color: #fff; border: none; border-radius: 50%; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; font-size: 11px; cursor: pointer;">✕</button>
-                    </div>
-                </div>
+        </div>
+    </div>
 
                 <!-- Preview video đã chọn -->
                 <div *ngIf="reviewVideos.length > 0" style="display: flex; gap: 8px; flex-wrap: wrap;">
                     <div *ngFor="let vid of reviewVideos; let idx = index" style="position: relative; width: 120px; height: 70px; border-radius: 6px; overflow: hidden; border: 1px solid #cbd5e1; background: #000;">
                         <video [src]="vid" controls style="width: 100%; height: 100%; object-fit: cover;"></video>
                         <button type="button" (click)="removeReviewVideo(idx)" style="position: absolute; top: 2px; right: 2px; background: rgba(0,0,0,0.65); color: #fff; border: none; border-radius: 50%; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; font-size: 11px; cursor: pointer; z-index: 5;">✕</button>
-                    </div>
-                </div>
-            </div>
+        </div>
+    </div>
+</div>
 
             <div *ngIf="reviewModalError" style="color: #dc2626; font-size: 13px; margin-bottom: 12px;">
                 {{ reviewModalError }}
-            </div>
+</div>
 
             <!-- Modal Actions -->
             <div style="display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid #f0f0f0; padding-top: 14px;">
@@ -541,4 +566,135 @@
         </div>
     </div>
     }
+
+    <!-- ====== MODAL HỦY ĐƠN HÀNG TRỰC TIẾP TẠI PROFILE ====== -->
+    <div *ngIf="isCancelModalOpen" class="review-modal-backdrop" style="position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 16px;">
+        <div style="background: #fff; border-radius: 12px; width: 100%; max-width: 480px; padding: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ebe5dc; padding-bottom: 12px; margin-bottom: 16px;">
+                <h3 style="font-size: 17px; font-weight: 700; color: #593c3b; margin: 0; display: flex; align-items: center; gap: 8px;">
+                    <i class="bi bi-x-circle" style="color: #704b4a;"></i> Xác nhận hủy đơn hàng #{{ selectedOrderForCancel?.orderCode }}
+                </h3>
+                <button type="button" (click)="closeCancelModal()" style="border: none; background: none; font-size: 20px; cursor: pointer; color: #888;">✕</button>
+            </div>
+
+            <p style="font-size: 13.5px; color: #666; margin-bottom: 14px; line-height: 1.5;">
+                Đơn hàng của bạn đang được chuẩn bị. Bạn có thể hủy trực tiếp ngay lập tức mà không cần xác thực OTP.
+            </p>
+
+            <div style="margin-bottom: 16px;">
+                <label style="display: block; font-size: 13px; font-weight: 600; color: #333; margin-bottom: 6px;">
+                    Lý do hủy đơn hàng <span style="color: #704b4a;">*</span>
+                </label>
+                <select [(ngModel)]="cancelReason" style="width: 100%; border: 1px solid #cbd5e1; border-radius: 6px; padding: 9px 12px; font-size: 13.5px; background: #fff; margin-bottom: 8px;">
+                    <option value="Đổi ý không muốn mua nữa">Đổi ý không muốn mua nữa</option>
+                    <option value="Thay đổi địa chỉ / số điện thoại nhận hàng">Thay đổi địa chỉ / số điện thoại nhận hàng</option>
+                    <option value="Muốn thay đổi sản phẩm / số lượng">Muốn thay đổi sản phẩm / số lượng</option>
+                    <option value="Thời gian giao hàng dự kiến không phù hợp">Thời gian giao hàng dự kiến không phù hợp</option>
+                    <option value="Tìm thấy sản phẩm tương tự có giá tốt hơn">Tìm thấy sản phẩm tương tự có giá tốt hơn</option>
+                    <option value="Lý do khác">Lý do khác</option>
+                </select>
+                <textarea
+                    *ngIf="cancelReason === 'Lý do khác'"
+                    [(ngModel)]="customCancelReason"
+                    rows="2"
+                    placeholder="Vui lòng nhập lý do cụ thể..."
+                    style="width: 100%; border: 1px solid #cbd5e1; border-radius: 6px; padding: 8px 12px; font-size: 13px;"
+                ></textarea>
+            </div>
+
+            <div *ngIf="cancelModalError" style="color: #dc2626; font-size: 13px; margin-bottom: 12px; background: #fef2f2; padding: 8px 12px; border-radius: 6px;">
+                {{ cancelModalError }}
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid #f0f0f0; padding-top: 14px;">
+                <button type="button" (click)="closeCancelModal()" [disabled]="cancelSubmitting" style="padding: 8px 16px; border: 1px solid #cbd5e1; background: #fff; border-radius: 6px; cursor: pointer; font-size: 13.5px; color: #64748b;">Quay lại</button>
+                <button
+                    type="button"
+                    style="background: #704b4a; color: #fff; border: none; padding: 9px 20px; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 13.5px; display: inline-flex; align-items: center; gap: 6px;"
+                    (click)="confirmCancelOrderDirect()"
+                    [disabled]="cancelSubmitting"
+                >
+                    {{ cancelSubmitting ? 'Đang hủy...' : 'Xác nhận hủy đơn' }}
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ====== MODAL YÊU CẦU HOÀN TIỀN TRỰC TIẾP TẠI PROFILE ====== -->
+    <div *ngIf="isRefundModalOpen" class="review-modal-backdrop" style="position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 16px;">
+        <div style="background: #fff; border-radius: 12px; width: 100%; max-width: 520px; padding: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ebe5dc; padding-bottom: 12px; margin-bottom: 16px;">
+                <h3 style="font-size: 17px; font-weight: 700; color: #593c3b; margin: 0; display: flex; align-items: center; gap: 8px;">
+                    <i class="bi bi-arrow-counterclockwise" style="color: #704b4a;"></i> Yêu cầu hoàn tiền đơn hàng #{{ selectedOrderForRefund?.orderCode }}
+                </h3>
+                <button type="button" (click)="closeRefundModal()" style="border: none; background: none; font-size: 20px; cursor: pointer; color: #888;">✕</button>
+            </div>
+
+            <div style="background: #faf6f5; border: 1px solid #ecdcdb; padding: 12px 14px; border-radius: 8px; font-size: 13px; color: #593c3b; margin-bottom: 14px; line-height: 1.4;">
+                <i class="bi bi-info-circle-fill" style="color: #704b4a;"></i>
+                Số tiền yêu cầu hoàn: <strong style="color: #704b4a;">{{ formatCurrency(selectedOrderForRefund?.finalAmount || selectedOrderForRefund?.totalAmount || 0) }}</strong>
+                (Áp dụng theo chính sách đổi trả &amp; hoàn tiền LIVORA).
+            </div>
+
+            <div style="margin-bottom: 14px;">
+                <label style="display: block; font-size: 13px; font-weight: 600; color: #333; margin-bottom: 6px;">
+                    Lý do hoàn tiền / Đổi trả <span style="color: #704b4a;">*</span>
+                </label>
+                <textarea
+                    [(ngModel)]="refundReason"
+                    rows="3"
+                    placeholder="Mô tả cụ thể lỗi sản phẩm hoặc lý do bạn muốn hoàn tiền..."
+                    style="width: 100%; border: 1px solid #cbd5e1; border-radius: 6px; padding: 8px 12px; font-size: 13px;"
+                ></textarea>
+            </div>
+
+            <div style="margin-bottom: 14px;">
+                <label style="display: block; font-size: 13px; font-weight: 600; color: #333; margin-bottom: 6px;">
+                    Hình thức hoàn tiền <span style="color: #704b4a;">*</span>
+                </label>
+                <div style="display: flex; gap: 20px;">
+                    <label style="display: inline-flex; align-items: center; gap: 6px; font-size: 13px; cursor: pointer;">
+                        <input type="radio" name="refundType" value="full" [(ngModel)]="refundType" /> Hoàn toàn bộ (100%)
+                    </label>
+                    <label style="display: inline-flex; align-items: center; gap: 6px; font-size: 13px; cursor: pointer;">
+                        <input type="radio" name="refundType" value="partial" [(ngModel)]="refundType" /> Hoàn một phần (50%)
+                    </label>
+                </div>
+            </div>
+
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 14px; margin-bottom: 14px;">
+                <h4 style="margin: 0 0 10px 0; font-size: 13px; font-weight: 700; color: #475569;">THÔNG TIN NGÂN HÀNG NHẬN TIỀN HOÀN:</h4>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+                    <div>
+                        <label style="display: block; font-size: 12px; color: #64748b; margin-bottom: 4px;">Ngân hàng *</label>
+                        <input type="text" [(ngModel)]="refundBankName" placeholder="VD: Vietcombank, MB..." style="width: 100%; border: 1px solid #cbd5e1; border-radius: 4px; padding: 6px 10px; font-size: 13px;" />
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 12px; color: #64748b; margin-bottom: 4px;">Số tài khoản *</label>
+                        <input type="text" [(ngModel)]="refundBankAccountNumber" placeholder="Nhập số tài khoản..." style="width: 100%; border: 1px solid #cbd5e1; border-radius: 4px; padding: 6px 10px; font-size: 13px;" />
+                    </div>
+                </div>
+                <div>
+                    <label style="display: block; font-size: 12px; color: #64748b; margin-bottom: 4px;">Tên chủ tài khoản *</label>
+                    <input type="text" [(ngModel)]="refundBankAccountOwner" placeholder="Tên chủ tài khoản..." style="width: 100%; border: 1px solid #cbd5e1; border-radius: 4px; padding: 6px 10px; font-size: 13px;" />
+                </div>
+            </div>
+
+            <div *ngIf="refundModalError" style="color: #dc2626; font-size: 13px; margin-bottom: 12px; background: #fef2f2; padding: 8px 12px; border-radius: 6px;">
+                {{ refundModalError }}
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid #f0f0f0; padding-top: 14px;">
+                <button type="button" (click)="closeRefundModal()" [disabled]="refundSubmitting" style="padding: 8px 16px; border: 1px solid #cbd5e1; background: #fff; border-radius: 6px; cursor: pointer; font-size: 13.5px; color: #64748b;">Quay lại</button>
+                <button
+                    type="button"
+                    style="background: #704b4a; color: #fff; border: none; padding: 9px 20px; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 13.5px; display: inline-flex; align-items: center; gap: 6px;"
+                    (click)="confirmRefundRequestDirect()"
+                    [disabled]="refundSubmitting"
+                >
+                    {{ refundSubmitting ? 'Đang gửi yêu cầu...' : 'Gửi yêu cầu hoàn tiền' }}
+                </button>
+            </div>
+        </div>
+    </div>
 </div>

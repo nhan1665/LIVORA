@@ -175,6 +175,13 @@ export class OrderComponent implements OnInit {
           danger: true,
           show: (row: Order) => row.orderStatus !== 'delivered' && row.orderStatus !== 'cancelled',
         },
+        {
+          id: 'refund',
+          label: 'Hủy & Hoàn tiền',
+          variant: 'hide',
+          danger: true,
+          show: (row: Order) => row.orderStatus === 'delivered',
+        },
       ],
     },
   ];
@@ -340,6 +347,8 @@ export class OrderComponent implements OnInit {
       this.promptAdvanceStatus(order);
     } else if (event.action === 'cancel') {
       this.promptCancelOrder(order);
+    } else if (event.action === 'refund') {
+      this.promptAdminRefund(order);
     }
   }
 
@@ -436,6 +445,81 @@ export class OrderComponent implements OnInit {
     this.isCancelOpen = false;
     this.cancelTargetOrder = null;
     this.cancelReason = '';
+  }
+
+  // Admin Refund / Cancel Delivered Modal
+  isAdminRefundOpen: boolean = false;
+  refundTargetOrder: Order | null = null;
+  adminRefundReason: string = '';
+  adminRefundAmount: number = 0;
+  adminRefundType: 'full' | 'partial' = 'full';
+  adminRefundBankName: string = '';
+  adminRefundBankAccountNumber: string = '';
+  adminRefundBankAccountOwner: string = '';
+  isSubmittingRefund: boolean = false;
+
+  promptAdminRefund(order: Order): void {
+    this.refundTargetOrder = order;
+    this.adminRefundReason = 'Khách hàng đổi trả sản phẩm sau khi đã nhận hàng (Đơn đã hoàn thành)';
+    this.adminRefundAmount = order.totalAmount || 0;
+    this.adminRefundType = 'full';
+    this.adminRefundBankName = '';
+    this.adminRefundBankAccountNumber = '';
+    this.adminRefundBankAccountOwner = order.customerInfo?.name || (order.customerInfo as any)?.fullName || '';
+    this.isAdminRefundOpen = true;
+  }
+
+  closeAdminRefundModal(): void {
+    this.isAdminRefundOpen = false;
+    this.refundTargetOrder = null;
+    this.isSubmittingRefund = false;
+  }
+
+  async confirmAdminRefund(): Promise<void> {
+    if (!this.refundTargetOrder) return;
+    if (!this.adminRefundReason.trim()) {
+      this.showNotice('Vui lòng nhập lý do hủy đơn & yêu cầu hoàn tiền.', 'error');
+      return;
+    }
+
+    this.isSubmittingRefund = true;
+    try {
+      const order = this.refundTargetOrder;
+      const phone = order.customerInfo?.phone || '';
+      const token = localStorage.getItem('livora_admin_token') || sessionStorage.getItem('livora_admin_token') || '';
+      const res = await fetch(`http://localhost:5000/api/refunds`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          orderCode: order.orderCode,
+          phone,
+          reason: this.adminRefundReason.trim(),
+          refundType: this.adminRefundType,
+          amount: this.adminRefundAmount,
+          bankName: this.adminRefundBankName.trim(),
+          bankAccountNumber: this.adminRefundBankAccountNumber.trim(),
+          bankAccountOwner: this.adminRefundBankAccountOwner.trim() || order.customerInfo?.name,
+        }),
+      });
+
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.success) {
+        this.showNotice(`Đã tạo yêu cầu hoàn tiền cho đơn hàng #${order.orderCode} thành công. Chuyển sang phòng Kế toán để thực hiện chi trả tiền hoàn!`, 'success');
+        this.isAdminRefundOpen = false;
+        this.refundTargetOrder = null;
+        this.loadOrders();
+      } else {
+        this.showNotice(data.message || 'Không thể tạo yêu cầu hoàn tiền.', 'error');
+      }
+    } catch (err: any) {
+      this.showNotice('Lỗi kết nối máy chủ hoàn tiền: ' + (err.message || ''), 'error');
+    } finally {
+      this.isSubmittingRefund = false;
+      this.cdr.detectChanges();
+    }
   }
 
   // Create Order Methods

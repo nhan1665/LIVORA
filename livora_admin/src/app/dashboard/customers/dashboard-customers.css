@@ -1,0 +1,458 @@
+.dash-cust-page {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+}
+
+.dash-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.dash-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: #2e2626;
+  margin: 0 0 4px 0;
+}
+
+.dash-subtitle {
+  font-size: 13px;
+  color: #796e65;
+  margin: 0;
+}
+
+.dash-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.btn-action {
+  height: 38px;
+  padding: 0 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-sec {
+  background: #ffffff;
+  border: 1px solid #ded7cb;
+  color: #593c3b;
+}
+
+.btn-sec:hover {
+  background: #f7f4ee;
+  border-color: #593c3b;
+}
+
+.btn-prim {
+  background: #593c3b;
+  border: none;
+  color: #ffffff;
+  box-shadow: 0 2px 6px rgba(89, 60, 59, 0.15);
+}
+
+.btn-prim:hover {
+  background: #472f2e;
+}
+
+/* KPI Grid */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+.kpi-box {
+  background: #ffffff;
+  border: 1px solid #ebe5dc;
+  border-radius: 12px;
+  padding: 16px 18px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+}
+
+.kpi-icon-wrap {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.icon-users {
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.icon-ltv {
+  background: #fdf2f8;
+  color: #db2777;
+}
+
+.icon-repeat {
+  background: #f0fdf4;
+  color: #16a34a;
+}
+
+.icon-vip {
+  background: #fefce8;
+  color: #ca8a04;
+}
+
+.kpi-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.kpi-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #8c827a;
+  letter-spacing: 0.5px;
+  margin-bottom: 2px;
+}
+
+.kpi-val {
+  font-size: 20px;
+  font-weight: 700;
+  color: #2e2626;
+  margin: 0;
+}
+
+.val-money {
+  color: #593c3b;
+}
+
+.val-green {
+  color: #16a34a;
+}
+
+.kpi-note {
+  font-size: 11px;
+  color: #8c827a;
+  margin-top: 2px;
+}
+
+.note-gold {
+  color: #b45309;
+  font-weight: 600;
+}
+
+/* Card Box */
+.card-box {
+  background: #ffffff;
+  border: 1px solid #ebe5dc;
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.card-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #2e2626;
+  margin: 0 0 4px 0;
+}
+
+.card-subtitle {
+  font-size: 12px;
+  color: #8c827a;
+  margin: 0;
+}
+
+.badge-status {
+  background: #f4efe6;
+  color: #6d5849;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 20px;
+}
+
+/* RFM Grid */
+.rfm-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+.rfm-card {
+  background: #faf8f5;
+  border: 1px solid #ede8df;
+  border-radius: 10px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.rfm-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.rfm-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: #2e2626;
+  line-height: 1.3;
+}
+
+.rfm-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 12px;
+  flex-shrink: 0;
+}
+
+.badge-vip {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.badge-loyal {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.badge-new {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.badge-atrisk {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.rfm-count {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.rfm-num {
+  font-size: 24px;
+  font-weight: 700;
+  color: #2e2626;
+}
+
+.rfm-unit {
+  font-size: 12px;
+  color: #8c827a;
+}
+
+.rfm-action-box {
+  background: #ffffff;
+  border: 1px solid #e9e3d9;
+  border-radius: 8px;
+  padding: 10px;
+  font-size: 12px;
+}
+
+.rfm-action-label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 700;
+  color: #593c3b;
+  margin-bottom: 4px;
+}
+
+.rfm-action-text {
+  color: #635041;
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* Dual Grid */
+.dual-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+/* Geo List */
+.geo-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.geo-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.geo-header {
+  display: flex;
+  align-items: center;
+  font-size: 13px;
+  gap: 10px;
+}
+
+.geo-rank {
+  font-weight: 700;
+  color: #b45309;
+  width: 24px;
+}
+
+.geo-name {
+  font-weight: 600;
+  color: #2e2626;
+  flex: 1;
+}
+
+.geo-orders {
+  color: #796e65;
+  font-size: 12px;
+}
+
+.geo-revenue {
+  color: #593c3b;
+}
+
+.geo-bar-bg {
+  height: 8px;
+  background: #f0ece3;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.geo-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #ca8a04 0%, #b45309 100%);
+  border-radius: 6px;
+  transition: width 0.3s ease;
+}
+
+/* CX Grid */
+.cx-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.cx-card {
+  background: #faf8f5;
+  border: 1px solid #ede8df;
+  border-radius: 10px;
+  padding: 14px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.cx-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.icon-star {
+  background: #fefce8;
+  color: #eab308;
+}
+
+.icon-refund {
+  background: #f0fdf4;
+  color: #16a34a;
+}
+
+.icon-speed {
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.icon-resol {
+  background: #fdf2f8;
+  color: #db2777;
+}
+
+.cx-body {
+  display: flex;
+  flex-direction: column;
+}
+
+.cx-title {
+  font-size: 12px;
+  color: #796e65;
+  font-weight: 600;
+}
+
+.cx-val {
+  font-size: 18px;
+  font-weight: 700;
+  color: #2e2626;
+  margin: 2px 0;
+}
+
+.cx-desc {
+  font-size: 11px;
+  color: #8c827a;
+}
+
+.text-green {
+  color: #16a34a;
+}
+
+.font-semibold {
+  font-weight: 600;
+}
+
+.font-bold {
+  font-weight: 700;
+}
+
+@media (max-width: 1024px) {
+  .kpi-grid,
+  .rfm-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .dual-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .kpi-grid,
+  .rfm-grid,
+  .cx-grid {
+    grid-template-columns: 1fr;
+  }
+}
+

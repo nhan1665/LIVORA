@@ -2,11 +2,19 @@
 
   <!-- Breadcrumbs -->
   <nav class="text-xs text-gray-500 space-x-2 mb-6 capitalize">
-    <a routerLink="/rooms" class="hover:underline cursor-pointer text-gray-700">Phòng</a>
-    <span>&gt;</span>
-    <a [routerLink]="['/rooms', currentRoom]" class="hover:underline cursor-pointer text-gray-700">{{ formattedRoomName }}</a>
-    <span>&gt;</span>
-    <span class="text-gray-900 font-medium">{{ formattedCategoryName }}</span>
+    @if (isSearchMode) {
+      <a routerLink="/home" class="hover:underline cursor-pointer text-gray-700">Trang chủ</a>
+      <span>&gt;</span>
+      <a routerLink="/rooms" class="hover:underline cursor-pointer text-gray-700">Sản phẩm</a>
+      <span>&gt;</span>
+      <span class="text-gray-900 font-medium">Tìm kiếm: "{{ searchQuery }}"</span>
+    } @else {
+      <a routerLink="/rooms" class="hover:underline cursor-pointer text-gray-700">Phòng</a>
+      <span>&gt;</span>
+      <a [routerLink]="['/rooms', currentRoom]" class="hover:underline cursor-pointer text-gray-700">{{ formattedRoomName }}</a>
+      <span>&gt;</span>
+      <span class="text-gray-900 font-medium">{{ formattedCategoryName }}</span>
+    }
   </nav>
 
   <!-- Title & Description -->
@@ -185,16 +193,23 @@
       } @else if (displayedProducts.length === 0) {
         <div class="py-16 text-center text-gray-500 bg-gray-50 rounded-lg p-8 border border-dashed border-gray-200">
           <svg class="mx-auto h-12 w-12 text-gray-300 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
-          <p class="text-base font-medium text-gray-700 mb-1">Không tìm thấy sản phẩm phù hợp</p>
-          <p class="text-xs text-gray-400">Hãy thử chọn lại danh mục hoặc bỏ bớt các bộ lọc tiêu chí.</p>
+          <p class="text-base font-medium text-gray-700 mb-1">
+            {{ isSearchMode ? 'Không tìm thấy sản phẩm nào khớp với từ khóa "' + searchQuery + '"' : 'Không tìm thấy sản phẩm phù hợp' }}
+          </p>
+          <p class="text-xs text-gray-400 mb-4">
+            {{ isSearchMode ? 'Vui lòng thử lại với từ khóa khác hoặc kiểm tra lại chính tả (ví dụ: sofa, bàn, ghế, đèn...).' : 'Hãy thử chọn lại danh mục hoặc bỏ bớt các bộ lọc tiêu chí.' }}
+          </p>
+          <a routerLink="/rooms" class="inline-flex items-center px-4 py-2 border border-gray-900 text-xs font-semibold rounded text-gray-900 hover:bg-gray-900 hover:text-white transition-colors">
+            Khám phá tất cả sản phẩm →
+          </a>
         </div>
       } @else {
         <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-x-3 gap-y-8 md:gap-x-4 md:gap-y-12">
 
           @for (product of displayedProducts; track product.id) {
-            <a [routerLink]="['/rooms', currentRoom, currentCategory, product.id]" class="group relative flex flex-col justify-between cursor-pointer">
+            <a [routerLink]="['/rooms', product.roomSlug || currentRoom || 'all', product.categorySlug || currentCategory || 'all', product.id]" class="group relative flex flex-col justify-between cursor-pointer">
 
               <div>
                 <div class="relative overflow-hidden aspect-square w-full bg-gray-50 rounded-sm mb-4 flex items-center justify-center p-2 md:p-3">

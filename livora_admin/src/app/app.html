@@ -6,34 +6,159 @@
     <main class="admin-main">
       <header class="admin-topbar">
         <nav class="topbar-breadcrumb" aria-label="Breadcrumb">
-          <a routerLink="/dashboard" class="breadcrumb-link">Dashboard</a>
+          <a [routerLink]="homeRoute()" class="breadcrumb-link" title="Về trang chủ">Trang chủ</a>
           @if (currentBreadcrumb().module) {
             <span class="breadcrumb-separator">&gt;</span>
-            <span class="breadcrumb-module">{{ currentBreadcrumb().module }}</span>
+            @if (currentBreadcrumb().moduleRoute) {
+              <a [routerLink]="currentBreadcrumb().moduleRoute" class="breadcrumb-link">{{ currentBreadcrumb().module }}</a>
+            } @else {
+              <span class="breadcrumb-module">{{ currentBreadcrumb().module }}</span>
+            }
           }
           <span class="breadcrumb-separator">&gt;</span>
           <span class="breadcrumb-current">{{ currentBreadcrumb().page }}</span>
         </nav>
         <div class="topbar-right">
-          <button type="button" class="notification-btn" title="Thông báo">
-            <svg
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.8"
-              stroke-linecap="round"
-              stroke-linejoin="round"
+          <!-- Notification Bell & Dropdown Popover -->
+          <div class="notification-wrapper" (click)="$event.stopPropagation()">
+            <button
+              type="button"
+              class="notification-btn"
+              [class.active]="isNotificationOpen()"
+              (click)="toggleNotification($event)"
+              title="Thông báo theo vai trò"
             >
-              <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
-              <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
-            </svg>
-            <span class="notification-dot"></span>
-          </button>
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
+                <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
+              </svg>
+              @if (unreadNotifCount() > 0) {
+                <span class="notification-badge">{{ unreadNotifCount() > 99 ? '99+' : unreadNotifCount() }}</span>
+              }
+            </button>
+
+            <!-- Notification Popover Card -->
+            @if (isNotificationOpen()) {
+              <div class="notification-popover" (click)="$event.stopPropagation()">
+                <div class="notif-header">
+                  <div class="notif-title-group">
+                    <span class="notif-title">Thông báo hệ thống</span>
+                    <span class="notif-role-tag">{{ currentUser()?.roleName || currentUser()?.role || 'Quản trị viên' }}</span>
+                  </div>
+                  @if (unreadNotifCount() > 0) {
+                    <button type="button" class="btn-mark-all" (click)="markAllAsRead($event)" title="Đánh dấu tất cả là đã đọc">
+                      Đã đọc tất cả
+                    </button>
+                  }
+                </div>
+
+                <div class="notif-tabs">
+                  <button
+                    type="button"
+                    class="notif-tab"
+                    [class.active]="activeNotifTab() === 'all'"
+                    (click)="activeNotifTab.set('all')"
+                  >
+                    Tất cả ({{ notifications().length }})
+                  </button>
+                  <button
+                    type="button"
+                    class="notif-tab"
+                    [class.active]="activeNotifTab() === 'unread'"
+                    (click)="activeNotifTab.set('unread')"
+                  >
+                    Chưa đọc ({{ unreadNotifCount() }})
+                  </button>
+                </div>
+
+                <div class="notif-list">
+                  @if (isLoadingNotifs()) {
+                    <div class="notif-empty">Đang tải thông báo...</div>
+                  } @else if (filteredNotifications().length === 0) {
+                    <div class="notif-empty">
+                      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#a89f91" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M22 17H2a3 3 0 0 0 3-3V9a7 7 0 0 1 14 0v5a3 3 0 0 0 3 3zm-8.27 4a2 2 0 0 1-3.46 0" />
+                      </svg>
+                      <p>Không có thông báo nào</p>
+                    </div>
+                  } @else {
+                    @for (notif of filteredNotifications(); track notif.id) {
+                      <div class="notif-item" [class.unread]="!notif.isRead" (click)="onNotificationClick(notif, $event)">
+                        <div class="notif-icon-col" [attr.data-type]="notif.type">
+                          @switch (notif.type) {
+                            @case ('refund') {
+                              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="12" y1="1" x2="12" y2="23"></line>
+                                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                              </svg>
+                            }
+                            @case ('contact') {
+                              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                              </svg>
+                            }
+                            @case ('review') {
+                              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                              </svg>
+                            }
+                            @case ('order') {
+                              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z" />
+                                <line x1="3" y1="6" x2="21" y2="6" />
+                                <path d="M16 10a4 4 0 0 1-8 0" />
+                              </svg>
+                            }
+                            @default {
+                              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="12" y1="16" x2="12" y2="12"></line>
+                                <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                              </svg>
+                            }
+                          }
+                        </div>
+                        <div class="notif-body">
+                          <div class="notif-item-header">
+                            <span class="notif-item-title">{{ notif.title }}</span>
+                            <span class="notif-badge-pill" [attr.data-type]="notif.type">{{ getRoleBadgeLabel(notif.type) }}</span>
+                          </div>
+                          <p class="notif-item-msg">{{ notif.message }}</p>
+                          <div class="notif-item-meta">
+                            <span class="notif-time">{{ formatTimeAgo(notif.createdAt) }}</span>
+                            @if (notif.link) {
+                              <span class="notif-action-hint">Nhấp để mở &rarr;</span>
+                            }
+                          </div>
+                        </div>
+                        @if (!notif.isRead) {
+                          <span class="notif-unread-dot"></span>
+                        }
+                      </div>
+                    }
+                  }
+                </div>
+              </div>
+            }
+          </div>
 
           <div class="topbar-user">
-            <div class="user-meta">
+            <div
+              class="user-meta clickable"
+              (click)="openProfile()"
+              role="button"
+              tabindex="0"
+              title="Xem thông tin cá nhân & Đổi mật khẩu"
+            >
               <span class="user-name">{{ currentUser()?.fullName || currentUser()?.code || 'DTNHAN' }}</span>
               <span class="user-role">
                 <span>{{ currentUser()?.roleName || currentUser()?.role || 'Quản trị viên' }}</span>
@@ -47,7 +172,7 @@
                   stroke-linecap="round"
                   stroke-linejoin="round"
                 >
-                  <polyline points="6 9 12 15 18 9"></polyline>
+                  <polyline points="9 18 15 12 9 6"></polyline>
                 </svg>
               </span>
             </div>

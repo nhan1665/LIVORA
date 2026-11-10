@@ -21,6 +21,7 @@ export class RoomProductList implements OnInit {
   activeFilter: string | null = 'Danh mục';
   currentCategory: string = 'all';
   currentRoom: string = '';
+  searchQuery: string = '';
   products: any[] = [];
   isBestSellerOnly: boolean = false;
   sortOption: string = '';
@@ -41,6 +42,10 @@ export class RoomProductList implements OnInit {
 
   roomNamesMap: Record<string, string> = {};
   categoryNamesMap: Record<string, string> = {};
+
+  get isSearchMode(): boolean {
+    return !!this.searchQuery.trim();
+  }
 
   get subCategories(): CategoryTabItem[] {
     if (!this.dbCategories || this.dbCategories.length === 0) {
@@ -106,6 +111,9 @@ export class RoomProductList implements OnInit {
   }
 
   get formattedCategoryName(): string {
+    if (this.isSearchMode) {
+      return `Tìm kiếm: "${this.searchQuery}"`;
+    }
     if (!this.currentCategory || this.currentCategory === 'all') {
       return 'Tất cả sản phẩm';
     }
@@ -113,6 +121,9 @@ export class RoomProductList implements OnInit {
   }
 
   get currentDescription(): string {
+    if (this.isSearchMode) {
+      return `Kết quả tìm kiếm sản phẩm nội thất phù hợp với từ khóa <strong>"${this.searchQuery}"</strong> trên toàn bộ hệ thống LIVORA.`;
+    }
     return `Khám phá các sản phẩm ${this.formattedCategoryName.toLowerCase()} chất lượng cao của LIVORA, mang lại sự tiện nghi và vẻ đẹp tinh tế cho không gian sống của bạn.`;
   }
 
@@ -145,7 +156,14 @@ export class RoomProductList implements OnInit {
       }
     });
 
-    // 3. Lắng nghe thay đổi tham số Route để lấy dữ liệu sản phẩm tương ứng từ Database
+    // 3. Lắng nghe tham số truy vấn tìm kiếm (search/q query param)
+    this.route.queryParamMap.subscribe(queryParams => {
+      const q = queryParams.get('q') || queryParams.get('search');
+      this.searchQuery = q ? q.trim() : '';
+      this.loadProductsForCurrentSelection();
+    });
+
+    // 4. Lắng nghe thay đổi tham số Route (roomName, categoryName)
     this.route.paramMap.subscribe(params => {
       const room = params.get('roomName');
       const category = params.get('categoryName');
@@ -165,6 +183,7 @@ export class RoomProductList implements OnInit {
   loadProductsForCurrentSelection(): void {
     const categoryParam = this.currentCategory && this.currentCategory !== 'all' ? this.currentCategory : undefined;
     const roomParam = this.currentRoom && this.currentRoom !== 'all' ? this.currentRoom : undefined;
+    const searchParam = this.searchQuery ? this.searchQuery.trim() : undefined;
 
     this.isLoading = true;
     this.cdr.detectChanges();
@@ -172,6 +191,7 @@ export class RoomProductList implements OnInit {
     this.productService.getProducts({
       room: roomParam,
       category: categoryParam,
+      search: searchParam,
       pageSize: 50
     }).subscribe({
       next: (realProducts) => {
@@ -194,6 +214,8 @@ export class RoomProductList implements OnInit {
               reviews: p.totalReviews || 0,
               colors: p.colors || [],
               soldQuantity: p.soldQuantity || 0,
+              roomSlug: (p.roomSlugs && p.roomSlugs.length > 0) ? p.roomSlugs[0] : (this.currentRoom || 'all'),
+              categorySlug: p.categorySlug || (this.currentCategory !== 'all' ? this.currentCategory : 'all'),
             };
           });
         } else {

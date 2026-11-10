@@ -1,10 +1,11 @@
 import { Component, inject, HostListener, ElementRef, OnInit, signal, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule, Router } from '@angular/router';
+import { RouterModule, Router, RouterLink } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { CartService } from '../../services/cart.service';
-import { RouterLink } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
+import { ProductService, UserProduct } from '../../services/product.service';
 import { environment } from '../../../environments/environment';
 
 export interface MarqueeItem {
@@ -19,7 +20,7 @@ export interface MarqueeItem {
 @Component({
   selector: 'app-header',
   standalone: true,
-  imports: [CommonModule, RouterModule, RouterLink],
+  imports: [CommonModule, RouterModule, RouterLink, FormsModule],
   templateUrl: './header.html',
   styleUrl: './header.css',
 })
@@ -27,12 +28,20 @@ export class Header implements OnInit {
   public readonly cartService = inject(CartService);
   public readonly authService = inject(AuthService);
   public readonly router = inject(Router);
+  public readonly productService = inject(ProductService);
   private readonly http = inject(HttpClient);
   private readonly cdr = inject(ChangeDetectorRef);
   private eRef = inject(ElementRef);
   
   showAccountDropdown = false;
   marquees = signal<MarqueeItem[]>([]);
+
+  // Search state
+  searchKeyword = '';
+  searchResults: UserProduct[] = [];
+  isSearching = false;
+  showSearchDropdown = false;
+  private searchDebounceTimer: any = null;
 
   ngOnInit(): void {
     this.loadMarquees();
@@ -67,9 +76,72 @@ export class Header implements OnInit {
 
   @HostListener('document:click', ['$event'])
   clickout(event: Event) {
-    if(!this.eRef.nativeElement.contains(event.target)) {
+    if (!this.eRef.nativeElement.contains(event.target)) {
       this.showAccountDropdown = false;
+      this.showSearchDropdown = false;
     }
+  }
+
+  onSearchInput(): void {
+    if (this.searchDebounceTimer) {
+      clearTimeout(this.searchDebounceTimer);
+    }
+
+    const term = this.searchKeyword.trim();
+    if (term.length < 2) {
+      this.searchResults = [];
+      this.isSearching = false;
+      this.showSearchDropdown = false;
+      this.cdr.detectChanges();
+      return;
+    }
+
+    this.showSearchDropdown = true;
+    this.isSearching = true;
+    this.cdr.detectChanges();
+
+    this.searchDebounceTimer = setTimeout(() => {
+      this.productService.getProducts({ search: term, pageSize: 6 }).subscribe({
+        next: (items) => {
+          this.searchResults = items || [];
+          this.isSearching = false;
+          this.cdr.detectChanges();
+        },
+        error: () => {
+          this.searchResults = [];
+          this.isSearching = false;
+          this.cdr.detectChanges();
+        },
+      });
+    }, 280);
+  }
+
+  onSearchFocus(): void {
+    if (this.searchKeyword.trim().length >= 2) {
+      this.showSearchDropdown = true;
+    }
+  }
+
+  clearSearch(): void {
+    this.searchKeyword = '';
+    this.searchResults = [];
+    this.showSearchDropdown = false;
+    this.cdr.detectChanges();
+  }
+
+  executeSearch(): void {
+    const term = this.searchKeyword.trim();
+    if (!term) return;
+
+    this.showSearchDropdown = false;
+    this.router.navigate(['/search'], { queryParams: { q: term } });
+  }
+
+  selectProduct(item: UserProduct): void {
+    this.showSearchDropdown = false;
+    const room = item.roomSlugs && item.roomSlugs.length > 0 ? item.roomSlugs[0] : 'all';
+    const category = item.categorySlug || 'all';
+    this.router.navigate(['/rooms', room, category, item.id || item.slug]);
   }
 
   onAccountIconClick(event: Event) {
