@@ -342,7 +342,7 @@ const toggleShippingConfig = async (req, res) => {
 };
 
 /**
- * @desc    Delete shipping config
+ * @desc    Ngừng áp dụng cấu hình vận chuyển (soft-deactivate, không xóa khỏi DB)
  * @route   DELETE /api/shipping/:id
  */
 const deleteShippingConfig = async (req, res) => {
@@ -350,21 +350,23 @@ const deleteShippingConfig = async (req, res) => {
     const shipping = await Shipping.findById(req.params.id);
     if (!shipping) return sendError(res, 'Không tìm thấy cấu hình vận chuyển.', 404);
 
+    shipping.isActive = false;
+    await shipping.save();
+
     logActivityInternal({
       entityType: 'shipping',
       entityId: shipping._id.toString(),
       entityCode: shipping.province,
-      action: 'Xóa cấu hình vận chuyển',
+      action: 'Ngừng áp dụng cấu hình vận chuyển',
       performedBy: 'Quản trị viên (Admin)',
       role: 'admin',
-      details: `Đã xóa tuyến giao hàng ${shipping.province} (${shipping.shippingMethod}) khỏi hệ thống`,
+      details: `Đã chuyển tuyến giao hàng ${shipping.province} (${shipping.shippingMethod}) sang trạng thái Ngừng áp dụng`,
     });
 
-    await Shipping.findByIdAndDelete(req.params.id);
-    return sendSuccess(res, null, 'Xóa cấu hình vận chuyển thành công.');
+    return sendSuccess(res, { id: shipping._id.toString(), isActive: false }, 'Đã chuyển cấu hình vận chuyển sang trạng thái ngừng áp dụng.');
   } catch (error) {
     console.error('deleteShippingConfig error:', error);
-    return sendError(res, 'Không thể xóa cấu hình.', 500);
+    return sendError(res, 'Không thể ngừng áp dụng cấu hình.', 500);
   }
 };
 

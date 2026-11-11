@@ -47,12 +47,15 @@ const voucherRoutes = require('./src/routes/voucherRoutes');
 const dashboardRoutes = require('./src/routes/dashboardRoutes');
 const homepageRoutes = require('./src/routes/homepageRoutes');
 const employeeRoutes = require('./src/routes/employeeRoutes');
+const roleRoutes = require('./src/routes/roleRoutes');
 const checkoutRoutes = require('./src/routes/checkoutRoutes');
 const activityLogRoutes = require('./src/routes/activityLogRoutes');
+const notificationRoutes = require('./src/routes/notificationRoutes');
 const requireAdmin = require('./src/middleware/requireAdmin');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/employees', employeeRoutes);
+app.use('/api/roles', roleRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/rooms', roomRoutes);
 app.use('/api/products', productRoutes);
@@ -69,6 +72,7 @@ app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/homepage', homepageRoutes);
 app.use('/api/checkout', checkoutRoutes);
 app.use('/api/activity-logs', activityLogRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // Historical database maintenance endpoints are unavailable during normal operation.
 app.use(['/api/drop-staffs', '/api/inspect-schema', '/api/seed'], (req, res, next) => {
@@ -213,6 +217,12 @@ const startServer = async () => {
     const seedMockSpacesAndProducts = require('./src/config/seedSpacesAndProducts');
     seedMockSpacesAndProducts().catch((seedErr) => {
       console.warn('Lỗi khi seed mock spaces & products:', seedErr.message);
+    });
+
+    // Tự động kiểm tra và seed 5 vai trò theo Use Case cùng các tài khoản nhân viên
+    const { seedRolesAndEmployees } = require('./src/config/seedRolesAndEmployees');
+    seedRolesAndEmployees().catch((roleErr) => {
+      console.warn('Lỗi khi seed roles & employees:', roleErr.message);
     });
 
     if (process.env.AUTO_SEED === 'true') {

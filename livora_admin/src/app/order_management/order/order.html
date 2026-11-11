@@ -23,79 +23,334 @@
     </div>
   </header>
 
-  <!-- KPI Stats Summary -->
-  <section class="order-kpi-grid">
-    <div class="kpi-card">
-      <span class="kpi-label">TỔNG ĐƠN HÀNG</span>
-      <strong class="kpi-value">{{ stats.totalOrders }}</strong>
-      <small class="kpi-desc">Tất cả đơn trong hệ thống</small>
-    </div>
-    <div class="kpi-card pending">
-      <span class="kpi-label">CHỜ XÁC NHẬN</span>
-      <strong class="kpi-value">{{ stats.pendingCount }}</strong>
-      <small class="kpi-desc">Cần nhân viên xử lý sớm</small>
-    </div>
-    <div class="kpi-card shipping">
-      <span class="kpi-label">ĐANG GIAO HÀNG</span>
-      <strong class="kpi-value">{{ stats.shippingCount }}</strong>
-      <small class="kpi-desc">Đang trên đường vận chuyển</small>
-    </div>
-    <div class="kpi-card delivered">
-      <span class="kpi-label">ĐÃ GIAO THÀNH CÔNG</span>
-      <strong class="kpi-value">{{ stats.deliveredCount }}</strong>
-      <small class="kpi-desc">Đơn hàng hoàn tất</small>
-    </div>
-    <div class="kpi-card revenue">
-      <span class="kpi-label">DOANH THU ĐÃ THU</span>
-      <strong class="kpi-value">{{ stats.totalRevenue.toLocaleString('vi-VN') }} đ</strong>
-      <small class="kpi-desc">Tổng thanh toán thành công</small>
-    </div>
-  </section>
+  <!-- Navigation Tabs -->
+  <div class="order-nav-tabs">
+    <button
+      type="button"
+      class="order-tab-btn"
+      [class.active]="activeTab === 'all'"
+      (click)="setTab('all')"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+      <span>Tất cả đơn hàng</span>
+      <span class="tab-count">{{ stats.totalOrders }}</span>
+    </button>
+    <button
+      type="button"
+      class="order-tab-btn"
+      [class.active]="activeTab === 'export_slips'"
+      (click)="setTab('export_slips')"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+      <span>Phiếu xuất bán</span>
+      @if (pendingExportSlipsCount > 0) {
+        <span class="tab-badge warning">{{ pendingExportSlipsCount }} chờ xuất</span>
+      } @else {
+        <span class="tab-count">{{ exportSlips.length }}</span>
+      }
+    </button>
+    <button
+      type="button"
+      class="order-tab-btn"
+      [class.active]="activeTab === 'returns'"
+      (click)="setTab('returns')"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg>
+      <span>Đơn hàng hoàn trả</span>
+      @if (pendingReturnRestockCount > 0) {
+        <span class="tab-badge danger">{{ pendingReturnRestockCount }} cần nhập kho</span>
+      } @else {
+        <span class="tab-count">{{ returnOrders.length }}</span>
+      }
+    </button>
+  </div>
 
-  <!-- Filter Bar -->
-  <section class="order-filters-container">
-    <div class="filter-main">
-      <app-filter-bar
-        searchPlaceholder="Tìm mã đơn, tên hoặc SĐT khách hàng..."
-        [searchValue]="keyword"
-        (searchValueChange)="onSearchChange($event)"
-        [statusValue]="orderStatusFilter"
-        [statusOptions]="statusOptions"
-        (filter)="onFilter($event)"
-        (reset)="onResetFilter()"
-      ></app-filter-bar>
-    </div>
-    <div class="filter-extra">
-      <label class="filter-label">THANH TOÁN</label>
-      <select
-        class="filter-select"
-        [ngModel]="paymentStatusFilter"
-        (ngModelChange)="onPaymentStatusChange($event)"
-      >
-        @for (opt of paymentOptions; track opt.value) {
-          <option [value]="opt.value">{{ opt.label }}</option>
-        }
-      </select>
-    </div>
-  </section>
+  @if (activeTab === 'all') {
+    <!-- KPI Stats Summary -->
+    <section class="order-kpi-grid">
+      <div class="kpi-card">
+        <span class="kpi-label">TỔNG ĐƠN HÀNG</span>
+        <strong class="kpi-value">{{ stats.totalOrders }}</strong>
+        <small class="kpi-desc">Tất cả đơn trong hệ thống</small>
+      </div>
+      <div class="kpi-card pending">
+        <span class="kpi-label">CHỜ XÁC NHẬN</span>
+        <strong class="kpi-value">{{ stats.pendingCount }}</strong>
+        <small class="kpi-desc">Cần nhân viên xử lý sớm</small>
+      </div>
+      <div class="kpi-card shipping">
+        <span class="kpi-label">ĐANG GIAO HÀNG</span>
+        <strong class="kpi-value">{{ stats.shippingCount }}</strong>
+        <small class="kpi-desc">Đang trên đường vận chuyển</small>
+      </div>
+      <div class="kpi-card delivered">
+        <span class="kpi-label">ĐÃ GIAO THÀNH CÔNG</span>
+        <strong class="kpi-value">{{ stats.deliveredCount }}</strong>
+        <small class="kpi-desc">Đơn hàng hoàn tất</small>
+      </div>
+      <div class="kpi-card revenue">
+        <span class="kpi-label">DOANH THU ĐÃ THU</span>
+        <strong class="kpi-value">{{ stats.totalRevenue.toLocaleString('vi-VN') }} đ</strong>
+        <small class="kpi-desc">Tổng thanh toán thành công</small>
+      </div>
+    </section>
 
-  <!-- Orders Data Table -->
-  <section class="order-table-card">
-    <app-data-table
-      [columns]="columns"
-      [data]="orders"
-      [loading]="loading"
-      [currentPage]="currentPage"
-      [totalItems]="totalItems"
-      [itemsPerPage]="pageSize"
-      itemLabel="đơn hàng"
-      emptyMessage="Chưa có đơn hàng nào"
-      emptySubMessage="Không tìm thấy đơn hàng nào phù hợp với điều kiện tìm kiếm."
-      (rowClick)="onRowClick($event)"
-      (actionClick)="onTableAction($event)"
-      (pageChange)="onPageChange($event)"
-    ></app-data-table>
-  </section>
+    <!-- Filter Bar -->
+    <section class="order-filters-container">
+      <div class="filter-main">
+        <app-filter-bar
+          searchPlaceholder="Tìm mã đơn, tên hoặc SĐT khách hàng..."
+          [searchValue]="keyword"
+          (searchValueChange)="onSearchChange($event)"
+          [statusValue]="orderStatusFilter"
+          [statusOptions]="statusOptions"
+          (filter)="onFilter($event)"
+          (reset)="onResetFilter()"
+        ></app-filter-bar>
+      </div>
+      <div class="filter-extra">
+        <label class="filter-label">THANH TOÁN</label>
+        <select
+          class="filter-select"
+          [ngModel]="paymentStatusFilter"
+          (ngModelChange)="onPaymentStatusChange($event)"
+        >
+          @for (opt of paymentOptions; track opt.value) {
+            <option [value]="opt.value">{{ opt.label }}</option>
+          }
+        </select>
+      </div>
+    </section>
+
+    <!-- Orders Data Table -->
+    <section class="order-table-card">
+      <app-data-table
+        [columns]="columns"
+        [data]="orders"
+        [loading]="loading"
+        [currentPage]="currentPage"
+        [totalItems]="totalItems"
+        [itemsPerPage]="pageSize"
+        itemLabel="đơn hàng"
+        emptyMessage="Chưa có đơn hàng nào"
+        emptySubMessage="Không tìm thấy đơn hàng nào phù hợp với điều kiện tìm kiếm."
+        (rowClick)="onRowClick($event)"
+        (actionClick)="onTableAction($event)"
+        (pageChange)="onPageChange($event)"
+      ></app-data-table>
+    </section>
+  } @else if (activeTab === 'export_slips') {
+    <!-- Tab Phiếu Xuất Bán -->
+    <div class="order-info-banner info">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink: 0; margin-top: 1px;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+      <div>
+        <strong>QUY TRÌNH XUẤT KHO:</strong> Sau khi đơn hàng được <strong>Xác nhận</strong>, hệ thống tự động sinh <strong>Phiếu xuất bán</strong>. Nhân viên kho tiến hành soạn hàng theo danh sách, sau đó nhấn nút <strong>"Xuất hàng"</strong> để chuyển đơn hàng sang trạng thái <strong>"Đang giao"</strong>.
+      </div>
+    </div>
+
+    <div class="custom-table-container">
+      @if (exportSlips.length === 0) {
+        <div class="empty-tab-state">
+          <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+          <h4>Chưa có phiếu xuất bán nào</h4>
+          <p>Khi có đơn hàng được xác nhận, phiếu xuất bán sẽ tự động xuất hiện tại đây để nhân viên kho thực hiện xuất hàng.</p>
+        </div>
+      } @else {
+        <table class="custom-table">
+          <thead>
+            <tr>
+              <th>Mã phiếu xuất</th>
+              <th>Đơn hàng</th>
+              <th>Khách hàng & SĐT</th>
+              <th>Danh sách sản phẩm xuất kho</th>
+              <th style="text-align: center;">Tổng SL</th>
+              <th>Ngày lập phiếu</th>
+              <th>Trạng thái phiếu</th>
+              <th style="text-align: center;">Hành động</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (slip of exportSlips; track slip._id) {
+              <tr>
+                <td>
+                  <span class="slip-code-badge">
+                    {{ slip.exportSlipCode || ('PX-' + slip.orderCode.replace('LIV-', '')) }}
+                  </span>
+                </td>
+                <td>
+                  <strong style="color: #704b4a; cursor: pointer; text-decoration: underline;" (click)="openDetail(slip)">
+                    {{ slip.orderCode }}
+                  </strong>
+                  <div style="font-size: 11.5px; color: #6b7280; margin-top: 2px;">
+                    {{ slip.totalAmount | number }} đ
+                  </div>
+                </td>
+                <td>
+                  <div style="font-weight: 600; color: #1f2937;">{{ slip.customerInfo.name }}</div>
+                  <div style="font-size: 12px; color: #6b7280;">{{ slip.customerInfo.phone }}</div>
+                </td>
+                <td>
+                  <div class="item-chip-list">
+                    @for (item of slip.items; track (item.productId + '_' + $index)) {
+                      <div class="item-chip">
+                        <span>{{ item.productName || item.sku || 'Sản phẩm' }}</span>
+                        <strong>x{{ item.quantity }}</strong>
+                      </div>
+                    }
+                  </div>
+                </td>
+                <td style="text-align: center; font-weight: 700; color: #1e293b;">
+                  {{ getOrderItemsCount(slip) }}
+                </td>
+                <td style="white-space: nowrap; color: #4b5563; font-size: 12px;">
+                  {{ slip.createdAt | date:'dd/MM/yyyy HH:mm' }}
+                </td>
+                <td>
+                  @if (slip.exportSlipStatus !== 'exported') {
+                    <span class="badge-status waiting">Chờ xuất kho</span>
+                  } @else {
+                    <span class="badge-status exported">Đã xuất kho</span>
+                    @if (slip.exportedAt) {
+                      <div style="font-size: 11px; color: #166534; margin-top: 2px;">
+                        {{ slip.exportedAt | date:'dd/MM HH:mm' }}
+                      </div>
+                    }
+                  }
+                </td>
+                <td style="text-align: center; white-space: nowrap;">
+                  @if (slip.exportSlipStatus !== 'exported') {
+                    <button
+                      type="button"
+                      class="btn-ship-action"
+                      (click)="confirmExportSlip(slip)"
+                      title="Nhấn để thực hiện trừ tồn kho sản phẩm và lập phiếu xuất"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                      Xuất hàng
+                    </button>
+                  } @else if (slip.orderStatus === 'confirmed') {
+                    <button
+                      type="button"
+                      class="btn-ship-action"
+                      style="background: #2563eb;"
+                      (click)="advanceToShipping(slip)"
+                      title="Đã xuất hàng xong, nhấn để chuyển đơn hàng sang trạng thái Đang giao"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="13 17 18 12 13 7"></polyline><polyline points="6 17 11 12 6 7"></polyline></svg>
+                      Chuyển Đang giao
+                    </button>
+                  } @else {
+                    <span style="font-size: 12px; color: #166534; font-weight: 600;">✓ Đang giao / Đã giao</span>
+                  }
+                  <button type="button" class="btn-view-order" (click)="openDetail(slip)">
+                    Chi tiết
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+    </div>
+  } @else if (activeTab === 'returns') {
+    <!-- Tab Đơn Hàng Hoàn Trả -->
+    <div class="order-info-banner warning">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink: 0; margin-top: 1px;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+      <div>
+        <strong>ĐƠN HÀNG HOÀN TRẢ SAU GIAO:</strong> Danh sách chỉ hiển thị các đơn hàng <strong>ĐÃ GIAO THÀNH CÔNG</strong> nhưng phát sinh hủy đơn / hoàn trả hàng. Quản trị viên kiểm tra hàng trả về và nhấn nút <strong>"Nhập hàng về kho"</strong> để hệ thống tự động cộng dồn số lượng sản phẩm trả về vào tồn kho.
+      </div>
+    </div>
+
+    <div class="custom-table-container">
+      @if (returnOrders.length === 0) {
+        <div class="empty-tab-state">
+          <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg>
+          <h4>Không có đơn hàng hoàn trả nào cần nhập kho</h4>
+          <p>Chỉ những đơn hàng đã giao thành công phát sinh hoàn tiền đổi trả mới xuất hiện tại đây để nhân viên kho thao tác nhập hàng về kho.</p>
+        </div>
+      } @else {
+        <table class="custom-table">
+          <thead>
+            <tr>
+              <th>Mã đơn hàng</th>
+              <th>Khách hàng & SĐT</th>
+              <th>Sản phẩm hoàn trả</th>
+              <th style="text-align: center;">Tổng SL trả</th>
+              <th>Lý do hoàn trả</th>
+              <th>Trạng thái kho hàng</th>
+              <th style="text-align: center;">Hành động</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (order of returnOrders; track order._id) {
+              <tr>
+                <td>
+                  <strong style="color: #704b4a; cursor: pointer; text-decoration: underline;" (click)="openDetail(order)">
+                    {{ order.orderCode }}
+                  </strong>
+                  <div style="font-size: 11.5px; color: #6b7280; margin-top: 2px;">
+                    {{ order.totalAmount | number }} đ
+                  </div>
+                </td>
+                <td>
+                  <div style="font-weight: 600; color: #1f2937;">{{ order.customerInfo.name }}</div>
+                  <div style="font-size: 12px; color: #6b7280;">{{ order.customerInfo.phone }}</div>
+                </td>
+                <td>
+                  <div class="item-chip-list">
+                    @for (item of order.items; track (item.productId + '_' + $index)) {
+                      <div class="item-chip">
+                        <span>{{ item.productName || item.sku || 'Sản phẩm' }}</span>
+                        <strong>x{{ item.quantity }}</strong>
+                      </div>
+                    }
+                  </div>
+                </td>
+                <td style="text-align: center; font-weight: 700; color: #b91c1c;">
+                  +{{ getOrderItemsCount(order) }}
+                </td>
+                <td>
+                  <div style="font-size: 12.5px; color: #4b5563; max-width: 260px; line-height: 1.4;">
+                    {{ order.refundReason || order.cancelReason || 'Yêu cầu hoàn trả / đổi trả sau khi nhận' }}
+                  </div>
+                </td>
+                <td>
+                  @if (order.isRestockedReturned) {
+                    <span class="badge-status restocked">Đã nhập kho (+tồn)</span>
+                    @if (order.restockedReturnedAt) {
+                      <div style="font-size: 11px; color: #166534; margin-top: 2px;">
+                        {{ order.restockedReturnedAt | date:'dd/MM/yyyy HH:mm' }}
+                      </div>
+                    }
+                  } @else {
+                    <span class="badge-status pending-restock">Chưa nhập kho lại</span>
+                  }
+                </td>
+                <td style="text-align: center; white-space: nowrap;">
+                  @if (!order.isRestockedReturned) {
+                    <button
+                      type="button"
+                      class="btn-restock-action"
+                      (click)="restockReturnOrder(order)"
+                      title="Nhấn để cộng số lượng sản phẩm hoàn trả lại vào tồn kho hệ thống"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg>
+                      Nhập hàng về kho
+                    </button>
+                  } @else {
+                    <span style="font-size: 12px; color: #166534; font-weight: 600;">✓ Đã cộng tồn kho</span>
+                  }
+                  <button type="button" class="btn-view-order" (click)="openDetail(order)">
+                    Chi tiết
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+    </div>
+  }
 </div>
 
 <!-- ================= ORDER DETAIL MODAL ================= -->
@@ -223,6 +478,17 @@
             <p>{{ selectedOrder.cancelReason || 'Không có lý do chi tiết.' }}</p>
           </div>
         }
+
+        @if (selectedOrder.notes && selectedOrder.notes.includes('HẾT HÀNG')) {
+          <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 12px 16px; margin-top: 12px; display: flex; align-items: flex-start; gap: 12px;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; margin-top: 2px;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            <div style="font-size: 13px; color: #991b1b; line-height: 1.5;">
+              <strong>CẢNH BÁO TỒN KHO:</strong> {{ selectedOrder.notes }}
+              <br/>
+              <em>NV Vận hành vui lòng: <strong>1. Tăng tồn kho sản phẩm</strong> (nếu xưởng còn hàng) rồi bấm chuyển tiếp trạng thái, HOẶC <strong>2. Bấm "Hủy đơn hàng"</strong> để thông báo cho khách.</em>
+            </div>
+          </div>
+        }
       </div>
 
       <!-- Customer & Shipping Info -->
@@ -332,7 +598,28 @@
           </button>
         }
 
-        @if (getNextStatus(selectedOrder.orderStatus)) {
+        @if (selectedOrder.orderStatus === 'delivered') {
+          <button
+            type="button"
+            class="btn-primary"
+            style="background: #704b4a; color: #ffffff; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 600; font-size: 13.5px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 6px rgba(112, 75, 74, 0.25);"
+            (click)="promptAdminRefund(selectedOrder)"
+          >
+            <i class="bi bi-arrow-counterclockwise"></i> Hủy đơn / Yêu cầu hoàn tiền
+          </button>
+        }
+
+        @if (selectedOrder.orderStatus === 'confirmed' && selectedOrder.exportSlipStatus !== 'exported') {
+          <button
+            type="button"
+            class="btn-primary"
+            style="background: #15803d; color: #ffffff; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 600; font-size: 13.5px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 6px rgba(21, 128, 61, 0.25);"
+            (click)="confirmExportSlip(selectedOrder)"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            Xuất hàng (Trừ tồn kho)
+          </button>
+        } @else if (getNextStatus(selectedOrder.orderStatus) && canShowAdvance(selectedOrder)) {
           <button
             type="button"
             class="btn-primary"
@@ -588,3 +875,79 @@
   (confirm)="confirmAdvanceStatus()"
   (cancel)="cancelAdvanceStatus()"
 ></app-confirm-dialog>
+
+<!-- ================= ADMIN REFUND / CANCEL DELIVERED MODAL ================= -->
+<app-form-modal
+  [isOpen]="isAdminRefundOpen"
+  title="Hủy đơn & Yêu cầu hoàn tiền (Đơn đã hoàn thành)"
+  [subtitle]="refundTargetOrder ? ('Đơn hàng #' + refundTargetOrder.orderCode + ' - Khách hàng: ' + refundTargetOrder.customerInfo.name) : ''"
+  size="md"
+  submitText="Xác nhận gửi yêu cầu hoàn tiền"
+  cancelText="Đóng"
+  [isSubmitting]="isSubmittingRefund"
+  (submit)="confirmAdminRefund()"
+  (close)="closeAdminRefundModal()"
+>
+  @if (refundTargetOrder) {
+    <div style="display: flex; flex-direction: column; gap: 16px;">
+      <div style="background: #faf6f5; border: 1px solid #ecdcdb; border-radius: 8px; padding: 12px 14px; font-size: 13px; color: #593c3b; line-height: 1.5;">
+        <strong>LƯU Ý QUẢN TRỊ:</strong> Đơn hàng này đang ở trạng thái <strong>ĐÃ GIAO / ĐÃ HOÀN THÀNH</strong>. Thao tác này sẽ ghi nhận hủy đơn đổi trả hàng và tự động chuyển yêu cầu hoàn tiền sang bộ phận Kế toán để thực hiện chi trả tiền cho khách hàng.
+      </div>
+
+      <div>
+        <label style="display: block; font-weight: 600; font-size: 13px; color: #374151; margin-bottom: 6px;">
+          Lý do hủy đơn & hoàn tiền <span style="color: #704b4a;">*</span>
+        </label>
+        <textarea
+          [(ngModel)]="adminRefundReason"
+          rows="3"
+          placeholder="Nhập lý do chi tiết (VD: Khách hàng đổi trả sản phẩm lỗi, trầy xước sau khi nhận...)"
+          style="width: 100%; border: 1px solid #d1d5db; border-radius: 6px; padding: 8px 12px; font-size: 13.5px;"
+        ></textarea>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+        <div>
+          <label style="display: block; font-weight: 600; font-size: 13px; color: #374151; margin-bottom: 6px;">
+            Số tiền hoàn lại (VNĐ) <span style="color: #dc2626;">*</span>
+          </label>
+          <input
+            type="number"
+            [(ngModel)]="adminRefundAmount"
+            style="width: 100%; border: 1px solid #d1d5db; border-radius: 6px; padding: 8px 12px; font-size: 13.5px;"
+          />
+        </div>
+        <div>
+          <label style="display: block; font-weight: 600; font-size: 13px; color: #374151; margin-bottom: 6px;">
+            Hình thức hoàn
+          </label>
+          <select
+            [(ngModel)]="adminRefundType"
+            style="width: 100%; border: 1px solid #d1d5db; border-radius: 6px; padding: 8px 12px; font-size: 13.5px;"
+          >
+            <option value="full">Hoàn toàn bộ (100%)</option>
+            <option value="partial">Hoàn một phần</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px 14px;">
+        <h5 style="font-size: 13px; font-weight: 700; color: #1f2937; margin-bottom: 10px;">THÔNG TIN NGÂN HÀNG NHẬN TIỀN CỦA KHÁCH:</h5>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+          <div>
+            <label style="display: block; font-size: 12px; color: #6b7280; margin-bottom: 4px;">Ngân hàng:</label>
+            <input type="text" [(ngModel)]="adminRefundBankName" placeholder="VD: Vietcombank, MBBank..." style="width: 100%; border: 1px solid #d1d5db; border-radius: 4px; padding: 6px 10px; font-size: 13px;" />
+          </div>
+          <div>
+            <label style="display: block; font-size: 12px; color: #6b7280; margin-bottom: 4px;">Số tài khoản:</label>
+            <input type="text" [(ngModel)]="adminRefundBankAccountNumber" placeholder="Số TK ngân hàng..." style="width: 100%; border: 1px solid #d1d5db; border-radius: 4px; padding: 6px 10px; font-size: 13px;" />
+          </div>
+        </div>
+        <div>
+          <label style="display: block; font-size: 12px; color: #6b7280; margin-bottom: 4px;">Chủ tài khoản:</label>
+          <input type="text" [(ngModel)]="adminRefundBankAccountOwner" placeholder="Tên chủ tài khoản..." style="width: 100%; border: 1px solid #d1d5db; border-radius: 4px; padding: 6px 10px; font-size: 13px;" />
+        </div>
+      </div>
+    </div>
+  }
+</app-form-modal>

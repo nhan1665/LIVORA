@@ -9,6 +9,7 @@ const {
   toggleProduct,
   deleteProduct,
   importProductsFromExcel,
+  restockProducts,
 } = require('../controllers/productController');
 
 const mongoose = require('mongoose');
@@ -86,6 +87,7 @@ router.get('/seed-mock-products', (req, res, next) => {
 });
 
 router.get('/', getProducts);
+router.post('/restock', restockProducts);
 router.post('/import-excel', importProductsFromExcel);
 router.post('/', createProduct);
 router.get('/:id', getProductById);

@@ -6,6 +6,7 @@ const Order = require('../models/Order');
 const Policy = require('../models/Policy');
 const Footer = require('../models/Footer');
 const { logActivityInternal } = require('./activityLogController');
+const { createNotification } = require('./notificationController');
 const { sendSuccess, sendPaginated, sendError } = require('../utils/responseHelper');
 
 /**
@@ -74,6 +75,10 @@ const getRefunds = async (req, res) => {
       orderExists: orderById.has(r.orderId?.toString()),
       reason: r.reason || '',
       refundType: r.refundType || 'full',
+      bankName: r.bankName || '',
+      bankAccountNumber: r.bankAccountNumber || '',
+      bankAccountOwner: r.bankAccountOwner || '',
+      evidenceImages: r.evidenceImages || [],
       status: r.status,
       rejectReason: r.rejectReason || '',
       processedBy: r.processedBy || '',
@@ -106,7 +111,16 @@ const getRefunds = async (req, res) => {
  */
 const createRefund = async (req, res) => {
   try {
-    const { orderCode, phone, reason, refundType = 'full' } = req.body;
+    const {
+      orderCode,
+      phone,
+      reason,
+      refundType = 'full',
+      bankName = '',
+      bankAccountNumber = '',
+      bankAccountOwner = '',
+      evidenceImages = [],
+    } = req.body;
 
     if (!orderCode || !phone || !reason) {
       return sendError(res, 'Vui lòng cung cấp mã đơn hàng, số điện thoại và lý do hoàn tiền.', 400);
@@ -123,9 +137,19 @@ const createRefund = async (req, res) => {
       return sendError(res, 'Số điện thoại không khớp với thông tin đơn hàng.', 400);
     }
 
-    const eligibleStatuses = ['confirmed', 'processing', 'delivered'];
-    if (!eligibleStatuses.includes(order.orderStatus)) {
-      return sendError(res, `Đơn hàng ở trạng thái "${order.orderStatus}" không thể yêu cầu hoàn tiền.`, 400);
+    // Các trạng thái được phép yêu cầu hoàn tiền:
+    // 1. delivered: Giao hàng thành công (đổi trả, lỗi sản phẩm)
+    // 2. confirmed, processing, cancelled: khi đơn hàng ĐÃ THANH TOÁN (paymentStatus = paid)
+    const isPaid = order.paymentStatus === 'paid';
+    const isDelivered = order.orderStatus === 'delivered';
+    const canRefund = isDelivered || (isPaid && ['confirmed', 'processing', 'cancelled'].includes(order.orderStatus));
+
+    if (!canRefund) {
+      return sendError(
+        res,
+        `Đơn hàng ở trạng thái "${order.orderStatus}" (${order.paymentStatus === 'paid' ? 'Đã thanh toán' : 'Chưa thanh toán'}) không đủ điều kiện yêu cầu hoàn tiền. Hoàn tiền chỉ áp dụng cho đơn đã giao thành công hoặc đơn đã thanh toán bị hủy.`,
+        400
+      );
     }
 
     const existingPending = await Refund.findOne({
@@ -140,7 +164,10 @@ const createRefund = async (req, res) => {
       return sendError(res, 'Loại hoàn tiền không hợp lệ.', 400);
     }
     const orderTotal = Number(order.totalAmount) || 0;
-    const refundAmount = refundType === 'full' ? orderTotal : Math.round(orderTotal * 0.5);
+    const requestedAmount = Number(req.body.amount);
+    const refundAmount = (!isNaN(requestedAmount) && requestedAmount > 0)
+      ? requestedAmount
+      : (refundType === 'full' ? orderTotal : Math.round(orderTotal * 0.5));
 
     const refund = new Refund({
       orderId: order._id,
@@ -151,10 +178,24 @@ const createRefund = async (req, res) => {
       amount: refundAmount,
       reason: reason.trim(),
       refundType,
+      bankName: String(bankName).trim(),
+      bankAccountNumber: String(bankAccountNumber).trim(),
+      bankAccountOwner: String(bankAccountOwner).trim(),
+      evidenceImages: Array.isArray(evidenceImages) ? evidenceImages : [],
       status: 'pending',
     });
 
     await refund.save();
+
+    createNotification({
+      title: `Yêu cầu hoàn tiền mới: ${refund.orderCode}`,
+      message: `Khách hàng ${refund.customerName} (${refund.customerPhone}) yêu cầu hoàn ${Number(refund.amount).toLocaleString('vi-VN')} đ cho đơn hàng #${refund.orderCode}. Lý do: ${refund.reason}`,
+      type: 'refund',
+      targetRoles: ['KE_TOAN', 'SUPER_ADMIN'],
+      link: '/orders/refunds',
+      entityId: refund._id,
+      entityCode: refund.orderCode,
+    }).catch(() => {});
 
     logActivityInternal({
       entityType: 'refund',
@@ -231,6 +272,16 @@ const updateRefundStatus = async (req, res) => {
     refund.status = status;
     refund.processedBy = processedBy;
     await refund.save();
+
+    createNotification({
+      title: `Yêu cầu hoàn tiền mới: ${refund.orderCode}`,
+      message: `Khách hàng ${refund.customerName} (${refund.customerPhone}) yêu cầu hoàn ${Number(refund.amount).toLocaleString('vi-VN')} đ cho đơn hàng #${refund.orderCode}. Lý do: ${refund.reason}`,
+      type: 'refund',
+      targetRoles: ['KE_TOAN', 'SUPER_ADMIN'],
+      link: '/orders/refunds',
+      entityId: refund._id,
+      entityCode: refund.orderCode,
+    }).catch(() => {});
 
     logActivityInternal({
       entityType: 'refund',

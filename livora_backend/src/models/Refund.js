@@ -45,6 +45,25 @@ const refundSchema = new mongoose.Schema(
       enum: ['pending', 'completed', 'rejected'],
       default: 'pending',
     },
+    bankName: {
+      type: String,
+      default: '',
+      trim: true,
+    },
+    bankAccountNumber: {
+      type: String,
+      default: '',
+      trim: true,
+    },
+    bankAccountOwner: {
+      type: String,
+      default: '',
+      trim: true,
+    },
+    evidenceImages: {
+      type: [String],
+      default: [],
+    },
     rejectReason: {
       type: String,
       default: '',

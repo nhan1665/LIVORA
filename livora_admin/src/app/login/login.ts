@@ -72,7 +72,23 @@ export class Login {
     }
   }
 
-  // Quick fill demo credentials
+  getDefaultRouteForRole(role: string): string {
+    const r = (role || '').toUpperCase();
+    if (r === 'KE_TOAN') return '/dashboard/revenue';
+    if (r === 'NV_VAN_HANH') return '/orders/list';
+    if (r === 'NV_NOI_DUNG') return '/home-management';
+    if (r === 'CSKH') return '/interactions/contact';
+    return '/dashboard/revenue'; // Super Admin
+  }
+
+  fillDemo(username: string, pass: string = '123456'): void {
+    this.employeeCode = username;
+    this.password = pass;
+    this.errorMessage = '';
+    this.successMessage = '';
+    this.cdr.detectChanges();
+  }
+
   // Handle Login submission: Gửi request xác thực nhân viên với Backend
   onLoginSubmit(): void {
     this.errorMessage = '';
@@ -115,8 +131,9 @@ export class Login {
           this.successMessage = `Đăng nhập thành công! Xin chào ${user.fullName || user.username || user.code}. Đang chuyển hướng...`;
           this.cdr.detectChanges();
 
+          const targetRoute = this.getDefaultRouteForRole(user.role);
           setTimeout(() => {
-            this.router.navigate(['/dashboard/revenue']);
+            this.router.navigate([targetRoute]);
           }, 350);
         } else {
           this.errorMessage = res.message || 'Mật khẩu không chính xác. Vui lòng kiểm tra lại.';

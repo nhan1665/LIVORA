@@ -54,6 +54,17 @@ export interface Order {
   orderStatus: OrderStatus;
   cancelReason?: string;
   notes?: string;
+  exportSlipCode?: string;
+  exportSlipStatus?: 'pending' | 'exported';
+  exportedAt?: string;
+  isStockDeducted?: boolean;
+  isRestockedReturned?: boolean;
+  restockedReturnedAt?: string;
+  hasRefund?: boolean;
+  refundId?: string;
+  refundReason?: string;
+  refundStatus?: string;
+  refundAmount?: number;
   history: OrderStatusHistoryItem[];
   createdAt: string;
   updatedAt: string;
@@ -111,7 +122,6 @@ export const PAYMENT_STATUS_LABELS: Record<PaymentStatus, string> = {
 export const ORDER_LIFECYCLE_SEQUENCE: OrderStatus[] = [
   'pending',
   'confirmed',
-  'processing',
   'shipping',
   'delivered',
 ];

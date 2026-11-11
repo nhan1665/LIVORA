@@ -2,6 +2,9 @@ import { Routes } from '@angular/router';
 import { Login } from './login/login';
 import { Dashboard } from './dashboard/dashboard';
 import { Revenue } from './dashboard/revenue/revenue';
+import { DashboardProducts } from './dashboard/products/dashboard-products';
+import { DashboardSpaces } from './dashboard/spaces/dashboard-spaces';
+import { DashboardCustomers } from './dashboard/customers/dashboard-customers';
 import { Homepage } from './homepage/homepage';
 import { Customer } from './customer_management/customer/customer';
 import { Category } from './product_management/category/category';
@@ -17,6 +20,7 @@ import { Voucher } from './settings/voucher/voucher';
 import { Shipping } from './settings/shipping/shipping';
 import { Permission } from './settings/permission/permission';
 import { SystemConfig } from './settings/system-config/system-config';
+import { Profile } from './profile/profile';
 
 export const routes: Routes = [
   // Auth (Giữ nguyên màn đăng nhập)
@@ -25,6 +29,9 @@ export const routes: Routes = [
   // Dashboard
   { path: 'dashboard', redirectTo: 'dashboard/revenue', pathMatch: 'full' },
   { path: 'dashboard/revenue', component: Revenue, title: 'Báo cáo doanh thu - Livora Admin' },
+  { path: 'dashboard/products', component: DashboardProducts, title: 'Hiệu suất sản phẩm - Livora Admin' },
+  { path: 'dashboard/spaces', component: DashboardSpaces, title: 'Chuyển đổi không gian 3D - Livora Admin' },
+  { path: 'dashboard/customers', component: DashboardCustomers, title: 'Chân dung khách hàng - Livora Admin' },
 
   // Trang chủ
   { path: 'home-management', component: Homepage, title: 'Quản lý trang chủ - Livora Admin' },
@@ -60,6 +67,9 @@ export const routes: Routes = [
   { path: 'settings/shipping', component: Shipping, title: 'Thiết lập vận chuyển - Livora Admin' },
   { path: 'settings/permissions', component: Permission, title: 'Phân quyền - Livora Admin' },
   { path: 'settings/system-config', component: SystemConfig, title: 'Cấu hình động - Livora Admin' },
+
+  // Hồ sơ cá nhân
+  { path: 'profile', component: Profile, title: 'Hồ sơ cá nhân - Livora Admin' },
 
   // Fallbacks
   { path: '', redirectTo: 'login', pathMatch: 'full' },

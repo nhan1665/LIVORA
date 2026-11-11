@@ -163,4 +163,13 @@ export class ProductService {
     );
   }
 
+  /**
+   * Nhập hàng tăng tồn kho (cộng thêm số lượng, không thay thế)
+   */
+  restockProducts(items: { sku: string; quantity: number; note?: string }[]): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/restock`, { items }).pipe(
+      map((res) => res.data),
+      catchError((err) => throwError(() => new Error(err.error?.message || 'Không thể nhập hàng tăng tồn.')))
+    );
+  }
 }

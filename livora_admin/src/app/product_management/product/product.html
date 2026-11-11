@@ -3,46 +3,56 @@
   <header class="page-header">
     <div class="header-left">
       <h1 class="page-title">Quản lý danh sách sản phẩm</h1>
-      <p class="page-desc">Quản lý thông tin chi tiết, giá bán, tồn kho và file 3D AR toàn bộ sản phẩm trên hệ thống LIVORA</p>
+      <p class="page-desc">Quản lý thông tin chi tiết, giá bán, tồn kho và file 3D AR toàn bộ sản phẩm trên hệ thống
+        LIVORA</p>
     </div>
     <div class="header-right">
       <!-- Hidden file input for Excel import -->
-      <input
-        #excelFileInput
-        type="file"
-        accept=".csv, .xlsx, .xls"
-        (change)="onExcelFileSelected($event)"
-        style="display: none;"
-      />
+      <input #excelFileInput type="file" accept=".csv, .xlsx, .xls" (change)="onExcelFileSelected($event)"
+        style="display: none;" />
 
-      <button
-        type="button"
-        class="btn btn-secondary"
-        (click)="downloadExcelTemplate()"
-        title="Tải file mẫu Excel chuẩn để nhập nhiều sản phẩm"
-      >
+      <button type="button" class="btn btn-secondary" (click)="downloadExcelTemplate()"
+        title="Tải file mẫu Excel chuẩn để nhập nhiều sản phẩm">
         <svg class="btn-icon" viewBox="0 0 20 20" fill="currentColor">
-          <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
+          <path fill-rule="evenodd"
+            d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z"
+            clip-rule="evenodd" />
         </svg>
         <span>Tải template Excel</span>
       </button>
 
-      <button
-        type="button"
-        class="btn btn-secondary"
-        (click)="triggerExcelInput(excelFileInput)"
-        [disabled]="isImportingExcel()"
-        title="Chọn file Excel/CSV từ máy tính để nhập hàng loạt sản phẩm"
-      >
+      <button type="button" class="btn btn-secondary" (click)="triggerExcelInput(excelFileInput)"
+        [disabled]="isImportingExcel()" title="Chọn file Excel/CSV từ máy tính để nhập hàng loạt sản phẩm">
         <svg class="btn-icon" viewBox="0 0 20 20" fill="currentColor">
-          <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+          <path fill-rule="evenodd"
+            d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z"
+            clip-rule="evenodd" />
         </svg>
         <span>{{ isImportingExcel() ? 'Đang nhập...' : 'Upload Excel' }}</span>
       </button>
 
+      <!-- Hidden file input for Restock Excel import -->
+      <input #restockFileInput type="file" accept=".csv, .xlsx, .xls" (change)="onRestockFileSelected($event)"
+        style="display: none;" />
+
+      <button type="button" class="btn btn-secondary" (click)="openRestockModal()"
+        title="Nhập hàng bằng file Excel để tăng số lượng tồn kho (cộng dồn)">
+        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path
+            d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z">
+          </path>
+          <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+          <line x1="12" y1="22.08" x2="12" y2="12"></line>
+        </svg>
+        <span>Nhập hàng (Tăng tồn)</span>
+      </button>
+
       <button type="button" class="btn btn-primary" (click)="openCreateModal()">
         <svg class="btn-icon" viewBox="0 0 20 20" fill="currentColor">
-          <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
+          <path fill-rule="evenodd"
+            d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
+            clip-rule="evenodd" />
         </svg>
         <span>Thêm sản phẩm mới</span>
       </button>
@@ -57,8 +67,11 @@
         <span class="metric-value">{{ metrics().totalProducts }}</span>
       </div>
       <div class="metric-icon-wrap" aria-hidden="true">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path
+            d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z">
+          </path>
           <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
           <line x1="12" y1="22.08" x2="12" y2="12"></line>
         </svg>
@@ -71,7 +84,8 @@
         <span class="metric-value text-success">{{ metrics().activeProducts }}</span>
       </div>
       <div class="metric-icon-wrap" aria-hidden="true">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+          stroke-linecap="round" stroke-linejoin="round">
           <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
           <polyline points="22 4 12 14.01 9 11.01"></polyline>
         </svg>
@@ -84,7 +98,8 @@
         <span class="metric-value text-danger">{{ metrics().outOfStockProducts }}</span>
       </div>
       <div class="metric-icon-wrap" aria-hidden="true">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+          stroke-linecap="round" stroke-linejoin="round">
           <circle cx="12" cy="12" r="10"></circle>
           <line x1="12" y1="8" x2="12" y2="12"></line>
           <line x1="12" y1="16" x2="12.01" y2="16"></line>
@@ -98,7 +113,8 @@
         <span class="metric-value text-teal">{{ metrics().has3DCount }}</span>
       </div>
       <div class="metric-icon-wrap" aria-hidden="true">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+          stroke-linecap="round" stroke-linejoin="round">
           <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
           <polyline points="2 17 12 22 22 17"></polyline>
           <polyline points="2 12 12 17 22 12"></polyline>
@@ -114,13 +130,8 @@
         <circle cx="9" cy="9" r="6" stroke-width="1.8" />
         <path d="M13.5 13.5L18 18" stroke-width="1.8" stroke-linecap="round" />
       </svg>
-      <input
-        type="text"
-        class="search-input"
-        placeholder="Tìm theo tên sản phẩm, mã SKU, chất liệu..."
-        [(ngModel)]="searchDraft"
-        (input)="onSearchChange()"
-      />
+      <input type="text" class="search-input" placeholder="Tìm theo tên sản phẩm, mã SKU, chất liệu..."
+        [(ngModel)]="searchDraft" (input)="onSearchChange()" />
       <button *ngIf="searchDraft" type="button" class="clear-btn" (click)="clearSearch()">✕</button>
     </div>
 
@@ -128,12 +139,7 @@
       <!-- Category Filter -->
       <div class="filter-group">
         <label for="filter-category">Danh mục:</label>
-        <select
-          id="filter-category"
-          class="select-control"
-          [(ngModel)]="categoryDraft"
-          (change)="onFilterChange()"
-        >
+        <select id="filter-category" class="select-control" [(ngModel)]="categoryDraft" (change)="onFilterChange()">
           <option value="all">Tất cả danh mục</option>
           <option *ngFor="let cat of availableCategories" [value]="cat.id">
             {{ cat.name }}
@@ -144,12 +150,7 @@
       <!-- Status Filter -->
       <div class="filter-group">
         <label for="filter-status">Trạng thái:</label>
-        <select
-          id="filter-status"
-          class="select-control"
-          [(ngModel)]="statusDraft"
-          (change)="onFilterChange()"
-        >
+        <select id="filter-status" class="select-control" [(ngModel)]="statusDraft" (change)="onFilterChange()">
           <option value="all">Tất cả trạng thái</option>
           <option value="active">Đang kinh doanh</option>
           <option value="inactive">Ngưng kinh doanh</option>
@@ -161,12 +162,7 @@
       <!-- 3D Filter -->
       <div class="filter-group">
         <label for="filter-3d">Mô hình 3D:</label>
-        <select
-          id="filter-3d"
-          class="select-control"
-          [(ngModel)]="has3DDraft"
-          (change)="onFilterChange()"
-        >
+        <select id="filter-3d" class="select-control" [(ngModel)]="has3DDraft" (change)="onFilterChange()">
           <option value="all">Tất cả</option>
           <option value="has_3d">Có file .GLB</option>
           <option value="no_3d">Chưa có file</option>
@@ -176,12 +172,7 @@
       <!-- Sort By -->
       <div class="filter-group">
         <label for="filter-sort">Sắp xếp:</label>
-        <select
-          id="filter-sort"
-          class="select-control"
-          [(ngModel)]="sortDraft"
-          (change)="onFilterChange()"
-        >
+        <select id="filter-sort" class="select-control" [(ngModel)]="sortDraft" (change)="onFilterChange()">
           <option value="newest">Mới nhất</option>
           <option value="price_asc">Giá: Thấp đến cao</option>
           <option value="price_desc">Giá: Cao đến thấp</option>
@@ -192,13 +183,15 @@
 
       <div class="filter-actions">
         <button type="button" class="btn btn-filter" (click)="onFilterChange()">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
             <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
           </svg>
           <span>Lọc</span>
         </button>
         <button type="button" class="btn btn-reset" (click)="resetFilters()" title="Đặt lại bộ lọc">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
             <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
           </svg>
           <span>Đặt lại</span>
@@ -214,7 +207,8 @@
         <thead>
           <tr>
             <th class="col-check">
-              <input type="checkbox" [checked]="isAllSelected()" (change)="toggleSelectAll()" aria-label="Chọn tất cả" />
+              <input type="checkbox" [checked]="isAllSelected()" (change)="toggleSelectAll()"
+                aria-label="Chọn tất cả" />
             </th>
             <th class="col-product">SẢN PHẨM</th>
             <th class="col-cat">LOẠI SẢN PHẨM</th>
@@ -226,9 +220,11 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let item of products()" [class.row-selected]="isSelected(item.id)" (click)="openEditModal(item)" style="cursor: pointer;">
+          <tr *ngFor="let item of products()" [class.row-selected]="isSelected(item.id)" (click)="openEditModal(item)"
+            style="cursor: pointer;">
             <td class="col-check" (click)="$event.stopPropagation()">
-              <input type="checkbox" [checked]="isSelected(item.id)" (change)="toggleSelect(item.id)" aria-label="Chọn dòng" />
+              <input type="checkbox" [checked]="isSelected(item.id)" (change)="toggleSelect(item.id)"
+                aria-label="Chọn dòng" />
             </td>
 
             <td class="col-product">
@@ -242,7 +238,8 @@
                   <div class="product-sub">
                     <span class="sku-code">{{ item.sku }}</span>
                     <span class="room-pill" *ngFor="let rName of item.roomNames">{{ rName }}</span>
-                    <span *ngIf="item.totalReviews" style="font-size: 10px; color: #b45309; font-weight: 600;">★ {{ item.averageRating }} ({{ item.totalReviews }})</span>
+                    <span *ngIf="item.totalReviews" style="font-size: 10px; color: #b45309; font-weight: 600;">★ {{
+                      item.averageRating }} ({{ item.totalReviews }})</span>
                   </div>
                 </div>
               </div>
@@ -262,21 +259,20 @@
             <td class="col-stock text-center">
               <div class="stock-stack">
                 <span class="stock-num">{{ item.stockQuantity }} sp</span>
-                <span
-                  class="stock-badge"
-                  [class.badge-in-stock]="item.stockQuantity > 0"
-                  [class.badge-out-stock]="item.stockQuantity === 0"
-                >
+                <span class="stock-badge" [class.badge-in-stock]="item.stockQuantity > 0"
+                  [class.badge-out-stock]="item.stockQuantity === 0">
                   {{ item.stockQuantity > 0 ? 'Còn hàng' : 'Hết hàng' }}
                 </span>
-                <small style="font-size: 10px; color: #704b4a; display: block; margin-top: 2px;">(Đã bán: {{ item.soldQuantity || 0 }})</small>
+                <small style="font-size: 10px; color: #704b4a; display: block; margin-top: 2px;">(Đã bán: {{
+                  item.soldQuantity || 0 }})</small>
               </div>
             </td>
 
             <td class="col-3d text-center">
               <span *ngIf="item.has3DModel" class="badge-3d has-3d" title="Có tệp .glb mô hình 3D AR">
                 <svg class="cube-icon" viewBox="0 0 20 20" fill="currentColor">
-                  <path d="M11 17a1 1 0 001.447.894l4-2A1 1 0 0017 15V9.236a1 1 0 00-1.447-.894l-4 2a1 1 0 00-.553.894V17zM15.211 6.276a1 1 0 000-1.788l-4.764-2.382a1 1 0 00-.894 0L4.789 4.488a1 1 0 000 1.788l4.764 2.382a1 1 0 00.894 0l4.764-2.382zM3 9.236V15a1 1 0 00.553.894l4 2A1 1 0 009 17v-5.764a1 1 0 00-.553-.894l-4-2A1 1 0 003 9.236z" />
+                  <path
+                    d="M11 17a1 1 0 001.447.894l4-2A1 1 0 0017 15V9.236a1 1 0 00-1.447-.894l-4 2a1 1 0 00-.553.894V17zM15.211 6.276a1 1 0 000-1.788l-4.764-2.382a1 1 0 00-.894 0L4.789 4.488a1 1 0 000 1.788l4.764 2.382a1 1 0 00.894 0l4.764-2.382zM3 9.236V15a1 1 0 00.553.894l4 2A1 1 0 009 17v-5.764a1 1 0 00-.553-.894l-4-2A1 1 0 003 9.236z" />
                 </svg>
                 <span>Có file .GLB</span>
               </span>
@@ -286,14 +282,9 @@
             </td>
 
             <td class="col-status text-center">
-              <button
-                type="button"
-                class="status-btn"
-                [class.status-active]="item.status === 'Đang kinh doanh'"
-                [class.status-inactive]="item.status !== 'Đang kinh doanh'"
-                (click)="toggleStatus(item)"
-                [title]="item.status === 'Đang kinh doanh' ? 'Nhấp để ngưng kinh doanh' : 'Nhấp để kinh doanh lại'"
-              >
+              <button type="button" class="status-btn" [class.status-active]="item.status === 'Đang kinh doanh'"
+                [class.status-inactive]="item.status !== 'Đang kinh doanh'" (click)="toggleStatus(item)"
+                [title]="item.status === 'Đang kinh doanh' ? 'Nhấp để ngưng kinh doanh' : 'Nhấp để kinh doanh lại'">
                 <span class="status-indicator"></span>
                 <span>{{ item.status }}</span>
               </button>
@@ -301,11 +292,14 @@
 
             <td class="col-actions text-right" (click)="$event.stopPropagation()">
               <div class="action-btn-group">
-                <button type="button" class="btn-action-text" (click)="openEditModal(item)" title="Xem chi tiết & Chỉnh sửa">
+                <button type="button" class="btn-action-text" (click)="openEditModal(item)"
+                  title="Xem chi tiết & Chỉnh sửa">
                   Chi tiết
                 </button>
-                <button type="button" class="btn-action-text btn-action-delete" (click)="confirmDelete(item)" title="Xóa sản phẩm">
-                  Xóa
+                <button type="button" class="btn-action-text"
+                  [class.btn-action-delete]="item.status === 'Đang kinh doanh'" (click)="confirmDelete(item)"
+                  [title]="item.status === 'Đang kinh doanh' ? 'Ngưng kinh doanh sản phẩm' : 'Kích hoạt kinh doanh lại sản phẩm'">
+                  {{ item.status === 'Đang kinh doanh' ? 'Ngưng KD' : 'Kinh doanh lại' }}
                 </button>
               </div>
             </td>
@@ -316,8 +310,11 @@
             <td colspan="8" class="empty-cell">
               <div class="empty-state">
                 <div class="empty-icon-wrap" aria-hidden="true">
-                  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#704b4a" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#704b4a" stroke-width="1.5"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path
+                      d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z">
+                    </path>
                     <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
                     <line x1="12" y1="22.08" x2="12" y2="12"></line>
                   </svg>
@@ -335,34 +332,20 @@
     <!-- Pagination Footer -->
     <footer class="pagination-footer">
       <div class="pagination-info">
-        Hiển thị <strong>{{ paginationStartIndex() }}</strong> - <strong>{{ paginationEndIndex() }}</strong> trong tổng số <strong>{{ totalItems() }}</strong> sản phẩm
+        Hiển thị <strong>{{ paginationStartIndex() }}</strong> - <strong>{{ paginationEndIndex() }}</strong> trong tổng
+        số <strong>{{ totalItems() }}</strong> sản phẩm
       </div>
       <div class="pagination-nav">
-        <button
-          type="button"
-          class="page-btn nav-arrow"
-          [disabled]="currentPage() === 1"
-          (click)="changePage(currentPage() - 1)"
-          aria-label="Trang trước"
-        >
+        <button type="button" class="page-btn nav-arrow" [disabled]="currentPage() === 1"
+          (click)="changePage(currentPage() - 1)" aria-label="Trang trước">
           &lt;
         </button>
-        <button
-          *ngFor="let p of visiblePageNumbers()"
-          type="button"
-          class="page-btn"
-          [class.active]="p === currentPage()"
-          (click)="changePage(p)"
-        >
+        <button *ngFor="let p of visiblePageNumbers()" type="button" class="page-btn"
+          [class.active]="p === currentPage()" (click)="changePage(p)">
           {{ p }}
         </button>
-        <button
-          type="button"
-          class="page-btn nav-arrow"
-          [disabled]="currentPage() === totalPages()"
-          (click)="changePage(currentPage() + 1)"
-          aria-label="Trang kế tiếp"
-        >
+        <button type="button" class="page-btn nav-arrow" [disabled]="currentPage() === totalPages()"
+          (click)="changePage(currentPage() + 1)" aria-label="Trang kế tiếp">
           &gt;
         </button>
       </div>
@@ -383,37 +366,20 @@
       <form (ngSubmit)="saveProduct()" class="modal-body">
         <!-- Tab Navigation inside Modal -->
         <div class="modal-tabs">
-          <button
-            type="button"
-            class="tab-btn"
-            [class.active]="activeModalTab() === 'general'"
-            (click)="setModalTab('general')"
-          >
+          <button type="button" class="tab-btn" [class.active]="activeModalTab() === 'general'"
+            (click)="setModalTab('general')">
             1. Thông tin chung & Giá
           </button>
-          <button
-            type="button"
-            class="tab-btn"
-            [class.active]="activeModalTab() === 'dimensions'"
-            (click)="setModalTab('dimensions')"
-          >
+          <button type="button" class="tab-btn" [class.active]="activeModalTab() === 'dimensions'"
+            (click)="setModalTab('dimensions')">
             2. Thông số & Kích thước
           </button>
-          <button
-            type="button"
-            class="tab-btn"
-            [class.active]="activeModalTab() === 'media'"
-            (click)="setModalTab('media')"
-          >
+          <button type="button" class="tab-btn" [class.active]="activeModalTab() === 'media'"
+            (click)="setModalTab('media')">
             3. Hình ảnh (bắt buộc) & Mô hình 3D
           </button>
-          <button
-            *ngIf="isEditMode()"
-            type="button"
-            class="tab-btn"
-            [class.active]="activeModalTab() === 'history'"
-            (click)="setModalTab('history')"
-          >
+          <button *ngIf="isEditMode()" type="button" class="tab-btn" [class.active]="activeModalTab() === 'history'"
+            (click)="setModalTab('history')">
             4. Lịch sử thao tác & thay đổi
           </button>
         </div>
@@ -424,23 +390,12 @@
             <div class="form-group col-half">
               <label for="prod-sku" class="form-label required">Mã sản phẩm (SKU)</label>
               <div style="display: flex; gap: 8px;">
-                <input
-                  id="prod-sku"
-                  type="text"
-                  class="form-input"
-                  [(ngModel)]="formDraft.sku"
-                  name="prodSku"
+                <input id="prod-sku" type="text" class="form-input" [(ngModel)]="formDraft.sku" name="prodSku"
                   placeholder="VD: GIUONG-SP001"
-                  style="text-transform: uppercase; font-family: monospace; font-weight: 600; flex: 1;"
-                  required
-                />
-                <button
-                  type="button"
-                  class="btn btn-secondary"
+                  style="text-transform: uppercase; font-family: monospace; font-weight: 600; flex: 1;" required />
+                <button type="button" class="btn btn-secondary"
                   style="padding: 6px 12px; font-size: 13px; white-space: nowrap;"
-                  title="Tự động sinh lại mã theo danh mục"
-                  (click)="regenerateSku()"
-                >
+                  title="Tự động sinh lại mã theo danh mục" (click)="regenerateSku()">
                   Tạo mã
                 </button>
               </div>
@@ -449,14 +404,8 @@
 
             <div class="form-group col-half">
               <label for="prod-cat" class="form-label required">Loại sản phẩm (Danh mục)</label>
-              <select
-                id="prod-cat"
-                class="select-control form-input"
-                [(ngModel)]="formDraft.categoryId"
-                name="prodCategory"
-                (change)="onCategoryChange()"
-                required
-              >
+              <select id="prod-cat" class="select-control form-input" [(ngModel)]="formDraft.categoryId"
+                name="prodCategory" (change)="onCategoryChange()" required>
                 <option value="" disabled selected>-- Chọn loại sản phẩm từ categories --</option>
                 <option *ngIf="availableCategories.length === 0" value="" disabled>Đang tải danh mục từ CSDL...</option>
                 <option *ngFor="let cat of availableCategories" [value]="cat.id">
@@ -469,26 +418,15 @@
 
           <div class="form-group">
             <label for="prod-name" class="form-label required">Tên sản phẩm</label>
-            <input
-              id="prod-name"
-              type="text"
-              class="form-input"
-              [(ngModel)]="formDraft.name"
-              name="prodName"
-              placeholder="VD: Sofa Góc L Nordic Modern"
-              required
-            />
+            <input id="prod-name" type="text" class="form-input" [(ngModel)]="formDraft.name" name="prodName"
+              placeholder="VD: Sofa Góc L Nordic Modern" required />
           </div>
 
           <div class="form-group">
             <label class="form-label">Không gian phòng (Có thể chọn nhiều)</label>
             <div class="room-checkbox-grid">
               <label *ngFor="let rm of availableRooms" class="room-check-label">
-                <input
-                  type="checkbox"
-                  [checked]="isRoomSelected(rm.id)"
-                  (change)="toggleRoom(rm.id)"
-                />
+                <input type="checkbox" [checked]="isRoomSelected(rm.id)" (change)="toggleRoom(rm.id)" />
                 <span>{{ rm.name }}</span>
               </label>
             </div>
@@ -497,56 +435,27 @@
           <div class="form-row">
             <div class="form-group col-third">
               <label for="prod-price" class="form-label required">Giá gốc (VNĐ)</label>
-              <input
-                id="prod-price"
-                type="number"
-                class="form-input"
-                [(ngModel)]="formDraft.price"
-                name="prodPrice"
-                min="0"
-                step="10000"
-                required
-              />
+              <input id="prod-price" type="number" class="form-input" [(ngModel)]="formDraft.price" name="prodPrice"
+                min="0" step="10000" required />
             </div>
 
             <div class="form-group col-third">
               <label for="prod-sale-price" class="form-label">Giá khuyến mãi (VNĐ)</label>
-              <input
-                id="prod-sale-price"
-                type="number"
-                class="form-input"
-                [(ngModel)]="formDraft.salePrice"
-                name="prodSalePrice"
-                min="0"
-                step="10000"
-                placeholder="Để trống nếu không giảm"
-              />
+              <input id="prod-sale-price" type="number" class="form-input" [(ngModel)]="formDraft.salePrice"
+                name="prodSalePrice" min="0" step="10000" placeholder="Để trống nếu không giảm" />
             </div>
 
             <div class="form-group col-third">
               <label for="prod-stock" class="form-label required">Số lượng tồn kho</label>
-              <input
-                id="prod-stock"
-                type="number"
-                class="form-input"
-                [(ngModel)]="formDraft.stockQuantity"
-                name="prodStock"
-                min="0"
-                required
-              />
+              <input id="prod-stock" type="number" class="form-input" [(ngModel)]="formDraft.stockQuantity"
+                name="prodStock" min="0" required />
             </div>
           </div>
 
           <div class="form-group">
             <label for="prod-desc" class="form-label">Mô tả sản phẩm</label>
-            <textarea
-              id="prod-desc"
-              class="form-textarea"
-              rows="3"
-              [(ngModel)]="formDraft.description"
-              name="prodDesc"
-              placeholder="Mô tả công năng, thiết kế và điểm nổi bật của món đồ..."
-            ></textarea>
+            <textarea id="prod-desc" class="form-textarea" rows="3" [(ngModel)]="formDraft.description" name="prodDesc"
+              placeholder="Mô tả công năng, thiết kế và điểm nổi bật của món đồ..."></textarea>
           </div>
         </div>
 
@@ -556,60 +465,30 @@
           <div class="form-row">
             <div class="form-group col-fourth">
               <label for="dim-len" class="form-label">Chiều dài (L)</label>
-              <input
-                id="dim-len"
-                type="number"
-                class="form-input"
-                [(ngModel)]="formDraft.dimensions.length"
-                name="dimLength"
-                min="0"
-              />
+              <input id="dim-len" type="number" class="form-input" [(ngModel)]="formDraft.dimensions.length"
+                name="dimLength" min="0" />
             </div>
             <div class="form-group col-fourth">
               <label for="dim-wid" class="form-label">Chiều rộng (W)</label>
-              <input
-                id="dim-wid"
-                type="number"
-                class="form-input"
-                [(ngModel)]="formDraft.dimensions.width"
-                name="dimWidth"
-                min="0"
-              />
+              <input id="dim-wid" type="number" class="form-input" [(ngModel)]="formDraft.dimensions.width"
+                name="dimWidth" min="0" />
             </div>
             <div class="form-group col-fourth">
               <label for="dim-hei" class="form-label">Chiều cao (H)</label>
-              <input
-                id="dim-hei"
-                type="number"
-                class="form-input"
-                [(ngModel)]="formDraft.dimensions.height"
-                name="dimHeight"
-                min="0"
-              />
+              <input id="dim-hei" type="number" class="form-input" [(ngModel)]="formDraft.dimensions.height"
+                name="dimHeight" min="0" />
             </div>
             <div class="form-group col-fourth">
               <label for="dim-wei" class="form-label">Trọng lượng (kg)</label>
-              <input
-                id="dim-wei"
-                type="number"
-                class="form-input"
-                [(ngModel)]="formDraft.dimensions.weight"
-                name="dimWeight"
-                min="0"
-              />
+              <input id="dim-wei" type="number" class="form-input" [(ngModel)]="formDraft.dimensions.weight"
+                name="dimWeight" min="0" />
             </div>
           </div>
 
           <div class="form-group">
             <label for="prod-materials" class="form-label">Chất liệu cấu thành (cách nhau bởi dấu phẩy)</label>
-            <input
-              id="prod-materials"
-              type="text"
-              class="form-input"
-              [(ngModel)]="materialsInput"
-              name="prodMaterials"
-              placeholder="VD: Gỗ sồi tự nhiên, Vải nỉ cao cấp, Khung thép sơn tĩnh điện"
-            />
+            <input id="prod-materials" type="text" class="form-input" [(ngModel)]="materialsInput" name="prodMaterials"
+              placeholder="VD: Gỗ sồi tự nhiên, Vải nỉ cao cấp, Khung thép sơn tĩnh điện" />
           </div>
 
           <div class="form-row options-row">
@@ -617,21 +496,11 @@
               <label class="form-label">Trạng thái kinh doanh</label>
               <div class="radio-inline-group">
                 <label class="radio-label">
-                  <input
-                    type="radio"
-                    name="prodOpStatus"
-                    value="Đang kinh doanh"
-                    [(ngModel)]="formDraft.status"
-                  />
+                  <input type="radio" name="prodOpStatus" value="Đang kinh doanh" [(ngModel)]="formDraft.status" />
                   <span>Đang kinh doanh</span>
                 </label>
                 <label class="radio-label">
-                  <input
-                    type="radio"
-                    name="prodOpStatus"
-                    value="ngưng kinh doanh"
-                    [(ngModel)]="formDraft.status"
-                  />
+                  <input type="radio" name="prodOpStatus" value="ngưng kinh doanh" [(ngModel)]="formDraft.status" />
                   <span>Ngưng kinh doanh</span>
                 </label>
               </div>
@@ -640,11 +509,7 @@
             <div class="form-group" [ngClass]="isEditMode() ? 'col-half' : 'col-full'">
               <label class="form-label">Sản phẩm nổi bật (Featured)</label>
               <label class="checkbox-container">
-                <input
-                  type="checkbox"
-                  [(ngModel)]="formDraft.isFeatured"
-                  name="prodFeatured"
-                />
+                <input type="checkbox" [(ngModel)]="formDraft.isFeatured" name="prodFeatured" />
                 <span>Ghim hiển thị trên banner & mục nổi bật trang chủ</span>
               </label>
             </div>
@@ -658,29 +523,15 @@
             <label for="prod-thumb" class="form-label required">Ảnh đại diện sản phẩm (Thumbnail)</label>
             <div class="media-upload-container">
               <div class="thumb-input-row">
-                <input
-                  id="prod-thumb"
-                  type="text"
-                  class="form-input"
-                  [(ngModel)]="formDraft.thumbnail"
-                  name="prodThumb"
-                  placeholder="Nhập link ảnh (https://...) hoặc tải ảnh từ máy tính..."
-                  required
-                />
-                <input
-                  #thumbFileInput
-                  type="file"
-                  accept="image/*"
-                  (change)="onThumbnailFileSelected($event)"
-                  style="display: none;"
-                />
-                <button
-                  type="button"
-                  class="btn btn-secondary btn-upload"
-                  (click)="thumbFileInput.click()"
-                >
+                <input id="prod-thumb" type="text" class="form-input" [(ngModel)]="formDraft.thumbnail" name="prodThumb"
+                  placeholder="Nhập link ảnh (https://...) hoặc tải ảnh từ máy tính..." required />
+                <input #thumbFileInput type="file" accept="image/*" (change)="onThumbnailFileSelected($event)"
+                  style="display: none;" />
+                <button type="button" class="btn btn-secondary btn-upload" (click)="thumbFileInput.click()">
                   <svg class="btn-icon" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd" />
+                    <path fill-rule="evenodd"
+                      d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z"
+                      clip-rule="evenodd" />
                   </svg>
                   <span>Chọn ảnh từ máy</span>
                 </button>
@@ -688,19 +539,10 @@
 
               <!-- Thumbnail Preview Box -->
               <div *ngIf="formDraft.thumbnail" class="thumbnail-preview-card">
-                <img
-                  [src]="formDraft.thumbnail"
-                  alt="Xem trước ảnh đại diện"
-                  class="thumb-preview-img"
-                />
+                <img [src]="formDraft.thumbnail" alt="Xem trước ảnh đại diện" class="thumb-preview-img" />
                 <div class="thumb-preview-info">
                   <span class="thumb-badge">Ảnh đại diện chính</span>
-                  <button
-                    type="button"
-                    class="btn-remove-thumb"
-                    (click)="removeThumbnail()"
-                    title="Xóa ảnh đại diện"
-                  >
+                  <button type="button" class="btn-remove-thumb" (click)="removeThumbnail()" title="Xóa ảnh đại diện">
                     ✕ Xóa ảnh
                   </button>
                 </div>
@@ -712,48 +554,26 @@
           <div class="form-group">
             <div class="gallery-header-row">
               <label for="prod-images" class="form-label">Danh sách ảnh phối cảnh / góc chụp khác</label>
-              <input
-                #galleryFileInput
-                type="file"
-                accept="image/*"
-                multiple
-                (change)="onGalleryFilesSelected($event)"
-                style="display: none;"
-              />
-              <button
-                type="button"
-                class="btn btn-secondary btn-sm"
-                (click)="galleryFileInput.click()"
-              >
+              <input #galleryFileInput type="file" accept="image/*" multiple (change)="onGalleryFilesSelected($event)"
+                style="display: none;" />
+              <button type="button" class="btn btn-secondary btn-sm" (click)="galleryFileInput.click()">
                 <svg class="btn-icon" viewBox="0 0 20 20" fill="currentColor">
-                  <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
+                  <path fill-rule="evenodd"
+                    d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
+                    clip-rule="evenodd" />
                 </svg>
                 <span>Tải nhiều ảnh từ máy</span>
               </button>
             </div>
 
-            <textarea
-              id="prod-images"
-              class="form-textarea"
-              rows="2"
-              [(ngModel)]="imagesInput"
-              name="prodImages"
-              placeholder="Nhập các đường link ảnh web cách nhau bởi dấu phẩy, hoặc dùng nút tải ảnh từ máy ở trên..."
-            ></textarea>
+            <textarea id="prod-images" class="form-textarea" rows="2" [(ngModel)]="imagesInput" name="prodImages"
+              placeholder="Nhập các đường link ảnh web cách nhau bởi dấu phẩy, hoặc dùng nút tải ảnh từ máy ở trên..."></textarea>
 
             <!-- Gallery Previews Grid -->
             <div *ngIf="formDraft.images && formDraft.images.length > 0" class="gallery-preview-grid">
-              <div
-                *ngFor="let img of formDraft.images; let idx = index"
-                class="gallery-preview-item"
-              >
+              <div *ngFor="let img of formDraft.images; let idx = index" class="gallery-preview-item">
                 <img [src]="img" [alt]="'Ảnh phối cảnh ' + (idx + 1)" />
-                <button
-                  type="button"
-                  class="gallery-delete-btn"
-                  (click)="removeGalleryImage(idx)"
-                  title="Xóa ảnh này"
-                >
+                <button type="button" class="gallery-delete-btn" (click)="removeGalleryImage(idx)" title="Xóa ảnh này">
                   ✕
                 </button>
               </div>
@@ -763,31 +583,29 @@
           <div class="form-group ar-box">
             <div class="ar-box-header">
               <div class="ar-icon">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                  <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+                  <polyline points="2 17 12 22 22 17"></polyline>
+                  <polyline points="2 12 12 17 22 12"></polyline>
+                </svg>
               </div>
               <div>
-                <label for="prod-glb" class="form-label">Mô hình 3D AR (.GLB URL) <span style="font-weight: normal; color: #64748b; font-size: 12px;">(Không bắt buộc - Tùy chọn)</span></label>
-                <p class="field-hint">Tùy chọn: Nhập liên kết file .GLB nếu có mô hình 3D AR. Nếu để trống, sản phẩm hiển thị ảnh thông thường.</p>
+                <label for="prod-glb" class="form-label">Mô hình 3D AR (.GLB URL) <span
+                    style="font-weight: normal; color: #64748b; font-size: 12px;">(Không bắt buộc - Tùy
+                    chọn)</span></label>
+                <p class="field-hint">Tùy chọn: Nhập liên kết file .GLB nếu có mô hình 3D AR. Nếu để trống, sản phẩm
+                  hiển thị ảnh thông thường.</p>
               </div>
             </div>
-            <input
-              id="prod-glb"
-              type="text"
-              class="form-input"
-              [(ngModel)]="formDraft.file3DUrl"
-              name="prodGlb"
-              placeholder="Tùy chọn: Nhập URL file .glb nếu có hoặc để trống"
-            />
+            <input id="prod-glb" type="text" class="form-input" [(ngModel)]="formDraft.file3DUrl" name="prodGlb"
+              placeholder="Tùy chọn: Nhập URL file .glb nếu có hoặc để trống" />
           </div>
         </div>
 
         <!-- TAB 4: Lịch sử thao tác & thay đổi -->
         <div *ngIf="activeModalTab() === 'history'" class="tab-content" style="padding: 12px 4px;">
-          <app-activity-log
-            entityType="product"
-            [entityId]="editingProductId() || formDraft.sku || 'sp-current'"
-            [entityCode]="formDraft.sku"
-          ></app-activity-log>
+          <app-activity-log entityType="product" [entityId]="editingProductId() || formDraft.sku || 'sp-current'"
+            [entityCode]="formDraft.sku"></app-activity-log>
         </div>
 
         <div *ngIf="errorMessage()" class="alert-error">
@@ -803,4 +621,98 @@
       </form>
     </div>
   </div>
+
+  <!-- ================= RESTOCK MODAL (NHẬP HÀNG TĂNG TỒN) ================= -->
+  @if (isRestockModalOpen()) {
+  <div class="modal-backdrop">
+    <div class="modal-dialog modal-md"
+      style="max-width: 620px; background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.15);">
+      <div class="modal-header"
+        style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f0eae6; padding-bottom: 16px; margin-bottom: 20px;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <div
+            style="width: 38px; height: 38px; border-radius: 8px; background: #fdf5f2; color: #704b4a; display: flex; align-items: center; justify-content: center;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path
+                d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z">
+              </path>
+              <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+              <line x1="12" y1="22.08" x2="12" y2="12"></line>
+            </svg>
+          </div>
+          <div>
+            <h3 style="font-size: 17px; font-weight: 700; color: #1e293b; margin: 0;">Nhập hàng (Tăng số lượng tồn kho)
+            </h3>
+            <p style="font-size: 13px; color: #64748b; margin: 2px 0 0 0;">Cộng dồn số lượng nhập từ Excel vào tồn kho
+              hiện tại (không thay thế)</p>
+          </div>
+        </div>
+        <button type="button" class="btn-close" (click)="closeRestockModal()"
+          style="border: none; background: none; font-size: 20px; cursor: pointer; color: #94a3b8;">&times;</button>
+      </div>
+
+      <div class="modal-body" style="margin-bottom: 20px;">
+        <!-- Quy tắc quan trọng -->
+        <div
+          style="background: #fbf7f4; border-left: 4px solid #704b4a; padding: 12px 14px; border-radius: 6px; margin-bottom: 18px;">
+          <div style="font-size: 13px; font-weight: 600; color: #704b4a; margin-bottom: 4px;">📌 QUY TẮC NHẬP HÀNG:
+          </div>
+          <p style="font-size: 12.5px; color: #4b3635; margin: 0; line-height: 1.5;">
+            File Excel chỉ cần 2 cột chính: <strong>sku</strong> (Mã SKU sản phẩm) và <strong>quantity</strong> (Số
+            lượng nhập). Khi tải lên, hệ thống sẽ <strong>TỰ ĐỘNG CỘNG THÊM</strong> số lượng này vào tồn kho hiện hữu,
+            bảo toàn hoàn toàn dữ liệu trước đó!
+          </p>
+        </div>
+
+        <!-- Nút tải file mẫu -->
+        <div style="display: flex; gap: 12px; margin-bottom: 20px;">
+          <button type="button" class="btn btn-secondary"
+            style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 10px;"
+            (click)="downloadRestockTemplate()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            <span>Tải file Excel mẫu (2 tab tra cứu SKU)</span>
+          </button>
+        </div>
+
+        <!-- Khung upload -->
+        <div
+          style="border: 2px dashed #cbd5e1; border-radius: 10px; padding: 30px 20px; text-align: center; background: #f8fafc; cursor: pointer; transition: all 0.2s;"
+          (click)="restockFileInput.click()">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#704b4a" stroke-width="1.8"
+            stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 10px;">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="17 8 12 3 7 8"></polyline>
+            <line x1="12" y1="3" x2="12" y2="15"></line>
+          </svg>
+          <div style="font-size: 14px; font-weight: 600; color: #1e293b; margin-bottom: 4px;">
+            {{ isRestocking() ? 'Đang đọc và xử lý file Excel...' : 'Nhấp để chọn file Excel nhập hàng (.xlsx, .xls,
+            .csv)' }}
+          </div>
+          <p style="font-size: 12px; color: #64748b; margin: 0;">Hệ thống sẽ tự nhận diện cột SKU và Số lượng</p>
+        </div>
+
+        <!-- Thông báo lỗi hoặc kết quả -->
+        @if (restockMessage()) {
+        <div style="margin-top: 15px; padding: 12px; border-radius: 6px; font-size: 13px;"
+          [style.background]="restockIsError() ? '#fef2f2' : '#f0fdf4'"
+          [style.color]="restockIsError() ? '#991b1b' : '#166534'"
+          [style.border]="restockIsError() ? '1px solid #fecaca' : '1px solid #bbf7d0'">
+          {{ restockMessage() }}
+        </div>
+        }
+      </div>
+
+      <div class="modal-footer"
+        style="display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid #f0eae6; padding-top: 14px;">
+        <button type="button" class="btn btn-secondary" (click)="closeRestockModal()">Đóng</button>
+      </div>
+    </div>
+  </div>
+  }
 </div>

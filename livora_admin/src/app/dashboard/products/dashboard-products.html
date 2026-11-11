@@ -1,0 +1,235 @@
+<div class="dash-prod-page">
+  <!-- Header -->
+  <div class="dash-head">
+    <div>
+      <h1 class="dash-title">Hiệu Suất Sản Phẩm &amp; Quản Trị Tồn Kho</h1>
+      <p class="dash-subtitle">Kiểm soát dòng tiền vốn đọng, phát hiện hàng bán chạy và cảnh báo nguy cơ đứt gãy tồn kho.</p>
+    </div>
+    <div class="dash-actions">
+      <button type="button" class="btn-action btn-sec" (click)="exportReport()">
+        <i class="bi bi-download"></i>
+        <span>Xuất Báo Cáo</span>
+      </button>
+      <button type="button" class="btn-action btn-prim" (click)="refresh()">
+        <i class="bi bi-arrow-repeat"></i>
+        <span>Làm Mới Số Liệu</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Metric Cards -->
+  <div class="kpi-grid">
+    <div class="kpi-box">
+      <div class="kpi-icon-wrap icon-money">
+        <i class="bi bi-wallet2"></i>
+      </div>
+      <div class="kpi-text">
+        <span class="kpi-label">TỔNG VỐN ĐỌNG TỒN KHO</span>
+        <h3 class="kpi-val">{{ formatCurrency(summary.totalInventoryValue) }}</h3>
+        <span class="kpi-note">{{ summary.totalProducts }} mã sản phẩm lưu kho</span>
+      </div>
+    </div>
+
+    <div class="kpi-box">
+      <div class="kpi-icon-wrap icon-warning">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+      </div>
+      <div class="kpi-text">
+        <span class="kpi-label">SẮP HẾT HÀNG (&le; 5 SP)</span>
+        <h3 class="kpi-val val-warn">{{ summary.lowStockCount }} SP</h3>
+        <span class="kpi-note note-red">Cần lên lịch nhập hàng gấp</span>
+      </div>
+    </div>
+
+    <div class="kpi-box">
+      <div class="kpi-icon-wrap icon-danger">
+        <i class="bi bi-box2"></i>
+      </div>
+      <div class="kpi-text">
+        <span class="kpi-label">HÀNG CHẬM LUÂN CHUYỂN</span>
+        <h3 class="kpi-val">{{ summary.slowMovingCount }} SP</h3>
+        <span class="kpi-note">Chưa phát sinh lượt mua</span>
+      </div>
+    </div>
+
+    <div class="kpi-box">
+      <div class="kpi-icon-wrap icon-success">
+        <i class="bi bi-arrow-repeat"></i>
+      </div>
+      <div class="kpi-text">
+        <span class="kpi-label">VÒNG QUAY TỒN KHO</span>
+        <h3 class="kpi-val val-green">{{ summary.inventoryTurnoverRate }}</h3>
+        <span class="kpi-note">Mức lưu chuyển ổn định</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2-Column Split: Top Best Sellers vs Stock Warnings -->
+  <div class="dash-row-2">
+    <!-- Top Best Sellers -->
+    <div class="card-panel">
+      <div class="panel-head">
+        <div class="panel-title-group">
+          <i class="bi bi-trophy text-gold"></i>
+          <h2 class="panel-title">Top Sản Phẩm Doanh Thu Cao Nhất</h2>
+        </div>
+        <span class="badge-count">{{ topSelling.length }} mặt hàng</span>
+      </div>
+
+      <div class="prod-list">
+        @for (item of topSelling; track item.id) {
+          <div class="prod-item">
+            <img [src]="item.thumbnail || 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=100'" alt="" class="prod-thumb" />
+            <div class="prod-details">
+              <span class="prod-name">{{ item.name }}</span>
+              <span class="prod-meta">Mã: {{ item.sku }} · Loại: {{ item.categoryName }}</span>
+            </div>
+            <div class="prod-stats">
+              <span class="prod-revenue">{{ formatCurrency(item.revenueGenerated) }}</span>
+              <span class="prod-sold-badge">Đã bán: {{ item.sold }} chiếc</span>
+            </div>
+          </div>
+        }
+        @if (topSelling.length === 0) {
+          <div class="empty-hint">Chưa ghi nhận số liệu sản phẩm bán ra.</div>
+        }
+      </div>
+    </div>
+
+    <!-- Low Stock Warnings -->
+    <div class="card-panel">
+      <div class="panel-head">
+        <div class="panel-title-group">
+          <i class="bi bi-bell-fill text-red"></i>
+          <h2 class="panel-title">Cảnh Báo Tồn Kho Khẩn Cấp</h2>
+        </div>
+        <span class="badge-count warn-badge">{{ lowStockWarnings.length }} mục cần tái đặt</span>
+      </div>
+
+      <div class="prod-list">
+        @for (item of lowStockWarnings; track item.id) {
+          <div class="prod-item">
+            <img [src]="item.thumbnail || 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=100'" alt="" class="prod-thumb" />
+            <div class="prod-details">
+              <span class="prod-name">{{ item.name }}</span>
+              <span class="prod-meta">SKU: {{ item.sku }} · Giá niêm yết: {{ formatCurrency(item.price) }}</span>
+            </div>
+            <div class="prod-stats">
+              <span class="stock-pill" [class.stock-zero]="item.stock === 0">
+                {{ item.stock === 0 ? 'Hết hàng (0)' : 'Còn ' + item.stock + ' chiếc' }}
+              </span>
+            </div>
+          </div>
+        }
+        @if (lowStockWarnings.length === 0) {
+          <div class="empty-hint">Tất cả sản phẩm đều duy trì tồn kho an toàn.</div>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- Category Performance Distribution -->
+  <div class="card-panel">
+    <div class="panel-head">
+      <div class="panel-title-group">
+        <i class="bi bi-pie-chart text-brown"></i>
+        <h2 class="panel-title">Tỷ Trọng Doanh Thu Theo Danh Mục Sản Phẩm</h2>
+      </div>
+      <span class="badge-count">Cơ cấu ngành hàng</span>
+    </div>
+
+    <div class="cat-grid">
+      @for (cat of categoryPerformance; track cat.name) {
+        <div class="cat-item">
+          <div class="cat-head">
+            <span class="cat-name">{{ cat.name }}</span>
+            <span class="cat-share">{{ getCategoryPercentage(cat.revenue) }}%</span>
+          </div>
+          <div class="cat-bar-bg">
+            <div class="cat-bar-fill" [style.width.%]="getCategoryPercentage(cat.revenue)"></div>
+          </div>
+          <div class="cat-footer">
+            <span>Tồn: {{ cat.totalStock }} SP</span>
+            <span>Doanh thu: {{ formatCurrency(cat.revenue) }}</span>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- BCG Growth-Share Matrix -->
+  <div class="card-panel">
+    <div class="panel-head">
+      <div class="panel-title-group">
+        <i class="bi bi-grid-3x3-gap-fill text-gold"></i>
+        <h2 class="panel-title">Ma Trận Phân Loại Hàng Hóa Quản Trị (BCG Matrix)</h2>
+      </div>
+      <span class="badge-count">Chiến lược danh mục</span>
+    </div>
+
+    <div class="bcg-grid">
+      <div class="bcg-box bcg-star">
+        <div class="bcg-header">
+          <span class="bcg-tag">🌟 NGÔI SAO (STARS)</span>
+          <small>Bán chạy &amp; Lợi nhuận cao</small>
+        </div>
+        <p class="bcg-action">Chiến lược: Đẩy mạnh quảng bá, duy trì tồn kho ưu tiên số 1.</p>
+        <ul class="bcg-items">
+          @for (p of bcgMatrix.stars; track p.id) {
+            <li>{{ p.name }} (Bán: {{ p.sold }})</li>
+          }
+          @if (bcgMatrix.stars.length === 0) { <li>Chưa phân loại</li> }
+        </ul>
+      </div>
+
+      <div class="bcg-box bcg-cow">
+        <div class="bcg-header">
+          <span class="bcg-tag">🐄 BÒ SỮA (CASH COWS)</span>
+          <small>Dòng tiền đều &amp; Ổn định</small>
+        </div>
+        <p class="bcg-action">Chiến lược: Tối ưu chi phí sản xuất, bán chéo kèm phụ kiện.</p>
+        <ul class="bcg-items">
+          @for (p of bcgMatrix.cashCows; track p.id) {
+            <li>{{ p.name }} (Bán: {{ p.sold }})</li>
+          }
+          @if (bcgMatrix.cashCows.length === 0) { <li>Chưa phân loại</li> }
+        </ul>
+      </div>
+
+      <div class="bcg-box bcg-question">
+        <div class="bcg-header">
+          <span class="bcg-tag">❓ DẤU HỎI (QUESTION MARKS)</span>
+          <small>Tồn nhiều nhưng bán chậm</small>
+        </div>
+        <p class="bcg-action">Chiến lược: Xem lại giá bán, gắn vào phối cảnh 3D để kích cầu.</p>
+        <ul class="bcg-items">
+          @for (p of bcgMatrix.questionMarks; track p.id) {
+            <li>{{ p.name }} (Tồn: {{ p.stock }})</li>
+          }
+          @if (bcgMatrix.questionMarks.length === 0) { <li>Chưa phân loại</li> }
+        </ul>
+      </div>
+
+      <div class="bcg-box bcg-dog">
+        <div class="bcg-header">
+          <span class="bcg-tag">🐕 CHÓ MỰC (DOGS)</span>
+          <small>Tồn ít, không phát sinh đơn</small>
+        </div>
+        <p class="bcg-action">Chiến lược: Giảm giá xả hàng thu hồi vốn, ngừng sản xuất.</p>
+        <ul class="bcg-items">
+          @for (p of bcgMatrix.dogs; track p.id) {
+            <li>{{ p.name }} (Tồn: {{ p.stock }})</li>
+          }
+          @if (bcgMatrix.dogs.length === 0) { <li>Chưa phân loại</li> }
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  @if (toastMessage) {
+    <div class="toast-notification">
+      <span>{{ toastMessage }}</span>
+    </div>
+  }
+</div>
+

@@ -1,0 +1,178 @@
+<div class="dash-cust-page">
+  <!-- Header -->
+  <div class="dash-head">
+    <div>
+      <h1 class="dash-title">Chân Dung Khách Hàng &amp; Giá Trị Vòng Đời (LTV)</h1>
+      <p class="dash-subtitle">Phân tích RFM, giữ chân khách hàng VIP, đo lường tỷ lệ quay lại và sức khỏe dịch vụ hậu mãi.</p>
+    </div>
+    <div class="dash-actions">
+      <button type="button" class="btn-action btn-sec" (click)="exportReport()">
+        <i class="bi bi-download"></i>
+        <span>Xuất Báo Cáo</span>
+      </button>
+      <button type="button" class="btn-action btn-prim" (click)="refresh()">
+        <i class="bi bi-arrow-repeat"></i>
+        <span>Làm Mới</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- KPI Grid -->
+  <div class="kpi-grid">
+    <div class="kpi-box">
+      <div class="kpi-icon-wrap icon-users">
+        <i class="bi bi-people-fill"></i>
+      </div>
+      <div class="kpi-text">
+        <span class="kpi-label">TỔNG KHÁCH HÀNG ĐĂNG KÝ</span>
+        <h3 class="kpi-val">{{ summary.totalCustomers | number }}</h3>
+        <span class="kpi-note">Tài khoản định danh hệ thống</span>
+      </div>
+    </div>
+
+    <div class="kpi-box">
+      <div class="kpi-icon-wrap icon-ltv">
+        <i class="bi bi-gem"></i>
+      </div>
+      <div class="kpi-text">
+        <span class="kpi-label">GIÁ TRỊ VÒNG ĐỜI (AVG LTV)</span>
+        <h3 class="kpi-val val-money">{{ formatCurrency(summary.averageCustomerLtv) }}</h3>
+        <span class="kpi-note">Chi tiêu bình quân / khách</span>
+      </div>
+    </div>
+
+    <div class="kpi-box">
+      <div class="kpi-icon-wrap icon-repeat">
+        <i class="bi bi-repeat"></i>
+      </div>
+      <div class="kpi-text">
+        <span class="kpi-label">TỶ LỆ KHÁCH QUAY LẠI MUA</span>
+        <h3 class="kpi-val val-green">{{ summary.repeatCustomerRate }}</h3>
+        <span class="kpi-note">Mua từ 2 đơn hàng trở lên</span>
+      </div>
+    </div>
+
+    <div class="kpi-box">
+      <div class="kpi-icon-wrap icon-vip">
+        <i class="bi bi-award-fill"></i>
+      </div>
+      <div class="kpi-text">
+        <span class="kpi-label">KHÁCH HÀNG VIP</span>
+        <h3 class="kpi-val">{{ summary.vipCustomerCount }} KH</h3>
+        <span class="kpi-note note-gold">Đóng góp 58% tổng doanh thu</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section 1: RFM Segments -->
+  <div class="card-box">
+    <div class="card-head">
+      <div>
+        <h2 class="card-title">Phân Khúc Khách Hàng RFM &amp; Hành Động Đề Xuất</h2>
+        <p class="card-subtitle">Chiến lược cá nhân hóa thông điệp nhằm tăng tỷ lệ giữ chân và giá trị đơn hàng.</p>
+      </div>
+      <span class="badge-status">Mô hình RFM Livora</span>
+    </div>
+
+    <div class="rfm-grid">
+      <div class="rfm-card" *ngFor="let seg of rfmSegments">
+        <div class="rfm-card-top">
+          <span class="rfm-name">{{ seg.segment }}</span>
+          <span class="rfm-badge" [ngClass]="seg.badgeClass">{{ seg.percentage }}%</span>
+        </div>
+        <div class="rfm-count">
+          <span class="rfm-num">{{ seg.count }}</span>
+          <span class="rfm-unit">khách hàng</span>
+        </div>
+        <div class="rfm-action-box">
+          <span class="rfm-action-label"><i class="bi bi-lightning-charge-fill"></i> Đề xuất quản trị:</span>
+          <p class="rfm-action-text">{{ seg.action }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dual Grid: Geographic Sales & Service Health -->
+  <div class="dual-grid">
+    <!-- Geographic Sales -->
+    <div class="card-box">
+      <div class="card-head">
+        <div>
+          <h2 class="card-title">Doanh Thu Theo Địa Lý (Top Tỉnh / Thành)</h2>
+          <p class="card-subtitle">Khu vực tập trung nhu cầu nội thất cao cấp lớn nhất.</p>
+        </div>
+      </div>
+
+      <div class="geo-list">
+        <div class="geo-item" *ngFor="let g of geographicSales; let idx = index">
+          <div class="geo-header">
+            <span class="geo-rank">#{{ idx + 1 }}</span>
+            <span class="geo-name">{{ g.province }}</span>
+            <span class="geo-orders font-semibold">{{ g.ordersCount }} đơn</span>
+            <span class="geo-revenue font-bold">{{ formatCurrency(g.revenue) }}</span>
+          </div>
+          <div class="geo-bar-bg">
+            <div class="geo-bar-fill" [style.width.%]="idx === 0 ? 100 : (idx === 1 ? 75 : (idx === 2 ? 45 : (idx === 3 ? 30 : 20)))"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Service Health (CSKH & Operations) -->
+    <div class="card-box">
+      <div class="card-head">
+        <div>
+          <h2 class="card-title">Sức Khỏe Trải Nghiệm Khách Hàng (CX)</h2>
+          <p class="card-subtitle">Chỉ số giám sát chất lượng sản phẩm và tốc độ xử lý khiếu nại.</p>
+        </div>
+      </div>
+
+      <div class="cx-grid">
+        <div class="cx-card">
+          <div class="cx-icon icon-star">
+            <i class="bi bi-star-fill"></i>
+          </div>
+          <div class="cx-body">
+            <span class="cx-title">Điểm Đánh Giá Sản Phẩm</span>
+            <h4 class="cx-val">{{ summary.avgSatisfactionRating }}</h4>
+            <span class="cx-desc">Dựa trên toàn bộ phản hồi từ khách hàng</span>
+          </div>
+        </div>
+
+        <div class="cx-card">
+          <div class="cx-icon icon-refund">
+            <i class="bi bi-shield-check"></i>
+          </div>
+          <div class="cx-body">
+            <span class="cx-title">Tỷ Lệ Yêu Cầu Hoàn Tiền</span>
+            <h4 class="cx-val text-green">{{ summary.refundRate }}</h4>
+            <span class="cx-desc">&lt; 2% là mức an toàn ngành nội thất</span>
+          </div>
+        </div>
+
+        <div class="cx-card">
+          <div class="cx-icon icon-speed">
+            <i class="bi bi-clock-history"></i>
+          </div>
+          <div class="cx-body">
+            <span class="cx-title">Thời Gian Phản Hồi CSKH</span>
+            <h4 class="cx-val">&lt; 15 phút</h4>
+            <span class="cx-desc">Xử lý liên hệ &amp; hỗ trợ tư vấn</span>
+          </div>
+        </div>
+
+        <div class="cx-card">
+          <div class="cx-icon icon-resol">
+            <i class="bi bi-check2-circle"></i>
+          </div>
+          <div class="cx-body">
+            <span class="cx-title">Tỷ Lệ Giải Quyết Khiếu Nại</span>
+            <h4 class="cx-val text-green">98.5%</h4>
+            <span class="cx-desc">Khách hàng hài lòng sau xử lý sự vụ</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+

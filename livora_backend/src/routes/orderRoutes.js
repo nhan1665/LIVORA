@@ -6,8 +6,10 @@ const {
   getOrderById,
   createOrder,
   updateOrderStatus,
+  exportOrder,
   cancelOrder,
   requestCancelOtp,
+  returnRestockOrder,
 } = require('../controllers/orderController');
 
 // Public route: Customers and users can create orders
@@ -26,6 +28,8 @@ router.get('/', (req, res, next) => {
 
 // Admin management routes
 router.patch('/:id/status', requireAdmin, updateOrderStatus);
+router.post('/:id/export', requireAdmin, exportOrder);
+router.post('/:id/return-restock', requireAdmin, returnRestockOrder);
 
 // Request OTP to cancel order (prints to Localhost terminal/console)
 router.post('/:id/request-cancel-otp', requestCancelOtp);

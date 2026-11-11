@@ -31,19 +31,65 @@ import { ActivityLogComponent } from '../../shared/activity-log/activity-log';
     ActivityLogComponent,
   ],
   templateUrl: './order.html',
+  styleUrl: './order.css',
 })
 export class OrderComponent implements OnInit {
   orders: Order[] = [];
+  allRawOrders: Order[] = [];
   totalItems: number = 0;
   currentPage: number = 1;
   pageSize: number = 10;
   loading: boolean = false;
   activeDetailTab: 'info' | 'history' = 'info';
+  activeTab: 'all' | 'export_slips' | 'returns' = 'all';
 
   // Search & Filter
   keyword: string = '';
   orderStatusFilter: string = 'all';
   paymentStatusFilter: string = 'all';
+
+  setTab(tab: 'all' | 'export_slips' | 'returns'): void {
+    this.activeTab = tab;
+    this.cdr.detectChanges();
+  }
+
+  get exportSlips(): Order[] {
+    return this.allRawOrders.filter(
+      (o) =>
+        o.orderStatus === 'confirmed' ||
+        o.orderStatus === 'shipping' ||
+        o.orderStatus === 'delivered' ||
+        !!o.exportSlipCode
+    );
+  }
+
+  get pendingExportSlipsCount(): number {
+    return this.allRawOrders.filter((o) => o.orderStatus === 'confirmed' && o.exportSlipStatus !== 'exported').length;
+  }
+
+  get returnOrders(): Order[] {
+    return this.allRawOrders.filter(
+      (o) =>
+        o.orderStatus === 'delivered' &&
+        (Boolean(o.hasRefund) ||
+          o.paymentStatus === 'refunded' ||
+          !!o.cancelReason ||
+          o.isRestockedReturned !== undefined ||
+          (o.history || []).some(
+            (h) =>
+              (h.note || '').toLowerCase().includes('hoàn') ||
+              (h.note || '').toLowerCase().includes('trả')
+          ))
+    );
+  }
+
+  get pendingReturnRestockCount(): number {
+    return this.returnOrders.filter((o) => !o.isRestockedReturned).length;
+  }
+
+  getOrderItemsCount(order: Order): number {
+    return (order.items || []).reduce((sum, it) => sum + (it.quantity || 1), 0);
+  }
 
   statusOptions: FilterSelectOption[] = [
     { label: 'Tất cả trạng thái đơn', value: 'all' },
@@ -163,10 +209,16 @@ export class OrderComponent implements OnInit {
           variant: 'view',
         },
         {
+          id: 'export',
+          label: 'Xuất hàng',
+          variant: 'edit',
+          show: (row: Order) => row.orderStatus === 'confirmed' && row.exportSlipStatus !== 'exported',
+        },
+        {
           id: 'advance',
           label: 'Duyệt',
           variant: 'edit',
-          show: (row: Order) => row.orderStatus !== 'delivered' && row.orderStatus !== 'cancelled',
+          show: (row: Order) => this.canShowAdvance(row),
         },
         {
           id: 'cancel',
@@ -174,6 +226,13 @@ export class OrderComponent implements OnInit {
           variant: 'hide',
           danger: true,
           show: (row: Order) => row.orderStatus !== 'delivered' && row.orderStatus !== 'cancelled',
+        },
+        {
+          id: 'refund',
+          label: 'Hủy & Hoàn tiền',
+          variant: 'hide',
+          danger: true,
+          show: (row: Order) => row.orderStatus === 'delivered',
         },
       ],
     },
@@ -248,6 +307,7 @@ export class OrderComponent implements OnInit {
     });
     this.orders = localRes.orders;
     this.totalItems = localRes.total;
+    this.allRawOrders = this.orderService.getAllRawOrders();
     this.stats = this.orderService.getOrderStats();
 
     // Chỉ bật loading skeleton nếu hoàn toàn chưa có đơn hàng nào
@@ -265,6 +325,7 @@ export class OrderComponent implements OnInit {
       });
       this.orders = res.orders;
       this.totalItems = res.total;
+      this.allRawOrders = this.orderService.getAllRawOrders();
       this.stats = this.orderService.getOrderStats();
     } catch (_) {}
 
@@ -336,11 +397,24 @@ export class OrderComponent implements OnInit {
     const order = event.row;
     if (event.action === 'view') {
       this.openDetail(order);
+    } else if (event.action === 'export') {
+      this.confirmExportSlip(order);
     } else if (event.action === 'advance') {
       this.promptAdvanceStatus(order);
     } else if (event.action === 'cancel') {
       this.promptCancelOrder(order);
+    } else if (event.action === 'refund') {
+      this.promptAdminRefund(order);
     }
+  }
+
+  canShowAdvance(order: Order): boolean {
+    if (order.orderStatus === 'delivered' || order.orderStatus === 'cancelled') return false;
+    // Khi đang ở trạng thái confirmed, CHỈ hiển thị nút chuyển Đang giao khi đã ấn Xuất hàng!
+    if (order.orderStatus === 'confirmed') {
+      return order.exportSlipStatus === 'exported';
+    }
+    return true;
   }
 
   openDetail(order: Order): void {
@@ -364,14 +438,66 @@ export class OrderComponent implements OnInit {
       this.showNotice('Đơn hàng đã ở trạng thái cuối cùng, không thể chuyển tiếp.', 'error');
       return;
     }
+    if (next === 'shipping' && order.exportSlipStatus !== 'exported') {
+      this.showNotice('Đơn hàng chưa xuất kho trên Phiếu xuất bán. Vui lòng bấm "Xuất hàng" để trừ tồn kho trước khi chuyển sang "Đang giao".', 'error');
+      return;
+    }
     this.advanceTargetOrder = order;
     this.advanceTargetStatus = next;
     this.isAdvanceConfirmOpen = true;
   }
 
+  advanceToShipping(order: Order): void {
+    if (order.exportSlipStatus !== 'exported') {
+      this.showNotice('Vui lòng thực hiện "Xuất hàng" trên Phiếu xuất bán trước khi chuyển đơn sang trạng thái Đang giao.', 'error');
+      return;
+    }
+    this.promptAdvanceStatus(order);
+  }
+
   get advanceConfirmMessage(): string {
     if (!this.advanceTargetOrder || !this.advanceTargetStatus) return '';
+    if (this.advanceTargetStatus === 'confirmed') {
+      return `Bạn có chắc chắn muốn XÁC NHẬN đơn hàng ${this.advanceTargetOrder.orderCode}? Sau khi xác nhận, hệ thống sẽ tự động lập Phiếu xuất bán trong tab "Phiếu xuất bán".`;
+    }
+    if (this.advanceTargetStatus === 'shipping') {
+      return `Xác nhận chuyển đơn hàng ${this.advanceTargetOrder.orderCode} sang trạng thái "Đang giao" (Bàn giao cho đơn vị vận chuyển)?`;
+    }
+    if (this.advanceTargetStatus === 'delivered') {
+      return `Xác nhận đơn hàng ${this.advanceTargetOrder.orderCode} đã GIAO HÀNG THÀNH CÔNG cho khách hàng?`;
+    }
     return `Bạn có chắc chắn muốn chuyển đơn hàng ${this.advanceTargetOrder.orderCode} từ "${this.getStatusLabel(this.advanceTargetOrder.orderStatus)}" sang "${this.getStatusLabel(this.advanceTargetStatus)}"?`;
+  }
+
+  async confirmExportSlip(order: Order): Promise<void> {
+    const slipCode = order.exportSlipCode || ('PX-' + order.orderCode.replace(/^LIV-/, ''));
+    if (!confirm(`Xác nhận XUẤT HÀNG cho Phiếu xuất #${slipCode} thuộc đơn hàng #${order.orderCode}?\n\n👉 Thao tác này sẽ thực hiện TRỪ TỒN KHO các sản phẩm trong phiếu xuất và sau đó MỞ KHÓA nút chuyển sang "Đang giao".`)) {
+      return;
+    }
+    const res = await this.orderService.exportOrderAsync(order._id);
+    if (res.success) {
+      this.showNotice(res.message, 'success');
+      await this.loadOrders(true);
+      if (this.selectedOrder && this.selectedOrder._id === order._id) {
+        this.selectedOrder = this.orderService.getOrderById(order._id) || null;
+      }
+    } else {
+      this.showNotice(res.message, 'error');
+    }
+  }
+
+  async restockReturnOrder(order: Order): Promise<void> {
+    const itemCount = (order.items || []).reduce((sum, it) => sum + (it.quantity || 1), 0);
+    if (!confirm(`Bạn có chắc chắn muốn NHẬP HÀNG VỀ KHO cho đơn hoàn trả #${order.orderCode}? Tổng cộng ${itemCount} sản phẩm sẽ được cộng ngược lại vào tồn kho hệ thống.`)) {
+      return;
+    }
+    const res = await this.orderService.restockReturnOrder(order._id);
+    if (res.success) {
+      this.showNotice(res.message, 'success');
+      await this.loadOrders(true);
+    } else {
+      this.showNotice(res.message, 'error');
+    }
   }
 
   confirmAdvanceStatus(): void {
@@ -436,6 +562,81 @@ export class OrderComponent implements OnInit {
     this.isCancelOpen = false;
     this.cancelTargetOrder = null;
     this.cancelReason = '';
+  }
+
+  // Admin Refund / Cancel Delivered Modal
+  isAdminRefundOpen: boolean = false;
+  refundTargetOrder: Order | null = null;
+  adminRefundReason: string = '';
+  adminRefundAmount: number = 0;
+  adminRefundType: 'full' | 'partial' = 'full';
+  adminRefundBankName: string = '';
+  adminRefundBankAccountNumber: string = '';
+  adminRefundBankAccountOwner: string = '';
+  isSubmittingRefund: boolean = false;
+
+  promptAdminRefund(order: Order): void {
+    this.refundTargetOrder = order;
+    this.adminRefundReason = 'Khách hàng đổi trả sản phẩm sau khi đã nhận hàng (Đơn đã hoàn thành)';
+    this.adminRefundAmount = order.totalAmount || 0;
+    this.adminRefundType = 'full';
+    this.adminRefundBankName = '';
+    this.adminRefundBankAccountNumber = '';
+    this.adminRefundBankAccountOwner = order.customerInfo?.name || (order.customerInfo as any)?.fullName || '';
+    this.isAdminRefundOpen = true;
+  }
+
+  closeAdminRefundModal(): void {
+    this.isAdminRefundOpen = false;
+    this.refundTargetOrder = null;
+    this.isSubmittingRefund = false;
+  }
+
+  async confirmAdminRefund(): Promise<void> {
+    if (!this.refundTargetOrder) return;
+    if (!this.adminRefundReason.trim()) {
+      this.showNotice('Vui lòng nhập lý do hủy đơn & yêu cầu hoàn tiền.', 'error');
+      return;
+    }
+
+    this.isSubmittingRefund = true;
+    try {
+      const order = this.refundTargetOrder;
+      const phone = order.customerInfo?.phone || '';
+      const token = localStorage.getItem('livora_admin_token') || sessionStorage.getItem('livora_admin_token') || '';
+      const res = await fetch(`http://localhost:5000/api/refunds`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          orderCode: order.orderCode,
+          phone,
+          reason: this.adminRefundReason.trim(),
+          refundType: this.adminRefundType,
+          amount: this.adminRefundAmount,
+          bankName: this.adminRefundBankName.trim(),
+          bankAccountNumber: this.adminRefundBankAccountNumber.trim(),
+          bankAccountOwner: this.adminRefundBankAccountOwner.trim() || order.customerInfo?.name,
+        }),
+      });
+
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.success) {
+        this.showNotice(`Đã tạo yêu cầu hoàn tiền cho đơn hàng #${order.orderCode} thành công. Chuyển sang phòng Kế toán để thực hiện chi trả tiền hoàn!`, 'success');
+        this.isAdminRefundOpen = false;
+        this.refundTargetOrder = null;
+        this.loadOrders();
+      } else {
+        this.showNotice(data.message || 'Không thể tạo yêu cầu hoàn tiền.', 'error');
+      }
+    } catch (err: any) {
+      this.showNotice('Lỗi kết nối máy chủ hoàn tiền: ' + (err.message || ''), 'error');
+    } finally {
+      this.isSubmittingRefund = false;
+      this.cdr.detectChanges();
+    }
   }
 
   // Create Order Methods

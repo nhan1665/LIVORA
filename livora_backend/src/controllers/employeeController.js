@@ -161,7 +161,7 @@ const updateEmployee = async (req, res) => {
 };
 
 /**
- * @desc    Xóa nhân viên
+ * @desc    Ngưng hoạt động / Vô hiệu hóa tài khoản nhân viên (soft-deactivate, không xóa khỏi DB)
  * @route   DELETE /api/employees/:id
  */
 const deleteEmployee = async (req, res) => {
@@ -173,14 +173,16 @@ const deleteEmployee = async (req, res) => {
     }
 
     if (employee.code === 'NV2709') {
-      return sendError(res, 'Không thể xóa tài khoản Quản trị viên mặc định của hệ thống.', 403);
+      return sendError(res, 'Không thể vô hiệu hóa tài khoản Quản trị viên mặc định của hệ thống.', 403);
     }
 
-    await Employee.findByIdAndDelete(id);
+    employee.isActive = false;
+    employee.status = 'inactive';
+    await employee.save();
 
-    return sendSuccess(res, { id }, 'Đã xóa tài khoản nhân viên thành công.');
+    return sendSuccess(res, { id, isActive: false, status: 'inactive' }, 'Đã chuyển tài khoản nhân viên sang trạng thái ngưng hoạt động.');
   } catch (error) {
-    return sendError(res, 'Lỗi khi xóa nhân viên.', 500);
+    return sendError(res, 'Lỗi khi ngưng hoạt động nhân viên.', 500);
   }
 };
 

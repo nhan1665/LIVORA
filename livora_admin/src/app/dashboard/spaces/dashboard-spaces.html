@@ -1,0 +1,174 @@
+<div class="dash-space-page">
+  <!-- Header -->
+  <div class="dash-head">
+    <div>
+      <h1 class="dash-title">Hiệu Quả Không Gian 3D &amp; Cảm Hứng AR</h1>
+      <p class="dash-subtitle">Đo lường mức độ tương tác trực quan 3D, tỷ lệ mua trọn gói (cross-sell combo) và thị hiếu nội thất.</p>
+    </div>
+    <div class="dash-actions">
+      <button type="button" class="btn-action btn-sec" (click)="exportReport()">
+        <i class="bi bi-download"></i>
+        <span>Xuất Báo Cáo</span>
+      </button>
+      <button type="button" class="btn-action btn-prim" (click)="refresh()">
+        <i class="bi bi-arrow-repeat"></i>
+        <span>Làm Mới</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- KPI Grid -->
+  <div class="kpi-grid">
+    <div class="kpi-box">
+      <div class="kpi-icon-wrap icon-space">
+        <i class="bi bi-badge-3d-fill"></i>
+      </div>
+      <div class="kpi-text">
+        <span class="kpi-label">KHÔNG GIAN 3D ĐANG HIỂN THỊ</span>
+        <h3 class="kpi-val">{{ summary.totalSpaces }}</h3>
+        <span class="kpi-note">Bộ sưu tập mẫu trực tuyến</span>
+      </div>
+    </div>
+
+    <div class="kpi-box">
+      <div class="kpi-icon-wrap icon-hotspots">
+        <i class="bi bi-pin-map-fill"></i>
+      </div>
+      <div class="kpi-text">
+        <span class="kpi-label">ĐIỂM CHẠM SẢN PHẨM (HOTSPOTS)</span>
+        <h3 class="kpi-val">{{ summary.totalHotspots }}</h3>
+        <span class="kpi-note">Trung bình {{ summary.avgHotspotsPerSpace }} SP / không gian</span>
+      </div>
+    </div>
+
+    <div class="kpi-box">
+      <div class="kpi-icon-wrap icon-combo">
+        <i class="bi bi-cart-check-fill"></i>
+      </div>
+      <div class="kpi-text">
+        <span class="kpi-label">TỶ LỆ MUA KÈM COMBO PHÒNG</span>
+        <h3 class="kpi-val val-gold">{{ summary.comboCrossSellRate }}</h3>
+        <span class="kpi-note note-green">+12.5% so với mua sản phẩm lẻ</span>
+      </div>
+    </div>
+
+    <div class="kpi-box">
+      <div class="kpi-icon-wrap icon-interact">
+        <i class="bi bi-eye-fill"></i>
+      </div>
+      <div class="kpi-text">
+        <span class="kpi-label">TƯƠNG TÁC XEM PHÒNG 3D</span>
+        <h3 class="kpi-val">{{ summary.totalInteractions | number }}</h3>
+        <span class="kpi-note">Lượt khám phá góc nhìn 360&deg;</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Top Spaces Table -->
+  <div class="card-box">
+    <div class="card-head">
+      <div>
+        <h2 class="card-title">Top Không Gian 3D Tạo Ra Giá Trị Đơn Hàng Cao Nhất</h2>
+        <p class="card-subtitle">Những phòng mẫu được khách hàng trải nghiệm và quyết định đặt mua combo nhiều nhất.</p>
+      </div>
+      <span class="badge-status">Dữ liệu thời gian thực</span>
+    </div>
+
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Không Gian Mẫu</th>
+            <th>Loại Phòng</th>
+            <th>Phong Cách</th>
+            <th class="text-center">Số SP Ghim</th>
+            <th class="text-right">Lượt Xem 3D</th>
+            <th class="text-right">Đơn Chuyển Đổi</th>
+            <th class="text-right">Doanh Thu Ước Tính</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let space of topSpaces">
+            <td>
+              <div class="space-col">
+                <img [src]="space.thumbnail || 'assets/placeholder.jpg'" [alt]="space.name" class="space-thumb" />
+                <span class="space-name">{{ space.name }}</span>
+              </div>
+            </td>
+            <td><span class="room-tag">{{ space.roomType }}</span></td>
+            <td><span class="style-text">{{ space.style }}</span></td>
+            <td class="text-center font-semibold">{{ space.hotspotsCount }} SP</td>
+            <td class="text-right">{{ space.viewCount | number }}</td>
+            <td class="text-right font-semibold text-success">{{ space.estimatedOrders }} đơn</td>
+            <td class="text-right font-bold text-money">{{ formatCurrency(space.estimatedRevenue) }}</td>
+          </tr>
+          <tr *ngIf="topSpaces.length === 0">
+            <td colspan="7" class="text-center py-4 text-muted">Chưa có dữ liệu không gian mẫu.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Bottom Grid: Style Popularity & Room Breakdown -->
+  <div class="dual-grid">
+    <!-- Style Popularity -->
+    <div class="card-box">
+      <div class="card-head">
+        <div>
+          <h2 class="card-title">Thị Hiếu Phong Cách Thiết Kế</h2>
+          <p class="card-subtitle">Tỷ lệ quan tâm và tìm kiếm của khách hàng theo trường phái nội thất.</p>
+        </div>
+      </div>
+      <div class="style-list">
+        <div class="style-item" *ngFor="let s of stylePopularity">
+          <div class="style-info">
+            <span class="style-title">{{ s.name }}</span>
+            <span class="style-meta">{{ s.count }} phòng ({{ s.percentage }}%)</span>
+          </div>
+          <div class="prog-bar-bg">
+            <div class="prog-bar-fill" [style.width.%]="s.percentage"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Room Distribution -->
+    <div class="card-box">
+      <div class="card-head">
+        <div>
+          <h2 class="card-title">Phân Bổ Theo Khu Vực Nhà Ở</h2>
+          <p class="card-subtitle">Cơ cấu phòng khách, phòng ngủ, phòng ăn và không gian làm việc.</p>
+        </div>
+      </div>
+      <div class="room-grid">
+        <div class="room-card" *ngFor="let r of roomDistribution">
+          <div class="room-card-head">
+            <i class="bi bi-door-open-fill text-gold"></i>
+            <span class="room-card-title">{{ r.room }}</span>
+          </div>
+          <div class="room-card-stats">
+            <span class="room-num">{{ r.count }}</span>
+            <span class="room-unit">không gian</span>
+          </div>
+          <div class="room-share-badge">{{ r.share }}% thị phần</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Strategic Insight for Admins -->
+  <div class="insight-banner">
+    <div class="insight-icon">
+      <i class="bi bi-lightbulb-fill"></i>
+    </div>
+    <div class="insight-content">
+      <h4 class="insight-title">Khuyến nghị Quản Trị từ Trải nghiệm 3D Livora:</h4>
+      <p class="insight-desc">
+        Khách hàng có xu hướng chi tiêu <strong>+42% giá trị đơn hàng</strong> khi trải nghiệm không gian 3D hoàn chỉnh thay vì mua từng sản phẩm đơn lẻ.
+        Khuyến nghị đội ngũ Nội dung (Content) ưu tiên tạo thêm không gian <em>Modern Luxury</em> và <em>Japandi</em> cho Phòng Ngủ và Phòng Làm Việc để đón đầu làn sóng mua sắm quý mới.
+      </p>
+    </div>
+  </div>
+</div>
+

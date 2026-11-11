@@ -1,343 +1,383 @@
 <div class="permission-page">
-  <!-- Page Header -->
-  <header class="page-head">
-    <div class="head-left">
-      <h1 class="page-title">Phân quyền &amp; Vai trò</h1>
-      <p class="page-subtitle">
-        Cấu hình ma trận phân quyền theo 6 vai trò chuẩn hoặc phân quyền tùy biến cho từng nhân viên cụ thể
+  @if (!isSuperAdmin) {
+    <!-- Access Denied for Non-Super-Admin -->
+    <div class="card p-6 text-center" style="margin: 40px auto; max-width: 600px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); background: #fff;">
+      <div style="font-size: 48px; color: #dc2626; margin-bottom: 16px;">
+        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="15" y1="9" x2="9" y2="15"></line>
+          <line x1="9" y1="9" x2="15" y2="15"></line>
+        </svg>
+      </div>
+      <h2 style="font-size: 20px; font-weight: 700; color: #1e293b; margin-bottom: 8px;">Truy cập bị từ chối</h2>
+      <p style="color: #64748b; font-size: 14px; line-height: 1.6; margin-bottom: 24px;">
+        Chỉ tài khoản <strong>Super Admin</strong> mới có quyền xem và cấu hình Phân quyền hệ thống. Bạn chỉ có thể truy cập các chức năng được phân quyền theo vai trò của mình.
       </p>
     </div>
-    <div class="head-right">
-      <button type="button" class="btn btn-secondary" (click)="openDetailModal()" title="Xem chi tiết & lịch sử thay đổi phân quyền">
-        <span>Xem chi tiết &amp; Lịch sử</span>
-      </button>
-      <button
-        type="button"
-        class="btn btn-primary"
-        (click)="savePermissions()"
-        [class.btn-pulse]="hasUnsavedChanges()"
-      >
-        <span>Lưu quyền phân bổ</span>
-      </button>
-    </div>
-  </header>
-
-  <!-- Filter Controls Section -->
-  <section class="toolbar-card">
-    <div class="filter-row">
-      <!-- Role Filter -->
-      <div class="filter-field">
-        <label for="roleSelect" class="filter-label">1. CHỌN VAI TRÒ (6 VAI TRÒ CHUẨN)</label>
-        <div class="select-wrap">
-          <select
-            id="roleSelect"
-            class="filter-select"
-            [ngModel]="selectedRoleCode()"
-            (ngModelChange)="onRoleChange($event)"
-          >
-            @for (r of roles; track r.code) {
-              <option [value]="r.code">{{ r.name }}</option>
-            }
-          </select>
-        </div>
+  } @else {
+    <!-- Page Header -->
+    <header class="page-head">
+      <div class="head-left">
+        <h1 class="page-title">Phân quyền &amp; Quản lý 5 Vai trò</h1>
+        <p class="page-subtitle">
+          Quản lý ma trận phân quyền cho 5 vai trò hệ thống: <strong>Super Admin</strong>, <strong>Kế toán</strong>, <strong>NV Vận hành</strong>, <strong>NV Nội dung</strong> và <strong>CSKH</strong>.
+        </p>
       </div>
-
-      <!-- Staff Member Filter -->
-      <div class="filter-field">
-        <label for="staffSelect" class="filter-label">2. CHỌN NHÂN VIÊN CỤ THỂ</label>
-        <div class="select-wrap">
-          <select
-            id="staffSelect"
-            class="filter-select"
-            [ngModel]="selectedStaffId()"
-            (ngModelChange)="onStaffChange($event)"
-          >
-            <option value="all">Tất cả nhân viên thuộc vai trò này (Mặc định)</option>
-            @for (staff of staffList; track staff.id) {
-              <option [value]="staff.id">{{ staff.code }} — {{ staff.name }} ({{ staff.roleName }})</option>
-            }
-          </select>
-        </div>
-      </div>
-
-      <!-- Feature Search -->
-      <div class="filter-field search-field">
-        <label for="featureSearch" class="filter-label">TÌM CHỨC NĂNG</label>
-        <div class="input-wrap">
-          <input
-            id="featureSearch"
-            type="text"
-            class="filter-input"
-            placeholder="Tìm theo tên chức năng, nhóm..."
-            [ngModel]="searchKeyword()"
-            (ngModelChange)="searchKeyword.set($event)"
-          />
-        </div>
-      </div>
-    </div>
-
-    <!-- Quick Operations Toolbar -->
-    <div class="quick-ops-row">
-      <div class="role-badge-display">
-        <span class="role-pill" [ngClass]="currentRole().badgeClass">
-          {{ currentRole().name }}
-        </span>
-        <span class="role-desc-text">
-          @if (currentStaff()) {
-            Đang cấu hình đặc quyền riêng cho: <strong>{{ currentStaff()?.name }}</strong> (Mã: {{ currentStaff()?.code }} · Email: {{ currentStaff()?.email }})
-          } @else {
-            {{ currentRole().description }}
-          }
-        </span>
-      </div>
-
-      <div class="bulk-buttons">
-        <button type="button" class="btn btn-sm btn-secondary" (click)="checkAll()" title="Cấp toàn bộ quyền">
-          <span>Chọn tất cả</span>
-        </button>
-        <button type="button" class="btn btn-sm btn-secondary" (click)="uncheckAll()" title="Thu hồi toàn bộ">
-          <span>Bỏ chọn tất cả</span>
-        </button>
-        <button type="button" class="btn btn-sm btn-outline" (click)="resetToRoleDefault()" title="Khôi phục chuẩn vai trò">
-          <span>Khôi phục chuẩn vai trò</span>
-        </button>
-      </div>
-    </div>
-  </section>
-
-  <!-- Permissions Summary Banner -->
-  <div class="summary-banner" [class.banner-changed]="hasUnsavedChanges()">
-    <div class="summary-stats">
-      <span>Thống kê quyền được cấp: <strong>{{ grantedCount() }} / {{ totalActionsCount() }}</strong> thao tác</span>
-      <span class="stat-sep">•</span>
-      <span>Số chức năng hiển thị: <strong>{{ filteredFeatures().length }}</strong> mục</span>
-    </div>
-    @if (hasUnsavedChanges()) {
-      <div class="unsaved-badge">
-        <span>Có thay đổi chưa lưu</span>
-      </div>
-    }
-  </div>
-
-  <!-- Permissions Matrix Table -->
-  <div class="table-card">
-    <div class="table-responsive">
-      <table class="matrix-table">
-        <thead>
-          <tr>
-            <th class="col-feature">CHỨC NĂNG HỆ THỐNG (THEO DÒNG)</th>
-            @for (col of actionColumns; track col.key) {
-              <th class="col-action text-center">
-                <div class="action-header-content">
-                  <span class="action-title">{{ col.label }}</span>
-                  <label class="toggle-col-label" [title]="'Chọn/bỏ toàn bộ cột ' + col.label">
-                    <input
-                      type="checkbox"
-                      [checked]="isColumnAllChecked(col.key)"
-                      (change)="toggleColumn(col.key)"
-                    />
-                    <small>Cả cột</small>
-                  </label>
-                </div>
-              </th>
-            }
-            <th class="col-all text-center">TOÀN QUYỀN</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (f of filteredFeatures(); track f.featureId) {
-            <tr class="feature-row" [class.row-all-checked]="isRowAllChecked(f)">
-              <!-- Feature Info -->
-              <td class="col-feature">
-                <div class="feature-info">
-                  <div class="feature-badge">{{ f.featureId }}</div>
-                  <div class="feature-text">
-                    <span class="feature-name">{{ f.featureName }}</span>
-                    <span class="feature-cat">{{ f.category }}</span>
-                  </div>
-                </div>
-              </td>
-
-              <!-- Action: Xem -->
-              <td class="col-action text-center" (click)="toggleAction(f, 'view')">
-                <input
-                  type="checkbox"
-                  class="perm-checkbox"
-                  [checked]="f.actions.view"
-                  (click)="$event.stopPropagation()"
-                  (change)="toggleAction(f, 'view')"
-                />
-              </td>
-
-              <!-- Action: Thêm mới -->
-              <td class="col-action text-center" (click)="toggleAction(f, 'create')">
-                <input
-                  type="checkbox"
-                  class="perm-checkbox"
-                  [checked]="f.actions.create"
-                  (click)="$event.stopPropagation()"
-                  (change)="toggleAction(f, 'create')"
-                />
-              </td>
-
-              <!-- Action: Chỉnh sửa -->
-              <td class="col-action text-center" (click)="toggleAction(f, 'edit')">
-                <input
-                  type="checkbox"
-                  class="perm-checkbox"
-                  [checked]="f.actions.edit"
-                  (click)="$event.stopPropagation()"
-                  (change)="toggleAction(f, 'edit')"
-                />
-              </td>
-
-              <!-- Action: Xóa -->
-              <td class="col-action text-center" (click)="toggleAction(f, 'delete')">
-                <input
-                  type="checkbox"
-                  class="perm-checkbox"
-                  [checked]="f.actions.delete"
-                  (click)="$event.stopPropagation()"
-                  (change)="toggleAction(f, 'delete')"
-                />
-              </td>
-
-              <!-- Action: Duyệt -->
-              <td class="col-action text-center" (click)="toggleAction(f, 'approve')">
-                <input
-                  type="checkbox"
-                  class="perm-checkbox"
-                  [checked]="f.actions.approve"
-                  (click)="$event.stopPropagation()"
-                  (change)="toggleAction(f, 'approve')"
-                />
-              </td>
-
-              <!-- Action: Xuất dữ liệu -->
-              <td class="col-action text-center" (click)="toggleAction(f, 'export')">
-                <input
-                  type="checkbox"
-                  class="perm-checkbox"
-                  [checked]="f.actions.export"
-                  (click)="$event.stopPropagation()"
-                  (change)="toggleAction(f, 'export')"
-                />
-              </td>
-
-              <!-- Toggle Whole Row -->
-              <td class="col-all text-center" (click)="toggleRow(f)">
-                <button
-                  type="button"
-                  class="row-toggle-btn"
-                  [class.btn-active]="isRowAllChecked(f)"
-                  [title]="isRowAllChecked(f) ? 'Bỏ chọn toàn bộ chức năng này' : 'Chọn toàn bộ chức năng này'"
-                >
-                  {{ isRowAllChecked(f) ? 'Toàn quyền' : 'Tùy biến' }}
-                </button>
-              </td>
-            </tr>
-          }
-
-          @if (filteredFeatures().length === 0) {
-            <tr>
-              <td colspan="8" class="empty-state">
-                <p>Không tìm thấy chức năng nào phù hợp với từ khóa "{{ searchKeyword() }}".</p>
-                <button type="button" class="btn btn-secondary btn-sm" (click)="searchKeyword.set('')">Xóa tìm kiếm</button>
-              </td>
-            </tr>
-          }
-        </tbody>
-      </table>
-    </div>
-
-    <!-- Table Footer -->
-    <footer class="table-footer">
-      <div class="footer-note">
-        <span>* Ghi chú: Cột thao tác tương ứng với từng chức năng. Thay đổi sẽ có hiệu lực ngay sau khi bấm <strong>Lưu quyền phân bổ</strong>.</span>
-      </div>
-      <div class="footer-actions">
-        <button type="button" class="btn btn-secondary" (click)="resetToRoleDefault()">Đặt lại</button>
-        <button type="button" class="btn btn-primary" (click)="savePermissions()">Lưu quyền phân bổ</button>
-      </div>
-    </footer>
-  </div>
-
-  <!-- Detail & Activity Log Modal -->
-  @if (isModalOpen()) {
-    <app-form-modal
-      [isOpen]="true"
-      title="Chi tiết &amp; Lịch sử phân quyền"
-      subtitle="Thông tin phân quyền và nhật ký thay đổi vai trò hệ thống"
-      size="lg"
-      [showFooter]="false"
-      (close)="closeModal()"
-    >
-      <!-- Modal Navigation Tabs -->
-      <div class="modal-tab-nav">
-        <button
-          type="button"
-          class="tab-nav-btn"
-          [class.active]="activeModalTab() === 'info'"
-          (click)="activeModalTab.set('info')"
-        >
-          Thông tin vai trò
+      <div class="head-right">
+        <button type="button" class="btn btn-secondary" (click)="openDetailModal()" title="Xem chi tiết & lịch sử thay đổi phân quyền">
+          <span>Xem chi tiết &amp; Lịch sử</span>
         </button>
         <button
           type="button"
-          class="tab-nav-btn"
-          [class.active]="activeModalTab() === 'history'"
-          (click)="activeModalTab.set('history')"
+          class="btn btn-primary"
+          (click)="savePermissions()"
+          [class.btn-pulse]="hasUnsavedChanges()"
+          [disabled]="isLoading()"
         >
-          Lịch sử thao tác
+          <span>{{ isLoading() ? 'Đang lưu...' : 'Lưu quyền phân bổ' }}</span>
         </button>
       </div>
+    </header>
 
-      <!-- Tab 1: Info -->
-      @if (activeModalTab() === 'info') {
-        <div class="modal-body-content">
-          <div class="info-group">
-            <span class="info-label">VAI TRÒ HIỆN TẠI</span>
-            <div class="info-val-wrap">
-              <span class="role-pill" [ngClass]="currentRole().badgeClass">{{ currentRole().name }}</span>
-              <p class="info-desc">{{ currentRole().description }}</p>
-            </div>
-          </div>
-
-          <div class="info-group">
-            <span class="info-label">NHÂN VIÊN THUỘC VAI TRÒ NÀY ({{ filteredStaffList().length }} nhân viên)</span>
-            <div class="staff-tag-list">
-              @for (st of filteredStaffList(); track st.id) {
-                <div class="staff-tag">
-                  <div class="staff-avatar">{{ st.avatar }}</div>
-                  <div class="staff-details">
-                    <span class="staff-name">{{ st.name }}</span>
-                    <span class="staff-code">{{ st.code }} · {{ st.email }}</span>
-                  </div>
-                </div>
+    <!-- Filter Controls Section -->
+    <section class="toolbar-card">
+      <div class="filter-row">
+        <!-- Role Filter -->
+        <div class="filter-field">
+          <label for="roleSelect" class="filter-label">1. CHỌN VAI TRÒ (5 VAI TRÒ HỆ THỐNG)</label>
+          <div class="select-wrap">
+            <select
+              id="roleSelect"
+              class="filter-select"
+              [ngModel]="selectedRoleCode()"
+              (ngModelChange)="onRoleChange($event)"
+            >
+              @for (r of roles(); track r.code) {
+                <option [value]="r.code">{{ r.name }}</option>
               }
+            </select>
+          </div>
+        </div>
+
+        <!-- Staff Member Filter -->
+        <div class="filter-field">
+          <label for="staffSelect" class="filter-label">2. CHỌN NHÂN VIÊN THUỘC VAI TRÒ</label>
+          <div class="select-wrap">
+            <select
+              id="staffSelect"
+              class="filter-select"
+              [ngModel]="selectedStaffId()"
+              (ngModelChange)="onStaffChange($event)"
+            >
+              <option value="all">Tất cả nhân viên thuộc vai trò này (Mặc định)</option>
+              @for (staff of filteredStaffList(); track staff.id) {
+                <option [value]="staff.id">{{ staff.code }} — {{ staff.name }} ({{ staff.roleName }})</option>
+              }
+            </select>
+          </div>
+        </div>
+
+        <!-- Feature Search -->
+        <div class="filter-field search-field">
+          <label for="featureSearch" class="filter-label">TÌM CHỨC NĂNG</label>
+          <div class="input-wrap">
+            <input
+              id="featureSearch"
+              type="text"
+              class="filter-input"
+              placeholder="Tìm theo tên chức năng, nhóm..."
+              [ngModel]="searchKeyword()"
+              (ngModelChange)="searchKeyword.set($event)"
+            />
+          </div>
+        </div>
+      </div>
+
+      <!-- Use Cases Row according to Diagram -->
+      @if (currentRole().useCases && currentRole().useCases!.length > 0) {
+        <div style="margin-top: 14px; padding: 12px 16px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;">
+          <div style="font-size: 11px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+            </svg>
+            CÁC CA SỬ DỤNG (USE CASES) THEO THIẾT KẾ:
+          </div>
+          <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+            @for (uc of currentRole().useCases; track uc) {
+              <span style="display: inline-flex; align-items: center; padding: 3px 10px; font-size: 12px; font-weight: 500; background: #e0f2fe; color: #0369a1; border-radius: 9999px; border: 1px solid #bae6fd;">
+                ✓ {{ uc }}
+              </span>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- Quick Operations Toolbar -->
+      <div class="quick-ops-row">
+        <div class="role-badge-display">
+          <span class="role-pill" [ngClass]="currentRole().badgeClass">
+            {{ currentRole().name }}
+          </span>
+          <span class="role-desc-text">
+            @if (currentStaff()) {
+              Đang xem đặc quyền riêng cho: <strong>{{ currentStaff()?.name }}</strong> (Mã: {{ currentStaff()?.code }} · Email: {{ currentStaff()?.email }})
+            } @else {
+              {{ currentRole().description }}
+            }
+          </span>
+        </div>
+
+        <div class="bulk-buttons">
+          <button type="button" class="btn btn-sm btn-secondary" (click)="checkAll()" title="Cấp toàn bộ quyền">
+            <span>Chọn tất cả</span>
+          </button>
+          <button type="button" class="btn btn-sm btn-secondary" (click)="uncheckAll()" title="Thu hồi toàn bộ">
+            <span>Bỏ chọn tất cả</span>
+          </button>
+          <button type="button" class="btn btn-sm btn-outline" (click)="resetToRoleDefault()" title="Khôi phục chuẩn vai trò">
+            <span>Khôi phục chuẩn vai trò</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Permissions Summary Banner -->
+    <div class="summary-banner" [class.banner-changed]="hasUnsavedChanges()">
+      <div class="summary-stats">
+        <span>Thống kê quyền được cấp: <strong>{{ grantedCount() }} / {{ totalActionsCount() }}</strong> thao tác</span>
+        <span class="stat-sep">•</span>
+        <span>Số chức năng hiển thị: <strong>{{ filteredFeatures().length }}</strong> mục</span>
+      </div>
+      @if (hasUnsavedChanges()) {
+        <div class="unsaved-badge">
+          <span>Có thay đổi chưa lưu</span>
+        </div>
+      }
+    </div>
+
+    <!-- Permissions Matrix Table -->
+    <div class="table-card">
+      <div class="table-responsive">
+        <table class="matrix-table">
+          <thead>
+            <tr>
+              <th class="col-feature">CHỨC NĂNG HỆ THỐNG (THEO DÒNG)</th>
+              @for (col of actionColumns; track col.key) {
+                <th class="col-action text-center">
+                  <div class="action-header-content">
+                    <span class="action-title">{{ col.label }}</span>
+                    <label class="toggle-col-label" [title]="'Chọn/bỏ toàn bộ cột ' + col.label">
+                      <input
+                        type="checkbox"
+                        [checked]="isColumnAllChecked(col.key)"
+                        (change)="toggleColumn(col.key)"
+                      />
+                      <small>Cả cột</small>
+                    </label>
+                  </div>
+                </th>
+              }
+              <th class="col-all text-center">TOÀN QUYỀN</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (f of filteredFeatures(); track f.featureId) {
+              <tr class="feature-row" [class.row-all-checked]="isRowAllChecked(f)">
+                <!-- Feature Info -->
+                <td class="col-feature">
+                  <div class="feature-info">
+                    <div class="feature-badge">{{ f.featureId }}</div>
+                    <div class="feature-text">
+                      <span class="feature-name">{{ f.featureName }}</span>
+                      <span class="feature-cat">{{ f.category }}</span>
+                    </div>
+                  </div>
+                </td>
+
+                <!-- Action: Xem -->
+                <td class="col-action text-center" (click)="toggleAction(f, 'view')">
+                  <input
+                    type="checkbox"
+                    class="perm-checkbox"
+                    [checked]="f.actions.view"
+                    (click)="$event.stopPropagation()"
+                    (change)="toggleAction(f, 'view')"
+                  />
+                </td>
+
+                <!-- Action: Thêm mới -->
+                <td class="col-action text-center" (click)="toggleAction(f, 'create')">
+                  <input
+                    type="checkbox"
+                    class="perm-checkbox"
+                    [checked]="f.actions.create"
+                    (click)="$event.stopPropagation()"
+                    (change)="toggleAction(f, 'create')"
+                  />
+                </td>
+
+                <!-- Action: Chỉnh sửa -->
+                <td class="col-action text-center" (click)="toggleAction(f, 'edit')">
+                  <input
+                    type="checkbox"
+                    class="perm-checkbox"
+                    [checked]="f.actions.edit"
+                    (click)="$event.stopPropagation()"
+                    (change)="toggleAction(f, 'edit')"
+                  />
+                </td>
+
+                <!-- Action: Xóa -->
+                <td class="col-action text-center" (click)="toggleAction(f, 'delete')">
+                  <input
+                    type="checkbox"
+                    class="perm-checkbox"
+                    [checked]="f.actions.delete"
+                    (click)="$event.stopPropagation()"
+                    (change)="toggleAction(f, 'delete')"
+                  />
+                </td>
+
+                <!-- Action: Duyệt -->
+                <td class="col-action text-center" (click)="toggleAction(f, 'approve')">
+                  <input
+                    type="checkbox"
+                    class="perm-checkbox"
+                    [checked]="f.actions.approve"
+                    (click)="$event.stopPropagation()"
+                    (change)="toggleAction(f, 'approve')"
+                  />
+                </td>
+
+                <!-- Action: Xuất dữ liệu -->
+                <td class="col-action text-center" (click)="toggleAction(f, 'export')">
+                  <input
+                    type="checkbox"
+                    class="perm-checkbox"
+                    [checked]="f.actions.export"
+                    (click)="$event.stopPropagation()"
+                    (change)="toggleAction(f, 'export')"
+                  />
+                </td>
+
+                <!-- Toggle Whole Row -->
+                <td class="col-all text-center" (click)="toggleRow(f)">
+                  <button
+                    type="button"
+                    class="row-toggle-btn"
+                    [class.btn-active]="isRowAllChecked(f)"
+                    [title]="isRowAllChecked(f) ? 'Bỏ chọn toàn bộ chức năng này' : 'Chọn toàn bộ chức năng này'"
+                  >
+                    {{ isRowAllChecked(f) ? 'Toàn quyền' : 'Tùy biến' }}
+                  </button>
+                </td>
+              </tr>
+            }
+
+            @if (filteredFeatures().length === 0) {
+              <tr>
+                <td colspan="8" class="empty-state">
+                  <p>Không tìm thấy chức năng nào phù hợp với từ khóa "{{ searchKeyword() }}".</p>
+                  <button type="button" class="btn btn-secondary btn-sm" (click)="searchKeyword.set('')">Xóa tìm kiếm</button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Table Footer -->
+      <footer class="table-footer">
+        <div class="footer-note">
+          <span>* Ghi chú: Cột thao tác tương ứng với từng chức năng. Thay đổi sẽ có hiệu lực ngay sau khi bấm <strong>Lưu quyền phân bổ</strong>.</span>
+        </div>
+        <div class="footer-actions">
+          <button type="button" class="btn btn-secondary" (click)="resetToRoleDefault()">Đặt lại</button>
+          <button type="button" class="btn btn-primary" (click)="savePermissions()" [disabled]="isLoading()">Lưu quyền phân bổ</button>
+        </div>
+      </footer>
+    </div>
+
+    <!-- Detail & Activity Log Modal -->
+    @if (isModalOpen()) {
+      <app-form-modal
+        [isOpen]="true"
+        title="Chi tiết &amp; Lịch sử phân quyền"
+        subtitle="Thông tin phân quyền và nhật ký thay đổi vai trò hệ thống"
+        size="lg"
+        [showFooter]="false"
+        (close)="closeModal()"
+      >
+        <!-- Modal Navigation Tabs -->
+        <div class="modal-tab-nav">
+          <button
+            type="button"
+            class="tab-nav-btn"
+            [class.active]="activeModalTab() === 'info'"
+            (click)="activeModalTab.set('info')"
+          >
+            Thông tin vai trò
+          </button>
+          <button
+            type="button"
+            class="tab-nav-btn"
+            [class.active]="activeModalTab() === 'history'"
+            (click)="activeModalTab.set('history')"
+          >
+            Lịch sử thao tác
+          </button>
+        </div>
+
+        <!-- Tab 1: Info -->
+        @if (activeModalTab() === 'info') {
+          <div class="modal-body-content">
+            <div class="info-group">
+              <span class="info-label">VAI TRÒ HIỆN TẠI</span>
+              <div class="info-val-wrap">
+                <span class="role-pill" [ngClass]="currentRole().badgeClass">{{ currentRole().name }}</span>
+                <p class="info-desc">{{ currentRole().description }}</p>
+              </div>
+            </div>
+
+            <div class="info-group">
+              <span class="info-label">NHÂN VIÊN THUỘC VAI TRÒ NÀY ({{ filteredStaffList().length }} nhân viên)</span>
+              <div class="staff-tag-list">
+                @for (st of filteredStaffList(); track st.id) {
+                  <div class="staff-tag">
+                    <div class="staff-avatar">{{ st.avatar }}</div>
+                    <div class="staff-details">
+                      <span class="staff-name">{{ st.name }}</span>
+                      <span class="staff-code">{{ st.code }} · {{ st.email }}</span>
+                    </div>
+                  </div>
+                }
+                @if (filteredStaffList().length === 0) {
+                  <p style="color: #94a3b8; font-size: 13px; font-style: italic;">Chưa có nhân viên nào được gán vai trò này.</p>
+                }
+              </div>
+            </div>
+
+            <div class="info-group">
+              <span class="info-label">TỔNG QUAN PHÂN BỔ QUYỀN HẠN</span>
+              <p class="info-stat-highlight">
+                Đang cấp <strong>{{ grantedCount() }}</strong> quyền hạn trên tổng số <strong>{{ totalActionsCount() }}</strong> quyền khả dụng của hệ thống LIVORA.
+              </p>
             </div>
           </div>
+        }
 
-          <div class="info-group">
-            <span class="info-label">TỔNG QUAN PHÂN BỔ QUYỀN HẠN</span>
-            <p class="info-stat-highlight">
-              Đang cấp <strong>{{ grantedCount() }}</strong> quyền hạn trên tổng số <strong>{{ totalActionsCount() }}</strong> quyền khả dụng của hệ thống LIVORA.
-            </p>
+        <!-- Tab 2: Activity Log -->
+        @if (activeModalTab() === 'history') {
+          <div class="modal-body-content history-wrap">
+            <app-activity-log
+              entityType="permission"
+              [entityId]="selectedStaffId() !== 'all' ? selectedStaffId() : selectedRoleCode()"
+              [entityCode]="selectedStaffId() !== 'all' ? (currentStaff()?.code || '') : currentRole().name"
+            ></app-activity-log>
           </div>
-        </div>
-      }
-
-      <!-- Tab 2: Activity Log -->
-      @if (activeModalTab() === 'history') {
-        <div class="modal-body-content history-wrap">
-          <app-activity-log
-            entityType="permission"
-            [entityId]="selectedStaffId() !== 'all' ? selectedStaffId() : selectedRoleCode()"
-            [entityCode]="selectedStaffId() !== 'all' ? (currentStaff()?.code || '') : currentRole().name"
-          ></app-activity-log>
-        </div>
-      }
-    </app-form-modal>
+        }
+      </app-form-modal>
+    }
   }
 
   <!-- Toast Notification -->
@@ -347,4 +387,3 @@
     </div>
   }
 </div>
-

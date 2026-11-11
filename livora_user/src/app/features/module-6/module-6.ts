@@ -374,6 +374,87 @@ export class Module6 implements OnInit {
     }
   }
 
+  // ====== HOÀN TIỀN (REFUND) ======
+  showRefundModal = false;
+  refundReason = 'Sản phẩm lỗi kỹ thuật hoặc trầy xước trong quá trình vận chuyển';
+  refundType: 'full' | 'partial' = 'full';
+  refundBankName = '';
+  refundBankAccountNumber = '';
+  refundBankAccountOwner = '';
+  submittingRefund = false;
+  refundError = '';
+  refundSuccessToast = '';
+
+  get canRequestRefund(): boolean {
+    if (!this.orderInfo) return false;
+    const status = (this.orderInfo.status || '').toLowerCase();
+    const pmStatus = (this.orderInfo.paymentStatus || '').toLowerCase();
+    const isPaid = pmStatus.includes('paid') || pmStatus.includes('đã thanh toán');
+
+    // Điều kiện hoàn tiền:
+    // 1. Đơn đã hoàn thành / đã giao thành công (delivered / completed / đã hoàn thành) -> được phép hủy đổi trả & yêu cầu hoàn tiền
+    // 2. Hoặc đơn đã thanh toán (paid) mà bị hủy hoặc đang chờ giao
+    const isDeliveredOrCompleted = ['delivered', 'completed', 'đã hoàn thành', 'hoàn thành', 'đã giao'].some(st => status.includes(st));
+    return isDeliveredOrCompleted || (isPaid && (status === 'cancelled' || status === 'confirmed' || status === 'processing' || status === 'pending'));
+  }
+
+  openRefundModal(): void {
+    if (!this.orderInfo) return;
+    this.showRefundModal = true;
+    this.refundError = '';
+    this.refundBankAccountOwner = this.orderInfo.customer?.name || '';
+  }
+
+  closeRefundModal(): void {
+    this.showRefundModal = false;
+    this.refundError = '';
+  }
+
+  async submitRefundRequest(): Promise<void> {
+    if (!this.orderInfo) return;
+    if (!this.refundReason.trim()) {
+      this.refundError = 'Vui lòng nhập lý do yêu cầu hoàn tiền.';
+      return;
+    }
+    if (!this.refundBankName.trim() || !this.refundBankAccountNumber.trim()) {
+      this.refundError = 'Vui lòng cung cấp đầy đủ tên ngân hàng và số tài khoản nhận tiền hoàn.';
+      return;
+    }
+
+    this.submittingRefund = true;
+    this.refundError = '';
+
+    try {
+      const res = await fetch(`${environment.apiBaseUrl}/refunds`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          orderCode: this.orderInfo.code,
+          phone: this.orderInfo.customer?.phone || '',
+          reason: this.refundReason.trim(),
+          refundType: this.refundType,
+          bankName: this.refundBankName.trim(),
+          bankAccountNumber: this.refundBankAccountNumber.trim(),
+          bankAccountOwner: this.refundBankAccountOwner.trim() || this.orderInfo.customer?.name,
+        }),
+      });
+
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.success) {
+        this.refundError = data.message || 'Không thể gửi yêu cầu hoàn tiền. Vui lòng thử lại sau.';
+        return;
+      }
+
+      this.showRefundModal = false;
+      this.refundSuccessToast = `Yêu cầu hoàn tiền cho đơn hàng #${this.orderInfo.code} đã được gửi thành công! Kế toán LIVORA sẽ liên hệ và xử lý chuyển tiền trong 24h làm việc.`;
+    } catch {
+      this.refundError = 'Có lỗi xảy ra khi kết nối máy chủ. Vui lòng thử lại.';
+    } finally {
+      this.submittingRefund = false;
+      this.cdr.detectChanges();
+    }
+  }
+
   // ====== HELPER MAPPING ======
   private mapRawOrderToTracking(o: any): TrackingOrder {
     const rawStatus = (o.orderStatus || 'pending').toLowerCase();

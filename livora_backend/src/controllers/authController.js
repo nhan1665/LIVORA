@@ -2,6 +2,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const Staff = require('../models/Staff');
 const Employee = require('../models/Employee');
+const Role = require('../models/Role');
 const Customer = require('../models/Customer');
 const { logActivityInternal } = require('./activityLogController');
 const { sendSuccess, sendError } = require('../utils/responseHelper');
@@ -74,13 +75,29 @@ const staffLogin = async (req, res) => {
       return sendError(res, 'Mật khẩu không chính xác. Vui lòng kiểm tra lại.', 401);
     }
 
+    // Determine role code and fetch role configuration
+    let roleCode = (employee.role || '').toUpperCase();
+    if (['ADMIN', 'QUẢN TRỊ VIÊN', 'QUAN_TRI_VIEN', 'QUANTRIVIEN', ''].includes(roleCode) || ['admin', 'DTNHAN', 'dtnhan'].includes(employee.username)) {
+      roleCode = 'SUPER_ADMIN';
+    }
+
+    const roleDoc = await Role.findOne({
+      $or: [{ code: roleCode }, { name: employee.role }],
+    }).lean();
+
+    const finalRoleCode = roleDoc ? roleDoc.code : roleCode;
+    const finalRoleName = roleDoc ? roleDoc.name : (employee.role || 'Quản trị viên');
+    const allowedMenus = roleDoc ? roleDoc.allowedMenus : [];
+    const allowedRoutes = roleDoc ? roleDoc.allowedRoutes : [];
+    const useCases = roleDoc ? roleDoc.useCases : [];
+
     const token = generateToken({
       id: employee._id.toString(),
       code: employee.code,
       username: employee.username || employee.code,
       fullName: employee.fullName || employee.code,
       email: employee.email,
-      role: employee.role || 'Quản trị viên',
+      role: finalRoleCode,
     });
 
     return sendSuccess(
@@ -94,7 +111,11 @@ const staffLogin = async (req, res) => {
           fullName: employee.fullName || employee.code,
           email: employee.email,
           phone: employee.phone || '',
-          role: employee.role || 'Quản trị viên',
+          role: finalRoleCode,
+          roleName: finalRoleName,
+          allowedMenus,
+          allowedRoutes,
+          useCases,
         },
       },
       'Đăng nhập quản trị thành công.'
@@ -245,6 +266,85 @@ const staffResetPassword = async (req, res) => {
   } catch (error) {
     console.error('staffResetPassword error:', error);
     return sendError(res, 'Lỗi hệ thống khi đặt lại mật khẩu.', 500);
+  }
+};
+
+/**
+ * @desc    Đổi mật khẩu tài khoản quản trị / nhân viên
+ * @route   POST /api/auth/admin/change-password
+ */
+const staffChangePassword = async (req, res) => {
+  try {
+    const { employeeId, code: altCode, username, currentPassword, newPassword } = req.body;
+    const bearer = req.get('authorization') || '';
+    const token = /^Bearer\s+(.+)$/i.exec(bearer)?.[1];
+    let tokenUserId = null;
+
+    if (token) {
+      try {
+        const decoded = jwt.verify(token, JWT_SECRET);
+        tokenUserId = decoded.id;
+      } catch (err) {
+        // continue
+      }
+    }
+
+    if (!currentPassword || !newPassword) {
+      return sendError(res, 'Vui lòng nhập mật khẩu hiện tại và mật khẩu mới.', 400);
+    }
+
+    if (newPassword.length < 6) {
+      return sendError(res, 'Mật khẩu mới phải có tối thiểu 6 ký tự.', 400);
+    }
+
+    const targetId = tokenUserId || employeeId;
+    const lookupCode = (altCode || username || '').trim().toUpperCase();
+
+    let employee = null;
+    if (targetId) {
+      employee = await Employee.findById(targetId) || await Staff.findById(targetId);
+    }
+    if (!employee && lookupCode) {
+      employee = await Employee.findOne({ $or: [{ code: lookupCode }, { username: lookupCode }, { username: lookupCode.toLowerCase() }] })
+        || await Staff.findOne({ $or: [{ code: lookupCode }, { username: lookupCode }, { username: lookupCode.toLowerCase() }] });
+    }
+
+    if (!employee) {
+      return sendError(res, 'Không tìm thấy tài khoản nhân viên.', 404);
+    }
+
+    let isMatch = false;
+    if (employee.passwordHash) {
+      isMatch = await bcrypt.compare(currentPassword, employee.passwordHash);
+    }
+    if (!isMatch) {
+      return sendError(res, 'Mật khẩu hiện tại không chính xác.', 400);
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const passwordHash = await bcrypt.hash(newPassword, salt);
+    employee.passwordHash = passwordHash;
+    await employee.save();
+
+    if (employee.code) {
+      await Employee.updateOne({ code: employee.code }, { passwordHash });
+      await Staff.updateOne({ code: employee.code }, { passwordHash });
+    }
+
+    logActivityInternal({
+      entityType: 'employee',
+      entityId: employee._id.toString(),
+      entityCode: employee.code,
+      action: 'Đổi mật khẩu thành công',
+      performedBy: employee.fullName || employee.code,
+      role: employee.role || 'Quản trị viên',
+      details: `Nhân viên ${employee.code} (${employee.fullName}) đã đổi mật khẩu cá nhân thành công.`,
+    });
+
+    return sendSuccess(res, null, 'Đổi mật khẩu thành công!');
+  } catch (error) {
+    console.error('staffChangePassword error:', error);
+    return sendError(res, 'Lỗi hệ thống khi đổi mật khẩu.', 500);
   }
 };
 
@@ -563,6 +663,7 @@ module.exports = {
   adminLogin: staffLogin,
   staffForgotPassword,
   staffResetPassword,
+  staffChangePassword,
   customerRegister,
   customerLogin,
   customerForgotPassword,

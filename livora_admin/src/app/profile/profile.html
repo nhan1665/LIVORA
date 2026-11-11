@@ -1,0 +1,190 @@
+<div class="profile-page">
+  <!-- Header -->
+  <div class="profile-head">
+    <div>
+      <h1 class="profile-title">Hồ Sơ Cá Nhân &amp; Tài Khoản</h1>
+      <p class="profile-subtitle">Xem thông tin định danh, vai trò phân quyền và cập nhật mật khẩu đăng nhập hệ thống.</p>
+    </div>
+  </div>
+
+  <div class="profile-grid">
+    <!-- Left Column: User Details & Role Card -->
+    <div class="card-box info-card">
+      <div class="user-hero">
+        <div class="avatar-circle">
+          <span>{{ getInitials() }}</span>
+        </div>
+        <div class="user-hero-meta">
+          <h2 class="hero-name">{{ user?.fullName || user?.username || 'Quản trị viên' }}</h2>
+          <span class="hero-code">Mã nhân viên: <strong>{{ user?.code || 'NV-0001' }}</strong></span>
+          <div class="role-pill" [ngClass]="getRoleBadgeClass(roleCode)">
+            <i class="bi bi-shield-lock-fill"></i>
+            <span>{{ roleDisplayName }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <h3 class="section-title">Thông Tin Định Danh</h3>
+      <div class="info-list">
+        <div class="info-row">
+          <span class="info-label"><i class="bi bi-person-badge"></i> Họ và tên</span>
+          <span class="info-val font-semibold">{{ user?.fullName || 'Chưa cập nhật' }}</span>
+        </div>
+
+        <div class="info-row">
+          <span class="info-label"><i class="bi bi-upc-scan"></i> Tên đăng nhập</span>
+          <span class="info-val">{{ user?.username || user?.code }}</span>
+        </div>
+
+        <div class="info-row">
+          <span class="info-label"><i class="bi bi-envelope"></i> Địa chỉ Email</span>
+          <span class="info-val">{{ user?.email || 'admin@livora.com' }}</span>
+        </div>
+
+        <div class="info-row">
+          <span class="info-label"><i class="bi bi-telephone"></i> Số điện thoại</span>
+          <span class="info-val">{{ user?.phone || '0901234567' }}</span>
+        </div>
+
+        <div class="info-row">
+          <span class="info-label"><i class="bi bi-key-fill"></i> Vai trò actor</span>
+          <span class="info-val font-semibold text-primary">{{ roleCode || 'SUPER_ADMIN' }}</span>
+        </div>
+      </div>
+
+      <div class="role-note-box">
+        <i class="bi bi-info-circle-fill"></i>
+        <div class="role-note-text">
+          <strong>Phạm vi truy cập:</strong> Tài khoản của bạn được cấp quyền dựa trên vai trò <em>{{ roleDisplayName }}</em> theo đúng mô hình phân quyền quản trị của LIVORA.
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column: Change Password Card -->
+    <div class="card-box pass-card">
+      <div class="card-head">
+        <div>
+          <h2 class="card-title">Đổi Mật Khẩu Đăng Nhập</h2>
+          <p class="card-subtitle">Khuyến nghị sử dụng mật khẩu mạnh kết hợp chữ cái và số để bảo vệ an toàn tài khoản.</p>
+        </div>
+        <div class="icon-lock-header">
+          <i class="bi bi-shield-check"></i>
+        </div>
+      </div>
+
+      <!-- Alerts -->
+      <div class="alert-box alert-success" *ngIf="successMessage">
+        <i class="bi bi-check-circle-fill"></i>
+        <span>{{ successMessage }}</span>
+      </div>
+
+      <div class="alert-box alert-error" *ngIf="errorMessage">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        <span>{{ errorMessage }}</span>
+      </div>
+
+      <form class="pass-form" (ngSubmit)="onSubmitChangePassword()">
+        <!-- Current Password -->
+        <div class="form-group">
+          <label class="form-label" for="currentPassword">
+            <span>Mật khẩu hiện tại</span>
+            <span class="text-danger">*</span>
+          </label>
+          <div class="input-wrap">
+            <input
+              [type]="showCurrentPassword ? 'text' : 'password'"
+              id="currentPassword"
+              name="currentPassword"
+              [(ngModel)]="currentPassword"
+              class="form-input"
+              placeholder="Nhập mật khẩu hiện tại"
+              autocomplete="current-password"
+              required
+            />
+            <button
+              type="button"
+              class="btn-toggle-eye"
+              (click)="showCurrentPassword = !showCurrentPassword"
+              tabindex="-1"
+            >
+              <i class="bi" [ngClass]="showCurrentPassword ? 'bi-eye-slash' : 'bi-eye'"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- New Password -->
+        <div class="form-group">
+          <label class="form-label" for="newPassword">
+            <span>Mật khẩu mới</span>
+            <span class="text-danger">*</span>
+          </label>
+          <div class="input-wrap">
+            <input
+              [type]="showNewPassword ? 'text' : 'password'"
+              id="newPassword"
+              name="newPassword"
+              [(ngModel)]="newPassword"
+              class="form-input"
+              placeholder="Tối thiểu 6 ký tự"
+              autocomplete="new-password"
+              required
+            />
+            <button
+              type="button"
+              class="btn-toggle-eye"
+              (click)="showNewPassword = !showNewPassword"
+              tabindex="-1"
+            >
+              <i class="bi" [ngClass]="showNewPassword ? 'bi-eye-slash' : 'bi-eye'"></i>
+            </button>
+          </div>
+          <span class="form-hint">Mật khẩu phải có từ 6 ký tự trở lên.</span>
+        </div>
+
+        <!-- Confirm Password -->
+        <div class="form-group">
+          <label class="form-label" for="confirmPassword">
+            <span>Xác nhận mật khẩu mới</span>
+            <span class="text-danger">*</span>
+          </label>
+          <div class="input-wrap">
+            <input
+              [type]="showConfirmPassword ? 'text' : 'password'"
+              id="confirmPassword"
+              name="confirmPassword"
+              [(ngModel)]="confirmPassword"
+              class="form-input"
+              placeholder="Nhập lại mật khẩu mới"
+              autocomplete="new-password"
+              required
+            />
+            <button
+              type="button"
+              class="btn-toggle-eye"
+              (click)="showConfirmPassword = !showConfirmPassword"
+              tabindex="-1"
+            >
+              <i class="bi" [ngClass]="showConfirmPassword ? 'bi-eye-slash' : 'bi-eye'"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Submit Button -->
+        <div class="form-actions">
+          <button
+            type="submit"
+            class="btn-submit"
+            [disabled]="isSubmitting || !currentPassword || !newPassword || !confirmPassword"
+          >
+            <i class="bi bi-arrow-repeat spin-icon" *ngIf="isSubmitting"></i>
+            <i class="bi bi-check2-circle" *ngIf="!isSubmitting"></i>
+            <span>{{ isSubmitting ? 'Đang cập nhật...' : 'Cập Nhật Mật Khẩu' }}</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+

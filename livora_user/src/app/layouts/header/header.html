@@ -39,14 +39,81 @@
       <a routerLink="/design" routerLinkActive="active" class="nav-link">Không gian</a>
     </nav>
 
-    <!-- Search Bar -->
-    <div class="search-container">
-      <button class="search-btn" aria-label="Tìm kiếm" title="Tìm kiếm">
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
-          <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
-        </svg>
-      </button>
-      <input type="text" class="search-input" placeholder="Bạn đang tìm kiếm gì?">
+    <!-- Search Bar with Live Results -->
+    <div class="search-wrapper">
+      <div class="search-container">
+        <button type="button" class="search-btn" (click)="executeSearch()" aria-label="Tìm kiếm" title="Tìm kiếm">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+            <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 14z"/>
+          </svg>
+        </button>
+        <input
+          type="text"
+          class="search-input"
+          placeholder="Bạn đang tìm kiếm gì?"
+          [(ngModel)]="searchKeyword"
+          (input)="onSearchInput()"
+          (keydown.enter)="executeSearch()"
+          (focus)="onSearchFocus()"
+        />
+        <button
+          *ngIf="searchKeyword.trim()"
+          type="button"
+          class="search-clear-btn"
+          (click)="clearSearch()"
+          aria-label="Xóa từ khóa"
+          title="Xóa"
+        >
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Live Search Results Dropdown -->
+      <div *ngIf="showSearchDropdown && searchKeyword.trim().length >= 2" class="search-results-dropdown">
+        <!-- Loading State -->
+        <div *ngIf="isSearching" class="search-dropdown-loading">
+          <div class="search-spinner"></div>
+          <span>Đang tìm kiếm sản phẩm...</span>
+        </div>
+
+        <!-- Results List -->
+        <div *ngIf="!isSearching && searchResults.length > 0" class="search-results-list">
+          <div class="search-results-header">
+            <span>Sản phẩm gợi ý ({{ searchResults.length }})</span>
+          </div>
+
+          <div
+            *ngFor="let item of searchResults"
+            class="search-result-item"
+            (click)="selectProduct(item)"
+          >
+            <img [src]="item.thumbnail || 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=200'" [alt]="item.name" class="search-item-thumb">
+            <div class="search-item-info">
+              <h4 class="search-item-title">{{ item.name }}</h4>
+              <div class="search-item-meta">
+                <span class="search-item-price">{{ (item.salePrice || item.price) | number:'1.0-0' }} ₫</span>
+                <span *ngIf="item.categoryName" class="search-item-badge">{{ item.categoryName }}</span>
+              </div>
+            </div>
+          </div>
+
+          <button type="button" class="search-view-all-btn" (click)="executeSearch()">
+            <span>Xem tất cả kết quả cho "{{ searchKeyword }}"</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M5 12h14M12 5l7 7-7 7"/>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Empty State -->
+        <div *ngIf="!isSearching && searchResults.length === 0" class="search-results-empty">
+          <p>Không tìm thấy sản phẩm nào khớp với <strong>"{{ searchKeyword }}"</strong></p>
+          <small>Thử tìm với từ khóa khác như "bàn", "sofa", "ghế", "giường"...</small>
+        </div>
+      </div>
     </div>
 
     <!-- Icons Section -->
