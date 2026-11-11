@@ -277,7 +277,7 @@ const toggleRoom = async (req, res) => {
 };
 
 /**
- * @desc    Delete room
+ * @desc    Ngưng hoạt động phòng kiến trúc (soft-deactivate, không xóa khỏi DB)
  * @route   DELETE /api/rooms/:id
  */
 const deleteRoom = async (req, res) => {
@@ -287,21 +287,23 @@ const deleteRoom = async (req, res) => {
       return sendError(res, 'Không tìm thấy phòng.', 404);
     }
 
+    room.isActive = false;
+    await room.save();
+
     logActivityInternal({
       entityType: 'room',
       entityId: room._id.toString(),
       entityCode: room.code,
-      action: 'Xóa phòng kiến trúc',
+      action: 'Ngưng hoạt động phòng kiến trúc',
       performedBy: 'Quản trị viên (Admin)',
       role: 'admin',
-      details: `Đã xóa phòng ${room.name} (${room.code}) khỏi hệ thống`,
+      details: `Đã chuyển phòng ${room.name} (${room.code}) sang trạng thái Ngưng hoạt động`,
     });
 
-    await Room.findByIdAndDelete(req.params.id);
-    return sendSuccess(res, null, 'Xóa phòng thành công.');
+    return sendSuccess(res, { id: room._id.toString(), isActive: false }, 'Đã chuyển phòng sang trạng thái ngưng hoạt động.');
   } catch (error) {
     console.error('deleteRoom error:', error);
-    return sendError(res, 'Không thể xóa phòng.', 500);
+    return sendError(res, 'Không thể ngưng hoạt động phòng.', 500);
   }
 };
 

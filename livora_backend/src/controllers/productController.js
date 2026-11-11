@@ -760,7 +760,7 @@ const toggleProduct = async (req, res) => {
 };
 
 /**
- * @desc    Delete product
+ * @desc    Ngưng kinh doanh sản phẩm (soft-deactivate, không xóa khỏi DB)
  * @route   DELETE /api/products/:id
  */
 const deleteProduct = async (req, res) => {
@@ -768,21 +768,24 @@ const deleteProduct = async (req, res) => {
     const product = await Product.findById(req.params.id);
     if (!product) return sendError(res, 'Không tìm thấy sản phẩm.', 404);
 
+    product.status = 'inactive';
+    product.isActive = false;
+    await product.save();
+
     logActivityInternal({
       entityType: 'product',
       entityId: product._id.toString(),
       entityCode: product.sku,
-      action: 'Xóa sản phẩm khỏi hệ thống',
+      action: 'Ngưng kinh doanh sản phẩm',
       performedBy: 'Quản trị viên (Admin)',
       role: 'admin',
-      details: `Đã xóa sản phẩm ${product.name} (SKU: ${product.sku})`,
+      details: `Đã chuyển sản phẩm ${product.name} (SKU: ${product.sku}) sang trạng thái Ngưng kinh doanh`,
     });
 
-    await Product.findByIdAndDelete(req.params.id);
-    return sendSuccess(res, null, 'Xóa sản phẩm thành công.');
+    return sendSuccess(res, { id: product._id.toString(), status: 'inactive', isActive: false }, 'Đã chuyển sản phẩm sang trạng thái ngưng kinh doanh.');
   } catch (error) {
     console.error('deleteProduct error:', error);
-    return sendError(res, 'Không thể xóa sản phẩm.', 500);
+    return sendError(res, 'Không thể cập nhật trạng thái sản phẩm.', 500);
   }
 };
 
@@ -996,6 +999,90 @@ const importProductsFromExcel = async (req, res) => {
   }
 };
 
+/**
+ * @desc    Nhập hàng tăng tồn kho (Cộng thêm số lượng, không thay thế)
+ * @route   POST /api/products/restock
+ */
+const restockProducts = async (req, res) => {
+  try {
+    const rawItems = Array.isArray(req.body)
+      ? req.body
+      : (req.body.items || req.body.products || []);
+
+    if (!Array.isArray(rawItems) || rawItems.length === 0) {
+      return sendError(res, 'Danh sách nhập hàng trống hoặc không hợp lệ.', 400);
+    }
+
+    const updatedItems = [];
+    const notFoundItems = [];
+
+    for (const item of rawItems) {
+      const rawSku = (item.sku || item.code || item.productId || item['Mã SKU'] || item['Mã SP'] || '').toString().trim();
+      const rawQty = item.quantity !== undefined ? item.quantity : (item.qty !== undefined ? item.qty : item['Số lượng']);
+      const addQty = parseInt(rawQty, 10);
+
+      if (!rawSku || isNaN(addQty) || addQty <= 0) {
+        continue;
+      }
+
+      let product = null;
+      if (mongoose.isValidObjectId(rawSku)) {
+        product = await Product.findById(rawSku);
+      }
+      if (!product) {
+        product = await Product.findOne({ sku: { $regex: new RegExp(`^${rawSku}$`, 'i') } });
+      }
+      if (!product) {
+        product = await Product.findOne({ code: { $regex: new RegExp(`^${rawSku}$`, 'i') } });
+      }
+
+      if (!product) {
+        notFoundItems.push(rawSku);
+        continue;
+      }
+
+      const prevStock = Number(product.stockQuantity) || 0;
+      const newStock = prevStock + addQty;
+      product.stockQuantity = newStock;
+      await product.save();
+
+      logActivityInternal({
+        entityType: 'product',
+        entityId: product._id.toString(),
+        entityCode: product.sku,
+        action: 'Nhập hàng tăng tồn kho',
+        performedBy: 'Quản trị viên (Admin)',
+        role: 'admin',
+        details: `Nhập thêm +${addQty} sản phẩm vào kho. Tồn kho cũ: ${prevStock} -> Tồn kho mới: ${newStock}`,
+      });
+
+      updatedItems.push({
+        id: product._id.toString(),
+        sku: product.sku,
+        name: product.name,
+        addedQuantity: addQty,
+        previousStock: prevStock,
+        currentStock: newStock,
+      });
+    }
+
+    if (updatedItems.length === 0) {
+      return sendError(res, 'Không có mã sản phẩm nào khớp trong hệ thống để tăng tồn kho.', 404);
+    }
+
+    return sendSuccess(res, {
+      totalReceived: rawItems.length,
+      updatedCount: updatedItems.length,
+      notFoundCount: notFoundItems.length,
+      updatedItems,
+      notFoundItems,
+    }, `Đã cộng thêm tồn kho thành công cho ${updatedItems.length} sản phẩm.`);
+  } catch (error) {
+    console.error('restockProducts error:', error);
+    return sendError(res, error.message || 'Không thể thực hiện nhập hàng tăng tồn.', 500);
+  }
+};
+
 module.exports = {
   getProducts,
   getProductById,
@@ -1004,6 +1091,7 @@ module.exports = {
   toggleProduct,
   deleteProduct,
   importProductsFromExcel,
+  restockProducts,
   syncSoldQuantities,
   syncProductRatingsAndReviews,
 };

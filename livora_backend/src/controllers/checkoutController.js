@@ -145,21 +145,6 @@ async function createCheckoutOrder(req, res) {
               requested: item.quantity,
               available: Math.max(0, avail),
             });
-            await Product.updateOne(
-              { _id: item.productId },
-              { $set: { stockQuantity: 0, stockStatus: 'out_of_stock' }, $inc: { soldQuantity: item.quantity } },
-              { session }
-            );
-          } else {
-            const newStock = avail - item.quantity;
-            await Product.updateOne(
-              { _id: item.productId },
-              {
-                $inc: { stockQuantity: -item.quantity, soldQuantity: item.quantity },
-                $set: { stockStatus: newStock === 0 ? 'out_of_stock' : 'in_stock' },
-              },
-              { session }
-            );
           }
         }
       }

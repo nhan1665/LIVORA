@@ -230,8 +230,9 @@
                             Bạn chưa có địa chỉ giao hàng nào. Vui lòng nhấn <strong>"Thêm địa chỉ"</strong> ở trên để bổ sung.
                         </p>
                     </ng-template>
-    </div>
+                </div>
             </fieldset>
+        </div>
 
         <!-- TAB 2: LỊCH SỬ ĐƠN HÀNG THẬT TỪ DATABASE -->
         <div *ngIf="activeTab === 'history'" class="history-container">
@@ -348,10 +349,11 @@
                             >
                                 <i class="bi bi-x-circle"></i> Hủy đơn hàng
                             </button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
-</div>
 
         <!-- TAB 3: ĐÁNH GIÁ SẢN PHẨM -->
         <div *ngIf="activeTab === 'reviews'" class="history-container">
@@ -438,9 +440,10 @@
                         >
                             {{ rev.status === 'visible' ? 'Đang hiển thị' : 'Đã ẩn' }}
                         </span>
+                    </div>
+                </div>
+            </div>
         </div>
-    </div>
-</div>
 
     </main>
 

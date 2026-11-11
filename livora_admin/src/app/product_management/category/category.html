@@ -124,8 +124,14 @@
                 <button type="button" class="btn-action-text" (click)="openEditModal(cat)" title="Chỉnh sửa loại">
                   Chỉnh sửa
                 </button>
-                <button type="button" class="btn-action-text btn-action-delete" (click)="confirmDelete(cat)" title="Xóa loại">
-                  Xóa
+                <button
+                  type="button"
+                  class="btn-action-text"
+                  [class.btn-action-delete]="cat.isActive"
+                  (click)="confirmDelete(cat)"
+                  [title]="cat.isActive ? 'Tạm dừng loại sản phẩm' : 'Kích hoạt lại loại sản phẩm'"
+                >
+                  {{ cat.isActive ? 'Tạm dừng' : 'Kích hoạt' }}
                 </button>
               </div>
             </td>

@@ -125,6 +125,13 @@ const formatOrderForResponse = (o) => ({
   note: o.notes || '',
   notes: o.notes || '',
   cancelReason: o.cancelReason || '',
+  exportSlipCode: o.exportSlipCode || null,
+  exportSlipStatus: o.exportSlipStatus || 'pending',
+  exportedAt: o.exportedAt || null,
+  isStockDeducted: Boolean(o.isStockDeducted),
+  isRestockedReturned: Boolean(o.isRestockedReturned),
+  restockedReturnedAt: o.restockedReturnedAt || null,
+  statusHistory: o.statusHistory || [],
   createdAt: o.createdAt,
   updatedAt: o.updatedAt,
 });
@@ -204,7 +211,24 @@ const getOrders = async (req, res) => {
       .limit(limit)
       .lean();
 
-    const items = orders.map(formatOrderForResponse);
+    const orderIds = orders.map((o) => o._id).filter(Boolean);
+    const linkedRefunds = orderIds.length
+      ? await Refund.find({ orderId: { $in: orderIds } }).lean()
+      : [];
+    const refundByOrderId = new Map(linkedRefunds.map((r) => [r.orderId.toString(), r]));
+
+    const items = orders.map((o) => {
+      const formatted = formatOrderForResponse(o);
+      const ref = refundByOrderId.get(o._id.toString());
+      if (ref) {
+        formatted.hasRefund = true;
+        formatted.refundId = ref._id.toString();
+        formatted.refundReason = ref.reason || '';
+        formatted.refundStatus = ref.status || 'pending';
+        formatted.refundAmount = ref.amount || 0;
+      }
+      return formatted;
+    });
 
     return sendPaginated(res, {
       items,
@@ -246,7 +270,17 @@ const getOrderById = async (req, res) => {
       return sendError(res, 'Không tìm thấy đơn hàng.', 404);
     }
 
-    return sendSuccess(res, formatOrderForResponse(order));
+    const formatted = formatOrderForResponse(order);
+    const linkedRefund = await Refund.findOne({ orderId: order._id }).lean();
+    if (linkedRefund) {
+      formatted.hasRefund = true;
+      formatted.refundId = linkedRefund._id.toString();
+      formatted.refundReason = linkedRefund.reason || '';
+      formatted.refundStatus = linkedRefund.status || 'pending';
+      formatted.refundAmount = linkedRefund.amount || 0;
+    }
+
+    return sendSuccess(res, formatted);
   } catch (error) {
     console.error('getOrderById error:', error);
     return sendError(res, 'Không thể tải thông tin đơn hàng.', 500);
@@ -493,8 +527,29 @@ const updateOrderStatus = async (req, res) => {
       return sendError(res, 'Đơn hàng đã bị hủy, không thể thay đổi trạng thái.', 400);
     }
 
+    if (status === 'shipping') {
+      if (order.exportSlipStatus !== 'exported') {
+        return sendError(res, 'Vui lòng thực hiện "Xuất hàng" trên Phiếu xuất bán trước khi chuyển đơn sang trạng thái Đang giao.', 400);
+      }
+    }
+
     order.orderStatus = status;
-    if (status === 'delivered') {
+    if (status === 'confirmed') {
+      if (!order.exportSlipCode) {
+        order.exportSlipCode = 'PX-' + order.orderCode.replace(/^LIV-/, '');
+      }
+      if (!order.exportSlipStatus) {
+        order.exportSlipStatus = 'pending';
+      }
+    } else if (status === 'shipping') {
+      if (!order.exportSlipCode) {
+        order.exportSlipCode = 'PX-' + order.orderCode.replace(/^LIV-/, '');
+      }
+      order.exportSlipStatus = 'exported';
+      if (!order.exportedAt) {
+        order.exportedAt = new Date();
+      }
+    } else if (status === 'delivered') {
       order.paymentStatus = 'paid';
     }
 
@@ -507,13 +562,149 @@ const updateOrderStatus = async (req, res) => {
       action: `Chuyển trạng thái đơn hàng sang "${status}"`,
       performedBy: 'Quản trị viên (Admin)',
       role: 'admin',
-      details: `Cập nhật trạng thái xử lý đơn hàng thành công.${status === 'delivered' ? ' Thanh toán tự động chuyển thành: Đã thanh toán.' : ''}`,
+      details: `Cập nhật trạng thái xử lý đơn hàng thành công.${status === 'confirmed' ? ' Đã tự động sinh Phiếu xuất bán #' + order.exportSlipCode : ''}${status === 'shipping' ? ' Đã xác nhận chuyển Đang giao.' : ''}${status === 'delivered' ? ' Thanh toán tự động chuyển thành: Đã thanh toán.' : ''}`,
     });
 
     return sendSuccess(res, formatOrderForResponse(order), 'Cập nhật trạng thái thành công.');
   } catch (error) {
     console.error('updateOrderStatus error:', error);
     return sendError(res, 'Không thể cập nhật trạng thái đơn hàng.', 500);
+  }
+};
+
+/**
+ * @desc    Xuất hàng cho đơn hàng: Trừ tồn kho sản phẩm, đánh dấu phiếu xuất là exported, mở khóa nút chuyển Đang giao
+ * @route   POST /api/orders/:id/export
+ */
+const exportOrder = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+    if (!order) return sendError(res, 'Không tìm thấy đơn hàng.', 404);
+
+    if (order.orderStatus === 'cancelled') {
+      return sendError(res, 'Đơn hàng đã bị hủy, không thể xuất hàng.', 400);
+    }
+
+    if (order.isStockDeducted && order.exportSlipStatus === 'exported') {
+      return sendError(res, 'Đơn hàng này đã được xuất kho và trừ tồn kho trước đó.', 400);
+    }
+
+    // Tiến hành trừ tồn kho sản phẩm và tăng lượt bán
+    const exportedItems = [];
+    for (const item of (order.items || [])) {
+      if (item.productId) {
+        const prod = await Product.findById(item.productId);
+        if (prod) {
+          const qty = Number(item.quantity) || 1;
+          const newStock = Math.max(0, (Number(prod.stockQuantity) || 0) - qty);
+          prod.stockQuantity = newStock;
+          prod.soldQuantity = (Number(prod.soldQuantity) || 0) + qty;
+          prod.stockStatus = newStock === 0 ? 'out_of_stock' : 'in_stock';
+          await prod.save();
+
+          exportedItems.push({
+            productId: prod._id.toString(),
+            name: prod.name,
+            sku: prod.sku,
+            quantity: qty,
+            remainingStock: newStock,
+          });
+        }
+      }
+    }
+
+    if (!order.exportSlipCode) {
+      order.exportSlipCode = 'PX-' + order.orderCode.replace(/^LIV-/, '');
+    }
+    order.isStockDeducted = true;
+    order.exportSlipStatus = 'exported';
+    order.exportedAt = new Date();
+
+    if (!order.statusHistory) order.statusHistory = [];
+    order.statusHistory.push({
+      status: order.orderStatus,
+      timestamp: new Date(),
+      note: `Xuất kho theo Phiếu #${order.exportSlipCode} - Đã trừ tồn kho (${exportedItems.length} mặt hàng). Mở khóa chuyển trạng thái Đang giao.`,
+      actor: 'Admin Warehouse',
+    });
+
+    await order.save();
+
+    logActivityInternal({
+      entityType: 'order',
+      entityId: order._id.toString(),
+      entityCode: order.orderCode,
+      action: 'Xuất kho phiếu bán hàng',
+      performedBy: 'Quản trị viên (Kho)',
+      role: 'admin',
+      details: `Đã xuất kho Phiếu #${order.exportSlipCode} và trừ tồn kho cho ${exportedItems.length} sản phẩm. Nút chuyển sang Đang giao đã được kích hoạt.`,
+    });
+
+    return sendSuccess(res, {
+      order: formatOrderForResponse(order),
+      exportedItems,
+    }, `Xuất hàng thành công! Đã trừ tồn kho cho đơn #${order.orderCode}. Nút chuyển sang Đang giao đã xuất hiện.`);
+  } catch (error) {
+    console.error('exportOrder error:', error);
+    return sendError(res, 'Không thể thực hiện xuất hàng.', 500);
+  }
+};
+
+/**
+ * @desc    Nhập kho hoàn trả cho đơn hàng đã giao (cộng dồn tồn kho ngược trở lại)
+ * @route   POST /api/orders/:id/return-restock
+ */
+const returnRestockOrder = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+    if (!order) return sendError(res, 'Không tìm thấy đơn hàng.', 404);
+
+    if (order.isRestockedReturned) {
+      return sendError(res, 'Đơn hàng này đã được thực hiện nhập kho hoàn trả trước đó.', 400);
+    }
+
+    const restockedItems = [];
+    for (const item of (order.items || [])) {
+      if (item.productId) {
+        const product = await Product.findById(item.productId);
+        if (product) {
+          const qty = Number(item.quantity) || 1;
+          const prev = Number(product.stockQuantity) || 0;
+          product.stockQuantity = prev + qty;
+          await product.save();
+
+          restockedItems.push({
+            productId: product._id.toString(),
+            sku: product.sku,
+            name: product.name,
+            quantity: qty,
+            newStock: product.stockQuantity,
+          });
+        }
+      }
+    }
+
+    order.isRestockedReturned = true;
+    order.restockedReturnedAt = new Date();
+    await order.save();
+
+    logActivityInternal({
+      entityType: 'order',
+      entityId: order._id.toString(),
+      entityCode: order.orderCode,
+      action: 'Nhập hàng hoàn trả về kho',
+      performedBy: 'Quản trị viên (Admin)',
+      role: 'admin',
+      details: `Đã hoàn nhập kho ${restockedItems.length} mặt hàng từ đơn hoàn trả #${order.orderCode}, cộng tồn kho thành công.`,
+    });
+
+    return sendSuccess(res, {
+      order: formatOrderForResponse(order),
+      restockedItems,
+    }, 'Đã nhập hàng về kho và cộng tồn thành công.');
+  } catch (error) {
+    console.error('returnRestockOrder error:', error);
+    return sendError(res, 'Không thể nhập hàng hoàn trả về kho.', 500);
   }
 };
 
@@ -628,10 +819,12 @@ const cancelOrder = async (req, res) => {
           { new: true, session }
         );
         if (!current) throw new Error('Order changed while cancelling.');
-        for (const item of current.items) {
-          const restored = await Product.updateOne({ _id: item.productId },
-            { $inc: { stockQuantity: item.quantity, soldQuantity: -item.quantity }, $set: { stockStatus: 'in_stock' } }, { session });
-          if (restored.matchedCount !== 1) throw new Error('Checkout product is missing; cancellation requires reconciliation.');
+        if (order.isStockDeducted) {
+          for (const item of current.items) {
+            const restored = await Product.updateOne({ _id: item.productId },
+              { $inc: { stockQuantity: item.quantity, soldQuantity: -item.quantity }, $set: { stockStatus: 'in_stock' } }, { session });
+            if (restored.matchedCount !== 1) throw new Error('Checkout product is missing; cancellation requires reconciliation.');
+          }
         }
         if (current.voucherId) {
           const restored = await Voucher.updateOne({ _id: current.voucherId, usedCount: { $gt: 0 } },
@@ -650,13 +843,16 @@ const cancelOrder = async (req, res) => {
       order.orderStatus = 'cancelled';
       order.cancelReason = reason.trim();
       await order.save();
-      for (const item of (order.items || [])) {
-        if (item.productId) {
-          await Product.updateOne(
-            { _id: item.productId },
-            { $inc: { stockQuantity: item.quantity, soldQuantity: -item.quantity }, $set: { stockStatus: 'in_stock' } }
-          );
+      if (order.isStockDeducted) {
+        for (const item of (order.items || [])) {
+          if (item.productId) {
+            await Product.updateOne(
+              { _id: item.productId },
+              { $inc: { stockQuantity: item.quantity, soldQuantity: -item.quantity }, $set: { stockStatus: 'in_stock' } }
+            );
+          }
         }
+        order.isStockDeducted = false;
       }
     }
 
@@ -717,6 +913,8 @@ module.exports = {
   getOrderById,
   createOrder,
   updateOrderStatus,
+  exportOrder,
   cancelOrder,
   requestCancelOtp,
+  returnRestockOrder,
 };

@@ -289,21 +289,23 @@ const deleteCategory = async (req, res) => {
       return sendError(res, 'Không tìm thấy loại sản phẩm.', 404);
     }
 
+    category.isActive = false;
+    await category.save();
+
     logActivityInternal({
       entityType: 'category',
       entityId: category._id.toString(),
       entityCode: category.code,
-      action: 'Xóa loại sản phẩm',
+      action: 'Ngưng hoạt động loại sản phẩm',
       performedBy: 'Quản trị viên (Admin)',
       role: 'admin',
-      details: `Đã xóa danh mục ${category.name} (${category.code}) khỏi hệ thống`,
+      details: `Đã chuyển danh mục ${category.name} (${category.code}) sang trạng thái Ngưng hoạt động`,
     });
 
-    await Category.findByIdAndDelete(req.params.id);
-    return sendSuccess(res, null, 'Xóa loại sản phẩm thành công.');
+    return sendSuccess(res, { id: category._id.toString(), isActive: false }, 'Đã chuyển loại sản phẩm sang trạng thái ngưng hoạt động.');
   } catch (error) {
     console.error('deleteCategory error:', error);
-    return sendError(res, 'Không thể xóa loại sản phẩm.', 500);
+    return sendError(res, 'Không thể ngưng hoạt động loại sản phẩm.', 500);
   }
 };
 

@@ -70,6 +70,24 @@ const orderSchema = new mongoose.Schema(
     },
     cancelReason: { type: String, default: null },
     notes: { type: String, default: null },
+    exportSlipCode: { type: String, default: null },
+    exportSlipStatus: {
+      type: String,
+      enum: ['pending', 'exported'],
+      default: 'pending',
+    },
+    exportedAt: { type: Date, default: null },
+    isStockDeducted: { type: Boolean, default: false },
+    isRestockedReturned: { type: Boolean, default: false },
+    restockedReturnedAt: { type: Date, default: null },
+    statusHistory: [
+      {
+        status: { type: String },
+        timestamp: { type: Date, default: Date.now },
+        note: { type: String, default: '' },
+        actor: { type: String, default: 'Hệ thống' },
+      },
+    ],
   },
   {
     timestamps: true,

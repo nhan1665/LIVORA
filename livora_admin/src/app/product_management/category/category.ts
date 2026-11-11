@@ -295,9 +295,10 @@ export class Category implements OnInit {
   }
 
   confirmDelete(cat: ProductCategory): void {
-    const ok = window.confirm(`Bạn có chắc chắn muốn xóa danh mục "${cat.name}" (${cat.code}) không?`);
+    const actionText = cat.isActive ? 'tạm dừng' : 'kích hoạt lại';
+    const ok = window.confirm(`Bạn có chắc chắn muốn ${actionText} danh mục "${cat.name}" (${cat.code}) không?`);
     if (ok) {
-      this.categoryService.deleteCategory(cat.id).subscribe({
+      this.categoryService.toggleCategory(cat.id).subscribe({
         next: () => {
           this.loadData();
         },

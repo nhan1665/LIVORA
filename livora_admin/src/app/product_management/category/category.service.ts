@@ -108,6 +108,10 @@ export class CategoryService {
     return this.toggleCategoryStatus(id);
   }
 
+  toggleCategory(id: string): Observable<ProductCategory> {
+    return this.toggleCategoryStatus(id);
+  }
+
   /**
    * Deletes a category.
    */

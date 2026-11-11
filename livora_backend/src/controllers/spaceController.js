@@ -441,7 +441,7 @@ const toggleRoomDesign = async (req, res) => {
 };
 
 /**
- * @desc    Delete room design
+ * @desc    Ngưng hoạt động không gian thiết kế (soft-deactivate, không xóa khỏi DB)
  * @route   DELETE /api/room-designs/:id
  */
 const deleteRoomDesign = async (req, res) => {
@@ -449,21 +449,23 @@ const deleteRoomDesign = async (req, res) => {
     const design = await RoomDesign.findById(req.params.id);
     if (!design) return sendError(res, 'Không tìm thấy không gian thiết kế.', 404);
 
+    design.isActive = false;
+    await design.save();
+
     logActivityInternal({
       entityType: 'space',
       entityId: design._id.toString(),
       entityCode: design.code,
-      action: 'Xóa không gian thiết kế',
+      action: 'Ngưng hoạt động không gian thiết kế',
       performedBy: 'Quản trị viên (Admin)',
       role: 'admin',
-      details: `Đã xóa không gian ${design.name} (${design.code}) khỏi hệ thống`,
+      details: `Đã chuyển không gian ${design.name} (${design.code}) sang trạng thái Ngưng hoạt động`,
     });
 
-    await RoomDesign.findByIdAndDelete(req.params.id);
-    return sendSuccess(res, null, 'Xóa không gian thiết kế thành công.');
+    return sendSuccess(res, { id: design._id.toString(), isActive: false }, 'Đã chuyển không gian sang trạng thái ngưng hoạt động.');
   } catch (error) {
     console.error('deleteRoomDesign error:', error);
-    return sendError(res, 'Không thể xóa không gian.', 500);
+    return sendError(res, 'Không thể ngưng hoạt động không gian.', 500);
   }
 };
 

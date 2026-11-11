@@ -422,11 +422,11 @@ const deleteMarquee = async (req, res) => {
   try {
     const { id } = req.params;
     const col = mongoose.connection.db.collection('Marquees');
-    await col.deleteOne(buildIdQuery(id));
-    return sendSuccess(res, { id }, 'Xóa thông báo Marquee thành công.');
+    await col.updateOne(buildIdQuery(id), { $set: { status: 'Đã ẩn', updatedAt: new Date() } });
+    return sendSuccess(res, { id, status: 'Đã ẩn' }, 'Đã chuyển thông báo Marquee sang trạng thái Đã ẩn.');
   } catch (err) {
     console.error('deleteMarquee error:', err);
-    return sendError(res, 'Không thể xóa thông báo Marquee.', 500);
+    return sendError(res, 'Không thể ẩn thông báo Marquee.', 500);
   }
 };
 
@@ -685,17 +685,17 @@ const deleteBanner = async (req, res) => {
       if (activeCount <= 3) {
         return sendError(
           res,
-          'Hệ thống yêu cầu duy trì tối thiểu 3 banner đang hiển thị trên trang chủ! Không thể xóa banner đang hiển thị này.',
+          'Hệ thống yêu cầu duy trì tối thiểu 3 banner đang hiển thị trên trang chủ! Không thể ẩn banner đang hiển thị này.',
           400
         );
       }
     }
 
-    await col.deleteOne(buildIdQuery(id));
-    return sendSuccess(res, { id }, 'Xóa Banner thành công.');
+    await col.updateOne(buildIdQuery(id), { $set: { status: 'hidden', updatedAt: new Date() } });
+    return sendSuccess(res, { id, status: 'Đã ẩn' }, 'Đã chuyển Banner sang trạng thái Đã ẩn.');
   } catch (err) {
     console.error('deleteBanner error:', err);
-    return sendError(res, 'Không thể xóa Banner.', 500);
+    return sendError(res, 'Không thể ẩn Banner.', 500);
   }
 };
 
@@ -990,11 +990,11 @@ const deleteBrand = async (req, res) => {
   try {
     const { id } = req.params;
     const col = mongoose.connection.db.collection('Brands');
-    await col.deleteOne(buildIdQuery(id));
-    return sendSuccess(res, { id }, 'Xóa thương hiệu thành công.');
+    await col.updateOne(buildIdQuery(id), { $set: { status: 'hidden', updatedAt: new Date() } });
+    return sendSuccess(res, { id, status: 'Đã ẩn' }, 'Đã chuyển thương hiệu sang trạng thái Đã ẩn.');
   } catch (err) {
     console.error('deleteBrand error:', err);
-    return sendError(res, 'Không thể xóa thương hiệu.', 500);
+    return sendError(res, 'Không thể ẩn thương hiệu.', 500);
   }
 };
 

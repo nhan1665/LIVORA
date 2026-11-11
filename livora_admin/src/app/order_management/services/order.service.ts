@@ -74,211 +74,7 @@ export class OrderService {
     },
   ];
 
-  private initialOrders: Order[] = [
-    {
-      _id: 'ord-001',
-      orderCode: 'LIV-260301-889',
-      customerId: 'cust-001',
-      customerInfo: {
-        name: 'Dương Trọng Nhân',
-        phone: '0562173125',
-        email: 'nhandt23406@st.uel.edu.vn',
-        address: 'Đường số 8, Phường Linh Xuân, Thành phố Thủ Đức, TP. Hồ Chí Minh',
-      },
-      items: [
-        {
-          productId: 'prod-001',
-          productName: 'Khung giường ngủ cao cấp thiết kế đơn giản 4 chân',
-          sku: 'BED-LIV-01',
-          thumbnail: 'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?w=500&auto=format&fit=crop&q=60',
-          color: 'Trắng - đen',
-          price: 2000000,
-          quantity: 1,
-          subtotal: 2000000,
-        },
-      ],
-      voucherCode: 'LIVORA10',
-      subtotalAmount: 2000000,
-      discountAmount: 200000,
-      shippingFee: 50000,
-      totalAmount: 1850000,
-      paymentMethod: 'Banking',
-      paymentStatus: 'paid',
-      orderStatus: 'confirmed',
-      notes: 'Giao giờ hành chính, gọi trước 30 phút.',
-      history: [
-        { status: 'pending', timestamp: '2026-10-08T08:30:00Z', note: 'Khách hàng tạo đơn qua website' },
-        { status: 'confirmed', timestamp: '2026-10-08T09:15:00Z', note: 'Nhân viên vận hành xác nhận đơn' },
-      ],
-      createdAt: '2026-10-08T08:30:00Z',
-      updatedAt: '2026-10-08T09:15:00Z',
-    },
-    {
-      _id: 'ord-002',
-      orderCode: 'LIV-260302-104',
-      customerId: 'cust-002',
-      customerInfo: {
-        name: 'Tống Phước Hưng',
-        phone: '0912345678',
-        email: 'hungtp@example.com',
-        address: 'Khu phố 6, Phường Linh Trung, Thành phố Thủ Đức, TP. Hồ Chí Minh',
-      },
-      items: [
-        {
-          productId: 'prod-002',
-          productName: 'Sofa góc nỉ bọc đệm cao cấp Scandinavian',
-          sku: 'SOFA-LIV-02',
-          thumbnail: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=500&auto=format&fit=crop&q=60',
-          color: 'Beige',
-          price: 6500000,
-          quantity: 1,
-          subtotal: 6500000,
-        },
-        {
-          productId: 'prod-003',
-          productName: 'Bàn trà gỗ sồi tròn đôi mặt kính cường lực',
-          sku: 'TABLE-LIV-03',
-          thumbnail: 'https://images.unsplash.com/photo-1533090161767-e6ffed986c88?w=500&auto=format&fit=crop&q=60',
-          color: 'Gỗ sồi sáng',
-          price: 1850000,
-          quantity: 1,
-          subtotal: 1850000,
-        },
-      ],
-      voucherCode: '',
-      subtotalAmount: 8350000,
-      discountAmount: 0,
-      shippingFee: 0,
-      totalAmount: 8350000,
-      paymentMethod: 'COD',
-      paymentStatus: 'unpaid',
-      orderStatus: 'shipping',
-      notes: 'Nhà trong ngõ, hỗ trợ bê lên tầng 2.',
-      history: [
-        { status: 'pending', timestamp: '2026-10-07T14:20:00Z', note: 'Đơn hàng được đặt thành công' },
-        { status: 'confirmed', timestamp: '2026-10-07T15:00:00Z', note: 'Xác nhận đơn hàng và gọi khách' },
-        { status: 'processing', timestamp: '2026-10-08T08:00:00Z', note: 'Đóng gói sản phẩm xuất kho' },
-        { status: 'shipping', timestamp: '2026-10-08T13:30:00Z', note: 'Bàn giao cho đơn vị vận chuyển GHTK' },
-      ],
-      createdAt: '2026-10-07T14:20:00Z',
-      updatedAt: '2026-10-08T13:30:00Z',
-    },
-    {
-      _id: 'ord-003',
-      orderCode: 'LIV-260302-315',
-      customerId: 'cust-003',
-      customerInfo: {
-        name: 'Võ Tuấn Đạt',
-        phone: '0987654321',
-        email: 'datvt@example.com',
-        address: '123 Cách Mạng Tháng Tám, Quận 3, TP. Hồ Chí Minh',
-      },
-      items: [
-        {
-          productId: 'prod-005',
-          productName: 'Ghế bành thư giãn da PU chân kim loại mạ vàng',
-          sku: 'CHAIR-LIV-05',
-          thumbnail: 'https://images.unsplash.com/photo-1580481077114-1e039433dc51?w=500&auto=format&fit=crop&q=60',
-          color: 'Cam đất',
-          price: 2450000,
-          quantity: 2,
-          subtotal: 4900000,
-        },
-      ],
-      subtotalAmount: 4900000,
-      discountAmount: 0,
-      shippingFee: 40000,
-      totalAmount: 4940000,
-      paymentMethod: 'VNPay',
-      paymentStatus: 'paid',
-      orderStatus: 'delivered',
-      notes: '',
-      history: [
-        { status: 'pending', timestamp: '2026-10-05T10:00:00Z', note: 'Đơn hàng tạo mới' },
-        { status: 'confirmed', timestamp: '2026-10-05T10:30:00Z', note: 'Xác nhận đơn' },
-        { status: 'processing', timestamp: '2026-10-05T14:00:00Z', note: 'Đang gia công kiểm tra chất lượng' },
-        { status: 'shipping', timestamp: '2026-10-06T09:00:00Z', note: 'Đang giao hàng' },
-        { status: 'delivered', timestamp: '2026-10-06T16:45:00Z', note: 'Giao hàng thành công cho khách' },
-      ],
-      createdAt: '2026-10-05T10:00:00Z',
-      updatedAt: '2026-10-06T16:45:00Z',
-    },
-    {
-      _id: 'ord-004',
-      orderCode: 'LIV-260303-771',
-      customerId: 'cust-004',
-      customerInfo: {
-        name: 'Đỗ Phạm Minh Tân',
-        phone: '0903112233',
-        email: 'tanpm@example.com',
-        address: '45 Nguyễn Thị Minh Khai, Quận 1, TP. Hồ Chí Minh',
-      },
-      items: [
-        {
-          productId: 'prod-004',
-          productName: 'Tủ quần áo 3 cánh mở phủ Melamine chống ẩm',
-          sku: 'WARD-LIV-04',
-          thumbnail: 'https://images.unsplash.com/photo-1595428774223-ef52624120d2?w=500&auto=format&fit=crop&q=60',
-          color: 'Trắng vân gỗ',
-          price: 4900000,
-          quantity: 1,
-          subtotal: 4900000,
-        },
-      ],
-      subtotalAmount: 4900000,
-      discountAmount: 0,
-      shippingFee: 60000,
-      totalAmount: 4960000,
-      paymentMethod: 'Banking',
-      paymentStatus: 'refunded',
-      orderStatus: 'cancelled',
-      cancelReason: 'Khách hàng đổi ý muốn chọn kích thước lớn hơn, đã xử lý hoàn tiền.',
-      notes: '',
-      history: [
-        { status: 'pending', timestamp: '2026-10-06T11:00:00Z', note: 'Khách hàng đặt hàng' },
-        { status: 'confirmed', timestamp: '2026-10-06T11:40:00Z', note: 'Đã xác nhận' },
-        { status: 'cancelled', timestamp: '2026-10-07T09:00:00Z', note: 'Hủy đơn theo yêu cầu của khách hàng' },
-      ],
-      createdAt: '2026-10-06T11:00:00Z',
-      updatedAt: '2026-10-07T09:00:00Z',
-    },
-    {
-      _id: 'ord-005',
-      orderCode: 'LIV-260304-992',
-      customerId: 'cust-005',
-      customerInfo: {
-        name: 'Cao Thành Thuận',
-        phone: '0938445566',
-        email: 'thuanct@example.com',
-        address: 'Ấn Tấn Thành, Xã Vĩnh Bình, Tỉnh Đồng Tháp',
-      },
-      items: [
-        {
-          productId: 'prod-006',
-          productName: 'Đèn cây đứng phòng khách phong cách Ý',
-          sku: 'LAMP-LIV-06',
-          thumbnail: 'https://images.unsplash.com/photo-1507473885765-e6ed057f782c?w=500&auto=format&fit=crop&q=60',
-          color: 'Vàng đồng',
-          price: 950000,
-          quantity: 2,
-          subtotal: 1900000,
-        },
-      ],
-      subtotalAmount: 1900000,
-      discountAmount: 100000,
-      shippingFee: 30000,
-      totalAmount: 1830000,
-      paymentMethod: 'COD',
-      paymentStatus: 'unpaid',
-      orderStatus: 'pending',
-      notes: 'Giao trong tuần này giúp em nhé.',
-      history: [
-        { status: 'pending', timestamp: '2026-10-09T08:15:00Z', note: 'Đơn hàng mới tạo - Chờ nhân viên xác nhận' },
-      ],
-      createdAt: '2026-10-09T08:15:00Z',
-      updatedAt: '2026-10-09T08:15:00Z',
-    },
-  ];
+  private initialOrders: Order[] = [];
 
   private orders: Order[] = [];
   private catalogProducts: CatalogProductOption[] = [];
@@ -292,24 +88,47 @@ export class OrderService {
     if (typeof fetch === 'undefined') return;
     try {
       const cacheBuster = force ? `&_t=${Date.now()}` : '';
-      const token = typeof localStorage !== 'undefined' ? localStorage.getItem('livora_admin_token') || '' : '';
+      const token = (typeof localStorage !== 'undefined' ? localStorage.getItem('livora_admin_token') : null) ||
+                    (typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('livora_admin_token') : null) || '';
       const headers: Record<string, string> = {};
       if (token) headers['Authorization'] = `Bearer ${token}`;
-      const res = await fetch(`http://localhost:5000/api/orders?pageSize=100${cacheBuster}`, {
+
+      // 1. Tải danh sách đơn hàng thật 100% từ MongoDB Atlas Orders Collection
+      const res = await fetch(`http://localhost:5000/api/orders?pageSize=200${cacheBuster}`, {
         cache: 'no-store',
         headers,
       });
       const json = await res.json();
       if (json && json.success && Array.isArray(json.data)) {
         const backendOrders: Order[] = json.data.map((o: any) => this.mapBackendOrderToModel(o));
-        const map = new Map<string, Order>();
-        backendOrders.forEach(order => map.set(order.orderCode, order));
-        // Only locally created POS orders can be pending a backend write. Do not
-        // reintroduce the bundled demo orders when the backend responds.
-        this.orders.filter(order => /^ord-\d{13,}$/.test(order._id)).forEach(order => {
-          if (!map.has(order.orderCode)) map.set(order.orderCode, order);
-        });
-        this.orders = Array.from(map.values()).sort(
+
+        // 2. Tải danh sách phiếu hoàn tiền thật từ MongoDB Atlas Refunds Collection để map chính xác
+        try {
+          const refRes = await fetch(`http://localhost:5000/api/refunds?pageSize=200${cacheBuster}`, {
+            cache: 'no-store',
+            headers,
+          });
+          const refJson = await refRes.json();
+          if (refJson && refJson.success && Array.isArray(refJson.data)) {
+            const refundMap = new Map<string, any>();
+            refJson.data.forEach((r: any) => {
+              if (r.orderId) refundMap.set(String(r.orderId), r);
+              if (r.orderCode) refundMap.set(String(r.orderCode), r);
+            });
+            backendOrders.forEach(bo => {
+              const matchedRefund = refundMap.get(String(bo._id)) || refundMap.get(String(bo.orderCode));
+              if (matchedRefund) {
+                bo.hasRefund = true;
+                bo.refundId = matchedRefund.id || matchedRefund._id;
+                bo.refundReason = matchedRefund.reason || bo.cancelReason || '';
+                bo.refundStatus = matchedRefund.status || 'pending';
+                bo.refundAmount = matchedRefund.amount || bo.totalAmount;
+              }
+            });
+          }
+        } catch (_) {}
+
+        this.orders = backendOrders.sort(
           (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
         );
         this.saveOrders();
@@ -331,7 +150,7 @@ export class OrderService {
         this.saveStock();
       }
     } catch (_) {
-      // Fallback to local storage if backend not reachable
+      // Fallback
     }
   }
 
@@ -373,6 +192,17 @@ export class OrderService {
       orderStatus: o.orderStatus || 'pending',
       notes: o.note || '',
       cancelReason: o.cancelReason || '',
+      exportSlipCode: o.exportSlipCode || (o.orderStatus !== 'pending' && o.orderStatus !== 'cancelled' ? 'PX-' + (o.orderCode || '').replace(/^LIV-/, '') : null),
+      exportSlipStatus: o.exportSlipStatus || (o.orderStatus === 'shipping' || o.orderStatus === 'delivered' ? 'exported' : 'pending'),
+      exportedAt: o.exportedAt || null,
+      isStockDeducted: Boolean(o.isStockDeducted),
+      isRestockedReturned: Boolean(o.isRestockedReturned),
+      restockedReturnedAt: o.restockedReturnedAt || null,
+      hasRefund: Boolean(o.hasRefund),
+      refundId: o.refundId || null,
+      refundReason: o.refundReason || '',
+      refundStatus: o.refundStatus || '',
+      refundAmount: o.refundAmount || 0,
       history: (o.statusHistory || []).map((h: any) => ({
         status: h.status,
         timestamp: h.timestamp,
@@ -388,10 +218,11 @@ export class OrderService {
     try {
       const storedOrders = localStorage.getItem(STORAGE_KEY);
       if (storedOrders) {
-        this.orders = JSON.parse(storedOrders);
+        const parsed: Order[] = JSON.parse(storedOrders);
+        // Loại bỏ hoàn toàn data mock (ord-001..ord-006)
+        this.orders = parsed.filter(o => !String(o._id).startsWith('ord-00'));
       } else {
-        this.orders = [...this.initialOrders];
-        this.saveOrders();
+        this.orders = [];
       }
 
       const storedStock = localStorage.getItem(STOCK_KEY);
@@ -402,7 +233,7 @@ export class OrderService {
         this.saveStock();
       }
     } catch {
-      this.orders = [...this.initialOrders];
+      this.orders = [];
       this.catalogProducts = [...this.initialProducts];
     }
   }
@@ -569,6 +400,10 @@ export class OrderService {
     };
   }
 
+  getAllRawOrders(): Order[] {
+    return [...this.orders];
+  }
+
   getOrderById(id: string): Order | undefined {
     return this.orders.find(o => o._id === id);
   }
@@ -614,7 +449,30 @@ export class OrderService {
       };
     }
 
+    if (targetStatus === 'shipping' && order.exportSlipStatus !== 'exported') {
+      return {
+        success: false,
+        message: 'Vui lòng thực hiện "Xuất hàng" trên Phiếu xuất bán trước khi chuyển đơn sang trạng thái Đang giao.',
+      };
+    }
+
     order.orderStatus = targetStatus;
+    if (targetStatus === 'confirmed') {
+      if (!order.exportSlipCode) {
+        order.exportSlipCode = 'PX-' + order.orderCode.replace(/^LIV-/, '');
+      }
+      if (!order.exportSlipStatus) {
+        order.exportSlipStatus = 'pending';
+      }
+    } else if (targetStatus === 'shipping') {
+      if (!order.exportSlipCode) {
+        order.exportSlipCode = 'PX-' + order.orderCode.replace(/^LIV-/, '');
+      }
+      order.exportSlipStatus = 'exported';
+      if (!order.exportedAt) {
+        order.exportedAt = new Date().toISOString();
+      }
+    }
     order.updatedAt = new Date().toISOString();
     order.history.push({
       status: targetStatus,
@@ -642,6 +500,56 @@ export class OrderService {
     return { success: true, message: 'Cập nhật trạng thái đơn hàng thành công.', order };
   }
 
+  async exportOrderAsync(orderId: string): Promise<{ success: boolean; message: string; order?: Order }> {
+    const order = this.getOrderById(orderId);
+    if (!order) return { success: false, message: 'Không tìm thấy đơn hàng cần xuất.' };
+
+    try {
+      const token = (typeof localStorage !== 'undefined' ? localStorage.getItem('livora_admin_token') : null) || '';
+      const res = await fetch(`http://localhost:5000/api/orders/${order._id}/export`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (!data.success) {
+        return { success: false, message: data.message || 'Lỗi khi xuất hàng từ máy chủ.' };
+      }
+    } catch (err: any) {
+      console.warn('Lỗi gọi API export:', err);
+    }
+
+    if (!order.exportSlipCode) {
+      order.exportSlipCode = 'PX-' + order.orderCode.replace(/^LIV-/, '');
+    }
+    order.exportSlipStatus = 'exported';
+    order.exportedAt = new Date().toISOString();
+    order.isStockDeducted = true;
+
+    // Trừ tồn kho local
+    for (const item of (order.items || [])) {
+      const p = this.catalogProducts.find(cp => cp.productId === item.productId || cp.sku === item.sku);
+      if (p) {
+        p.stockQuantity = Math.max(0, (Number(p.stockQuantity) || 0) - (Number(item.quantity) || 1));
+      }
+    }
+    this.saveStock();
+
+    order.updatedAt = new Date().toISOString();
+    order.history.push({
+      status: order.orderStatus,
+      timestamp: order.updatedAt,
+      note: `Xuất kho Phiếu #${order.exportSlipCode} - Đã trừ tồn kho sản phẩm. Mở khóa nút chuyển Đang giao.`,
+      updatedBy: 'Admin Warehouse',
+    });
+    this.saveOrders();
+
+    return {
+      success: true,
+      message: `Đã xuất hàng thành công cho đơn #${order.orderCode}! Tồn kho đã được trừ. Nút chuyển sang "Đang giao" đã mở khóa.`,
+      order,
+    };
+  }
+
   cancelOrder(orderId: string, reason: string): { success: boolean; message: string; order?: Order } {
     const order = this.getOrderById(orderId);
     if (!order) {
@@ -660,14 +568,17 @@ export class OrderService {
       return { success: false, message: 'Bắt buộc phải nhập lý do hủy đơn hàng.' };
     }
 
-    // Restore stock quantities
-    for (const item of order.items) {
-      const prod = this.catalogProducts.find(p => p.productId === item.productId);
-      if (prod) {
-        prod.stockQuantity += item.quantity;
+    // Restore stock quantities only if stock was actually deducted
+    if (order.isStockDeducted) {
+      for (const item of order.items) {
+        const prod = this.catalogProducts.find(p => p.productId === item.productId || p.sku === item.sku);
+        if (prod) {
+          prod.stockQuantity += item.quantity;
+        }
       }
+      this.saveStock();
+      order.isStockDeducted = false;
     }
-    this.saveStock();
 
     order.orderStatus = 'cancelled';
     order.cancelReason = reason.trim();
@@ -703,6 +614,54 @@ export class OrderService {
     order.updatedAt = new Date().toISOString();
     this.saveOrders();
     return { success: true, message: 'Cập nhật trạng thái thanh toán thành công.', order };
+  }
+
+  async restockReturnOrder(orderId: string): Promise<{ success: boolean; message: string; order?: Order }> {
+    const order = this.getOrderById(orderId);
+    if (!order) {
+      return { success: false, message: 'Không tìm thấy đơn hàng cần nhập kho hoàn trả.' };
+    }
+
+    if (order.isRestockedReturned) {
+      return { success: false, message: 'Đơn hàng này đã được thực hiện nhập kho hoàn trả trước đó.' };
+    }
+
+    try {
+      if (typeof fetch !== 'undefined') {
+        const token = localStorage.getItem('livora_admin_token') || '';
+        const res = await fetch(`http://localhost:5000/api/orders/${order._id}/return-restock`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        });
+        const data = await res.json();
+        if (!data.success) {
+          return { success: false, message: data.message || 'Lỗi khi nhập kho hoàn trả từ server.' };
+        }
+      }
+    } catch (err: any) {
+      console.warn('Lỗi gọi API return-restock:', err);
+    }
+
+    // Hoàn trả tồn kho local
+    for (const item of (order.items || [])) {
+      const prod = this.catalogProducts.find(p => p.productId === item.productId || p.sku === item.sku);
+      if (prod) {
+        prod.stockQuantity = (Number(prod.stockQuantity) || 0) + (Number(item.quantity) || 1);
+      }
+    }
+    this.saveStock();
+
+    order.isRestockedReturned = true;
+    order.restockedReturnedAt = new Date().toISOString();
+    order.history.push({
+      status: order.orderStatus,
+      timestamp: order.restockedReturnedAt,
+      note: 'Nhập hàng hoàn trả về kho - Tồn kho sản phẩm đã được cộng lại',
+      updatedBy: 'Admin Operator',
+    });
+
+    this.saveOrders();
+    return { success: true, message: `Đã nhập hàng hoàn trả về kho cho đơn #${order.orderCode} thành công!`, order };
   }
 
   createOrder(request: CreateOrderRequest): { success: boolean; message: string; order?: Order } {
@@ -757,15 +716,6 @@ export class OrderService {
         subtotal: itemTotal,
       });
     }
-
-    // Deduct stock
-    for (const itemReq of request.items) {
-      const prod = this.catalogProducts.find(p => p.productId === itemReq.productId);
-      if (prod) {
-        prod.stockQuantity -= itemReq.quantity;
-      }
-    }
-    this.saveStock();
 
     // Discount & Shipping calculation
     let discount = 0;

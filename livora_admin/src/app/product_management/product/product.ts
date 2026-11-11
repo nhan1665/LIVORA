@@ -101,6 +101,12 @@ export class Product implements OnInit {
   // Trạng thái nhập Excel
   readonly isImportingExcel = signal(false);
 
+  // Trạng thái nhập hàng tăng tồn kho
+  readonly isRestockModalOpen = signal(false);
+  readonly isRestocking = signal(false);
+  readonly restockMessage = signal('');
+  readonly restockIsError = signal(false);
+
   // Dynamic options loaded from MongoDB Atlas (Categories & Rooms collections)
   availableCategories: { id: string; code?: string; name: string; slug?: string }[] = [];
   availableRooms: { id: string; code?: string; name: string; slug?: string }[] = [];
@@ -901,16 +907,16 @@ export class Product implements OnInit {
           materials:
             matIdx !== -1 && row[matIdx]
               ? String(row[matIdx])
-                  .split(/[,;|]/)
-                  .map((s) => s.trim())
-                  .filter(Boolean)
+                .split(/[,;|]/)
+                .map((s) => s.trim())
+                .filter(Boolean)
               : [],
           colors:
             colIdx !== -1 && row[colIdx]
               ? String(row[colIdx])
-                  .split(/[,;|]/)
-                  .map((s) => s.trim())
-                  .filter(Boolean)
+                .split(/[,;|]/)
+                .map((s) => s.trim())
+                .filter(Boolean)
               : [],
           thumbnail: thumbIdx !== -1 ? String(row[thumbIdx] || '').trim() : '',
         });
@@ -946,6 +952,174 @@ export class Product implements OnInit {
     } catch (err: any) {
       this.isImportingExcel.set(false);
       alert('Lỗi xử lý file Excel: ' + (err?.message || err));
+    } finally {
+      input.value = '';
+    }
+  }
+
+  openRestockModal(): void {
+    this.restockMessage.set('');
+    this.restockIsError.set(false);
+    this.isRestockModalOpen.set(true);
+  }
+
+  closeRestockModal(): void {
+    this.isRestockModalOpen.set(false);
+    this.restockMessage.set('');
+  }
+
+  async downloadRestockTemplate(): Promise<void> {
+    try {
+      const codeHeaders = ['sku', 'quantity', 'note'];
+      const labelHeaders = [
+        'Mã SKU (* Bắt buộc tra cứu tab Danh_Sach_SKU)',
+        'Số lượng nhập cộng thêm (* Bắt buộc số nguyên > 0)',
+        'Ghi chú nhập hàng (Tùy chọn)',
+      ];
+
+      const sample1 = this.products()[0]
+        ? [this.products()[0].sku, 15, 'Nhập hàng lô mới']
+        : ['SOFA-SP001', 10, 'Bổ sung tồn kho xưởng'];
+      const sample2 = this.products()[1]
+        ? [this.products()[1].sku, 20, 'Nhập bổ sung đợt 2']
+        : ['BAN-SP001', 5, 'Bổ sung kho showroom'];
+
+      const skuLookupSheet: any[][] = [
+        ['sku', 'product_name', 'current_stock', 'category'],
+        ['MÃ SKU ĐỂ ĐIỀN VÀO CỘT A', 'TÊN SẢN PHẨM', 'TỒN KHO HIỆN TẠI', 'DANH MỤC'],
+      ];
+
+      for (const p of this.products()) {
+        skuLookupSheet.push([p.sku, p.name, p.stockQuantity, p.categoryName || '']);
+      }
+
+      await this.excelService.exportMultiSheet(
+        [
+          { name: 'Template_Nhap_Hang', data: [codeHeaders, labelHeaders, sample1, sample2] },
+          { name: 'Danh_Sach_SKU', data: skuLookupSheet },
+        ],
+        'Mau_Nhap_Hang_Tang_Ton_Livora.xlsx'
+      );
+    } catch (err: any) {
+      alert('Lỗi tải file mẫu nhập hàng: ' + (err?.message || err));
+    }
+  }
+
+  async onRestockFileSelected(event: Event): Promise<void> {
+    const input = event.target as HTMLInputElement;
+    if (!input.files || input.files.length === 0) return;
+    const file = input.files[0];
+
+    try {
+      this.isRestocking.set(true);
+      this.restockMessage.set('Đang đọc file Excel...');
+      this.restockIsError.set(false);
+
+      const sheets = await this.excelService.readWorkbook(file);
+      const sheetNames = Object.keys(sheets);
+      if (sheetNames.length === 0) {
+        throw new Error('File không chứa dữ liệu hợp lệ.');
+      }
+
+      const targetSheetName =
+        sheetNames.find((s) => s.toLowerCase().includes('nhap') || s.toLowerCase().includes('restock') || s.toLowerCase().includes('hang')) ||
+        sheetNames[0];
+
+      const rows = sheets[targetSheetName];
+      if (!rows || rows.length < 2) {
+        throw new Error(`Sheet "${targetSheetName}" không có dữ liệu hàng nào.`);
+      }
+
+      let skuIdx = -1;
+      let qtyIdx = -1;
+      let noteIdx = -1;
+      let headerRowIndex = 0;
+
+      for (let r = 0; r < Math.min(3, rows.length); r++) {
+        const headerRow = (rows[r] || []).map((c: any) =>
+          this.removeVietnameseTones(String(c || '')).toLowerCase().trim()
+        );
+
+        headerRow.forEach((col: string, idx: number) => {
+          if (col === 'sku' || col.includes('ma sku') || col.includes('ma sp') || col.includes('masp')) {
+            if (skuIdx === -1) skuIdx = idx;
+          }
+          if (col === 'quantity' || col.includes('so luong') || col.includes('soluong') || col === 'qty') {
+            if (qtyIdx === -1) qtyIdx = idx;
+          }
+          if (col === 'note' || col.includes('ghi chu')) {
+            if (noteIdx === -1) noteIdx = idx;
+          }
+        });
+
+        if (skuIdx !== -1 && qtyIdx !== -1) {
+          headerRowIndex = r;
+          break;
+        }
+      }
+
+      if (skuIdx === -1) skuIdx = 0;
+      if (qtyIdx === -1) qtyIdx = 1;
+
+      const itemsToRestock: { sku: string; quantity: number; note?: string }[] = [];
+      const errors: string[] = [];
+
+      for (let r = headerRowIndex + 1; r < rows.length; r++) {
+        const row = rows[r];
+        if (!row || row.length === 0 || row.every((c: any) => c === '' || c === null || c === undefined)) {
+          continue;
+        }
+
+        const rawSku = String(row[skuIdx] || '').trim();
+        const rawQty = row[qtyIdx];
+        const rawNote = noteIdx !== -1 ? String(row[noteIdx] || '').trim() : '';
+
+        if (rawSku.toLowerCase().includes('mã sku') || rawSku.toLowerCase() === 'sku') {
+          continue;
+        }
+
+        const qty = parseInt(String(rawQty || ''), 10);
+        if (!rawSku) {
+          continue;
+        }
+
+        if (isNaN(qty) || qty <= 0) {
+          errors.push(`Dòng ${r + 1} (SKU: ${rawSku}): Số lượng nhập phải là số nguyên > 0.`);
+          continue;
+        }
+
+        itemsToRestock.push({ sku: rawSku, quantity: qty, note: rawNote });
+      }
+
+      if (itemsToRestock.length === 0) {
+        throw new Error('Không tìm thấy dòng sản phẩm hợp lệ nào để nhập hàng.');
+      }
+
+      this.productService.restockProducts(itemsToRestock).subscribe({
+        next: (res) => {
+          this.isRestocking.set(false);
+          const updatedCount = res?.updatedCount || itemsToRestock.length;
+          let msg = `Đã nhập hàng tăng tồn thành công cho ${updatedCount} sản phẩm (số lượng đã được cộng dồn)!`;
+          if (res?.notFoundCount > 0) {
+            msg += ` (Có ${res.notFoundCount} mã SKU không tìm thấy: ${res.notFoundItems.slice(0, 3).join(', ')})`;
+          }
+          if (errors.length > 0) {
+            msg += ` (${errors.length} dòng lỗi bị bỏ qua)`;
+          }
+          this.restockMessage.set(msg);
+          this.restockIsError.set(false);
+          this.loadData();
+        },
+        error: (err) => {
+          this.isRestocking.set(false);
+          this.restockMessage.set(err.message || 'Lỗi khi nhập hàng tăng tồn.');
+          this.restockIsError.set(true);
+        },
+      });
+    } catch (err: any) {
+      this.isRestocking.set(false);
+      this.restockMessage.set(err.message || 'Lỗi xử lý file Excel.');
+      this.restockIsError.set(true);
     } finally {
       input.value = '';
     }
@@ -1087,9 +1261,11 @@ export class Product implements OnInit {
   }
 
   confirmDelete(item: ProductItem): void {
-    const ok = window.confirm(`Bạn có chắc chắn muốn xóa sản phẩm "${item.name}" (${item.sku}) không?`);
+    const isCurrentlyActive = item.status === 'Đang kinh doanh';
+    const actionText = isCurrentlyActive ? 'ngưng kinh doanh' : 'kích hoạt kinh doanh lại';
+    const ok = window.confirm(`Bạn có chắc chắn muốn ${actionText} sản phẩm "${item.name}" (${item.sku}) không?`);
     if (ok) {
-      this.productService.deleteProduct(item.id).subscribe({
+      this.productService.toggleStatus(item.id).subscribe({
         next: () => {
           this.loadData();
         },

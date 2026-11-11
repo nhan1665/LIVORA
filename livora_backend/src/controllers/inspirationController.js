@@ -258,7 +258,7 @@ const toggleInspiration = async (req, res) => {
 };
 
 /**
- * @desc    Delete inspiration
+ * @desc    Ẩn phối cảnh cảm hứng (soft-deactivate, không xóa khỏi DB)
  * @route   DELETE /api/inspirations/:id
  */
 const deleteInspiration = async (req, res) => {
@@ -266,21 +266,23 @@ const deleteInspiration = async (req, res) => {
     const inspiration = await Inspiration.findById(req.params.id);
     if (!inspiration) return sendError(res, 'Không tìm thấy cảm hứng.', 404);
 
+    inspiration.status = 'hidden';
+    await inspiration.save();
+
     logActivityInternal({
       entityType: 'inspiration',
       entityId: inspiration._id.toString(),
       entityCode: inspiration.code,
-      action: 'Xóa phối cảnh cảm hứng',
+      action: 'Ẩn phối cảnh cảm hứng',
       performedBy: 'Quản trị viên (Admin)',
       role: 'admin',
-      details: `Đã xóa concept ${inspiration.title} (${inspiration.code}) khỏi hệ thống`,
+      details: `Đã chuyển concept ${inspiration.title} (${inspiration.code}) sang trạng thái Ẩn`,
     });
 
-    await Inspiration.findByIdAndDelete(req.params.id);
-    return sendSuccess(res, null, 'Xóa cảm hứng thành công.');
+    return sendSuccess(res, { id: inspiration._id.toString(), status: 'hidden' }, 'Đã chuyển cảm hứng sang trạng thái ẩn.');
   } catch (error) {
     console.error('deleteInspiration error:', error);
-    return sendError(res, 'Không thể xóa cảm hứng.', 500);
+    return sendError(res, 'Không thể ẩn cảm hứng.', 500);
   }
 };
 
