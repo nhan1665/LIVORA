@@ -11,6 +11,8 @@ const configureCors = () => {
     'http://localhost:4201',
     'http://127.0.0.1:4200',
     'http://127.0.0.1:4201',
+    'https://livora-user.netlify.app',
+    'https://livora-admin.netlify.app',
   ];
 
   const corsOptions = {
@@ -18,8 +20,13 @@ const configureCors = () => {
       // Allow requests with no origin (like mobile apps, curl, or Postman)
       if (!origin) return callback(null, true);
 
-      // In development, allow localhost origins
-      if (allowedOrigins.indexOf(origin) !== -1 || /^http:\/\/localhost:\d+$/.test(origin) || /^http:\/\/127\.0\.0\.1:\d+$/.test(origin)) {
+      // Cho phép localhost và tất cả các domain netlify.app của dự án
+      if (
+        allowedOrigins.indexOf(origin) !== -1 ||
+        /^http:\/\/localhost:\d+$/.test(origin) ||
+        /^http:\/\/127\.0\.0\.1:\d+$/.test(origin) ||
+        /^https:\/\/.*\.netlify\.app$/.test(origin)
+      ) {
         return callback(null, true);
       }
 
