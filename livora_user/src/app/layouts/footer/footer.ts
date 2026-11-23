@@ -54,7 +54,7 @@ export class Footer implements OnInit {
             this.showPolicy = isVisible;
             const target = item.fileUrl || val;
             if (target && (target.startsWith('http') || target.startsWith('/uploads'))) {
-              this.policyUrl = target.startsWith('http') ? target : `https://livora-backend.onrender.com${target}`;
+              this.policyUrl = target.startsWith('http') ? target : `https://livora-backend-t8w8.onrender.com${target}`;
             }
           }
         });
@@ -64,7 +64,7 @@ export class Footer implements OnInit {
             next: (pRes) => {
               if (pRes?.data?.fileUrl) {
                 const target = pRes.data.fileUrl;
-                this.policyUrl = target.startsWith('http') ? target : `https://livora-backend.onrender.com${target}`;
+                this.policyUrl = target.startsWith('http') ? target : `https://livora-backend-t8w8.onrender.com${target}`;
               }
             },
             error: () => {}
