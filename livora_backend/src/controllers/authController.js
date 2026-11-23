@@ -373,77 +373,155 @@ const customerRegister = async (req, res) => {
       return sendError(res, 'Số điện thoại không hợp lệ (gồm 10 số, bắt đầu bằng số 0).', 400);
     }
 
+    // Kiểm tra xem email hoặc SĐT đã có tài khoản thành viên chính thức (registered) hay chưa
     const existingEmail = await Customer.findOne({ email: cleanEmail });
-    if (existingEmail) {
+    if (existingEmail && existingEmail.customerType === 'registered') {
       return sendError(res, 'Email này đã được đăng ký tài khoản. Vui lòng đăng nhập.', 400);
     }
 
+    let guestCustomerToUpgrade = null;
     if (cleanPhone) {
       const existingPhone = await Customer.findOne({ phone: cleanPhone });
       if (existingPhone) {
-        return sendError(res, 'Số điện thoại này đã được đăng ký tài khoản.', 400);
+        if (existingPhone.customerType === 'registered' && existingPhone.email !== cleanEmail) {
+          return sendError(res, 'Số điện thoại này đã được đăng ký cho một tài khoản khác.', 400);
+        }
+        // Nếu là khách vãng lai đã từng đặt hàng trước đó -> Nâng cấp bản ghi khách vãng lai thành thành viên chính thức
+        if (existingPhone.customerType === 'guest') {
+          guestCustomerToUpgrade = existingPhone;
+        }
       }
+    }
+
+    if (!guestCustomerToUpgrade && existingEmail && existingEmail.customerType === 'guest') {
+      guestCustomerToUpgrade = existingEmail;
     }
 
     const salt = await bcrypt.genSalt(10);
     const passwordHash = await bcrypt.hash(password, salt);
-
-    // Đảm bảo mã khách hàng duy nhất KH-xxxx không trùng lặp
-    const count = await Customer.countDocuments();
-    let counter = count + 1;
-    let code = `KH-${String(counter).padStart(4, '0')}`;
-    while (await Customer.exists({ code })) {
-      counter++;
-      code = `KH-${String(counter).padStart(4, '0')}`;
-    }
-
     const defaultFullName = (fullName || '').trim() || cleanEmail.split('@')[0];
 
-    const newCustomer = new Customer({
-      code,
-      fullName: defaultFullName,
-      email: cleanEmail,
-      phone: cleanPhone,
-      passwordHash,
-      customerType: 'registered',
-      status: 'active',
-      isActive: true,
-      addresses: address ? [{
-        isDefault: true,
-        label: 'Mặc định',
-        fullName: defaultFullName,
-        phone: cleanPhone,
-        addressLine: address.trim(),
-        province: province || '',
-      }] : [],
-    });
+    let targetCustomer;
 
-    await newCustomer.save();
+    if (guestCustomerToUpgrade) {
+      // NÂNG CẤP KHÁCH VÃNG LAI THÀNH THÀNH VIÊN
+      guestCustomerToUpgrade.fullName = defaultFullName;
+      guestCustomerToUpgrade.email = cleanEmail;
+      if (cleanPhone) guestCustomerToUpgrade.phone = cleanPhone;
+      guestCustomerToUpgrade.passwordHash = passwordHash;
+      guestCustomerToUpgrade.customerType = 'registered';
+      guestCustomerToUpgrade.status = 'active';
+      guestCustomerToUpgrade.isActive = true;
+      guestCustomerToUpgrade.failedLoginAttempts = 0;
+      if (address) {
+        guestCustomerToUpgrade.addresses = [{
+          isDefault: true,
+          label: 'Mặc định',
+          fullName: defaultFullName,
+          phone: cleanPhone || guestCustomerToUpgrade.phone || '',
+          addressLine: address.trim(),
+          province: province || '',
+        }];
+      }
+      await guestCustomerToUpgrade.save();
+      targetCustomer = guestCustomerToUpgrade;
+    } else {
+      // TẠO TÀI KHOẢN MỚI
+      const count = await Customer.countDocuments();
+      let counter = count + 1;
+      let code = `KH-${String(counter).padStart(4, '0')}`;
+      while (await Customer.exists({ code })) {
+        counter++;
+        code = `KH-${String(counter).padStart(4, '0')}`;
+      }
+
+      targetCustomer = new Customer({
+        code,
+        fullName: defaultFullName,
+        email: cleanEmail,
+        phone: cleanPhone,
+        passwordHash,
+        customerType: 'registered',
+        status: 'active',
+        isActive: true,
+        failedLoginAttempts: 0,
+        addresses: address ? [{
+          isDefault: true,
+          label: 'Mặc định',
+          fullName: defaultFullName,
+          phone: cleanPhone,
+          addressLine: address.trim(),
+          province: province || '',
+        }] : [],
+      });
+      await targetCustomer.save();
+    }
+
+    // TỰ ĐỘNG LIÊN KẾT (MAPPING) CÁC ĐƠN HÀNG VÃNG LAI CŨ ĐÃ TỪNG ĐẶT VỚI SĐT HOẶC EMAIL NÀY
+    try {
+      const pastOrdersFilter = {
+        $and: [
+          {
+            $or: [
+              ...(cleanPhone ? [{ 'customerInfo.phone': cleanPhone }] : []),
+              { 'customerInfo.email': cleanEmail },
+            ],
+          },
+          {
+            $or: [
+              { customerId: null },
+              { customerId: { $exists: false } },
+              ...(guestCustomerToUpgrade ? [{ customerId: guestCustomerToUpgrade._id }] : []),
+            ],
+          },
+        ],
+      };
+
+      const pastOrders = await Order.find(pastOrdersFilter);
+      if (pastOrders.length > 0) {
+        await Order.updateMany(
+          { _id: { $in: pastOrders.map((o) => o._id) } },
+          { $set: { customerId: targetCustomer._id } }
+        );
+      }
+
+      // Cập nhật lại tổng số đơn và chi tiêu tích lũy thực tế
+      const validOrders = await Order.find({
+        customerId: targetCustomer._id,
+        orderStatus: { $ne: 'cancelled' },
+      });
+      targetCustomer.totalOrders = validOrders.length;
+      targetCustomer.accumulatedSpent = validOrders.reduce((sum, o) => sum + (Number(o.totalAmount) || 0), 0);
+      targetCustomer.lastActiveAt = new Date();
+      await targetCustomer.save();
+    } catch (mapErr) {
+      console.warn('Lỗi khi tự động mapping đơn hàng cũ cho khách đăng ký:', mapErr.message);
+    }
 
     logActivityInternal({
       entityType: 'customer',
-      entityId: newCustomer._id.toString(),
-      entityCode: newCustomer.code,
+      entityId: targetCustomer._id.toString(),
+      entityCode: targetCustomer.code,
       action: 'Khách hàng đăng ký tài khoản thành viên',
-      performedBy: newCustomer.fullName,
+      performedBy: targetCustomer.fullName,
       role: 'customer',
-      details: `Đăng ký thành viên Livora qua website với email: ${newCustomer.email}`,
+      details: `Đăng ký thành viên Livora qua website với email: ${targetCustomer.email}`,
     });
 
-    const token = generateToken({ id: newCustomer._id, role: 'customer', email: newCustomer.email });
+    const token = generateToken({ id: targetCustomer._id, role: 'customer', email: targetCustomer.email });
 
     return sendSuccess(res, {
       token,
       user: {
-        id: newCustomer._id.toString(),
-        code: newCustomer.code,
-        fullName: newCustomer.fullName,
-        email: newCustomer.email,
-        phone: newCustomer.phone,
-        birthDate: newCustomer.birthDate || null,
-        gender: newCustomer.gender || '',
-        avatar: newCustomer.avatar || '',
-        addresses: newCustomer.addresses,
+        id: targetCustomer._id.toString(),
+        code: targetCustomer.code,
+        fullName: targetCustomer.fullName,
+        email: targetCustomer.email,
+        phone: targetCustomer.phone,
+        birthDate: targetCustomer.birthDate || null,
+        gender: targetCustomer.gender || '',
+        avatar: targetCustomer.avatar || '',
+        addresses: targetCustomer.addresses,
       },
     }, 'Đăng ký tài khoản thành công.', 201);
   } catch (error) {
@@ -476,7 +554,7 @@ const customerLogin = async (req, res) => {
     }
 
     if (customer.status === 'locked' || !customer.isActive) {
-      return sendError(res, 'Tài khoản của bạn đã bị tạm khóa. Vui lòng liên hệ CSKH.', 403);
+      return sendError(res, 'Tài khoản của bạn đã bị tạm khóa do nhập sai mật khẩu nhiều lần hoặc bị quản trị viên khóa. Vui lòng liên hệ CSKH.', 403);
     }
 
     let isMatch = false;
@@ -484,9 +562,24 @@ const customerLogin = async (req, res) => {
       isMatch = await bcrypt.compare(password, customer.passwordHash);
     }
     if (!isMatch) {
-      return sendError(res, 'Email / Số điện thoại hoặc mật khẩu không chính xác.', 401);
+      // Tăng biến đếm số lần nhập sai mật khẩu
+      const currentAttempts = (customer.failedLoginAttempts || 0) + 1;
+      customer.failedLoginAttempts = currentAttempts;
+
+      if (currentAttempts >= 5) {
+        customer.status = 'locked';
+        customer.isActive = false;
+        await customer.save();
+        return sendError(res, 'Bạn đã nhập sai mật khẩu 5 lần liên tiếp. Tài khoản đã bị tạm khóa để đảm bảo an toàn. Vui lòng sử dụng tính năng Quên mật khẩu hoặc liên hệ hỗ trợ.', 403);
+      }
+
+      await customer.save();
+      const remaining = 5 - currentAttempts;
+      return sendError(res, `Email / Số điện thoại hoặc mật khẩu không chính xác. Bạn còn ${remaining} lần thử trước khi tài khoản bị khóa.`, 401);
     }
 
+    // Đăng nhập thành công: reset số lần sai
+    customer.failedLoginAttempts = 0;
     customer.lastActiveAt = new Date();
     await customer.save();
 

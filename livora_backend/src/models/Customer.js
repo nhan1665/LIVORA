@@ -82,6 +82,10 @@ const customerSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    failedLoginAttempts: {
+      type: Number,
+      default: 0,
+    },
     lastActiveAt: {
       type: Date,
       default: Date.now,

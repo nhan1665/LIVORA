@@ -79,6 +79,7 @@ async function loadItems(requestedItems, session) {
       productId: product ? product._id : (mongoose.isValidObjectId(id) ? new mongoose.Types.ObjectId(id) : new mongoose.Types.ObjectId()),
       sku: product ? product.sku : (item.sku || ('SKU-' + id)),
       productName: product ? product.name : (item.productName || item.name || 'Sản phẩm nội thất LIVORA'),
+      productImage: product ? (product.primaryImage || (Array.isArray(product.images) ? product.images[0] : '') || '') : (item.image || item.productImage || ''),
       quantity,
       unitPrice,
       subtotal: lineSubtotal,
