@@ -243,7 +243,7 @@ export class Payment implements OnInit, OnDestroy {
     if (!rawTarget) return;
 
     if (rawTarget.startsWith('/uploads') || rawTarget.startsWith('http')) {
-      const fileTarget = rawTarget.startsWith('http') ? rawTarget : `http://localhost:5000${rawTarget}`;
+      const fileTarget = rawTarget.startsWith('http') ? rawTarget : `https://livora-backend.onrender.com${rawTarget}`;
       window.open(fileTarget, '_blank');
       return;
     }
@@ -271,7 +271,7 @@ export class Payment implements OnInit, OnDestroy {
       }
     }
 
-    const fileTarget = `http://localhost:5000${rawTarget}`;
+    const fileTarget = `https://livora-backend.onrender.com${rawTarget}`;
     window.open(fileTarget, '_blank');
   }
 
