@@ -1,5 +1,5 @@
 const dns = require('dns');
-try { dns.setServers(['8.8.8.8', '1.1.1.1']); } catch (_) {}
+try { dns.setServers(['8.8.8.8', '1.1.1.1']); } catch (_) { }
 require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
@@ -18,7 +18,7 @@ const PORT = process.env.PORT || 5000;
 const uploadDir = path.join(__dirname, 'public', 'uploads', 'policy');
 try {
   fs.mkdirSync(uploadDir, { recursive: true });
-} catch (_) {}
+} catch (_) { }
 
 // Middleware
 app.use(configureCors());
@@ -201,7 +201,7 @@ const startServer = async () => {
   const conn = await connectDB();
   if (!conn) throw new Error('MongoDB connection is required before starting the API.');
 
-  app.listen(PORT, () => {
+  app.listen(PORT, '0.0.0.0', () => {
     console.log(`LIVORA Backend API listening on http://localhost:${PORT}`);
 
     // Đồng bộ số lượng đã bán thực tế 100% từ CSDL đơn hàng Orders và đánh giá từ Reviews (tuyệt đối không fake)
