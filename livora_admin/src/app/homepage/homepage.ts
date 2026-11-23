@@ -1000,7 +1000,7 @@ export class Homepage implements OnInit, AfterViewInit {
 
   openFooterPolicyFile(item: FooterConfigItem): void {
     if (item.fileUrl) {
-      const fullUrl = item.fileUrl.startsWith('http') ? item.fileUrl : `http://localhost:5000${item.fileUrl}`;
+      const fullUrl = item.fileUrl.startsWith('http') ? item.fileUrl : `https://livora-backend.onrender.com${item.fileUrl}`;
       window.open(fullUrl, '_blank');
       return;
     }
@@ -1027,7 +1027,7 @@ export class Homepage implements OnInit, AfterViewInit {
       }
     }
     if (item.value && (item.value.startsWith('http') || item.value.startsWith('/uploads'))) {
-      const url = item.value.startsWith('http') ? item.value : `http://localhost:5000${item.value}`;
+      const url = item.value.startsWith('http') ? item.value : `https://livora-backend.onrender.com${item.value}`;
       window.open(url, '_blank');
     }
   }

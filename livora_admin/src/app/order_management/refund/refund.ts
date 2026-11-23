@@ -396,7 +396,7 @@ export class RefundComponent implements OnInit {
   openCurrentPolicyFile(): void {
     if (!this.currentPolicy) return;
     const url = this.currentPolicy.fileUrl
-      ? (this.currentPolicy.fileUrl.startsWith('http') ? this.currentPolicy.fileUrl : `http://localhost:5000${this.currentPolicy.fileUrl}`)
+      ? (this.currentPolicy.fileUrl.startsWith('http') ? this.currentPolicy.fileUrl : `https://livora-backend.onrender.com${this.currentPolicy.fileUrl}`)
       : this.currentPolicy.fileData;
     if (!url) return;
 
