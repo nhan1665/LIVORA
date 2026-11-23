@@ -1,0 +1,8 @@
+[build]
+  command = "npm run build"
+  publish = "dist/web_1_UEL_course_team_project/browser"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
