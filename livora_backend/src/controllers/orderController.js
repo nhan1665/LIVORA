@@ -403,10 +403,22 @@ const createOrder = async (req, res) => {
       linkedCustomer = await Customer.findOne({ phone: cPhone.trim() });
       if (!linkedCustomer) {
         try {
+          const count = await Customer.countDocuments();
+          let counter = count + 1;
+          let custCode = `KH-${String(counter).padStart(4, '0')}`;
+          while (await Customer.exists({ code: custCode })) {
+            counter++;
+            custCode = `KH-${String(counter).padStart(4, '0')}`;
+          }
+
           linkedCustomer = new Customer({
+            code: custCode,
             fullName: cName.trim(),
             phone: cPhone.trim(),
-            email: customerInfo.email ? customerInfo.email.trim() : undefined,
+            email: customerInfo.email && customerInfo.email.trim() ? customerInfo.email.trim() : `${cPhone.trim()}@guest.livora.vn`,
+            customerType: 'guest',
+            status: 'active',
+            isActive: true,
             address: orderAddress.trim(),
             province: customerInfo.province || undefined,
             district: customerInfo.district || undefined,

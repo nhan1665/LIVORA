@@ -9,6 +9,7 @@ const orderItemSchema = new mongoose.Schema(
     },
     sku: { type: String, default: null },
     productName: { type: String, required: true },
+    productImage: { type: String, default: '' },
     selectedColor: { type: String, default: null },
     quantity: { type: Number, required: true, min: 1 },
     unitPrice: { type: Number, required: true, min: 0 },
