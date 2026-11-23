@@ -150,7 +150,7 @@ export class Policy implements OnInit {
 
   openCurrentFile(): void {
     const policy = this.currentPolicy();
-    const url = policy?.fileData || (policy?.fileUrl ? `https://livora-backend.onrender.com${policy.fileUrl}` : '');
+    const url = policy?.fileData || (policy?.fileUrl ? `https://livora-backend-t8w8.onrender.com${policy.fileUrl}` : '');
     if (url) {
       window.open(url, '_blank');
     }

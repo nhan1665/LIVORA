@@ -94,7 +94,7 @@ export class OrderService {
       if (token) headers['Authorization'] = `Bearer ${token}`;
 
       // 1. Tải danh sách đơn hàng thật 100% từ MongoDB Atlas Orders Collection
-      const res = await fetch(`https://livora-backend.onrender.com/api/orders?pageSize=200${cacheBuster}`, {
+      const res = await fetch(`https://livora-backend-t8w8.onrender.com/api/orders?pageSize=200${cacheBuster}`, {
         cache: 'no-store',
         headers,
       });
@@ -104,7 +104,7 @@ export class OrderService {
 
         // 2. Tải danh sách phiếu hoàn tiền thật từ MongoDB Atlas Refunds Collection để map chính xác
         try {
-          const refRes = await fetch(`https://livora-backend.onrender.com/api/refunds?pageSize=200${cacheBuster}`, {
+          const refRes = await fetch(`https://livora-backend-t8w8.onrender.com/api/refunds?pageSize=200${cacheBuster}`, {
             cache: 'no-store',
             headers,
           });
@@ -135,7 +135,7 @@ export class OrderService {
       }
 
       // Tải danh sách sản phẩm thật từ MongoDB Atlas
-      const prodRes = await fetch(`https://livora-backend.onrender.com/api/products?pageSize=100${cacheBuster}`, { cache: 'no-store' });
+      const prodRes = await fetch(`https://livora-backend-t8w8.onrender.com/api/products?pageSize=100${cacheBuster}`, { cache: 'no-store' });
       const prodJson = await prodRes.json();
       if (prodJson && prodJson.success && Array.isArray(prodJson.data) && prodJson.data.length > 0) {
         this.catalogProducts = prodJson.data.map((p: any) => ({
@@ -299,7 +299,7 @@ export class OrderService {
       try {
         const token = (typeof localStorage !== 'undefined' ? localStorage.getItem('livora_admin_token') : null) ||
                       (typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('livora_admin_token') : null);
-        const res = await fetch(`https://livora-backend.onrender.com/api/customers?search=${encodeURIComponent(cleanPhone)}`, {
+        const res = await fetch(`https://livora-backend-t8w8.onrender.com/api/customers?search=${encodeURIComponent(cleanPhone)}`, {
           headers: {
             'Content-Type': 'application/json',
             ...(token ? { Authorization: `Bearer ${token}` } : {})
@@ -490,7 +490,7 @@ export class OrderService {
 
     // Sync status change to backend
     if (typeof fetch !== 'undefined') {
-      fetch(`https://livora-backend.onrender.com/api/orders/${order._id}/status`, {
+      fetch(`https://livora-backend-t8w8.onrender.com/api/orders/${order._id}/status`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('livora_admin_token') || ''}` },
         body: JSON.stringify({ status: targetStatus, note, actor: 'Admin Operator' }),
@@ -506,7 +506,7 @@ export class OrderService {
 
     try {
       const token = (typeof localStorage !== 'undefined' ? localStorage.getItem('livora_admin_token') : null) || '';
-      const res = await fetch(`https://livora-backend.onrender.com/api/orders/${order._id}/export`, {
+      const res = await fetch(`https://livora-backend-t8w8.onrender.com/api/orders/${order._id}/export`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       });
@@ -594,7 +594,7 @@ export class OrderService {
 
     // Sync cancellation to backend
     if (typeof fetch !== 'undefined') {
-      fetch(`https://livora-backend.onrender.com/api/orders/${order._id}/cancel`, {
+      fetch(`https://livora-backend-t8w8.onrender.com/api/orders/${order._id}/cancel`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('livora_admin_token') || ''}` },
         body: JSON.stringify({ reason: reason.trim(), actor: 'Admin Operator' }),
@@ -629,7 +629,7 @@ export class OrderService {
     try {
       if (typeof fetch !== 'undefined') {
         const token = localStorage.getItem('livora_admin_token') || '';
-        const res = await fetch(`https://livora-backend.onrender.com/api/orders/${order._id}/return-restock`, {
+        const res = await fetch(`https://livora-backend-t8w8.onrender.com/api/orders/${order._id}/return-restock`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         });
@@ -783,7 +783,7 @@ export class OrderService {
     // 1. Tạo mới khách hàng trên backend nếu là người dùng mới
     if (isNewCustomer && typeof fetch !== 'undefined') {
       try {
-        const custRes = await fetch('https://livora-backend.onrender.com/api/customers', {
+        const custRes = await fetch('https://livora-backend-t8w8.onrender.com/api/customers', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('livora_admin_token') || ''}` },
           body: JSON.stringify({
@@ -841,7 +841,7 @@ export class OrderService {
           note: request.notes?.trim() || '',
         };
 
-        const orderRes = await fetch('https://livora-backend.onrender.com/api/orders', {
+        const orderRes = await fetch('https://livora-backend-t8w8.onrender.com/api/orders', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('livora_admin_token') || ''}` },
           body: JSON.stringify(orderPayload),

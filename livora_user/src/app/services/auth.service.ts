@@ -97,7 +97,7 @@ export class AuthService {
         throw new Error('Quá thời gian kết nối đến máy chủ. Vui lòng kiểm tra backend server.');
       }
       if (err.message && err.message.includes('Failed to fetch')) {
-        throw new Error('Không thể kết nối đến máy chủ backend (https://livora-backend.onrender.com). Vui lòng đảm bảo server đang chạy.');
+        throw new Error('Không thể kết nối đến máy chủ backend (https://livora-backend-t8w8.onrender.com). Vui lòng đảm bảo server đang chạy.');
       }
       throw err;
     }
